@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.eclipse.serializer</groupId>
+        <artifactId>serializer-parent</artifactId>
+        <version>0.9.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>serializer-persistence-parent</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Eclipse Serializer Persistence Parent</name>
+    <description>Eclipse Serializer Persistence Parent Project</description>
+
+    <modules>
+        <module>persistence</module>
+        <module>binary</module>
+        <module>binary-jdk8</module>
+        <module>binary-android</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>from_java_17</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>binary-jdk17</module>
+            </modules>
+        </profile>
+    </profiles>
+</project>

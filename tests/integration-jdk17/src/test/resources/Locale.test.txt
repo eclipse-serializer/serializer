@@ -1,0 +1,6 @@
+MgAAAAAAAABEAAAAAAAAAAEAZKeztuANGgAAAAAAAAAFAAAAAAAAAGQAZQAtAEQARQA=
+
+32 00 00 00 00 00 00 00 44 00 00 00 00 00 00 00 2.......D.......
+01 00 64 A7 B3 B6 E0 0D 1A 00 00 00 00 00 00 00 ..d.............
+05 00 00 00 00 00 00 00 64 00 65 00 2D 00 44 00 ........d.e.-.D.
+45 00                                           E.
