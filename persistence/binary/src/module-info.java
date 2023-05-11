@@ -19,28 +19,31 @@
  */
 module org.eclipse.serializer.persistence.binary
 {
-	exports org.eclipse.serializer.persistence.binary.java.util.regex;
-	exports org.eclipse.serializer.persistence.binary.java.util;
-	exports org.eclipse.serializer.persistence.binary.java.time;
-	exports org.eclipse.serializer.persistence.binary.types;
-	exports org.eclipse.serializer.persistence.binary.java.math;
-	exports org.eclipse.serializer.persistence.binary.internal;
-	exports org.eclipse.serializer.persistence.binary.java.sql;
-	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.util;
 	exports org.eclipse.serializer.persistence.binary.exceptions;
-	exports org.eclipse.serializer.persistence.binary.java.lang;
-	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.reference;
+	exports org.eclipse.serializer.persistence.binary.internal; /* FIXME Do not export internal stuff */
 	exports org.eclipse.serializer.persistence.binary.java.io;
 	exports org.eclipse.serializer.persistence.binary.java.nio.file;
+	exports org.eclipse.serializer.persistence.binary.java.lang;
+	exports org.eclipse.serializer.persistence.binary.java.math;
 	exports org.eclipse.serializer.persistence.binary.java.net;
+	exports org.eclipse.serializer.persistence.binary.java.sql;
+	exports org.eclipse.serializer.persistence.binary.java.time;
 	exports org.eclipse.serializer.persistence.binary.java.util.concurrent;
+	exports org.eclipse.serializer.persistence.binary.java.util.regex;
+	exports org.eclipse.serializer.persistence.binary.java.util;
 	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity;
-	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.persistence.types;
 	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections;
-	
-	requires java.sql;
-	requires jdk.unsupported;
+	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.persistence.types;
+	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.reference;
+	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.util;
+	exports org.eclipse.serializer.persistence.binary.types;
+
+	requires transitive org.eclipse.serializer.persistence;
+	requires transitive jdk.unsupported;
+
+	requires java.sql;  /* binary handlers */
+	/* To indicate we use these modules directly, but they also come through org.eclipse.serializer.persistence */
 	requires org.eclipse.serializer.afs;
 	requires org.eclipse.serializer.base;
-	requires org.eclipse.serializer.persistence;
+	requires org.slf4j;
 }

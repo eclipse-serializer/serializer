@@ -19,8 +19,9 @@
  */
 module org.eclipse.serializer.afs
 {
-	exports org.eclipse.serializer.afs.types;
+	/* All packages are exported */
 	exports org.eclipse.serializer.afs.exceptions;
-	
-	requires org.eclipse.serializer.base;
+	exports org.eclipse.serializer.afs.types;
+
+	requires transitive org.eclipse.serializer.base;
 }
