@@ -19,39 +19,38 @@
  */
 module org.eclipse.serializer.base
 {
-	exports org.eclipse.serializer.memory.android;
-	exports org.eclipse.serializer.hashing;
-	exports org.eclipse.serializer.util.xcsv;
-	exports org.eclipse.serializer.reference;
-	exports org.eclipse.serializer.reflect;
-	exports org.eclipse.serializer.typing;
-	exports org.eclipse.serializer.concurrency;
-	exports org.eclipse.serializer.functional;
+	/* All packages are exported */
+	exports org.eclipse.serializer.branching;
 	exports org.eclipse.serializer.chars;
 	exports org.eclipse.serializer.collections;
-	exports org.eclipse.serializer.branching;
-	exports org.eclipse.serializer.equality;
-	exports org.eclipse.serializer.entity;
-	exports org.eclipse.serializer.util.similarity;
-	exports org.eclipse.serializer.util.logging;
-	exports org.eclipse.serializer.util.iterables;
-	exports org.eclipse.serializer.collections.types;
-	exports org.eclipse.serializer.memory;
-	exports org.eclipse.serializer.io;
-	exports org.eclipse.serializer.util;
 	exports org.eclipse.serializer.collections.interfaces;
-	exports org.eclipse.serializer.collections.sorting;
-	exports org.eclipse.serializer.memory.sun;
 	exports org.eclipse.serializer.collections.old;
-	exports org.eclipse.serializer.meta;
+	exports org.eclipse.serializer.collections.sorting;
+	exports org.eclipse.serializer.collections.types;
+	exports org.eclipse.serializer.concurrency;
+	exports org.eclipse.serializer.entity;
+	exports org.eclipse.serializer.equality;
 	exports org.eclipse.serializer.exceptions;
+	exports org.eclipse.serializer.functional;
+	exports org.eclipse.serializer.hashing;
+	exports org.eclipse.serializer.io;
 	exports org.eclipse.serializer.math;
-	exports org.eclipse.serializer.util.cql;
+	exports org.eclipse.serializer.memory;
+	exports org.eclipse.serializer.memory.android;
+	exports org.eclipse.serializer.memory.sun;
+	exports org.eclipse.serializer.meta;
+	exports org.eclipse.serializer.reference;
+	exports org.eclipse.serializer.reflect;
 	exports org.eclipse.serializer.time;
+	exports org.eclipse.serializer.typing;
+	exports org.eclipse.serializer.util;
+	exports org.eclipse.serializer.util.cql;
+	exports org.eclipse.serializer.util.iterables;
+	exports org.eclipse.serializer.util.logging;
+	exports org.eclipse.serializer.util.similarity;
+	exports org.eclipse.serializer.util.xcsv;
 
-	requires java.compiler;
-	requires java.desktop;
-	requires java.management;
-	requires jdk.unsupported;
-	requires org.slf4j;
+	requires transitive java.management;
+	requires transitive jdk.unsupported;
+	requires transitive org.slf4j;
 }

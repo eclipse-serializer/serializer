@@ -19,10 +19,11 @@
  */
 module org.eclipse.serializer.persistence.binary.android
 {
-	exports org.eclipse.serializer.persistence.binary.android.types;
 	exports org.eclipse.serializer.persistence.binary.android.java.time;
-	
+	exports org.eclipse.serializer.persistence.binary.android.types;
+
+	requires transitive org.eclipse.serializer.persistence.binary;
+	/* To indicate we use these modules directly, but they also come through org.eclipse.serializer.persistence.binary */
 	requires org.eclipse.serializer.base;
 	requires org.eclipse.serializer.persistence;
-	requires org.eclipse.serializer.persistence.binary;
 }
