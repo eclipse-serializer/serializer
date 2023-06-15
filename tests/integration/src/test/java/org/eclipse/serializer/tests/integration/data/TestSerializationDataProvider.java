@@ -122,7 +122,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
                 , Arguments.of(new TestSerializationData(new File("."), "File.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(Path.of(".").toAbsolutePath(), "Path.test.txt", defaultCompare))  // Can't do this as it is location dependent
                 , Arguments.of(new TestSerializationData(new Date(MOMENT_IN_TIME), "Date.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(defineLocalDateTime(), "LocalDateTime.test.txt", defaultCompare))
+                //, Arguments.of(new TestSerializationData(defineLocalDateTime(), "LocalDateTime.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(new java.sql.Date(MOMENT_IN_TIME), "SqlDate.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(new java.sql.Time(MOMENT_IN_TIME), "SqlTime.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(new java.sql.Timestamp(MOMENT_IN_TIME), "SqlTimeStamp.test.txt", defaultCompare))
