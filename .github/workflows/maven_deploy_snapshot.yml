@@ -11,6 +11,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - id: install-secret-key
+        name: Install gpg secret key
+        run: |
+          cat <(echo -e "${{ secrets.ORG_GPG_PRIVATE_KEY }}") | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
       - uses: actions/checkout@v3
       - name: Set up Java for publishing to Maven Central Snapshot Repository
         uses: actions/setup-java@v3
@@ -21,14 +26,12 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-          gpg-private-key: GPG_PRIVATE_KEY
           gpg-passphrase: PASSPHRASE
       - name: Make a snapshot
-        run: mvn -Pdeploy --no-transfer-progress --batch-mode clean deploy
+        run: mvn -X -Pdeploy --no-transfer-progress --batch-mode clean deploy
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
 
       #java 17 build
@@ -42,16 +45,14 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-          gpg-private-key: GPG_PRIVATE_KEY
           gpg-passphrase: PASSPHRASE
       - name: Build with java 17
         run: |
           mvn -pl persistence/binary-jdk17 clean source:jar install -am -B
       - name: Deploy module build with java 17
         run: |
-          mvn -Pdeploy -pl persistence/binary-jdk17 deploy
+          mvn -X -Pdeploy -pl persistence/binary-jdk17 deploy
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
