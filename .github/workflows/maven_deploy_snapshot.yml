@@ -11,6 +11,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - id: install-secret-key
+        name: Install gpg secret key
+        run: |
+          cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
       - uses: actions/checkout@v3
       - name: Set up Java for publishing to Maven Central Snapshot Repository
         uses: actions/setup-java@v3
