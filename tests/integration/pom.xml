@@ -6,13 +6,13 @@
     <parent>
         <groupId>org.eclipse.serializer</groupId>
         <artifactId>serializer-tests</artifactId>
-        <version>0.9.0-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>org.eclipse.serializer.tests</groupId>
     <artifactId>integration</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <name>Eclipse Serializer Test on JDK 8</name>
     <description>Eclipse Serializer Testing on JDK 8</description>

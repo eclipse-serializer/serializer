@@ -8,7 +8,7 @@
 
 	<groupId>org.eclipse.serializer</groupId>
 	<artifactId>serializer-parent</artifactId>
-	<version>0.9.0-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Eclipse Serializer</name>
@@ -36,7 +36,7 @@
 		<license.inceptionYear>2023</license.inceptionYear>
 		<license.licenseName>epl_v2</license.licenseName>
 		<license.licenceFile>${basedir}/LICENSE</license.licenceFile>
-		<api.version>0.9</api.version>
+		<api.version>1</api.version>
 		<javadoc.failed.on.error>false</javadoc.failed.on.error>
 	</properties>
 
