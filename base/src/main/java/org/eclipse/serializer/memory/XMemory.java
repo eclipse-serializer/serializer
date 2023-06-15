@@ -29,7 +29,7 @@ import java.util.function.Predicate;
 
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
 import org.eclipse.serializer.exceptions.UnhandledPlatformError;
-import org.eclipse.serializer.memory.android.MicroStreamAndroidAdapter;
+import org.eclipse.serializer.memory.android.AndroidAdapter;
 import org.eclipse.serializer.memory.sun.JdkMemoryAccessor;
 import org.eclipse.serializer.util.X;
 
@@ -63,7 +63,7 @@ public final class XMemory
 			 * https://stackoverflow.com/questions/4519556/how-to-determine-if-my-app-is-running-on-android
 			 */
 			VmCheckEquality("Supported Standard Android",
-                            MicroStreamAndroidAdapter::setupFull,
+                            AndroidAdapter::setupFull,
                             entry("java.vendor"   , "The Android Project"),
                             entry("java.vm.vendor", "The Android Project")
 			),
@@ -89,11 +89,11 @@ public final class XMemory
 			 * See
 			 * https://www.graalvm.org/sdk/javadoc/index.html?constant-values.html
 			 * 
-			 * Check if microstream is run in a GraalVM native image, if so we need to switch to the android Memory accessing/handling
+			 * Check if we run in a GraalVM native image, if so we need to switch to the android Memory accessing/handling
 			 * 
 			 */
 			VmCheckNotBlank("GraalVM native image",
-				MicroStreamAndroidAdapter::setupFull,
+				AndroidAdapter::setupFull,
 				entry("org.graalvm.nativeimage.imagecode")
 			)
 

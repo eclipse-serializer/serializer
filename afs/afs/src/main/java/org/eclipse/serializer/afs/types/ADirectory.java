@@ -172,7 +172,7 @@ public interface ADirectory extends AItem, AResolving
 	 * Each is only allowed if there are no uses for that directory
 	 * 
 	 * (19.07.2020 TM):
-	 * Downgraded to T0D0 since MicroStream does not require directory mutations (for now...).
+	 * Downgraded to T0D0 since we do not require directory mutations (for now...).
 	 */
 	
 	/**

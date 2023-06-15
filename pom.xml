@@ -235,8 +235,8 @@
 						<failOnError>false</failOnError>
 						<notree>true</notree>
 						<source>8</source>
-						<doctitle>MicroStream API</doctitle>
-						<windowtitle>MicroStream API</windowtitle>
+						<doctitle>Eclipse Serializer API</doctitle>
+						<windowtitle>Eclipse Serializer API</windowtitle>
 						<stylesheetfile>${maven.multiModuleProjectDirectory}/etc/styles/javadoc-stylesheet.css</stylesheetfile>
 						<archive>
 							<manifestEntries>
@@ -396,8 +396,8 @@
 							<notree>true</notree>
 							<additionalOptions>-html5</additionalOptions>
 							<source>8</source>
-							<doctitle>MicroStream API ${api.version}</doctitle>
-							<windowtitle>MicroStream API ${api.version}</windowtitle>
+							<doctitle>Eclipse Serializer API ${api.version}</doctitle>
+							<windowtitle>Eclipse Serializer API ${api.version}</windowtitle>
 							<stylesheetfile>${maven.multiModuleProjectDirectory}/etc/styles/javadoc-stylesheet.css</stylesheetfile>
 							<javadocExecutable>${javadoc.executable}</javadocExecutable>
 							<archive>

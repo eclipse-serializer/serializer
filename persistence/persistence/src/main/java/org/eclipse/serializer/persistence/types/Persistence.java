@@ -231,7 +231,7 @@ public class Persistence
 		 * Kind of weird to put it here, but it has to be somewhere
 		 * and the Persistence layer is the base for everything.
 		 */
-		return "MicroStream";
+		return "Eclipse Serializer";
 	}
 
 	public static final String objectIdLabel()

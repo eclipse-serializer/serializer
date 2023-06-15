@@ -30,7 +30,7 @@ import org.eclipse.serializer.memory.XMemory;
  * Trivial setup wrapping class to simplify and document the different setup possibilities.
  *
  */
-public final class MicroStreamAndroidAdapter
+public final class AndroidAdapter
 {
 	
 	/**
@@ -62,7 +62,7 @@ public final class MicroStreamAndroidAdapter
 	 * 
 	 * @throws UnsupportedOperationException when called
 	 */
-	private MicroStreamAndroidAdapter()
+	private AndroidAdapter()
 	{
 		// static only
 		throw new UnsupportedOperationException();
