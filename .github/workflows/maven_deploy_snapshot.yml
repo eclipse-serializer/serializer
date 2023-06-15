@@ -14,7 +14,7 @@ jobs:
       - id: install-secret-key
         name: Install gpg secret key
         run: |
-          cat <(echo -e "${{ secrets.ORG_GPG_PRIVATE_KEY }}") | gpg --batch --import
+          cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
       - uses: actions/checkout@v3
       - name: Set up Java for publishing to Maven Central Snapshot Repository
