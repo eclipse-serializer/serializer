@@ -26,15 +26,13 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-          gpg-private-key: GPG_PRIVATE_KEY
           gpg-passphrase: PASSPHRASE
       - name: Make a snapshot
         run: mvn -Pdeploy --no-transfer-progress --batch-mode clean deploy
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
+          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
 
       #java 17 build
       - uses: actions/checkout@v3
@@ -47,7 +45,6 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-          gpg-private-key: GPG_PRIVATE_KEY
           gpg-passphrase: PASSPHRASE
       - name: Build with java 17
         run: |
@@ -58,5 +55,4 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
+          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
