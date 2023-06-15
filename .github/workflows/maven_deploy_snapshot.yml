@@ -1,0 +1,54 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Make snapshot and deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - id: install-secret-key
+        name: Install gpg secret key
+        run: |
+          cat <(echo -e "${{ secrets.ORG_GPG_PRIVATE_KEY }}") | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+      - uses: actions/checkout@v3
+      - name: Set up Java for publishing to Maven Central Snapshot Repository
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: ossrh
+          server-username: ORG_OSSRH_USERNAME
+          server-password: ORG_OSSRH_PASSWORD
+      - name: Make a snapshot
+        run: mvn -Pdeploy -Pproduction --no-transfer-progress --batch-mode -Dgpg.passphrase=${{ secrets.ORG_GPG_PASSPHRASE }} clean deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
+
+      #java 17 build
+      - uses: actions/checkout@v3
+      - name: Set up Java 17 for publishing to Maven Central Repository
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: ossrh
+          server-username: ORG_OSSRH_PASSWORD
+          server-password: ORG_OSSRH_PASSWORD
+      - name: Build with java 17
+        run: |
+          mvn -pl persistence/binary-jdk17 clean source:jar install -am -B
+      - name: Deploy module build with java 17
+        run: |
+          mvn -Pdeploy -pl persistence/binary-jdk17 -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_PASSWORD }}
+          MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
