@@ -366,7 +366,7 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerEqConstHashTable.New()     ,
 				BinaryHandlerSingleton.New()            ,
 				BinaryHandlerSubstituterDefault.New()
-			/* (29.10.2013 TM)TODO: more MicroStream default custom handlers
+			/* (29.10.2013 TM)TODO: more default custom handlers
 			 * - VarString
 			 * - VarByte
 			 * - _intList etc.
