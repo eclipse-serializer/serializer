@@ -6,12 +6,12 @@
 
 	<parent>
 		<groupId>org.eclipse.serializer</groupId>
-		<artifactId>serializer-afs-parent</artifactId>
+		<artifactId>afs-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>serializer-afs</artifactId>
+	<artifactId>afs</artifactId>
 	
 	<name>Eclipse Serializer Abstract File System</name>
 	<description>Abstract Eclipse Serializer File System Implementation</description>
@@ -19,7 +19,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.serializer</groupId>
-			<artifactId>serializer-base</artifactId>
+			<artifactId>base</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

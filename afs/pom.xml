@@ -13,7 +13,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>serializer-afs-parent</artifactId>
+	<artifactId>afs-parent</artifactId>
 	<packaging>pom</packaging>
 	
 	<name>Eclipse Serializer Abstract File System Parent</name>

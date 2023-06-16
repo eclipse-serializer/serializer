@@ -13,7 +13,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>serializer-persistence-parent</artifactId>
+    <artifactId>persistence-parent</artifactId>
     <packaging>pom</packaging>
 
     <name>Eclipse Serializer Persistence Parent</name>
