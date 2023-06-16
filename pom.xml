@@ -12,7 +12,7 @@
 	<packaging>pom</packaging>
 
 	<name>Eclipse Serializer</name>
-	<description>Eclipse Serializer roject</description>
+	<description>Eclipse Serializer project</description>
 	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 
 	<organization>
