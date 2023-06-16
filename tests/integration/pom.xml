@@ -43,7 +43,7 @@
 
         <dependency>
             <groupId>org.eclipse.serializer</groupId>
-            <artifactId>serializer-persistence-binary-jdk8</artifactId>
+            <artifactId>persistence-binary-jdk8</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 

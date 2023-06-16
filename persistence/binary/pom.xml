@@ -6,12 +6,12 @@
 
 	<parent>
 		<groupId>org.eclipse.serializer</groupId>
-		<artifactId>serializer-persistence-parent</artifactId>
+		<artifactId>persistence-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>serializer-persistence-binary</artifactId>
+	<artifactId>persistence-binary</artifactId>
 	
 	<name>Eclipse Serializer Persistence Binary</name>
 	<description>Eclipse Serializer Persistence Binary Data Extension</description>
@@ -19,7 +19,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.serializer</groupId>
-			<artifactId>serializer-persistence</artifactId>
+			<artifactId>persistence</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

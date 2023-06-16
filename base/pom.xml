@@ -13,7 +13,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>serializer-base</artifactId>
+	<artifactId>base</artifactId>
 	
 	<name>Eclipse Serializer Base</name>
 	<description>Commons Module of the Eclipse Serializer Framework</description>

@@ -24,7 +24,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.serializer</groupId>
-			<artifactId>serializer-persistence-binary</artifactId>
+			<artifactId>persistence-binary</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 	</dependencies>
