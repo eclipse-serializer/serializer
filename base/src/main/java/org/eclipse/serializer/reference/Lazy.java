@@ -1,5 +1,7 @@
 package org.eclipse.serializer.reference;
 
+import static org.eclipse.serializer.chars.XChars.systemString;
+
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -21,16 +23,14 @@ package org.eclipse.serializer.reference;
  */
 
 import static org.eclipse.serializer.util.X.mayNull;
-import static org.eclipse.serializer.chars.XChars.systemString;
 import static org.eclipse.serializer.util.logging.Logging.LazyArg;
-
-import org.slf4j.Logger;
 
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.memory.MemoryStatisticsProvider;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 
 /**
@@ -360,6 +360,12 @@ public interface Lazy<T> extends Referencing<T>
 			this.validateObjectIdToBeSet(objectId);
 			this.$setLoader(loader);
 			this.objectId = objectId;
+		}
+		
+		public final synchronized void $unlink()
+		{
+			this.objectId = Swizzling.toUnmappedObjectId(this.subject);
+			this.loader   = null;
 		}
 
 		public final synchronized void $setLoader(final ObjectSwizzling loader)
