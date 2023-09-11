@@ -25,6 +25,7 @@ module org.eclipse.serializer.persistence
 	FIXME These 2 classes need to be moved.
 	 */
 	exports org.eclipse.serializer.persistence.types;
+	exports org.eclipse.serializer.persistence.util;
 
 	requires transitive org.eclipse.serializer.afs;
 	/* To indicate we use these modules directly, but they also come through org.eclipse.serializer.afs */
