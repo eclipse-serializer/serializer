@@ -34,6 +34,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
 import org.eclipse.serializer.collections.old.AbstractBridgeXSet;
@@ -49,8 +50,6 @@ import org.eclipse.serializer.collections.types.XIterable;
 import org.eclipse.serializer.collections.types.XList;
 import org.eclipse.serializer.collections.types.XProcessingCollection;
 import org.eclipse.serializer.collections.types.XTable;
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
 import org.eclipse.serializer.functional.IndexedAcceptor;
@@ -61,6 +60,7 @@ import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 
 
 /* (12.07.2012 TM) FIXME: complete EqHashTable implementation

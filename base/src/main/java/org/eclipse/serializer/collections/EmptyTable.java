@@ -35,11 +35,11 @@ import org.eclipse.serializer.collections.types.XImmutableEnum;
 import org.eclipse.serializer.collections.types.XImmutableList;
 import org.eclipse.serializer.collections.types.XImmutableTable;
 import org.eclipse.serializer.collections.types.XIterable;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.KeyValue;
+import org.eclipse.serializer.util.X;
 
 // (17.09.2013 TM)FIXME: EmptyTable: implement all FIXME
 public final class EmptyTable<K, V> implements XImmutableTable<K, V>

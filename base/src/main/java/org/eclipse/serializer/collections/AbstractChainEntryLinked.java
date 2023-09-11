@@ -24,9 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 
 
 public abstract class AbstractChainEntryLinked<E, K, V, EN extends AbstractChainEntryLinked<E, K, V, EN>>

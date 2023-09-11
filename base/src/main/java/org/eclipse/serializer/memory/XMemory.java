@@ -910,6 +910,63 @@ public final class XMemory
 
 		return buffer;
 	}
+
+    public static final void free(final long address)
+    {
+        XMemory.MEMORY_ACCESSOR.freeMemory(address);
+    }
+
+
+    public static final ByteBuffer allocateDirectNativeDefault()
+    {
+        return allocateDirectNative(XMemory.defaultBufferSize());
+    }
+
+    // memory allocation //
+
+    public static final long allocate(final long bytes)
+    {
+        return XMemory.MEMORY_ACCESSOR.allocateMemory(bytes);
+    }
+
+    /**
+     * Parses a {@link String} instance to a {@link ByteOrder} instance according to {@code ByteOrder#toString()}
+     * or throws an {@link IllegalArgumentException} if the passed string does not match exactly one of the
+     * {@link ByteOrder} constant instances' string representation.
+     *
+     * @param name the string representing the {@link ByteOrder} instance to be parsed.
+     * @return the recognized {@link ByteOrder}
+     * @throws IllegalArgumentException if the string can't be recognized as a {@link ByteOrder} constant instance.
+     * @see ByteOrder#toString()
+     */
+    public static final ByteOrder parseByteOrder(final String name)
+    {
+        if(name.equals(ByteOrder.BIG_ENDIAN.toString()))
+        {
+            return ByteOrder.BIG_ENDIAN;
+        }
+        if(name.equals(ByteOrder.LITTLE_ENDIAN.toString()))
+        {
+            return ByteOrder.LITTLE_ENDIAN;
+        }
+
+        throw new IllegalArgumentException("Unknown ByteOrder: \"" + name + "\"");
+    }
+
+    public static final byte[] toArray(final ByteBuffer source, final int position, final int length)
+    {
+        final long plState = XMemory.getPositionLimit(source);
+        XMemory.setPositionLimit(source, position, position + length);
+
+        final byte[] bytes = new byte[length];
+        source.get(bytes, 0, length);
+
+        // why would a querying methode intrinsically increase the position? WHY?
+        XMemory.setPositionLimit(source, plState);
+
+        return bytes;
+    }
+    
 	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //

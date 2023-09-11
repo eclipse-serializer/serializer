@@ -32,11 +32,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.branching.ThrowBreak;
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
+import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.Aggregator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
@@ -44,6 +43,7 @@ import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.reference.ReferenceType;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 
 
 public final class ChainStrongStrongStorage<K, V, EN extends AbstractChainEntry<KeyValue<K, V>, K, V, EN>>

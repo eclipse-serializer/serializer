@@ -34,7 +34,6 @@ import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.collections.types.XImmutableList;
 import org.eclipse.serializer.collections.types.XList;
 import org.eclipse.serializer.collections.types.XSettingList;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.equality.IdentityEqualityLogic;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
@@ -43,6 +42,7 @@ import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.ReadOnlyListIterator;
 
 

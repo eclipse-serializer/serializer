@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
 import org.eclipse.serializer.collections.old.OldCollection;
 import org.eclipse.serializer.collections.old.OldList;
@@ -42,7 +43,6 @@ import org.eclipse.serializer.collections.types.XGettingTable;
 import org.eclipse.serializer.collections.types.XImmutableList;
 import org.eclipse.serializer.collections.types.XImmutableTable;
 import org.eclipse.serializer.collections.types.XIterable;
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.equality.IdentityEqualator;
 import org.eclipse.serializer.equality.IdentityEqualityLogic;

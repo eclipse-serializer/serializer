@@ -36,13 +36,13 @@ import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XList;
 import org.eclipse.serializer.collections.types.XSettingList;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.ReadOnlyListIterator;
 
 

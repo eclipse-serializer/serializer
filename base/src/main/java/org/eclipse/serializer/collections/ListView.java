@@ -30,11 +30,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.old.AbstractOldGettingList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.collections.types.XImmutableList;
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.typing.XTypes;

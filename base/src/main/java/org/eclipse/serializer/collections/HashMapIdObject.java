@@ -22,9 +22,9 @@ package org.eclipse.serializer.collections;
 
 import java.util.function.Consumer;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.OptimizableCollection;
 import org.eclipse.serializer.collections.types.XList;
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.functional._longProcedure;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.typing.Composition;
