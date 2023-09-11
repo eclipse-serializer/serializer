@@ -40,7 +40,6 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.chars.CharsUtils;
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.BulkList;
@@ -228,7 +227,7 @@ public final class XIO
         final String separator = path.getFileSystem()
                 .getSeparator();
 
-        return CharsUtils.splitSimple(pathString, separator);
+        return XChars.splitSimple(pathString, separator);
     }
 	
 	public static boolean isDirectory(final Path path) throws IOException
@@ -652,7 +651,7 @@ public final class XIO
 	        final CharSequence... elements
 	)
 	{
-	    return CharsUtils.assembleSeparated(vs, XIO.filePathSeparator(), elements);
+	    return XChars.assembleSeparated(vs, XIO.filePathSeparator(), elements);
 	}
 	
 	public static final void move(final Path sourceFile, final Path targetFile)
