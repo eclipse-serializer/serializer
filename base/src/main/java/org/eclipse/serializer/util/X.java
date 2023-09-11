@@ -32,6 +32,7 @@ import org.eclipse.serializer.collections.ConstList;
 import org.eclipse.serializer.collections.Constant;
 import org.eclipse.serializer.collections.Empty;
 import org.eclipse.serializer.collections.EmptyTable;
+import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.Singleton;
 import org.eclipse.serializer.collections.SynchList;
 import org.eclipse.serializer.collections.interfaces.Sized;
@@ -311,6 +312,24 @@ public final class X
 	public static <E> Constant<E> Constant(final E element)
 	{
 		return new Constant<>(element);
+	}
+	
+	@SafeVarargs
+	public static <E> HashEnum<E> Enum(final E... elements)
+	{
+		if(elements == null || elements.length == 0)
+		{
+			return HashEnum.New();
+		}
+		return HashEnum.<E>New(elements);
+	}
+	
+	public static <E> HashEnum<E> Enum(final Iterable<? extends E> elements)
+	{
+		final HashEnum<E> newInstance = HashEnum.New();
+		elements.forEach(newInstance);
+		
+		return newInstance;
 	}
 
 	public static <T> XReference<T> Reference(final T object)
