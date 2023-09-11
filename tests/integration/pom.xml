@@ -38,13 +38,13 @@
         <dependency>
             <groupId>org.eclipse.serializer</groupId>
             <artifactId>serializer</artifactId>
-            <version>${project.parent.version}</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.serializer</groupId>
             <artifactId>persistence-binary-jdk8</artifactId>
-            <version>${project.parent.version}</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

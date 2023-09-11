@@ -21,8 +21,8 @@ package org.eclipse.serializer.collections;
  */
 
 import org.eclipse.serializer.collections.interfaces.Sized;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.math.XMath;
+import org.eclipse.serializer.util.X;
 
 
 /**

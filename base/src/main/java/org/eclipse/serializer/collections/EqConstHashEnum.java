@@ -29,13 +29,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.ChainStorage;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
 import org.eclipse.serializer.collections.old.OldSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.hashing.HashEqualator;

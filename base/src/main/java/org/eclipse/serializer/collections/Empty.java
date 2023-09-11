@@ -35,10 +35,10 @@ import org.eclipse.serializer.collections.old.OldSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
 import org.eclipse.serializer.collections.types.XImmutableList;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.typing.Stateless;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.EmptyListIterator;
 
 

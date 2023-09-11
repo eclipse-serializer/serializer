@@ -26,12 +26,12 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.UtilStackTrace;
+import org.eclipse.serializer.util.X;
 
 /**
  * Numerous utility methods for working with arrays, all of which are either missing in the JDK.

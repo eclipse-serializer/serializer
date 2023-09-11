@@ -37,7 +37,6 @@ import org.eclipse.serializer.collections.old.AbstractBridgeXList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XList;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.equality.IdentityEqualityLogic;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
@@ -46,6 +45,7 @@ import org.eclipse.serializer.functional.KamikazeArrayAdder;
 import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.GenericListIterator;
 
 

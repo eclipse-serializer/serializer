@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
 import org.eclipse.serializer.collections.interfaces.ChainStorage;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
@@ -38,7 +39,6 @@ import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
 import org.eclipse.serializer.functional.IndexedAcceptor;

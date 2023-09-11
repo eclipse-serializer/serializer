@@ -25,14 +25,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.types.XCollection;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XProcessingSequence;
 import org.eclipse.serializer.collections.types.XSettingList;
 import org.eclipse.serializer.collections.types.XSortableSequence;
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.AggregateMax;
 import org.eclipse.serializer.functional.AggregateMin;
@@ -42,6 +41,7 @@ import org.eclipse.serializer.functional.IsGreater;
 import org.eclipse.serializer.functional.IsSmaller;
 import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 
 public final class XUtilsCollection
 {

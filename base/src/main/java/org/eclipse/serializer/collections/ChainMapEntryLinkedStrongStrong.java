@@ -1,5 +1,7 @@
 package org.eclipse.serializer.collections;
 
+import org.eclipse.serializer.typing.KeyValue;
+
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -21,7 +23,6 @@ package org.eclipse.serializer.collections;
  */
 
 import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.typing.KeyValue;
 
 final class ChainMapEntryLinkedStrongStrong<K, V>
 extends AbstractChainEntryLinkedKV<K, V, ChainMapEntryLinkedStrongStrong<K, V>>

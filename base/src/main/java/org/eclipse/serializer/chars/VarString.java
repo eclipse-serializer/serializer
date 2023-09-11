@@ -33,8 +33,8 @@ import org.eclipse.serializer.collections.XArrays;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
 import org.eclipse.serializer.functional._charProcedure;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.math.XMath;
+import org.eclipse.serializer.util.X;
 
 
 /**
