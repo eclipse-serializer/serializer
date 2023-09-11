@@ -48,6 +48,7 @@ module org.eclipse.serializer.base
 	exports org.eclipse.serializer.util.iterables;
 	exports org.eclipse.serializer.util.logging;
 	exports org.eclipse.serializer.util.similarity;
+	exports org.eclipse.serializer.util.traversing;
 	exports org.eclipse.serializer.util.xcsv;
 
 	requires transitive java.management;
