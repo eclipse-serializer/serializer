@@ -24,13 +24,13 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.nio.ByteBuffer;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.afs.exceptions.AfsExceptionConsistency;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.io.BufferProvider;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.util.UtilStackTrace;
+import org.eclipse.serializer.util.X;
 
 
 public interface AIoHandler extends WriteController
@@ -154,7 +154,7 @@ public interface AIoHandler extends WriteController
 	
 	public XGettingEnum<String> listFiles(ADirectory parent);
 		
-	public boolean isEmpty(ADirectory directory);	
+	public boolean isEmpty(ADirectory directory);
 	
 	
 	public abstract class Abstract<
@@ -586,7 +586,7 @@ public interface AIoHandler extends WriteController
 		}
 		
 		@Override
-		public boolean isEmpty(final ADirectory directory) 
+		public boolean isEmpty(final ADirectory directory)
 		{
 			this.validateHandledDirectory(directory);
 			
@@ -1124,7 +1124,11 @@ public interface AIoHandler extends WriteController
 					);
 					
 					result = this.specificDeleteFile(this.typeWritableFile.cast(file));
-			
+					if(result)
+					{
+						file.close();
+					}
+					
 					file.iterateObservers(o ->
 						o.onAfterFileDelete(file, result)
 					);
