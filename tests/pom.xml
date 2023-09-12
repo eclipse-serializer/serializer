@@ -15,6 +15,7 @@
 
     <name>Eclise Serializer Test Parent</name>
     <description>Eclise Serializer Test Parent</description>
+    <url>https://projects.eclipse.org/projects/technology.serializer</url>
 
     <modules>
         <module>integration</module>
