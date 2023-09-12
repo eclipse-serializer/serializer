@@ -1,26 +1,10 @@
 package org.eclipse.serializer;
 
-/*-
- * #%L
- * Eclipse Serializer
- * %%
- * Copyright (C) 2023 Eclipse Foundation
- * %%
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0.
- * 
- * This Source Code may also be made available under the following Secondary
- * Licenses when the conditions for such availability set forth in the Eclipse
- * Public License, v. 2.0 are satisfied: GNU General Public License, version 2
- * with the GNU Classpath Exception which is
- * available at https://www.gnu.org/software/classpath/license.html.
- * 
- * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
- * #L%
- */
+import static org.eclipse.serializer.util.X.notNull;
 
-import org.eclipse.serializer.util.X;
+import java.nio.ByteBuffer;
+import java.util.function.Function;
+
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.hashing.XHashing;
@@ -47,10 +31,27 @@ import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 
-import java.nio.ByteBuffer;
-import java.util.function.Function;
+/*-
+ * #%L
+ * Eclipse Serializer
+ * %%
+ * Copyright (C) 2023 Eclipse Foundation
+ * %%
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the Eclipse
+ * Public License, v. 2.0 are satisfied: GNU General Public License, version 2
+ * with the GNU Classpath Exception which is
+ * available at https://www.gnu.org/software/classpath/license.html.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+ * #L%
+ */
 
-import static org.eclipse.serializer.util.X.notNull;
+import org.eclipse.serializer.util.X;
 
 /**
  * Convenient API layer to use the binary persistence functionality for a simple serializer.
@@ -129,6 +130,7 @@ public interface Serializer<M> extends AutoCloseable
 		{
 			final ByteBuffer buffer = XMemory.allocateDirectNative(bytes.length);
 			buffer.put(bytes);
+			buffer.flip();
 			return ChunksWrapper.New(buffer);
 		}
 		
@@ -225,7 +227,11 @@ public interface Serializer<M> extends AutoCloseable
 				final Source source = ()   -> X.Constant(this.input);
 				final Target target = data -> this.output = data    ;
 								
-				this.persistenceManager = this.foundation.createPersistenceManager(source, target);
+				this.persistenceManager = this.foundation
+					.setPersistenceSource(source)
+					.setPersistenceTarget(target)
+					.createPersistenceManager()
+				;
 				this.storer             = this.persistenceManager.createStorer(
 					new SerializerStorer.Creator(this.foundation.isByteOrderMismatch())
 				);

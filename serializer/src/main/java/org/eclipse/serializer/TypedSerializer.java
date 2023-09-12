@@ -180,7 +180,7 @@ public interface TypedSerializer<M> extends Serializer<M>
 			final ByteOrder byteOrder = b == 0x0 ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 			
 			final ByteBuffer bb = ByteBuffer.wrap(bytes).order(byteOrder);
-			final List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+			final List<ByteBuffer> buffers = new ArrayList<>();
 						
 			while(bb.hasRemaining()) {
 				final int contentSize = bb.getInt();
@@ -365,7 +365,11 @@ public interface TypedSerializer<M> extends Serializer<M>
 				final Target target = data -> this.output = data    ;
 								
 				this.foundation.registerEntityType(SerializerTypeInfo.class);
-				this.persistenceManager = this.foundation.createPersistenceManager(source, target);
+				this.persistenceManager = this.foundation
+					.setPersistenceSource(source)
+					.setPersistenceTarget(target)
+					.createPersistenceManager()
+				;
 				this.storer             = this.persistenceManager.createStorer(
 					new SerializerStorer.Creator(this.foundation.isByteOrderMismatch())
 				);
