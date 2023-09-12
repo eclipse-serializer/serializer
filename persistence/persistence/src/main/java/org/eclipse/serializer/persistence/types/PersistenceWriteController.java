@@ -23,7 +23,7 @@ package org.eclipse.serializer.persistence.types;
 import static org.eclipse.serializer.util.X.notNull;
 
 import org.eclipse.serializer.afs.types.WriteController;
-import org.eclipse.serializer.persistence.exceptions.PersistenceException;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionStoringDisabled;
 
 
 @FunctionalInterface
@@ -36,7 +36,7 @@ public interface PersistenceWriteController extends WriteController
 			return;
 		}
 
-		throw new PersistenceException("Storing is not enabled.");
+		throw new PersistenceExceptionStoringDisabled();
 	}
 
 	public default boolean isStoringEnabled()
