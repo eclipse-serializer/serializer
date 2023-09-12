@@ -1,5 +1,7 @@
 package org.eclipse.serializer.reference;
 
+import static org.eclipse.serializer.chars.XChars.systemString;
+
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -21,16 +23,14 @@ package org.eclipse.serializer.reference;
  */
 
 import static org.eclipse.serializer.util.X.mayNull;
-import static org.eclipse.serializer.chars.XChars.systemString;
 import static org.eclipse.serializer.util.logging.Logging.LazyArg;
-
-import org.slf4j.Logger;
 
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.memory.MemoryStatisticsProvider;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 
 /**
@@ -361,6 +361,12 @@ public interface Lazy<T> extends Referencing<T>
 			this.$setLoader(loader);
 			this.objectId = objectId;
 		}
+		
+		public final synchronized void $unlink()
+		{
+			this.objectId = Swizzling.toUnmappedObjectId(this.subject);
+			this.loader   = null;
+		}
 
 		public final synchronized void $setLoader(final ObjectSwizzling loader)
 		{
@@ -423,22 +429,20 @@ public interface Lazy<T> extends Referencing<T>
 			this.subject = (T)this.loader.getObject(this.objectId);
 			
 			logger.debug(
-				"Lazy loaded {}: {}({})",
+				"Lazy loaded {}: {}",
 				this.objectId,
-				LazyArg(() -> systemString(this.subject)),
-				this.subject
+				LazyArg(() -> systemString(this.subject))
 			);
 		}
 
 		final synchronized boolean clearIfTimedout(final long millisecondThreshold)
 		{
 			logger.trace(
-				"Checking lazy {} ({} vs {}): {}({})",
+				"Checking lazy {} ({} vs {}): {}",
 				this.objectId,
 				this.lastTouched,
 				millisecondThreshold,
-				LazyArg(() -> systemString(this.subject)),
-				this.subject
+				LazyArg(() -> systemString(this.subject))
 			);
 
 			// time check implicitly covers already cleared reference. May of course not clear unstored references.
@@ -448,10 +452,9 @@ public interface Lazy<T> extends Referencing<T>
 			}
 
 			logger.debug(
-				"Timeout-clearing lazy {}: {}({})",
+				"Timeout-clearing lazy {}: {}",
 				this.objectId,
-				LazyArg(() -> systemString(this.subject)),
-				this.subject
+				LazyArg(() -> systemString(this.subject))
 			);
 			this.internalClear();
 			return true;

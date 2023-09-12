@@ -1,8 +1,5 @@
 package org.eclipse.serializer.persistence.types;
 
-import org.eclipse.serializer.persistence.exceptions.PersistenceException;
-import org.slf4j.Logger;
-
 import org.eclipse.serializer.chars.XChars;
 
 /*-
@@ -26,9 +23,12 @@ import org.eclipse.serializer.chars.XChars;
  */
 
 import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeConsistencyEnum;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.logging.Logging;
 import org.eclipse.serializer.util.similarity.Similarity;
+import org.slf4j.Logger;
 
 public interface PersistenceLegacyTypeHandlerCreator<D>
 {
@@ -83,8 +83,23 @@ public interface PersistenceLegacyTypeHandlerCreator<D>
 				{
 					final PersistenceTypeDefinitionMember targetCurrentConstant = match.targetElement();
 					final long targetOrdinal = currentConstantMembers.indexOf(targetCurrentConstant);
+					
 					if(targetOrdinal >= 0)
 					{
+						//allow ordinal changes only by explicit manual mappings
+						if(targetOrdinal != ordinal)
+						{
+							if(match.similarity() != PersistenceLegacyTypeMapper.Defaults.defaultExplicitMappingSimilarity())
+							{
+								throw new PersistenceExceptionTypeConsistencyEnum(
+									targetCurrentConstant.identifier(),
+									result.currentTypeHandler().typeName(),
+									ordinal,
+									targetOrdinal
+								);
+							}
+						}
+						
 						ordinalMap[ordinal] = Integer.valueOf((int)targetOrdinal);
 					}
 					else

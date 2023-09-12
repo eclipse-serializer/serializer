@@ -741,7 +741,7 @@ public class Singleton<E> implements XReference<E>
 
 
 
-	final class OldSingleton implements OldList<E>, OldSet<E>
+	public final class OldSingleton implements OldList<E>, OldSet<E>
 	{
 		@Override
 		public final Singleton<E> parent()

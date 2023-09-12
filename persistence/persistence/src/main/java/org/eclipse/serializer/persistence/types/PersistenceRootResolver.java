@@ -37,6 +37,7 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.reference.Reference;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
+import org.eclipse.serializer.util.X;
 
 public interface PersistenceRootResolver
 {
@@ -303,12 +304,21 @@ public interface PersistenceRootResolver
 				return null;
 			}
 			
-			final PersistenceTypeHandler<?, ?> enumTypeHandler = typeHandlerManager.lookupTypeHandler(
+			PersistenceTypeHandler<?, ?> enumTypeHandler = typeHandlerManager.lookupTypeHandler(
 				enumTypeId.longValue()
 			);
 			if(enumTypeHandler == null)
 			{
-				throw new PersistenceException("Unknown TypeId: " + enumTypeId);
+				//Under some circumstances the required type-handler may be missing
+				//(Issue https://github.com/microstream-one/microstream/issues/209).
+				//Try to create one…
+				typeHandlerManager.ensureTypeHandlersByTypeIds(X.Enum(enumTypeId));
+				enumTypeHandler = typeHandlerManager.lookupTypeHandler(enumTypeId.longValue());
+				if(enumTypeHandler == null)
+				{
+					throw new PersistenceException(
+						"No PersistenceTypeHandler found for root enum constant with TypeId: " + enumTypeId);
+				}
 			}
 			
 			// Checks for enum type internally. May be null for discarded (i.e. legacy) enums.
