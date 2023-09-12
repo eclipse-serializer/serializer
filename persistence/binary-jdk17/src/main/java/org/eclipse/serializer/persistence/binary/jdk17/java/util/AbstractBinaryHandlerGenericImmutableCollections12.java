@@ -22,11 +22,13 @@ package org.eclipse.serializer.persistence.binary.jdk17.java.util;
 
 import java.util.Collection;
 
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.reference.Swizzling;
 
 /**
  * Generic abstract class for specialized handler for
@@ -35,6 +37,8 @@ import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
  * <p></p>
  * The handler takes the internal constant java.util.ImmutableCollections.EMPTY
  * into account which must not be persisted.
+ * 
+ * @param <T> the handled type.
  */
 public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> extends AbstractBinaryHandlerCustom<T>
 {
@@ -42,7 +46,7 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	// abstract methods //
 	/////////////////////
 
-	protected abstract T createInstance(Object e0, Object e1);
+	protected abstract T createInstance();
 
 
 	///////////////////////////////////////////////////////////////////////////
@@ -55,6 +59,14 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 
 
 	///////////////////////////////////////////////////////////////////////////
+	// instance fields //
+	////////////////////
+	
+	final int memoryOffset_e0;
+	final int memoryOffset_e1;
+
+	
+	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
 
@@ -65,6 +77,9 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 				CustomField(Object.class, "e0"),
 				CustomField(Object.class, "e1")
 				));
+		
+		this.memoryOffset_e0 = XMemory.byteSizeObjectHeader(type);
+		this.memoryOffset_e1 = this.memoryOffset_e0 + XMemory.byteSizeReference();
 	}
 
 
@@ -75,46 +90,24 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	@Override
 	public T create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		Object e0 = null;
-		Object e1 = null;
-
-		long objectId = data.read_long(BINARY_OFFSET_E0);
-		if(objectId > 0L)
-		{
-			e0 = handler.getPersister().getObject(objectId);
-		}
-
-		objectId = data.read_long(BINARY_OFFSET_E1);
-		if(objectId > 0L)
-		{
-			e1 = handler.getPersister().getObject(objectId);
-		}
-
-		return this.createInstance(e0, e1);
+		return this.createInstance();
 	}
 
 	@Override
 	public void store(final Binary data, final T instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
 		final Collection<?> items = (Collection<?>)instance;
-		final int size = items.size();
 		final Object[] arr = items.toArray();
 
 		data.storeEntityHeader(BINARY_LENGTH, this.typeId(), objectId);
+		data.store_long(BINARY_OFFSET_E0, handler.apply(arr[0]));
 
-		if(size == 0)
+		if(arr.length == 1)
 		{
-			data.store_long(BINARY_OFFSET_E0, handler.apply(null));
 			data.store_long(BINARY_OFFSET_E1, handler.apply(null));
 		}
-		if(size == 1)
+		else if(arr.length == 2)
 		{
-			data.store_long(BINARY_OFFSET_E0, handler.apply(arr[0]));
-			data.store_long(BINARY_OFFSET_E1, handler.apply(null));
-		}
-		if(size == 2)
-		{
-			data.store_long(BINARY_OFFSET_E0, handler.apply(arr[0]));
 			data.store_long(BINARY_OFFSET_E1, handler.apply(arr[1]));
 		}
 	}
@@ -122,7 +115,17 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	@Override
 	public void updateState(final Binary data, final T instance, final PersistenceLoadHandler handler)
 	{
-		//no-op
+		final Object e0 = handler.lookupObject(data.read_long(BINARY_OFFSET_E0));
+		XMemory.setObject(instance, this.memoryOffset_e0, e0);
+		
+		final long objectE1Id = data.read_long(BINARY_OFFSET_E1);
+		if(Swizzling.isNotProperId(objectE1Id))
+		{
+			return;
+		}
+				
+		final Object e1 = handler.lookupObject(objectE1Id);
+		XMemory.setObject(instance, this.memoryOffset_e1, e1);
 	}
 
 	@Override
@@ -140,7 +143,8 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	@Override
 	public void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		//no-op
+		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_E0));
+		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_E1));
 	}
 
 }
