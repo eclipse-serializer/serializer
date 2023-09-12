@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.EqHashEnum;
 import org.eclipse.serializer.collections.types.XAddingMap;
@@ -69,6 +68,7 @@ import org.eclipse.serializer.reflect.Setter_int;
 import org.eclipse.serializer.reflect.Setter_long;
 import org.eclipse.serializer.reflect.Setter_short;
 import org.eclipse.serializer.typing.KeyValue;
+import org.eclipse.serializer.util.X;
 
 // CHECKSTYLE.OFF: AbstractClassName: this is kind of a hacky solution to improve readability on the use site
 public abstract class Binary implements Chunk
@@ -1673,6 +1673,10 @@ public abstract class Binary implements Chunk
 		BinaryReferenceTraverser[]  traversers,
 		PersistenceObjectIdAcceptor acceptor
 	);
+	
+	public abstract void mark();
+
+	public abstract void reset();
 
 	public final long storeCharsAsList(
 		final long   memoryOffset,
