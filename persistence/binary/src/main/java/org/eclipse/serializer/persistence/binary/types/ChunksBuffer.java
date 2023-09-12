@@ -25,11 +25,11 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExceptionStateInvalidLength;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdAcceptor;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
+import org.eclipse.serializer.util.X;
 
 
 public class ChunksBuffer extends Binary implements MemoryRangeReader
@@ -341,6 +341,24 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	)
 	{
 		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public void mark()
+	{
+		for(int i = 0; i <= this.currentBuffersIndex; i++)
+		{
+			this.buffers[i].mark();
+		}
+	}
+
+	@Override
+	public void reset()
+	{
+		for(int i = 0; i <= this.currentBuffersIndex; i++)
+		{
+			this.buffers[i].reset();
+		}
 	}
 				
 }
