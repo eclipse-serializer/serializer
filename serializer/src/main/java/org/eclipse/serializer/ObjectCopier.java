@@ -1,5 +1,13 @@
 package org.eclipse.serializer;
 
+import static org.eclipse.serializer.util.X.notNull;
+
+import java.io.Closeable;
+
+import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.types.PersistenceManager;
+import org.eclipse.serializer.reference.Reference;
+
 /*-
  * #%L
  * Eclipse Serializer
@@ -21,13 +29,6 @@ package org.eclipse.serializer;
  */
 
 import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.persistence.binary.types.Binary;
-import org.eclipse.serializer.persistence.types.PersistenceManager;
-import org.eclipse.serializer.reference.Reference;
-
-import java.io.Closeable;
-
-import static org.eclipse.serializer.util.X.notNull;
 
 public interface ObjectCopier extends Closeable
 {
@@ -90,7 +91,11 @@ public interface ObjectCopier extends Closeable
 				final Serializer.Source source = ()   -> X.Constant(buffer.get());
 				final Serializer.Target target = data -> buffer.set(data)        ;
 
-				this.persistenceManager = this.foundation.createPersistenceManager(source, target);
+				this.persistenceManager = this.foundation
+					.setPersistenceSource(source)
+					.setPersistenceTarget(target)
+					.createPersistenceManager()
+				;
 			}
 			else
 			{

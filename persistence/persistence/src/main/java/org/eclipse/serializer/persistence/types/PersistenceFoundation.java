@@ -24,7 +24,6 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.nio.ByteOrder;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XMap;
@@ -41,6 +40,7 @@ import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.Cloneable;
 import org.eclipse.serializer.util.InstanceDispatcher;
+import org.eclipse.serializer.util.X;
 
 
 /**
@@ -1992,7 +1992,7 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 		}
 		
 		@Override
-		public final F setStorerCreationObserver(final PersistenceStorer.CreationObserver liveStorerRegistry)
+		public F setStorerCreationObserver(final PersistenceStorer.CreationObserver liveStorerRegistry)
 		{
 			this.liveStorerRegistry = liveStorerRegistry;
 			return this.$();
