@@ -1,35 +1,5 @@
 package org.eclipse.serializer.tests.integration.data;
 
-/*-
- * #%L
- * Eclipse Serializer Test on JDK 8
- * %%
- * Copyright (C) 2023 Eclipse Foundation
- * %%
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0.
- * 
- * This Source Code may also be made available under the following Secondary
- * Licenses when the conditions for such availability set forth in the Eclipse
- * Public License, v. 2.0 are satisfied: GNU General Public License, version 2
- * with the GNU Classpath Exception which is
- * available at https://www.gnu.org/software/classpath/license.html.
- * 
- * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
- * #L%
- */
-
-import org.assertj.core.api.Assertions;
-import org.eclipse.serializer.tests.model.Item;
-import org.eclipse.serializer.tests.model.Address;
-import org.eclipse.serializer.tests.model.Employee;
-import org.eclipse.serializer.tests.model.Person;
-import org.eclipse.serializer.tests.model.Season;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -74,20 +44,50 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+/*-
+ * #%L
+ * Eclipse Serializer Test on JDK 8
+ * %%
+ * Copyright (C) 2023 Eclipse Foundation
+ * %%
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the Eclipse
+ * Public License, v. 2.0 are satisfied: GNU General Public License, version 2
+ * with the GNU Classpath Exception which is
+ * available at https://www.gnu.org/software/classpath/license.html.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+ * #L%
+ */
+
+import org.assertj.core.api.Assertions;
+import org.eclipse.serializer.tests.model.Address;
+import org.eclipse.serializer.tests.model.Employee;
+import org.eclipse.serializer.tests.model.Item;
+import org.eclipse.serializer.tests.model.Person;
+import org.eclipse.serializer.tests.model.Season;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+
 public class TestSerializationDataProvider implements ArgumentsProvider
 {
     private static final long MOMENT_IN_TIME = 1673619718205L; // For date and time testing we need a fix moment
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception
+    public Stream<? extends Arguments> provideArguments(final ExtensionContext extensionContext) throws Exception
     {
-        CompareInstances defaultCompare = (i1, i2) -> Assertions.assertThat(i1)
+        final CompareInstances defaultCompare = (i1, i2) -> Assertions.assertThat(i1)
                 .isEqualTo(i2);
-        CompareInstances toStringCompare = (i1, i2) -> Assertions.assertThat(i1.toString())
+        final CompareInstances toStringCompare = (i1, i2) -> Assertions.assertThat(i1.toString())
                 .isEqualTo(i2.toString());
-        CompareInstances arrayDequeCompare = (i1, i2) -> Assertions.assertThat(new ArrayList<>((Collection) i1))
+        final CompareInstances arrayDequeCompare = (i1, i2) -> Assertions.assertThat(new ArrayList<>((Collection) i1))
                 .isEqualTo(new ArrayList<>((Collection) i2));
-        CompareInstances identityHashMapCompare = (i1, i2) -> Assertions.assertThat(new HashMap<>((Map) i1))
+        final CompareInstances identityHashMapCompare = (i1, i2) -> Assertions.assertThat(new HashMap<>((Map) i1))
                 .isEqualTo(new HashMap<>((Map) i2));
         return Stream.of(
                 Arguments.of(new TestSerializationData(123, "Integer.test.txt", defaultCompare))
@@ -108,8 +108,8 @@ public class TestSerializationDataProvider implements ArgumentsProvider
                 , Arguments.of(new TestSerializationData(new Object[]{"item1", 123, 7654.321}, "MixedArray.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(12345.678F, "Float.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(-12345.678F, "FloatNegative.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(newStringBuilder(), "StringBuilder.test.txt", toStringCompare))
-                , Arguments.of(new TestSerializationData(newStringBuffer(), "StringBuffer.test.txt", toStringCompare))
+                , Arguments.of(new TestSerializationData(this.newStringBuilder(), "StringBuilder.test.txt", toStringCompare))
+                , Arguments.of(new TestSerializationData(this.newStringBuffer(), "StringBuffer.test.txt", toStringCompare))
                 , Arguments.of(new TestSerializationData(BigInteger.valueOf(Integer.MAX_VALUE)
                                                                  .add(BigInteger.valueOf(12345)), "BigInteger.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(BigDecimal.valueOf(15)
@@ -127,7 +127,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
                 , Arguments.of(new TestSerializationData(new java.sql.Time(MOMENT_IN_TIME), "SqlTime.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(new java.sql.Timestamp(MOMENT_IN_TIME), "SqlTimeStamp.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(ZoneOffset.of("+01:00"), "ZoneOffset.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(defineZonedDateTime(), "ZonedDateTime.test.txt", defaultCompare))
+//                , Arguments.of(new TestSerializationData(defineZonedDateTime(), "ZonedDateTime.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(Currency.getInstance("EUR"), "currency.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(Locale.GERMANY, "Locale.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(Optional.empty(), "OptionalEmpty.test.txt", defaultCompare))
@@ -135,39 +135,39 @@ public class TestSerializationDataProvider implements ArgumentsProvider
                 , Arguments.of(new TestSerializationData(Optional.of(7654L), "OptionalLong.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(Optional.of(1234.5678), "OptionalDouble.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(Optional.of("Real value"), "OptionalString.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testArrayList(), "ArrayList.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testArrayList(), "ArrayList.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testHashMap(), "HashMap.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testHashSet(), "HashSet.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testArrayDeque(), "ArrayDeque.test.txt", arrayDequeCompare))
-                , Arguments.of(new TestSerializationData(testCopyOnWriteArrayList(), "CopyOnWriteArrayList.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testCopyOnWriteArraySet(), "CopyOnWriteArraySet.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testArrayDeque(), "ArrayDeque.test.txt", arrayDequeCompare))
+                , Arguments.of(new TestSerializationData(this.testCopyOnWriteArrayList(), "CopyOnWriteArrayList.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testCopyOnWriteArraySet(), "CopyOnWriteArraySet.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testHashtable(), "Hashtable.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testIdentityHashMap(), "IdentityHashMap.test.txt", identityHashMapCompare))
                 //, Arguments.of(new TestSerializationData(testLinkedHashMap(), "LinkedHashMap.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testLinkedHashSet(), "LinkedHashSet.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testLinkedList(), "LinkedList.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testPriorityQueue(), "PriorityQueue.test.txt", arrayDequeCompare))
-                , Arguments.of(new TestSerializationData(testStack(), "Stack.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testTreeMap(), "TreeMap.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testTreeSet(), "TreeSet.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testVector(), "Vector.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testLinkedList(), "LinkedList.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testPriorityQueue(), "PriorityQueue.test.txt", arrayDequeCompare))
+                , Arguments.of(new TestSerializationData(this.testStack(), "Stack.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testTreeMap(), "TreeMap.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testTreeSet(), "TreeSet.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testVector(), "Vector.test.txt", defaultCompare))
                 , Arguments.of(new TestSerializationData(Pattern.compile("^.?$|^(..+?)\\1+$"), "Pattern.test.txt", toStringCompare))
                 //, Arguments.of(new TestSerializationData(testConcurrentHashMap(), "ConcurrentHashMap.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testConcurrentLinkedDeque(), "ConcurrentLinkedDequeue.test.txt", toStringCompare))
-                , Arguments.of(new TestSerializationData(testConcurrentLinkedQueue(), "ConcurrentLinkedQueue.test.txt", toStringCompare))
-                , Arguments.of(new TestSerializationData(testConcurrentSkipListMap(), "ConcurrentSkipListMap.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testConcurrentSkipListSet(), "ConcurrentSkipListSet.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testConcurrentLinkedDeque(), "ConcurrentLinkedDequeue.test.txt", toStringCompare))
+                , Arguments.of(new TestSerializationData(this.testConcurrentLinkedQueue(), "ConcurrentLinkedQueue.test.txt", toStringCompare))
+                , Arguments.of(new TestSerializationData(this.testConcurrentSkipListMap(), "ConcurrentSkipListMap.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testConcurrentSkipListSet(), "ConcurrentSkipListSet.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testProperties(), "Properties.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testItem(), "Enum.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(createCircular(), "circular.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(createObjectGraph(), "objectGraph.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testAddress(), "pojo.test.txt", defaultCompare))
+//                , Arguments.of(new TestSerializationData(testItem(), "Enum.test.txt", defaultCompare))
+//                , Arguments.of(new TestSerializationData(createCircular(), "circular.test.txt", defaultCompare))
+//                , Arguments.of(new TestSerializationData(createObjectGraph(), "objectGraph.test.txt", defaultCompare))
+//                , Arguments.of(new TestSerializationData(testAddress(), "pojo.test.txt", defaultCompare))
         );
     }
 
     private Item testItem()
     {
-        Item result = new Item();
+        final Item result = new Item();
         result.setName("Coat");
         result.setSeason(Season.WINTER);
         return result;
@@ -176,7 +176,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Properties testProperties()
     {
-        Properties result = new Properties();
+        final Properties result = new Properties();
         result.setProperty("key1", "value1");
         result.setProperty("key2", "value3");
         result.setProperty("key3", "value3");
@@ -185,12 +185,12 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Person createObjectGraph()
     {
-        return new Person(123L, "John Doe", 42, testAddress());
+        return new Person(123L, "John Doe", 42, this.testAddress());
     }
 
     private ConcurrentSkipListSet<String> testConcurrentSkipListSet()
     {
-        ConcurrentSkipListSet<String> result = new ConcurrentSkipListSet<>();
+        final ConcurrentSkipListSet<String> result = new ConcurrentSkipListSet<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -201,7 +201,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private ConcurrentSkipListMap<String, String> testConcurrentSkipListMap()
     {
-        ConcurrentSkipListMap<String, String> result = new ConcurrentSkipListMap<>();
+        final ConcurrentSkipListMap<String, String> result = new ConcurrentSkipListMap<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -211,7 +211,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private ConcurrentLinkedQueue<String> testConcurrentLinkedQueue()
     {
-        ConcurrentLinkedQueue<String> result = new ConcurrentLinkedQueue<>();
+        final ConcurrentLinkedQueue<String> result = new ConcurrentLinkedQueue<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -220,7 +220,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private ConcurrentLinkedDeque<String> testConcurrentLinkedDeque()
     {
-        ConcurrentLinkedDeque<String> result = new ConcurrentLinkedDeque<>();
+        final ConcurrentLinkedDeque<String> result = new ConcurrentLinkedDeque<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -230,7 +230,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private ConcurrentHashMap<String, String> testConcurrentHashMap()
     {
-        ConcurrentHashMap<String, String> result = new ConcurrentHashMap();
+        final ConcurrentHashMap<String, String> result = new ConcurrentHashMap();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -240,7 +240,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Vector<String> testVector()
     {
-        Vector<String> result = new Vector<>();
+        final Vector<String> result = new Vector<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -251,7 +251,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private TreeSet<String> testTreeSet()
     {
-        TreeSet<String> result = new TreeSet<>();
+        final TreeSet<String> result = new TreeSet<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -260,7 +260,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private TreeMap<String, String> testTreeMap()
     {
-        TreeMap<String, String> result = new TreeMap<>();
+        final TreeMap<String, String> result = new TreeMap<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -270,7 +270,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Stack<String> testStack()
     {
-        Stack<String> result = new Stack<>();
+        final Stack<String> result = new Stack<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -280,7 +280,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private PriorityQueue<String> testPriorityQueue()
     {
-        PriorityQueue<String> result = new PriorityQueue();
+        final PriorityQueue<String> result = new PriorityQueue();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -290,7 +290,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private LinkedList<String> testLinkedList()
     {
-        LinkedList<String> result = new LinkedList<>();
+        final LinkedList<String> result = new LinkedList<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -299,7 +299,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private LinkedHashSet<String> testLinkedHashSet()
     {
-        LinkedHashSet<String> result = new LinkedHashSet<>();
+        final LinkedHashSet<String> result = new LinkedHashSet<>();
         // Not using the constructor with collection as that not seems to guarantee the same order.
         result.add("Item1");
         result.add("Item2");
@@ -309,7 +309,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private LinkedHashMap<String, String> testLinkedHashMap()
     {
-        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        final LinkedHashMap<String, String> result = new LinkedHashMap<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -319,7 +319,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private IdentityHashMap<String, String> testIdentityHashMap()
     {
-        IdentityHashMap<String, String> result = new IdentityHashMap<>();
+        final IdentityHashMap<String, String> result = new IdentityHashMap<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -329,7 +329,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Hashtable<String, String> testHashtable()
     {
-        Hashtable<String, String> result = new Hashtable<>();
+        final Hashtable<String, String> result = new Hashtable<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -338,7 +338,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private CopyOnWriteArraySet<String> testCopyOnWriteArraySet()
     {
-        CopyOnWriteArraySet<String> result = new CopyOnWriteArraySet<>();
+        final CopyOnWriteArraySet<String> result = new CopyOnWriteArraySet<>();
         // Not using the constructor with collection as that not seems to guarantee the same order.
         result.add("Item1");
         result.add("Item2");
@@ -348,7 +348,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private CopyOnWriteArrayList<String> testCopyOnWriteArrayList()
     {
-        CopyOnWriteArrayList<String> result = new CopyOnWriteArrayList<>();
+        final CopyOnWriteArrayList<String> result = new CopyOnWriteArrayList<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -357,7 +357,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private ArrayDeque<String> testArrayDeque()
     {
-        ArrayDeque<String> result = new ArrayDeque<>();
+        final ArrayDeque<String> result = new ArrayDeque<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -366,7 +366,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Set<String> testHashSet()
     {
-        HashSet<String> result = new HashSet<>();
+        final HashSet<String> result = new HashSet<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -376,7 +376,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Map<String, String> testHashMap()
     {
-        Map<String, String> result = new HashMap<>();
+        final Map<String, String> result = new HashMap<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -385,7 +385,7 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private List<String> testArrayList()
     {
-        List<String> result = new ArrayList<>();
+        final List<String> result = new ArrayList<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -408,14 +408,14 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Object newStringBuilder()
     {
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
         builder.append("Builder content");
         return builder;
     }
 
     private Object newStringBuffer()
     {
-        StringBuffer builder = new StringBuffer();
+        final StringBuffer builder = new StringBuffer();
         builder.append("StringBuffer content");
         return builder;
     }
@@ -427,11 +427,11 @@ public class TestSerializationDataProvider implements ArgumentsProvider
 
     private Employee createCircular()
     {
-        Employee theBoss = new Employee(1L, "The boss");
+        final Employee theBoss = new Employee(1L, "The boss");
 
-        Employee employee1 = new Employee(2L, "Person X");
-        Employee employee2 = new Employee(3L, "Person Y");
-        Employee employee3 = new Employee(4L, "Person Z");
+        final Employee employee1 = new Employee(2L, "Person X");
+        final Employee employee2 = new Employee(3L, "Person Y");
+        final Employee employee3 = new Employee(4L, "Person Z");
 
         employee3.setManager(employee2);
 

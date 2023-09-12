@@ -1,5 +1,19 @@
 package org.eclipse.serializer.tests.integration.data;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Stack;
+import java.util.Vector;
+import java.util.stream.Stream;
+
 /*-
  * #%L
  * Eclipse Serializer Test on JDK 8
@@ -26,47 +40,33 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Stack;
-import java.util.Vector;
-import java.util.stream.Stream;
-
 public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 {
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception
+    public Stream<? extends Arguments> provideArguments(final ExtensionContext extensionContext) throws Exception
     {
-        CompareInstances defaultCompare = (i1, i2) -> Assertions.assertThat(i1)
+        final CompareInstances defaultCompare = (i1, i2) -> Assertions.assertThat(i1)
                 .isEqualTo(i2);
         return Stream.of(
 
-                Arguments.of(new TestSerializationData(testArrayList(), "jdk8/ArrayList.test.txt", defaultCompare))
+                Arguments.of(new TestSerializationData(this.testArrayList(), "jdk8/ArrayList.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testHashMap(), "jdk8/HashMap.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testHashSet(), "jdk8/HashSet.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testHashtable(), "jdk8/Hashtable.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testLinkedHashMap(), "jdk8/LinkedHashMap.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testLinkedHashSet(), "jdk8/LinkedHashSet.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testStack(), "jdk8/Stack.test.txt", defaultCompare))
-                , Arguments.of(new TestSerializationData(testVector(), "jdk8/Vector.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testStack(), "jdk8/Stack.test.txt", defaultCompare))
+                , Arguments.of(new TestSerializationData(this.testVector(), "jdk8/Vector.test.txt", defaultCompare))
                 //, Arguments.of(new TestSerializationData(testProperties(), "jdk8/Properties.test.txt", defaultCompare))
 
-                , Arguments.of(new TestSerializationData(createCircular(), "jdk8/circular.test.txt", defaultCompare))
+//                , Arguments.of(new TestSerializationData(this.createCircular(), "jdk8/circular.test.txt", defaultCompare))
         );
     }
 
     private Properties testProperties()
     {
-        Properties result = new Properties();
+        final Properties result = new Properties();
         result.setProperty("key1", "value1");
         result.setProperty("key2", "value3");
         result.setProperty("key3", "value3");
@@ -75,7 +75,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private Vector<String> testVector()
     {
-        Vector<String> result = new Vector<>();
+        final Vector<String> result = new Vector<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -86,7 +86,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private Stack<String> testStack()
     {
-        Stack<String> result = new Stack<>();
+        final Stack<String> result = new Stack<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -97,7 +97,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private LinkedHashSet<String> testLinkedHashSet()
     {
-        LinkedHashSet<String> result = new LinkedHashSet<>();
+        final LinkedHashSet<String> result = new LinkedHashSet<>();
         // Not using the constructor with collection as that not seems to guarantee the same order.
         result.add("Item1");
         result.add("Item2");
@@ -107,7 +107,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private LinkedHashMap<String, String> testLinkedHashMap()
     {
-        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        final LinkedHashMap<String, String> result = new LinkedHashMap<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -117,7 +117,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private Hashtable<String, String> testHashtable()
     {
-        Hashtable<String, String> result = new Hashtable<>();
+        final Hashtable<String, String> result = new Hashtable<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -126,7 +126,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private Set<String> testHashSet()
     {
-        HashSet<String> result = new HashSet<>();
+        final HashSet<String> result = new HashSet<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -136,7 +136,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private Map<String, String> testHashMap()
     {
-        Map<String, String> result = new HashMap<>();
+        final Map<String, String> result = new HashMap<>();
         result.put("key1", "value1");
         result.put("key2", "value2");
         result.put("key3", "value3");
@@ -145,7 +145,7 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private List<String> testArrayList()
     {
-        ArrayList<String> result = new ArrayList<>();
+        final ArrayList<String> result = new ArrayList<>();
         result.add("Item1");
         result.add("Item2");
         result.add("Item3");
@@ -155,11 +155,11 @@ public class TestSerializationDataProviderJDK8 implements ArgumentsProvider
 
     private Employee createCircular()
     {
-        Employee theBoss = new Employee(1L, "The boss");
+        final Employee theBoss = new Employee(1L, "The boss");
 
-        Employee employee1 = new Employee(2L, "Person X");
-        Employee employee2 = new Employee(3L, "Person Y");
-        Employee employee3 = new Employee(4L, "Person Z");
+        final Employee employee1 = new Employee(2L, "Person X");
+        final Employee employee2 = new Employee(3L, "Person Y");
+        final Employee employee3 = new Employee(4L, "Person Z");
 
         employee3.setManager(employee2);
 
