@@ -821,6 +821,11 @@ public final class XMemory
 	}
 
 
+	public static final ByteOrder nativeByteOrder()
+	{
+		return ByteOrder.nativeOrder();
+	}
+
 	public static final boolean isBigEndianNativeOrder()
 	{
 		return ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;

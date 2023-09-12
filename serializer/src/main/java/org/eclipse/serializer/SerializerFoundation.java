@@ -82,6 +82,7 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionCreator
 import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionResolverProvider;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryCreator;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryManager;
+import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryParser;
 import org.eclipse.serializer.persistence.types.PersistenceTypeEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerCreator;
@@ -113,11 +114,11 @@ import org.eclipse.serializer.util.InstanceDispatcher;
 import java.nio.ByteOrder;
 
 /**
- * This type serves as a factory instance for buidling {@link Serializer} instances.
+ * This type serves as a factory instance for building {@link Serializer} instances.
  * However, it is more than a mere factory as it keeps track of all component instances used in building
  * a {@link Serializer} instance. For example managing parts of an application can use it
  * to access former set ID providers or dictionary providers even after they have been assembled into (and
- * are intentionally hindden in) a {@link PersistenceManager} instance.*
+ * are intentionally hidden in) a {@link PersistenceManager} instance.*
  * Hence it can be seen as a kind of "master instance" of the built persistence layer or as its "foundation".
  *
  * @param <F> the foundation type
@@ -177,6 +178,8 @@ extends ByteOrderTargeting.Mutable<F>,
 	public PersistenceTypeDictionaryManager getTypeDictionaryManager();
 	
 	public PersistenceTypeDictionaryCreator getTypeDictionaryCreator();
+	
+	public PersistenceTypeDictionaryParser getTypeDictionaryParser();
 	
 	public PersistenceTypeLineageCreator getTypeLineageCreator();
 
@@ -263,6 +266,8 @@ extends ByteOrderTargeting.Mutable<F>,
 	
 	public XEnum<Class<?>> getEntityTypes();
 	
+	public SerializerTypeInfoStrategyCreator getSerializerTypeInfoStrategyCreator();
+	
 	
 	
 	public F setObjectRegistry(PersistenceObjectRegistry objectRegistry);
@@ -300,6 +305,8 @@ extends ByteOrderTargeting.Mutable<F>,
 	public F setPersister(Persister persister);
 	
 	public F setTypeDictionaryCreator(PersistenceTypeDictionaryCreator typeDictionaryCreator);
+	
+	public F setTypeDictionaryParser(PersistenceTypeDictionaryParser typeDictionaryParser);
 	
 	public F setTypeLineageCreator(PersistenceTypeLineageCreator typeLineageCreator);
 	
@@ -379,6 +386,10 @@ extends ByteOrderTargeting.Mutable<F>,
 	
 	public F setInstantiatorProvider(PersistenceTypeInstantiatorProvider<Binary> instantiatorProvider);
 
+	public F setSerializerTypeInfoStrategyCreator(SerializerTypeInfoStrategyCreator serializerTypeInfoStrategyCreator);
+
+
+	
 	public XTable<String, BinaryValueSetter> getCustomTranslatorLookup();
 	
 	public XEnum<BinaryValueTranslatorKeyBuilder> getTranslatorKeyBuilders();
@@ -467,6 +478,7 @@ extends ByteOrderTargeting.Mutable<F>,
 		private PersistenceTypeHandlerProvider<Binary>         typeHandlerProvider             ;
 		private PersistenceTypeDictionaryManager               typeDictionaryManager           ;
 		private PersistenceTypeDictionaryCreator               typeDictionaryCreator           ;
+		private PersistenceTypeDictionaryParser                typeDictionaryParser            ;
 		private PersistenceTypeLineageCreator                  typeLineageCreator              ;
 		private PersistenceTypeHandlerCreator<Binary>          typeHandlerCreator              ;
 		private PersistenceTypeAnalyzer                        typeAnalyzer                    ;
@@ -506,6 +518,7 @@ extends ByteOrderTargeting.Mutable<F>,
 		private BinaryValueTranslatorProvider          valueTranslatorProvider;
 
 		private XEnum<Class<?>> entityTypes;
+		private SerializerTypeInfoStrategyCreator serializerTypeInfoStrategyCreator;
 		
 		///////////////////////////////////////////////////////////////////////////
 		// constructors //
@@ -808,6 +821,17 @@ extends ByteOrderTargeting.Mutable<F>,
 			return this.typeDictionaryCreator;
 		}
 
+		@Override
+		public PersistenceTypeDictionaryParser getTypeDictionaryParser()
+		{
+			if(this.typeDictionaryParser == null)
+			{
+				this.typeDictionaryParser = this.dispatch(this.ensureTypeDictionaryParser());
+			}
+			
+			return this.typeDictionaryParser;
+		}
+		
 		@Override
 		public PersistenceTypeHandlerCreator<Binary> getTypeHandlerCreator()
 		{
@@ -1261,6 +1285,15 @@ extends ByteOrderTargeting.Mutable<F>,
 			return this.entityTypes;
 		}
 		
+		@Override
+		public SerializerTypeInfoStrategyCreator getSerializerTypeInfoStrategyCreator()
+		{
+			if(this.serializerTypeInfoStrategyCreator == null)
+			{
+				this.serializerTypeInfoStrategyCreator = this.ensureSerializerTypeInfoStrategyCreator();
+			}
+			return this.serializerTypeInfoStrategyCreator;
+		}
 
 
 		///////////////////////////////////////////////////////////////////////////
@@ -1434,6 +1467,15 @@ extends ByteOrderTargeting.Mutable<F>,
 		)
 		{
 			this.typeDictionaryCreator = typeDictionaryCreator;
+			return this.$();
+		}
+		
+		@Override
+		public F setTypeDictionaryParser(
+			final PersistenceTypeDictionaryParser typeDictionaryParser
+		)
+		{
+			this.typeDictionaryParser = typeDictionaryParser;
 			return this.$();
 		}
 		
@@ -1738,6 +1780,13 @@ extends ByteOrderTargeting.Mutable<F>,
 		}
 		
 		@Override
+		public F setSerializerTypeInfoStrategyCreator(final SerializerTypeInfoStrategyCreator serializerTypeInfoStrategyCreator)
+		{
+			this.serializerTypeInfoStrategyCreator = serializerTypeInfoStrategyCreator;
+			return this.$();
+		}
+		
+		@Override
 		public boolean registerEntityType(final Class<?> entityType)
 		{
 			return this.getEntityTypes().add(entityType);
@@ -1878,6 +1927,18 @@ extends ByteOrderTargeting.Mutable<F>,
 				)
 			;
 			return newTypeDictionaryCreator;
+		}
+
+		protected PersistenceTypeDictionaryParser ensureTypeDictionaryParser()
+		{
+			final PersistenceTypeDictionaryParser newTypeDictionaryParser =
+				PersistenceTypeDictionaryParser.New(
+					this.getTypeResolver()            ,
+					this.getFieldFixedLengthResolver(),
+					this.getTypeNameMapper()
+				)
+			;
+			return newTypeDictionaryParser;
 		}
 
 		protected PersistenceTypeAnalyzer ensureTypeAnalyzer()
@@ -2218,6 +2279,10 @@ extends ByteOrderTargeting.Mutable<F>,
 			return HashEnum.New();
 		}
 
+		protected SerializerTypeInfoStrategyCreator ensureSerializerTypeInfoStrategyCreator()
+		{
+			return new SerializerTypeInfoStrategyCreator.TypeDictionary(false);
+		}
 
 
 		///////////////////////////////////////////////////////////////////////////
