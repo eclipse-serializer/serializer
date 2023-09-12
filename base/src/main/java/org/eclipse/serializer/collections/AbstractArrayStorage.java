@@ -2728,13 +2728,13 @@ public abstract class AbstractArrayStorage
 
 		final int removeCount;
 		int i = offset - d;
-		int removeStartIndex = i;
+		int removeStartIndex = offset;
 		try
 		{
 			while(i != endIndex)
 			{
 				final E ei = data[i += d];
-				for(int j = i + d; j != endIndex;)
+				for(int j = i; j != endIndex;)
 				{
 					final E ej = data[j += d];
 					if(ej == removeMarker)
@@ -2787,7 +2787,7 @@ public abstract class AbstractArrayStorage
 
 		final int removeCount;
 		int i = offset - d;
-		int removeStartIndex = i;
+		int removeStartIndex = offset;
 		try
 		{
 			while(i != endIndex)
@@ -2867,7 +2867,7 @@ public abstract class AbstractArrayStorage
 		}
 
 		// actual moving
-		final int removeCount = XArrays.removeAllFromArray(data, (int)min, (int)++max, removeMarker);
+		final int removeCount = XArrays.removeAllFromArray(data, (int)min, size, removeMarker);
 
 		return removeCount;
 	}
