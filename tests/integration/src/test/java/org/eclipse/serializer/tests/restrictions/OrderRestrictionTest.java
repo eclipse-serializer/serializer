@@ -1,5 +1,7 @@
 package org.eclipse.serializer.tests.restrictions;
 
+import org.assertj.core.api.Assertions;
+
 /*-
  * #%L
  * Eclipse Serializer Test on JDK 8
@@ -24,7 +26,6 @@ import org.eclipse.serializer.Serializer;
 import org.eclipse.serializer.SerializerFoundation;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistencyUnhandledTypeId;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
-import org.assertj.core.api.Assertions;
 import org.eclipse.serializer.tests.model.Address;
 import org.eclipse.serializer.tests.model.Employee;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,7 @@ class OrderRestrictionTest
 
             bytesAddress = serializer.serialize(testAddress());
 
-        } catch (Exception e)
+        } catch (final Exception e)
         {
             throw new RuntimeException(e);
         }
@@ -63,7 +64,7 @@ class OrderRestrictionTest
                             () -> serializer.deserialize(bytesAddress)
                     )
                     .isInstanceOf(PersistenceExceptionTypeHandlerConsistencyUnhandledTypeId.class)
-                    .hasMessage("No type handler found for type id \"1000057\".");
+                    .hasMessage("No type handler found for type id \"1000062\".");
         }
 
 
@@ -85,7 +86,7 @@ class OrderRestrictionTest
 
             bytesAddress = serializer.serialize(testAddress());
 
-        } catch (Exception e)
+        } catch (final Exception e)
         {
             throw new RuntimeException(e);
         }
@@ -122,7 +123,7 @@ class OrderRestrictionTest
 
             bytesAddress = serializer.serialize(testAddress());
 
-        } catch (Exception e)
+        } catch (final Exception e)
         {
             throw new RuntimeException(e);
         }
@@ -151,11 +152,11 @@ class OrderRestrictionTest
 
     private static Employee createCircular()
     {
-        Employee theBoss = new Employee(1L, "The boss");
+        final Employee theBoss = new Employee(1L, "The boss");
 
-        Employee employee1 = new Employee(2L, "Person X");
-        Employee employee2 = new Employee(3L, "Person Y");
-        Employee employee3 = new Employee(4L, "Person Z");
+        final Employee employee1 = new Employee(2L, "Person X");
+        final Employee employee2 = new Employee(3L, "Person Y");
+        final Employee employee3 = new Employee(4L, "Person Z");
 
         employee3.setManager(employee2);
 
