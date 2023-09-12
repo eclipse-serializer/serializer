@@ -61,11 +61,11 @@
 
 	<profiles>
 		<profile>
-			<id>eclipse-compiler</id>
+			<id>eclipse</id>
 			<activation>
 				<property>
 					<name>maven.compiler.compilerId</name>
-					<value>eclipse</value>
+					<value>!javac</value>
 				</property>
 			</activation>
 			<build>
