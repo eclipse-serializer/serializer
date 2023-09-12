@@ -25,6 +25,7 @@ module org.eclipse.serializer.base
 	exports org.eclipse.serializer.collections;
 	exports org.eclipse.serializer.collections.interfaces;
 	exports org.eclipse.serializer.collections.old;
+	exports one.microstream.collections.lazy;
 	exports org.eclipse.serializer.collections.sorting;
 	exports org.eclipse.serializer.collections.types;
 	exports org.eclipse.serializer.concurrency;

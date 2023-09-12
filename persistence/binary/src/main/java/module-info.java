@@ -33,6 +33,7 @@ module org.eclipse.serializer.persistence.binary
 	exports org.eclipse.serializer.persistence.binary.java.util;
 	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity;
 	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections;
+	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.lazy;
 	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.persistence.types;
 	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.reference;
 	exports org.eclipse.serializer.persistence.binary.org.eclipse.serializer.util;
