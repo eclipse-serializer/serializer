@@ -1,4 +1,4 @@
-package one.microstream.collections.lazy;
+package org.eclipse.serializer.collections.lazy;
 
 /*-
  * #%L

@@ -25,12 +25,6 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.persistence.exceptions.PersistenceException;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeConsistency;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistency;
-import org.slf4j.Logger;
-
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.HashTable;
@@ -39,10 +33,15 @@ import org.eclipse.serializer.collections.types.XAddingEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.equality.Equalator;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeConsistency;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistency;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 
 public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager, PersistenceTypeHandlerRegistry<D>
@@ -648,7 +647,7 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		}
 		
 		@Override
-		public <T> long registerTypeHandlers(final Iterable<? extends PersistenceTypeHandler<D, T>> typeHandlers)
+		public long registerTypeHandlers(final Iterable<? extends PersistenceTypeHandler<D, ?>> typeHandlers)
 		{
 			synchronized(this.typeHandlerRegistry)
 			{

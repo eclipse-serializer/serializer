@@ -23,6 +23,7 @@ package org.eclipse.serializer.collections.old;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.eclipse.serializer.collections.XArrays;
 import org.eclipse.serializer.collections.types.XGettingSet;
 import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.typing.XTypes;
@@ -138,6 +139,13 @@ public abstract class AbstractOldGettingSet<E> implements OldSet<E>
 	public Object[] toArray()
 	{
 		return this.subject.toArray();
+	}
+	
+	@Override
+	public <T> T[] toArray(final T[] target)
+	{
+		XArrays.copyTo(this.parent(), target);
+		return target;
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.lazy;
 
+import org.eclipse.serializer.collections.lazy.LazyHashMap;
+
 /*-
  * #%L
  * Eclipse Serializer Persistence Binary
@@ -26,8 +28,6 @@ import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.util.X;
-
-import one.microstream.collections.lazy.LazyHashMap;
 
 public final class BinaryHandlerLazyHashMapSegmentEntryList extends AbstractBinaryHandlerCustomIterable<LazyHashMap.LazyHashMapSegmentEntryList<?,?>>
 {

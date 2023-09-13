@@ -23,6 +23,9 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
 import java.lang.reflect.Method;
 import java.util.Iterator;
 
+import org.eclipse.serializer.collections.lazy.LazyArrayList;
+import org.eclipse.serializer.collections.lazy.LazySegment;
+import org.eclipse.serializer.collections.lazy.LazySegmentUnloader;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -32,10 +35,6 @@ import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.reference.ControlledLazyReference;
 import org.eclipse.serializer.reflect.XReflect;
-
-import one.microstream.collections.lazy.LazyArrayList;
-import one.microstream.collections.lazy.LazySegment;
-import one.microstream.collections.lazy.LazySegmentUnloader;
 
 public final class BinaryHandlerLazyArrayList extends AbstractBinaryHandlerCustomCollection<LazyArrayList<?>>
 {

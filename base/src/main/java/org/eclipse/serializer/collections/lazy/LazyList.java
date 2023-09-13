@@ -1,8 +1,8 @@
-package one.microstream.collections.lazy;
+package org.eclipse.serializer.collections.lazy;
 
 /*-
  * #%L
- * MicroStream Base
+ * microstream-base
  * %%
  * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
@@ -20,8 +20,17 @@ package one.microstream.collections.lazy;
  * #L%
  */
 
-import java.util.Set;
+import java.util.List;
 
-public interface LazySet<E> extends LazyCollection<E>, Set<E> {
- // Everything in LazyCollection done
+import org.eclipse.serializer.reference.Lazy;
+
+/**
+ * A {@link List}, which uses {@link Lazy} references internally,
+ * to enable automatic partial loading of the list's content.
+ *
+ * @param <E> the type of elements in this collection
+ */
+public interface LazyList<E> extends List<E>, LazyCollection<E>
+{
+	// just a marker interface, for now
 }
