@@ -16,6 +16,7 @@
 
     <name>Eclipse Serializer Test on JDK 8</name>
     <description>Eclipse Serializer Testing on JDK 8</description>
+    <url>https://projects.eclipse.org/projects/technology.serializer</url>
 
     <properties>
         <enforcer.skip>true</enforcer.skip>

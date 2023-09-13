@@ -15,6 +15,7 @@
 	
 	<name>Eclipse Serializer Persistence JDK17</name>
 	<description>Eclipse Serializer Persistence Specialized Type Handlers for JDK17+</description>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 	
 	<properties>
 		<maven.compiler.source>17</maven.compiler.source>

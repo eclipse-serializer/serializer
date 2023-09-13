@@ -17,9 +17,7 @@
 	
 	<name>Eclipse Serializer</name>
 	<description>Eclipse Serializer Main artifact</description>
-
-	<properties>
-	</properties>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 
 	<dependencies>
 		<dependency>

@@ -18,6 +18,7 @@
 	
 	<name>Eclipse Serializer Abstract File System Parent</name>
 	<description>Eclipse Serializer File System Abstraction Parent Project</description>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 
 	<modules>
 		<module>afs</module>
