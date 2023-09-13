@@ -1,8 +1,8 @@
-package org.eclipse.serializer.persistence.binary.types;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
- * Eclipse Store Persistence Binary
+ * Eclipse Serializer Persistence
  * %%
  * Copyright (C) 2023 Eclipse Foundation
  * %%
@@ -19,9 +19,6 @@ package org.eclipse.serializer.persistence.binary.types;
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  * #L%
  */
-
-
-import org.eclipse.serializer.persistence.types.ObjectIdsProcessor;
 
 public interface ObjectIdsSelector
 {
