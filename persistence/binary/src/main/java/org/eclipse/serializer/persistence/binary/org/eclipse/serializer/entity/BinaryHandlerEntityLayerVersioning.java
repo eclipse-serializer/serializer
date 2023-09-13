@@ -22,11 +22,11 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity;
 
 import static org.eclipse.serializer.util.X.notNull;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
 import org.eclipse.serializer.entity.EntityLayerVersioning;
 import org.eclipse.serializer.entity.EntityVersionContext;
+import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.binary.types.BinaryTypeHandler;
@@ -36,6 +36,7 @@ import org.eclipse.serializer.persistence.types.PersistenceInstantiator;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 public class BinaryHandlerEntityLayerVersioning
 	extends AbstractBinaryHandlerCustom<EntityLayerVersioning<?>>
@@ -117,7 +118,9 @@ public class BinaryHandlerEntityLayerVersioning
 	)
 	{
 		final Object[] elements = (Object[])data.getHelper(instance);
-		final EqHashTable versions = EqHashTable.New(EntityInternals.getContext(instance).equalator());
+		final EqHashTable<Object, Object> versions = EqHashTable.<Object, Object>New(
+			(HashEqualator<? super Object>)EntityInternals.getContext(instance).equalator()
+		);
 		for(int i = 0; i < elements.length; )
 		{
 			versions.put(elements[i++], elements[i++]);

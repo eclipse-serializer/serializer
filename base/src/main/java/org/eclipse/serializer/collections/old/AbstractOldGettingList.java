@@ -24,10 +24,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.ListIterator;
 
+import org.eclipse.serializer.collections.XArrays;
 import org.eclipse.serializer.collections.types.XGettingList;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.ReadOnlyListIterator;
 
 public abstract class AbstractOldGettingList<E> implements OldList<E>
@@ -206,6 +207,13 @@ public abstract class AbstractOldGettingList<E> implements OldList<E>
 	public Object[] toArray()
 	{
 		return this.subject.toArray();
+	}
+	
+	@Override
+	public <T> T[] toArray(final T[] target)
+	{
+		XArrays.copyTo(this.parent(), target);
+		return target;
 	}
 
 	@Override
