@@ -23,29 +23,9 @@ package org.eclipse.serializer.collections.old;
 import java.util.Collection;
 
 import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.XArrays;
 
 public interface OldCollection<E> extends Collection<E>
 {
 	public XGettingCollection<E> parent();
-
-	@Override
-	public default <T> T[] toArray(final T[] target)
-	{
-		XArrays.copyTo(this.parent(), target);
-		return target;
-	}
-
-
-	public default void bla()
-	{
-		final BulkList<String> ps = null;
-
-		final Number[] ns = new Number[5];
-
-		XArrays.copyTo(ps, ns);
-	}
-
 
 }

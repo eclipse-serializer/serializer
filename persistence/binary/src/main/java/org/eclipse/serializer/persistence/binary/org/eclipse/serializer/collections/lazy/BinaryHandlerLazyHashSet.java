@@ -22,15 +22,14 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
 
 import java.lang.reflect.Field;
 
+import org.eclipse.serializer.collections.lazy.LazyHashMap;
+import org.eclipse.serializer.collections.lazy.LazyHashSet;
 import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.reflect.XReflect;
-
-import one.microstream.collections.lazy.LazyHashMap;
-import one.microstream.collections.lazy.LazyHashSet;
 
 public final class BinaryHandlerLazyHashSet extends AbstractBinaryHandlerCustom<LazyHashSet<?>>{
 

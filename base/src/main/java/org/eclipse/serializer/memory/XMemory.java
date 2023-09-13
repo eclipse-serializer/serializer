@@ -896,6 +896,21 @@ public final class XMemory
 		}
 		return bytes;
 	}
+	
+	public static final ByteBuffer toDirectByteBuffer(final byte[] bytes)
+	{
+		final ByteBuffer buffer = allocateDirectNative(bytes.length);
+		buffer.put(bytes);
+		buffer.flip();
+		return buffer;
+	}
+	
+	public static final ByteBuffer slice(final ByteBuffer source, final long position, final long limit)
+	{
+		final ByteBuffer tmp = source.duplicate();
+		tmp.limit((int)(position + limit)).position((int)position);
+		return tmp.slice();
+	}
 
 	public static final long getPositionLimit(final ByteBuffer buffer)
 	{

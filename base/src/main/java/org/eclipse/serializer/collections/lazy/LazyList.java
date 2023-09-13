@@ -1,10 +1,10 @@
-package org.eclipse.serializer.persistence.binary.types;
+package org.eclipse.serializer.collections.lazy;
 
 /*-
  * #%L
- * Eclipse Store Persistence Binary
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -20,11 +20,17 @@ package org.eclipse.serializer.persistence.binary.types;
  * #L%
  */
 
+import java.util.List;
 
-import org.eclipse.serializer.persistence.types.ObjectIdsProcessor;
+import org.eclipse.serializer.reference.Lazy;
 
-public interface ObjectIdsSelector
+/**
+ * A {@link List}, which uses {@link Lazy} references internally,
+ * to enable automatic partial loading of the list's content.
+ *
+ * @param <E> the type of elements in this collection
+ */
+public interface LazyList<E> extends List<E>, LazyCollection<E>
 {
-	public boolean processSelected(ObjectIdsProcessor processor);
-
+	// just a marker interface, for now
 }

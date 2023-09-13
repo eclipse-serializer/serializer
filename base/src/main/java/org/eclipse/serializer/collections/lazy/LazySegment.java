@@ -1,4 +1,4 @@
-package one.microstream.collections.lazy;
+package org.eclipse.serializer.collections.lazy;
 
 /*-
  * #%L
@@ -20,8 +20,38 @@ package one.microstream.collections.lazy;
  * #L%
  */
 
-import java.util.Set;
+public interface LazySegment<E> {
 
-public interface LazySet<E> extends LazyCollection<E>, Set<E> {
- // Everything in LazyCollection done
+	/**
+	 * get the number of contained element in this segment.
+	 * 
+	 * @return number of contained elements;
+	 */
+	int size();
+	
+	/**
+	 * Check if the lazy loaded data of this segment has been loaded.
+	 * 
+	 * @return true if loaded, otherwise false.
+	 */
+	boolean isLoaded();
+
+	/**
+	 * Check if this segment has modifications that are not yet persisted.
+	 * 
+	 * @return true if there are modifications not yet persisted, otherwise false.
+	 */
+	boolean isModified();
+
+	/**
+	 * Unload the lazy data of this segment
+	 */
+	void unloadSegment();
+
+	boolean unloadAllowed();
+
+	void allowUnload(final boolean allow);
+
+	E getData();
+
 }

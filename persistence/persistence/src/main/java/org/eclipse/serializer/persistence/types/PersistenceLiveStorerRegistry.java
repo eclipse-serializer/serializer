@@ -1,8 +1,8 @@
-package org.eclipse.serializer.persistence.binary.types;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
- * Eclipse Store Persistence Binary
+ * Eclipse Serializer Persistence
  * %%
  * Copyright (C) 2023 Eclipse Foundation
  * %%
@@ -23,7 +23,6 @@ package org.eclipse.serializer.persistence.binary.types;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.HashEnum;
-import org.eclipse.serializer.persistence.types.PersistenceStorer;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 

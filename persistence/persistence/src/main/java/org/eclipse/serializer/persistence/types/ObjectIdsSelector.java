@@ -1,10 +1,10 @@
-package one.microstream.collections.lazy;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
- * microstream-base
+ * Eclipse Serializer Persistence
  * %%
- * Copyright (C) 2019 - 2022 MicroStream Software
+ * Copyright (C) 2023 Eclipse Foundation
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -20,17 +20,8 @@ package one.microstream.collections.lazy;
  * #L%
  */
 
-import java.util.List;
-
-import org.eclipse.serializer.reference.Lazy;
-
-/**
- * A {@link List}, which uses {@link Lazy} references internally,
- * to enable automatic partial loading of the list's content.
- *
- * @param <E> the type of elements in this collection
- */
-public interface LazyList<E> extends List<E>, LazyCollection<E>
+public interface ObjectIdsSelector
 {
-	// just a marker interface, for now
+	public boolean processSelected(ObjectIdsProcessor processor);
+
 }
