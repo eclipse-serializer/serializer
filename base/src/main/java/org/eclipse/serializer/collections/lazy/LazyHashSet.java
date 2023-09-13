@@ -1,4 +1,4 @@
-package one.microstream.collections.lazy;
+package org.eclipse.serializer.collections.lazy;
 
 /*-
  * #%L
@@ -24,7 +24,7 @@ import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Spliterator;
 
-import one.microstream.collections.lazy.LazyHashMap.Entry;
+import org.eclipse.serializer.collections.lazy.LazyHashMap.Entry;
 
 /**
  * Implementation of the {@code Set} interface, backed by a {@link LazyHashMap}
