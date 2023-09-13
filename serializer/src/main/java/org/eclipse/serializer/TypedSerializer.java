@@ -48,7 +48,7 @@ import org.slf4j.Logger;
  * It is based on a {@link SerializerFoundation}, which can be configured to various needs.
  * <p>
  * Per default {@link Binary} and <code>byte[]</code> are supported as medium types.
- * 
+ * <p>
  * The included type information can be configured by suppling a {@link SerializerTypeInfoStrategy}
  * using a {@link SerializerTypeInfoStrategyCreator} to the {@link SerializerFoundation}.
  *
@@ -76,8 +76,8 @@ public interface TypedSerializer<M> extends Serializer<M>
 	 * The serializer will include the whole set of current type information
 	 * in every serialized Binary.
 	 * 
-	 * @param foundation
-	 * @return
+	 * @param foundation the foundation to base the serializer on
+	 * @return A new TypedSerializer instance.
 	 */
 	public static Serializer<Binary> Binary(final SerializerFoundation<?> foundation)
 	{

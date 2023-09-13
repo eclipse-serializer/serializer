@@ -30,7 +30,6 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionRegistr
 import org.eclipse.serializer.persistence.types.PersistenceTypeDictionary;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryAssembler;
 import org.eclipse.serializer.util.logging.Logging;
-
 import org.slf4j.Logger;
 
 /**
@@ -66,7 +65,7 @@ public interface SerializerTypeInfoStrategy extends PersistenceTypeDefinitionReg
 	 * 
 	 * This implementation includes only type information for types added to the
 	 * serializers type registry in the current serialization.
-	 *
+	 * <p>
 	 * Types that are registered during the serializers setup are never included.
 	 */
 	public static class IncrementalDiff implements SerializerTypeInfoStrategy

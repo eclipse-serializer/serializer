@@ -52,7 +52,6 @@ import org.eclipse.serializer.util.iterables.ReadOnlyListIterator;
  * <p>
  * This concept can be very useful if a class wants to provide public read access to an internal enuM without
  * either the danger of the enuM being modified from the outside or the need to copy the whole enuM on every access.
- * <p>
  *
  */
 public class EnumView<E> implements XGettingEnum<E>
