@@ -48,7 +48,7 @@ jobs:
           gpg-passphrase: PASSPHRASE
       - name: Build with java 17
         run: |
-          mvn -pl persistence/binary-jdk17 clean source:jar install -am -B
+          mvn -pl persistence/binary-jdk17 clean install -am -B
       - name: Deploy module build with java 17
         run: |
           mvn -Pdeploy -pl persistence/binary-jdk17 deploy
