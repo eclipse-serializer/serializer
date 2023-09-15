@@ -194,7 +194,7 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 
 	public final class Default<D> implements PersistenceTypeHandlerManager<D>
 	{
-		private final static Logger logger = Logging.getLogger(PersistenceTypeHandlerManager.Default.class);
+		private final static Logger logger = Logging.getLogger(PersistenceTypeHandlerManager.class);
 		
 		///////////////////////////////////////////////////////////////////////////
 		// instance fields //
