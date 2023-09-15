@@ -232,7 +232,7 @@ public interface TypedSerializer<M> extends Serializer<M>
 		}
 		
 		
-		private final static Logger logger = Logging.getLogger(Serializer.class);
+		private final static Logger logger = Logging.getLogger(TypedSerializer.class);
 		
 		private final SerializerFoundation<?>         foundation                 ;
 		private final Function<Binary, M>             toMedium                   ;

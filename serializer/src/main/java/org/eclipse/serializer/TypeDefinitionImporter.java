@@ -30,7 +30,6 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerEnsurer;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
 import org.eclipse.serializer.util.logging.Logging;
-
 import org.slf4j.Logger;
 
 /**
@@ -46,7 +45,7 @@ public interface TypeDefinitionImporter
 
 	public static class Default implements TypeDefinitionImporter
 	{
-		private final static Logger logger = Logging.getLogger(Default.class);
+		private final static Logger logger = Logging.getLogger(TypeDefinitionImporter.class);
 		
 		///////////////////////////////////////////////////////////////////////////
 		// instance fields //

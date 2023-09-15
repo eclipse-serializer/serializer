@@ -21,13 +21,11 @@ package org.eclipse.serializer.persistence.binary.types;
  */
 
 import static java.lang.System.identityHashCode;
-import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.chars.XChars.systemString;
 import static org.eclipse.serializer.persistence.types.PersistenceLogging.STORER_CONTEXT;
+import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.util.logging.Logging.LazyArg;
 import static org.eclipse.serializer.util.logging.Logging.LazyArgInContext;
-
-import org.slf4j.Logger;
 
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
@@ -45,6 +43,7 @@ import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 
 public interface BinaryStorer extends PersistenceStorer
@@ -79,7 +78,7 @@ public interface BinaryStorer extends PersistenceStorer
 		// constants //
 		//////////////
 
-		private final static Logger logger = Logging.getLogger(Default.class);
+		private final static Logger logger = Logging.getLogger(BinaryStorer.class);
 		
 		
 		protected static int defaultSlotSize()

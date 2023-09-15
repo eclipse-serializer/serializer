@@ -25,14 +25,12 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
-import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerSingleton;
-import org.slf4j.Logger;
-
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.memory.XMemory;
+import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerSingleton;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistencyUnhandledTypeId;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceLoader;
@@ -45,6 +43,7 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerLookup;
 import org.eclipse.serializer.persistence.types.Persister;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 {
@@ -86,7 +85,7 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 
 	public final class Default implements BinaryLoader, BinaryEntityDataReader, PersistenceReferenceLoader
 	{
-		private final static Logger logger = Logging.getLogger(Default.class);
+		private final static Logger logger = Logging.getLogger(BinaryLoader.class);
 		
 		///////////////////////////////////////////////////////////////////////////
 		// constants //

@@ -80,7 +80,7 @@ public interface LazySegmentUnloader
 	 */
 	public final class Default implements LazySegmentUnloader
 	{
-		private final static Logger logger = Logging.getLogger(Default.class);
+		private final static Logger logger = Logging.getLogger(LazySegmentUnloader.class);
 
 		///////////////////////////////////////////////////////////////////////////
 		// instance fields //
@@ -228,7 +228,7 @@ public interface LazySegmentUnloader
 	 */
 	public final class Timed implements LazySegmentUnloader
 	{
-		private final static Logger logger = Logging.getLogger(Timed.class);
+		private final static Logger logger = Logging.getLogger(LazySegmentUnloader.class);
 		
 		//don't persist state! Must be recreated after a persisted instance of this class has been reloaded
 		transient private HashMap<LazySegment<?>, Long> loadedSegments;
