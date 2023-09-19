@@ -93,6 +93,20 @@ public interface Serializer<M> extends AutoCloseable
 		);
 	}
 	
+	public static Serializer<Binary> Binary()
+	{
+		return Binary(SerializerFoundation.New());
+	}
+	
+	public static Serializer<Binary> Binary(final SerializerFoundation<?> foundation)
+	{
+		return New(
+			foundation         ,
+			Function.identity(),
+			Function.identity()
+		);
+	}
+	
 	public static <M> Serializer<M> New(
 		final Function<Binary, M> toMedium,
 		final Function<M, Binary> toBinary
