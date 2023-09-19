@@ -23,11 +23,10 @@ package org.eclipse.serializer.reference;
 import java.lang.ref.WeakReference;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.time.XTime;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 public interface LazyReferenceManager
 {
@@ -175,7 +174,7 @@ public interface LazyReferenceManager
 		// constants //
 		//////////////
 
-		final static Logger logger = Logging.getLogger(Default.class);
+		final static Logger logger = Logging.getLogger(LazyReferenceManager.class);
 		
 		private static final Clearer CLEARER = new Clearer();
 

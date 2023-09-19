@@ -24,15 +24,14 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.persistence.exceptions.PersistenceException;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
-import org.slf4j.Logger;
-
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.entity.Entity;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.LambdaTypeRecognizer;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 /**
  * Named "ensurer" because depending on the case, it creates a new type handler or it just returns
@@ -69,7 +68,7 @@ extends PersistenceTypeHandlerIterable<D>, PersistenceDataTypeHolder<D>
 
 	public class Default<D> extends PersistenceDataTypeHolder.Default<D> implements PersistenceTypeHandlerEnsurer<D>
 	{
-		private final static Logger logger = Logging.getLogger(PersistenceTypeHandlerEnsurer.Default.class);
+		private final static Logger logger = Logging.getLogger(PersistenceTypeHandlerEnsurer.class);
 		
 		///////////////////////////////////////////////////////////////////////////
 		// instance fields //

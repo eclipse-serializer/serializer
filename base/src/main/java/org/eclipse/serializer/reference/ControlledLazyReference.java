@@ -42,7 +42,7 @@ public interface ControlledLazyReference<T> extends Lazy<T>
 	 */
 	public final class Default<T> extends Lazy.Default<T> implements ControlledLazyReference<T>
 	{
-		private final static Logger logger = Logging.getLogger(ControlledLazyReference.Default.class);
+		private final static Logger logger = Logging.getLogger(ControlledLazyReference.class);
 				
 		private LazyClearController lazyClearController;
 		

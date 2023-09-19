@@ -40,7 +40,7 @@ public interface PersistenceLegacyTypeHandlerCreator<D>
 	
 	public abstract class Abstract<D> implements PersistenceLegacyTypeHandlerCreator<D>
 	{
-		private final static Logger logger = Logging.getLogger(Abstract.class);
+		private final static Logger logger = Logging.getLogger(PersistenceLegacyTypeHandlerCreator.class);
 		
 		///////////////////////////////////////////////////////////////////////////
 		// static methods //

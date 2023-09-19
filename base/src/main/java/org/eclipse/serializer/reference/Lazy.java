@@ -180,7 +180,7 @@ public interface Lazy<T> extends Referencing<T>
 	
 	public class Default<T> implements Lazy<T>
 	{
-		private final static Logger logger = Logging.getLogger(Default.class);
+		private final static Logger logger = Logging.getLogger(Lazy.class);
 		
 		
 		@SuppressWarnings("all")
@@ -651,7 +651,7 @@ public interface Lazy<T> extends Referencing<T>
 		 */
 		public final class Default implements Lazy.Checker, Lazy.ClearingEvaluator
 		{
-			private final static Logger logger = Logging.getLogger(Default.class);
+			private final static Logger logger = Logging.getLogger(Lazy.Checker.class);
 			
 			
 			///////////////////////////////////////////////////////////////////////////
