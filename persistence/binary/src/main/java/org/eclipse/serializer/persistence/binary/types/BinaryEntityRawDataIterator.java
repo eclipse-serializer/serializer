@@ -22,7 +22,6 @@ package org.eclipse.serializer.persistence.binary.types;
 
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
-import org.eclipse.serializer.persistence.binary.types.Binary;
 
 
 public interface BinaryEntityRawDataIterator

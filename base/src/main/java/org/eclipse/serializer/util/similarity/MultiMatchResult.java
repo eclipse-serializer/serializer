@@ -238,7 +238,7 @@ public interface MultiMatchResult<E>
 			if(this.sourceMatches == null)
 			{
 				this.sourceMatches = this.matchesInSourceOrder.filterTo(
-                        new BulkList<Similarity<E>>(this.matchCount),
+                        new BulkList<>(this.matchCount),
                         XFunc.notNull()
 				).immure();
 			}
@@ -251,7 +251,7 @@ public interface MultiMatchResult<E>
 			if(this.targetMatches == null)
 			{
 				this.targetMatches = this.matchesInTargetOrder.filterTo(
-					new BulkList<Similarity<E>>(this.matchCount),
+					new BulkList<>(this.matchCount),
 					XFunc.notNull()
 				).immure();
 			}

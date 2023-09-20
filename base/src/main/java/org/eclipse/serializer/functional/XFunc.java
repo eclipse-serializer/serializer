@@ -78,7 +78,7 @@ public final class XFunc
 
 	public static final <T> Predicate<T> isEqualTo(final T subject)
 	{
-		return new Predicate<T>()
+		return new Predicate<>()
 		{
 			@Override
 			public boolean test(final T o)
@@ -90,7 +90,7 @@ public final class XFunc
 
 	public static final <T, E extends T> Predicate<T> predicate(final E subject, final Equalator<T> equalator)
 	{
-		return new Predicate<T>()
+		return new Predicate<>()
 		{
 			@Override
 			public boolean test(final T t)

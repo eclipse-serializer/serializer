@@ -91,7 +91,7 @@ public final class OldCollections
 
 	public static final <T> ArrayList<T> ArrayList(final int initialCapacity, final Iterable<T> elements)
 	{
-		return addBatch(new ArrayList<T>(initialCapacity), elements);
+		return addBatch(new ArrayList<>(initialCapacity), elements);
 	}
 	
 	@SafeVarargs
@@ -464,7 +464,7 @@ public final class OldCollections
 		{
 			return new HashSet<>();
 		}
-		return addArray(new HashSet<T>(elements.length), elements);
+		return addArray(new HashSet<>(elements.length), elements);
 	}
 
 	@SafeVarargs

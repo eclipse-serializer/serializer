@@ -333,7 +333,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 
 		// constructor only copies configuration (concern #1), not data (#2). See copy() for copying data.
 		this.slots         = ChainMapEntryLinkedHashedStrongStrong.array(original.slots.length);
-		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedHashedStrongStrong<K, V>(-1, null, null, null));
+		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedHashedStrongStrong<>(-1, null, null, null));
 		this.capacity      = original.capacity;
 	}
 
@@ -349,7 +349,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		this.range         = pow2InitialHashLength - 1;
 
 		this.slots         = ChainMapEntryLinkedHashedStrongStrong.array(pow2InitialHashLength);
-		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedHashedStrongStrong<K, V>(-1, null, null, null));
+		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedHashedStrongStrong<>(-1, null, null, null));
 		this.capacity      = (int)(pow2InitialHashLength * positiveHashDensity); // capped at MAX_VALUE
 	}
 
@@ -2264,7 +2264,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 
 	public static final <K, VK, VV> Function<K, EqHashTable<VK, VV>> supplier(final HashEqualator<VK> hashEqualator)
 	{
-		return new Function<K, EqHashTable<VK, VV>>()
+		return new Function<>()
 		{
 			@Override
 			public final EqHashTable<VK, VV> apply(final K key)
@@ -2277,7 +2277,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 
 	public static final <K, VK, VV> Function<K, EqHashTable<VK, VV>> supplier()
 	{
-		return new Function<K, EqHashTable<VK, VV>>()
+		return new Function<>()
 		{
 			@Override
 			public final EqHashTable<VK, VV> apply(final K key)

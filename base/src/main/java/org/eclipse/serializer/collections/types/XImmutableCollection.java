@@ -40,7 +40,7 @@ public interface XImmutableCollection<E> extends XGettingCollection<E>, Immutabl
 
 	public static <E> Aggregator<E, XImmutableCollection<E>> Builder(final long initialCapacity)
 	{
-		return new Aggregator<E, XImmutableCollection<E>>()
+		return new Aggregator<>()
 		{
 			private final BulkList<E> newInstance = BulkList.New(initialCapacity);
 

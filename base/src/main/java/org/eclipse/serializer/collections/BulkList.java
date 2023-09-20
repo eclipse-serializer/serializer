@@ -127,7 +127,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 */
 	public static <E> Aggregator<E, BulkList<E>> Builder(final long initialCapacity)
 	{
-		return new Aggregator<E, BulkList<E>>()
+		return new Aggregator<>()
 		{
 			private final BulkList<E> newInstance = BulkList.New(initialCapacity);
 
@@ -2381,7 +2381,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	@Override
 	public final Aggregator<E, BulkList<E>> collector()
 	{
-		return new Aggregator<E, BulkList<E>>()
+		return new Aggregator<>()
 		{
 			@Override
 			public void accept(final E element)

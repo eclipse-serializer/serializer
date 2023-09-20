@@ -188,7 +188,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 
 	public static final <K, VK, VV> Function<K, HashTable<VK, VV>> supplier()
 	{
-		return new Function<K, HashTable<VK, VV>>()
+		return new Function<>()
 		{
 			@Override
 			public final HashTable<VK, VV> apply(final K key)
@@ -273,7 +273,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 
 		// constructor only copies configuration (concern #1), not data (#2). See copy() for copying data.
 		this.slots         = ChainMapEntryLinkedStrongStrong.array(original.slots.length);
-		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<K, V>(null, null, null));
+		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<>(null, null, null));
 		this.capacity      = original.capacity;
 	}
 
@@ -287,7 +287,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		this.range         = pow2InitialCapacity - 1;
 
 		this.slots         = ChainMapEntryLinkedStrongStrong.array(pow2InitialCapacity);
-		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<K, V>(null, null, null));
+		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<>(null, null, null));
 		this.capacity      = (int)(pow2InitialCapacity * positiveHashDensity); // capped at MAX_VALUE
 	}
 

@@ -1242,7 +1242,8 @@ public abstract class Binary implements Chunk
 	{
 		return this.buildByte(0);
 	}
-	
+
+	@SuppressWarnings("deprecation") // see comment in method
 	public final Byte buildByte(final long offset)
 	{
 		/*
@@ -1278,9 +1279,9 @@ public abstract class Binary implements Chunk
 		return this.buildBoolean(0);
 	}
 
+	@SuppressWarnings("deprecation") // see comment in #buildByte()
 	public final Boolean buildBoolean(final long offset)
 	{
-		// see comment in #buildByte()
 		return new Boolean(this.read_boolean(offset));
 	}
 
@@ -1289,9 +1290,9 @@ public abstract class Binary implements Chunk
 		return this.buildShort(0);
 	}
 
+	@SuppressWarnings("deprecation") // see comment in #buildByte()
 	public final Short buildShort(final long offset)
 	{
-		// see comment in #buildByte()
 		return new Short(this.read_short(offset));
 	}
 
@@ -1300,9 +1301,9 @@ public abstract class Binary implements Chunk
 		return this.buildCharacter(0);
 	}
 
+	@SuppressWarnings("deprecation") // see comment in #buildByte()
 	public final Character buildCharacter(final long offset)
 	{
-		// see comment in #buildByte()
 		return new Character(this.read_char(offset));
 	}
 
@@ -1311,9 +1312,9 @@ public abstract class Binary implements Chunk
 		return this.buildInteger(0);
 	}
 
+	@SuppressWarnings("deprecation") // see comment in #buildByte()
 	public final Integer buildInteger(final long offset)
 	{
-		// see comment in #buildByte()
 		return new Integer(this.read_int(offset));
 	}
 
@@ -1333,9 +1334,9 @@ public abstract class Binary implements Chunk
 		return this.buildLong(0);
 	}
 
+	@SuppressWarnings("deprecation") // see comment in #buildByte()
 	public final Long buildLong(final long offset)
 	{
-		// see comment in #buildByte()
 		return new Long(this.read_long(offset));
 	}
 

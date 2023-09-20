@@ -147,7 +147,7 @@ implements XImmutableEnum<E>, HashCollection<E>, Composition, IdentityEqualityLo
 
 		// constructor only copies configuration (concern #1), not data (#2). See copy() for copying data.
 		this.slots         = ChainEntryLinkedStrong.array(original.slots.length);
-		this.chain         = new ChainStorageStrong<>(this, new ChainEntryLinkedStrong<E>(null, null));
+		this.chain         = new ChainStorageStrong<>(this, new ChainEntryLinkedStrong<>(null, null));
 		this.capacity      = original.capacity;
 	}
 
@@ -158,7 +158,7 @@ implements XImmutableEnum<E>, HashCollection<E>, Composition, IdentityEqualityLo
 		this.range         = pow2InitialHashLength - 1;
 
 		this.slots         = ChainEntryLinkedStrong.array(pow2InitialHashLength);
-		this.chain         = new ChainStorageStrong<>(this, new ChainEntryLinkedStrong<E>(null, null));
+		this.chain         = new ChainStorageStrong<>(this, new ChainEntryLinkedStrong<>(null, null));
 		this.capacity      = (int)(pow2InitialHashLength * positiveHashDensity); // capped at MAX_VALUE
 	}
 

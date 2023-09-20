@@ -178,7 +178,7 @@ public final class XHashing
 		final HashEqualator<? super K> hashEqualator
 	)
 	{
-		return new HashEqualator<KeyValue<K, V>>()
+		return new HashEqualator<>()
 		{
 			@Override
 			public int hash(final KeyValue<K, V> kv)

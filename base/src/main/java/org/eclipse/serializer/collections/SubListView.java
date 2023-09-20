@@ -52,7 +52,7 @@ public class SubListView<E> implements XGettingList<E>
 	)
 	{
 		// tricky 8-)
-		return new IndexedAcceptor<E>()
+		return new IndexedAcceptor<>()
 		{
 			@Override
 			public void accept(final E e, final long index)
