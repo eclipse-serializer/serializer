@@ -192,7 +192,7 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 	@Override
 	public Iterator<KeyValue<K, V>> iterator()
 	{
-		return new Iterator<KeyValue<K, V>>()
+		return new Iterator<>()
 		{
 			@Override
 			public boolean hasNext()

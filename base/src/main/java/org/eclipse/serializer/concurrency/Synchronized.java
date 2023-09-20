@@ -21,7 +21,7 @@ package org.eclipse.serializer.concurrency;
  */
 
 
-import org.eclipse.serializer.concurrency.ThreadSafe;
+
 
 public interface Synchronized extends ThreadSafe
 {

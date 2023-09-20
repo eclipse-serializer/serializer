@@ -507,7 +507,7 @@ extends AbstractChainStorage<E, K, V, EN>
 			return true;
 		}
 
-		final Aggregator<E, Boolean> agg = new Aggregator<E, Boolean>()
+		final Aggregator<E, Boolean> agg = new Aggregator<>()
 		{
 			private EN entry = ChainStorageStrong.this.head;
 			private boolean notEqual; // false by default

@@ -283,7 +283,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 			return true;
 		}
 
-		final Aggregator<K, Boolean> agg = new Aggregator<K, Boolean>()
+		final Aggregator<K, Boolean> agg = new Aggregator<>()
 		{
 			private EN entry = ChainStrongStrongStorage.this.head;
 			private boolean notEqual; // false by default
@@ -2413,7 +2413,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 			return true;
 		}
 
-		final Aggregator<V, Boolean> agg = new Aggregator<V, Boolean>()
+		final Aggregator<V, Boolean> agg = new Aggregator<>()
 		{
 			private EN entry = ChainStrongStrongStorage.this.head;
 			private boolean notEqual; // false by default

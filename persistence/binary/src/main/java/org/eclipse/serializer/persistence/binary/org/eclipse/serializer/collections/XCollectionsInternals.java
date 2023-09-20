@@ -209,6 +209,11 @@ final class XCollectionsInternals
 	{
 		XMemory.set_int(instance, OFFSET_HashEnum_size, size);
 	}
+	
+	public static void setSize(final HashTable<?, ?> instance, final int size)
+	{
+		XMemory.set_int(instance, OFFSET_HashTable_size, size);
+	}
 
 	public static void setKeys(final HashTable<?, ?> instance, final HashTable<?, ?>.Keys keys)
 	{

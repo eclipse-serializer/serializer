@@ -86,12 +86,12 @@ public interface CqlResultor<O, R>
 	{
 		final T target = supplier.get();
 
-		return new CqlResultor<O, T>()
+		return new CqlResultor<>()
 		{
 			@Override
 			public Aggregator<O, T> prepareCollector(final XIterable<?> source)
 			{
-				return new Aggregator<O, T>()
+				return new Aggregator<>()
 				{
 					@Override
 					public void accept(final O element)

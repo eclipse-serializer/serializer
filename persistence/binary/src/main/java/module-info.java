@@ -42,9 +42,6 @@ module org.eclipse.serializer.persistence.binary
 	requires transitive org.eclipse.serializer.persistence;
 	requires transitive jdk.unsupported;
 
-	requires java.sql;  /* binary handlers */
+	requires transitive java.sql;  /* binary handlers */
 	/* To indicate we use these modules directly, but they also come through org.eclipse.serializer.persistence */
-	requires org.eclipse.serializer.afs;
-	requires org.eclipse.serializer.base;
-	requires org.slf4j;
 }

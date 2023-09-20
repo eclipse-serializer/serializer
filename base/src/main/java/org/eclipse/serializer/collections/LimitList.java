@@ -389,7 +389,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 		final int oldSize = this.size;
 		try
 		{
-			this.size = elements.iterate(new KamikazeArrayAdder<E>(this.data, oldSize)).yield();
+			this.size = elements.iterate(new KamikazeArrayAdder<>(this.data, oldSize)).yield();
 		}
 		catch(final ArrayIndexOutOfBoundsException e)
 		{
@@ -430,7 +430,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 		this.ensureFreeCapacity(XTypes.to_int(elements.size())); // prevents Kamikaze later on :D
 		final int oldSize;
 		return (this.size = elements.iterate(
-			new KamikazeArrayAdder<E>(this.data, oldSize = this.size)).yield()
+			new KamikazeArrayAdder<>(this.data, oldSize = this.size)).yield()
 		) - oldSize;
 	}
 

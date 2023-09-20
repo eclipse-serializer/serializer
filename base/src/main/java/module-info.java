@@ -21,6 +21,7 @@ module org.eclipse.serializer.base
 {
 	/* All packages are exported */
 	exports org.eclipse.serializer.branching;
+	exports org.eclipse.serializer.bytes;
 	exports org.eclipse.serializer.chars;
 	exports org.eclipse.serializer.collections;
 	exports org.eclipse.serializer.collections.interfaces;

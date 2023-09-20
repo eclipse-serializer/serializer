@@ -78,7 +78,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		final Function<VI, VO>       valueProjector
 	)
 	{
-		return new Aggregator<KeyValue<KI, VI>, ConstHashTable<KO, VO>>()
+		return new Aggregator<>()
 		{
 			@Override
 			public void accept(final KeyValue<KI, VI> e)
@@ -253,7 +253,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 
 		// constructor only copies configuration (concern #1), not data (#2). See copy() for copying data.
 		this.slots         = ChainMapEntryLinkedStrongStrong.array(original.slots.length);
-		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<K, V>(null, null, null));
+		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<>(null, null, null));
 		this.capacity      = original.capacity;
 	}
 
@@ -267,7 +267,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		this.range         = pow2InitialHashLength - 1;
 
 		this.slots         = ChainMapEntryLinkedStrongStrong.array(pow2InitialHashLength);
-		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<K, V>(null, null, null));
+		this.chain         = new ChainStrongStrongStorage<>(this, new ChainMapEntryLinkedStrongStrong<>(null, null, null));
 		this.capacity      = (int)(pow2InitialHashLength * positiveHashDensity); // capped at MAX_VALUE
 	}
 

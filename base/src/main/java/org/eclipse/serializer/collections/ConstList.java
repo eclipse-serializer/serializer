@@ -83,7 +83,7 @@ implements XImmutableList<E>, Composition, IdentityEqualityLogic
 
 	public static <E> Aggregator<E, ConstList<E>> Builder(final int initialCapacity)
 	{
-		return new Aggregator<E, ConstList<E>>()
+		return new Aggregator<>()
 		{
 			private final BulkList<E> newInstance = BulkList.New(initialCapacity);
 

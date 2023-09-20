@@ -20,7 +20,7 @@ package org.eclipse.serializer.exceptions;
  * #L%
  */
 
-import org.eclipse.serializer.exceptions.BaseException;
+
 
 public class MultiCauseException extends BaseException
 {
