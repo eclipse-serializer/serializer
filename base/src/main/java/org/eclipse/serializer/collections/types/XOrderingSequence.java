@@ -20,8 +20,8 @@ package org.eclipse.serializer.collections.types;
  * #L%
  */
 
-import org.eclipse.serializer.collections.interfaces.ExtendedSequence;
 import org.eclipse.serializer.collections.IndexExceededException;
+import org.eclipse.serializer.collections.interfaces.ExtendedSequence;
 
 public interface XOrderingSequence<E> extends ExtendedSequence<E>
 {

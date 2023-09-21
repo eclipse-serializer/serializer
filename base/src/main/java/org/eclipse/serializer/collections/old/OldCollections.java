@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections.old;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -32,18 +32,16 @@ import java.util.Map;
 import java.util.RandomAccess;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingMap;
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 
 /**
- * Some utility functionality for the old, misdesigned, bugged JDK collections that is so obvious but still
- * missing in the JDK that even got implemented here despite having a vastly superior collections framework.
- * 
- * 
+ * Some utility functionality for the JDK collections that is so obvious but still
+ * missing in the JDK that got implemented here.
  */
 public final class OldCollections
 {

@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -21,15 +21,22 @@ package org.eclipse.serializer.collections;
  */
 
 import static org.eclipse.serializer.util.X.ArrayOfSameType;
+import static org.eclipse.serializer.util.X.notNull;
 
+import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.XFunc;
+import org.eclipse.serializer.functional._intProcedure;
+import org.eclipse.serializer.functional._longProcedure;
+import org.eclipse.serializer.math.FastRandom;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.UtilStackTrace;
 import org.eclipse.serializer.util.X;
@@ -40,76 +47,6 @@ import org.eclipse.serializer.util.X;
  */
 public final class XArrays
 {
-	public static <T> T removeFromIndex(final T[] elements, final int size, final int i)
-    {
-        final T removed = elements[i];
-        if(i + 1 == size)
-        {
-            elements[i] = null;
-        }
-        else
-        {
-            System.arraycopy(elements, i + 1, elements, i, size - i - 1);
-            elements[size - 1] = null;
-        }
-
-        return removed;
-    }
-
-    public static final <T> T[] fill(
-            final T[]                   array   ,
-            final Supplier<? extends T> supplier
-    )
-    {
-        return uncheckedFill(array, 0, array.length, supplier);
-    }
-
-    public static final <T> T[] uncheckedFill(
-            final T[]                   array   ,
-            final int                   offset  ,
-            final int                   bound   ,
-            final Supplier<? extends T> supplier
-    )
-    {
-        for(int i = offset; i < bound; i++)
-        {
-            array[i] = supplier.get();
-        }
-
-        return array;
-    }
-
-    public static final boolean equals(final byte[] a, final byte[] a2, final int length)
-    {
-        if(a == a2)
-        {
-            return true;
-        }
-        if(a == null || a2 == null || a.length < length || a2.length < length)
-        {
-            return false;
-        }
-
-        for(int i = 0; i < length; i++)
-        {
-            if(a[i] != a2[i])
-            {
-                return false;
-            }
-        }
-
-        return true;
-
-    }
-
-    public static <E> E[] copyRange(final E[] elements, final int offset, final int length)
-    {
-        final E[] copy = X.ArrayOfSameType(elements, length);
-        System.arraycopy(elements, offset, copy, 0, length);
-        return copy;
-    }
-	    
-	    
 	public static final void validateRange0toUpperBound(final int upperBound, final int offset, final int length)
 	{
 		if(offset < 0 || offset >= upperBound)
@@ -145,6 +82,15 @@ public final class XArrays
 		if(index < 0 || index >= arrayLength)
 		{
 			throw UtilStackTrace.cutStacktraceByOne(new ArrayIndexOutOfBoundsException(index));
+		}
+		return index;
+	}
+
+	public static final int validIndex(final int index, final Object[] array) throws ArrayIndexOutOfBoundsException
+	{
+		if(index < 0 || array != null && index >= array.length)
+		{
+			throw new ArrayIndexOutOfBoundsException(index);
 		}
 		return index;
 	}
@@ -196,6 +142,23 @@ public final class XArrays
 		}
 	}
 
+	public static final void checkBounds(final Object[] array, final int start, final int bound)
+	{
+		checkBounds(array.length, start, bound);
+	}
+	
+	public static final void checkBounds(final int arrayLength, final int start, final int bound)
+	{
+		if(bound < 0 || bound > arrayLength)
+		{
+			throw new IndexExceededException(arrayLength, bound);
+		}
+		if(start < 0 || start >= bound)
+		{
+			throw new IndexExceededException(arrayLength, start);
+		}
+	}
+
 	/**
 	 * Returns if the passed array is either null or has the length 0.
 	 *
@@ -207,6 +170,71 @@ public final class XArrays
 		return array == null || array.length == 0;
 	}
 	
+	public static final <T> T[] fill(
+		final T[]                   array   ,
+		final Supplier<? extends T> supplier
+	)
+	{
+		return uncheckedFill(array, 0, array.length, supplier);
+	}
+	
+	public static final <T> T[] fill(
+		final T[]                   array   ,
+		final int                   offset  ,
+		final int                   bound   ,
+		final Supplier<? extends T> supplier
+	)
+	{
+		checkBounds(array, offset, bound);
+		
+		return uncheckedFill(array, offset, bound, supplier);
+	}
+	
+	public static final <T> T[] uncheckedFill(
+		final T[]                   array   ,
+		final int                   offset  ,
+		final int                   bound   ,
+		final Supplier<? extends T> supplier
+	)
+	{
+		for(int i = offset; i < bound; i++)
+		{
+			array[i] = supplier.get();
+		}
+		
+		return array;
+	}
+
+	public static final <T> T[] fill(final T[] array, final T fillElement, final int fromIndex, final int toIndex)
+	{
+		if(fromIndex < 0 || fromIndex >= array.length)
+		{
+			throw new ArrayIndexOutOfBoundsException(fromIndex);
+		}
+		if(toIndex < 0 || toIndex >= array.length)
+		{
+			throw new ArrayIndexOutOfBoundsException(toIndex);
+		}
+
+		if(fromIndex < toIndex)
+		{
+			int i = fromIndex;
+			while(i <= toIndex)
+			{
+				array[i++] = fillElement;
+			}
+		}
+		else
+		{
+			int i = toIndex;
+			while(fromIndex >= toIndex)
+			{
+				array[i--] = fillElement;
+			}
+		}
+		return array;
+	}
+
 	public static final int[] fill(final int[] array, final int fillElement)
 	{
 		final int length = array.length;
@@ -217,6 +245,36 @@ public final class XArrays
 		return array;
 	}
 
+	public static final char[] fill(final char[] array, final char fillElement)
+	{
+		final int length = array.length;
+		for(int i = 0; i < length; i++)
+		{
+			array[i] = fillElement;
+		}
+		return array;
+	}
+	
+	public static final byte[] fill(final byte[] array, final byte fillElement)
+	{
+		final int length = array.length;
+		for(int i = 0; i < length; i++)
+		{
+			array[i] = fillElement;
+		}
+		return array;
+	}
+	
+	public static final float[] fill(final float[] array, final float fillElement)
+	{
+		final int length = array.length;
+		for(int i = 0; i < length; i++)
+		{
+			array[i] = fillElement;
+		}
+		return array;
+	}
+	
 	public static final double[] fill(final double[] array, final double fillElement)
 	{
 		final int length = array.length;
@@ -227,12 +285,46 @@ public final class XArrays
 		return array;
 	}
 
+	public static final <T> T[] clear(final T[] array)
+	{
+		final int length = array.length;
+		for(int i = 0; i < length; i++)
+		{
+			array[i] = null;
+		}
+		return array;
+	}
+
+	public static final <T> T[] replicate(final T subject, final int times)
+	{
+		final T[] array = X.ArrayForElementType(subject, times);
+		for(int i = 0; i < times; i++)
+		{
+			array[i] = subject;
+		}
+		return array;
+	}
+
 	public static final <T> T[] subArray(final T[] array, final int offset, final int length)
 	{
 		final T[] newArray; // bounds checks are done by VM.
 		System.arraycopy(
 			array, offset, newArray = X.ArrayOfSameType(array, length), 0, length
 			);
+		return newArray;
+	}
+
+	public static final byte[] subArray(final byte[] array, final int offset, final int length)
+	{
+		final byte[] newArray; // bounds checks are done by VM.
+		System.arraycopy(array, offset, newArray = new byte[length], 0, length);
+		return newArray;
+	}
+
+	public static final char[] subArray(final char[] array, final int offset, final int length)
+	{
+		final char[] newArray; // bounds checks are done by VM.
+		System.arraycopy(array, offset, newArray = new char[length], 0, length);
 		return newArray;
 	}
 
@@ -295,6 +387,29 @@ public final class XArrays
 		return true;
 	}
 	
+	public static final boolean equals(final byte[] a, final byte[] a2, final int length)
+	{
+		if(a == a2)
+		{
+			return true;
+		}
+		if(a == null || a2 == null || a.length < length || a2.length < length)
+		{
+			return false;
+		}
+		
+		for(int i = 0; i < length; i++)
+		{
+			if(a[i] != a2[i])
+			{
+				return false;
+			}
+		}
+		
+		return true;
+		
+	}
+	
 	public static <T> T[] add(final T[] array, final T element)
 	{
 		final T[] newArray = enlarge(array, array.length + 1);
@@ -312,6 +427,217 @@ public final class XArrays
 		return newArray;
 	}
 
+	/**
+	 * Adds all elements of the first array and all elements of the second array into one result array.
+	 * Handles null-arrays correctly.
+	 * Always creates a new array instance.
+	 * 
+	 * @param <T> the type of the array elements
+	 * @param a1 the first array
+	 * @param a2 the second array
+	 * @return a new array with the concatenated elements
+	 */
+	@SafeVarargs
+	public static final <T> T[] add(final T[] a1, final T... a2)
+	{
+		// escape conditions (must clone to consistently return a new instance)
+		if(a1 == null)
+		{
+			return a2 == null ? null : a2.clone();
+		}
+		if(a2 == null)
+		{
+			return a1.clone();
+		}
+
+		// actual adding of two non-null arrays
+		final T[] a = X.ArrayOfSameType(a1, a1.length + a2.length);
+		System.arraycopy(a1, 0, a,         0, a1.length);
+		System.arraycopy(a2, 0, a, a1.length, a2.length);
+		return a;
+	}
+
+	public static final int[] add(final int[] a1, final int... a2)
+	{
+		// escape conditions (must clone to consistently return a new instance)
+		if(a1 == null)
+		{
+			return a2 == null ? null : a2.clone();
+		}
+		if(a2 == null)
+		{
+			return a1.clone();
+		}
+
+		// actual adding
+		final int[] a = new int[a1.length + a2.length];
+		System.arraycopy(a1, 0, a,         0, a1.length);
+		System.arraycopy(a2, 0, a, a1.length, a2.length);
+		return a;
+	}
+
+	public static final long[] add(final long[] a1, final long... a2)
+	{
+		// escape conditions (must clone to consistently return a new instance)
+		if(a1 == null)
+		{
+			return a2 == null ? null : a2.clone();
+		}
+		if(a2 == null)
+		{
+			return a1.clone();
+		}
+
+		// actual adding
+		final long[] a = new long[a1.length + a2.length];
+		System.arraycopy(a1, 0, a,         0, a1.length);
+		System.arraycopy(a2, 0, a, a1.length, a2.length);
+		return a;
+	}
+
+	@SuppressWarnings("unchecked")
+	@SafeVarargs
+	public static final <T> T[] combine(final T[]... arrays)
+	{
+		if(arrays == null || arrays.length == 0)
+		{
+			return null;
+		}
+
+		// (13.03.2012 TM)FIXME: check type consistency throughout all element arrays
+		return combine((Class<T>)arrays[0].getClass().getComponentType(), arrays);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static final <T, S extends T> T[] combine(final Class<T> componentType, final S[]... arrays)
+	{
+		// escape conditions (must clone to consistently return a new instance)
+		if(arrays == null || arrays.length == 0)
+		{
+			return null;
+		}
+		if(arrays.length == 1)
+		{
+			return arrays[0].clone();
+		}
+
+		long totalLength = 0;
+		for(final S[] array : arrays)
+		{
+			totalLength += array.length;
+		}
+		if(totalLength > Integer.MAX_VALUE)
+		{
+			throw new ArrayIndexOutOfBoundsException(Long.toString(totalLength));
+		}
+
+		// actual adding
+		final T[] combined = (T[])Array.newInstance(componentType, (int)totalLength);
+		for(int c = 0, i = 0; c < arrays.length; c++)
+		{
+			System.arraycopy(arrays[c], 0, combined, i, arrays[c].length);
+			i += arrays[c].length;
+		}
+		return combined;
+	}
+
+	public static final int[] _intAdd(final int[] a1, final int... a2)
+	{
+		// escape conditions (must clone to consistently return a new instance)
+		if(a1 == null)
+		{
+			return a2 == null ? null : a2.clone();
+		}
+		if(a2 == null)
+		{
+			return a1.clone();
+		}
+
+		// actual adding
+		final int[] a = new int[a1.length + a2.length];
+		System.arraycopy(a1, 0, a,         0, a1.length);
+		System.arraycopy(a2, 0, a, a1.length, a2.length);
+		return a;
+	}
+
+	/**
+	 * Merges the both passed arrays by taking all elements from {@code a1} (even duplicates) and adds all
+	 * elements of {@code a2} (also duplicates as well) that are not already contained in {@code a1}.
+	 *
+	 * @param <T> the type of the array elements
+	 * @param a1 the first array
+	 * @param a2 the second array
+	 * @return a new array with the merged elements
+	 */
+	@SafeVarargs
+	public static final <T> T[] merge(final T[] a1, final T... a2)
+	{
+		// escape conditions (must clone to consistently return a new instance)
+		if(a1 == null)
+		{
+			return a2 == null ? null : a2.clone();
+		}
+		if(a2 == null)
+		{
+			return a1.clone();
+		}
+
+		final int         a1Len  = a1.length;
+		final BulkList<T> buffer = new BulkList<>(a1);
+
+		a2:
+		for(final T e : a2)
+		{
+			for(int i = 0; i < a1Len; i++)
+			{
+				if(e == a1[i])
+				{
+					continue a2; // element already contained in a1, skip
+				}
+			}
+			buffer.add(e); // element not yet contained in a1, add to buffer
+		}
+		
+		@SuppressWarnings("unchecked") // cast safety ensured by compiler. T[] has component type T.
+		final T[] newArray = buffer.toArray((Class<T>)a1.getClass().getComponentType());
+
+		return newArray;
+	}
+	
+	@SafeVarargs
+	public static final <T> T[] ensureContained(final T[] a1, final T... a2)
+	{
+		notNull(a1);
+		if(a2 == null)
+		{
+			return a1;
+		}
+
+		a2:
+		for(final T e2 : a2)
+		{
+			for(final T e1 : a1)
+			{
+				if(e2 == e1)
+				{
+					// element found in a1, continue with next a2 element
+					continue a2;
+				}
+			}
+			
+			// at least one element of a2 is not contained in a1. So they are merged (identitywise).
+			final HashEnum<T> merger = HashEnum.New(a1).addAll(a2);
+			
+			@SuppressWarnings("unchecked") // cast safety ensured by compiler. T[] has component type T.
+			final T[] merged = merger.toArray((Class<T>)a1.getClass().getComponentType());
+
+			return merged;
+		}
+		
+		// all elements of a2 were found in a1. No need to modify anything.
+		return a1;
+	}
+	
 	public static final <T> T[] ensureContained(final T[] ts, final T t)
 	{
 		if(contains(ts, t))
@@ -335,6 +661,96 @@ public final class XArrays
 		for(final E e : array)
 		{
 			if(e == element)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static final <E> boolean eqContains(final E[] array, final E element)
+	{
+		if(element == null)
+		{
+			for(final E e : array)
+			{
+				if(e == null)
+				{
+					return true;
+				}
+			}
+		}
+		else
+		{
+			for(final E e : array)
+			{
+				if(element.equals(e))
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static final <T, S extends T> boolean contains(final T[] array, final S element, final Equalator<? super T> cmp)
+	{
+		for(final T t : array)
+		{
+			if(cmp.equal(element, t))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static final <E> boolean containsId(final Collection<E> c, final E element)
+	{
+		// case XGettingCollection
+		if(c instanceof XGettingCollection<?>)
+		{
+			return ((XGettingCollection<E>)c).containsId(element);
+		}
+
+		// case old collection, use slow iterator
+		for(final E t : c)
+		{
+			if(t == element)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static final <E> boolean containS(final Collection<E> c, final E element)
+	{
+		// case XGettingCollection
+		if(c instanceof XGettingCollection<?>)
+		{
+			return ((XGettingCollection<E>)c).contains(element);
+		}
+
+		return c.contains(element);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static final <E> boolean contains(final Collection<? super E> c, final E sample, final Equalator<? super E> equalator)
+	{
+		// case XGettingCollection
+		if(c instanceof XGettingCollection<?>)
+		{
+			return ((XGettingCollection<E>)c).containsSearched(XFunc.predicate(sample, equalator));
+		}
+
+		// case old collection, use slow iterator
+		for(final Object t : c)
+		{
+			if(equalator.equal((E)t, sample))
 			{
 				return true;
 			}
@@ -460,6 +876,13 @@ public final class XArrays
 			}
 		}
 
+	}
+
+	@SuppressWarnings("unchecked")
+	@SafeVarargs
+	public static final <E> E[] removeDuplicates(final E... elements)
+	{
+		return X.Enum(elements).toArray((Class<E>)elements.getClass().getComponentType());
 	}
 
 	//!\\ NOTE: copy of single-object version with only contains part changed! Maintain by copying!
@@ -701,6 +1124,116 @@ public final class XArrays
 		return target;
 	}
 
+	/**
+	 * Moves the contents of the given array in a random order.
+	 * 
+	 * @param <T> the element type
+	 * @param data the array to shuffle
+	 * @return the array
+	 */
+	@SafeVarargs
+	public static final <T> T[] shuffle(final T... data)
+	{
+		final FastRandom random = new FastRandom();
+		for(int i = data.length, j; i > 1; i--)
+		{
+			final T t = data[i - 1];
+			data[i - 1] = data[j = random.nextInt(i)];
+			data[j] = t;
+		}
+		return data;
+	}
+
+	/**
+	 * Moves the contents of the given array in a random order.
+	 * 
+	 * @param <E> the element type
+	 * @param array the array to shuffle
+	 * @param startIndex the start index of the shuffle range
+	 * @param endIndex the end index of the shuffle range
+	 * @return the array
+	 */
+	public static final <E> E[] shuffle(final E[] array, final int startIndex, final int endIndex)
+	{
+		if(startIndex < 0 || endIndex >= array.length || startIndex > endIndex)
+		{
+			throw new IndexOutOfBoundsException("Range [" + startIndex + ';' + endIndex + "] not in [0;" + (array.length - 1) + "].");
+		}
+		final FastRandom random = new FastRandom();
+		for(int i = endIndex, j; i > startIndex; i--)
+		{
+			final E t = array[i - 1];
+			array[i - 1] = array[j = random.nextInt(i)];
+			array[j] = t;
+		}
+		return array;
+	}
+
+	public static final int[] shuffle(final int... data)
+	{
+		return shuffle(new FastRandom(), data);
+	}
+
+	public static final int[] shuffle(final FastRandom random, final int... data)
+	{
+		for(int i = data.length, j; i > 1; i--)
+		{
+			final int t = data[i - 1];
+			data[i - 1] = data[j = random.nextInt(i)];
+			data[j] = t;
+		}
+		return data;
+	}
+	
+	public static final long[] shuffle(final long... data)
+	{
+		return shuffle(new FastRandom(), data);
+	}
+
+	public static final long[] shuffle(final FastRandom random, final long... data)
+	{
+		for(int i = data.length, j; i > 1; i--)
+		{
+			final long t = data[i - 1];
+			data[i - 1] = data[j = random.nextInt(i)];
+			data[j] = t;
+		}
+		return data;
+	}
+
+	/**
+	 * Convenience method, calling either {@link System#arraycopy(Object, int, Object, int, int)} for
+	 * {@code length >= 0} or {@link XArrays#reverseArraycopy(Object[], int, Object[], int, int)} for {@code length < 0}
+	 * and returns {@code dest}.<br>
+	 * If length is known to be positive and performance badly matters or negative length shall be treated as an error,
+	 * use {@link System#arraycopy(Object, int, Object, int, int)} directly. Otherwise, this method is a convenient
+	 * alternative to handle more flexible bi-directional array copying.
+	 *
+	 * @param <D> the destination element type
+	 * @param <S> the source element type
+	 * @param src the source array
+	 * @param srcPos the source array position
+	 * @param dest the destination array
+	 * @param destPos the destination array position
+	 * @param length the length of the range to copy
+	 * @return the destination array
+	 */
+	public static <D, S extends D> D[] arraycopy(
+		final S[] src,
+		final int srcPos,
+		final D[] dest,
+		final int destPos,
+		final int length
+		)
+	{
+		if(length < 0)
+		{
+			return XArrays.reverseArraycopy(src, srcPos, dest, destPos, -length);
+		}
+		System.arraycopy(src, srcPos, dest, destPos, length);
+		return dest;
+	}
+	
 	public static <T> T[] enlarge(final T[] array, final int newLength)
 	{
 		if(newLength <= array.length)
@@ -718,6 +1251,111 @@ public final class XArrays
 		return newArray;
 	}
 	
+	public static <T> T[] shrink(final T[] array, final int newLength)
+	{
+		if(newLength >= array.length)
+		{
+			if(newLength == array.length)
+			{
+				return array;
+			}
+			throw new IllegalArgumentException();
+		}
+		
+		final T[] newArray = ArrayOfSameType(array, newLength);
+		System.arraycopy(array, 0, newArray, 0, newLength);
+		
+		return newArray;
+	}
+	
+	public static <T> T removeFromIndex(final T[] elements, final int size, final int i)
+	{
+		final T removed = elements[i];
+		if(i + 1 == size)
+		{
+			elements[i] = null;
+		}
+		else
+		{
+			System.arraycopy(elements, i + 1, elements, i, size - i - 1);
+			elements[size - 1] = null;
+		}
+		
+		return removed;
+	}
+
+	public static final boolean containsNull(final Object[] data, final int offset, final int length)
+	{
+		final int endIndex, d; // bi-directional index movement
+		if(length >= 0)
+		{
+			if(offset < 0 || (endIndex = offset + length - 1) >= data.length)
+			{
+				throw new IndexOutOfBoundsException(exceptionRange(data.length, offset, length));
+			}
+			if(length == 0)
+			{
+				return false;
+			}
+			d = +1; // incrementing direction
+		}
+		else if(length < 0)
+		{
+			if((endIndex = offset + length + 1) < 0 || offset >= data.length)
+			{
+				throw new IndexOutOfBoundsException(exceptionRange(data.length, offset, length));
+			}
+			d = -1; // decrementing direction
+		}
+		else if(offset < 0 || offset >= data.length)
+		{
+			throw new IndexOutOfBoundsException(exceptionIndexOutOfBounds(data.length, offset));
+		}
+		else
+		{
+			// handle length 0 special case not as escape condition but as last case to ensure index checking
+			return false;
+		}
+
+		int i = offset - d;
+		while(i != endIndex)
+		{
+			if(data[i += d] == null)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static <E> E[] copyRange(final E[] elements, final int offset, final int length)
+	{
+		final E[] copy = X.ArrayOfSameType(elements, length);
+		System.arraycopy(elements, offset, copy, 0, length);
+		return copy;
+	}
+
+	public static <E> E[] filter(final E[] elements, final Predicate<? super E> predicate)
+	{
+		return filterTo(elements, new BulkList<>(), predicate).toArray(componentType(elements));
+	}
+
+	public static <E, C extends Consumer<? super E>> C filterTo(
+		final E[] elements,
+		final C target,
+		final Predicate<? super E> predicate
+		)
+	{
+		for(final E e : elements)
+		{
+			if(predicate.test(e))
+			{
+				target.accept(e);
+			}
+		}
+		return target;
+	}
+
 	public static <E> int replaceAllInArray(
 		final E[] data,
 		final int startLow,
@@ -738,6 +1376,194 @@ public final class XArrays
 		return replaceCount;
 	}
 
+	public static <E> int replaceAllInArray(
+		final E[]                  data      ,
+		final int                  startLow  ,
+		final int                  boundHigh ,
+		final E                    sample    ,
+		final Equalator<? super E> equalator ,
+		final E                    newElement
+		)
+	{
+		int replaceCount = 0;
+		for(int i = startLow; i < boundHigh; i++)
+		{
+			if(equalator.equal(data[i], sample))
+			{
+				data[i] = newElement;
+				replaceCount++;
+			}
+		}
+		return replaceCount;
+	}
+
+	public static <T> T[] and(final T[] a1, final T[] a2)
+	{
+		final int length;
+		final T[] target = X.ArrayOfSameType(a1, length = min(a1.length, a2.length));
+		for(int i = 0; i < length; i++)
+		{
+			target[i] = a1[i] != null && a2[i] != null ? a1[i] : null;
+		}
+		return target;
+	}
+
+	public static <T> T[] or(final T[] a1, final T[] a2)
+	{
+		final int length;
+		final T[] target = X.ArrayOfSameType(a1, length = min(a1.length, a2.length));
+		for(int i = 0; i < length; i++)
+		{
+			target[i] = a1[i] != null ? a1[i] : a2[i] != null ? a2[i] : null;
+		}
+		return target;
+	}
+
+	public static <T> T[] not(final T[] a1, final T[] a2)
+	{
+		final int length;
+		final T[] target = X.ArrayOfSameType(a1, length = min(a1.length, a2.length));
+		for(int i = 0; i < length; i++)
+		{
+			target[i] = a2[i] == null ? a1[i] : null;
+		}
+		return target;
+	}
+	
+	/**
+	 * Orders the passed elements by the passed indices.
+	 *
+	 * @param <T> the target element type
+	 * @param <S> the source element type
+	 * @param elements the elements to be sorted according to the passed indices.
+	 * @param indices the indices defining the order in which the passed elements shall be rearranged.
+	 * @param indicesOffset the start offset of the indices
+	 * @param target the target array to receive the sorted elements.
+	 * @return the target array
+	 */
+	public static <T, S extends T> T[] orderByIndices(
+		final S[] elements,
+		final int[] indices,
+		final int indicesOffset,
+		final T[] target
+		)
+			throws IllegalArgumentException
+	{
+		if(indicesOffset < 0)
+		{
+			throw new ArrayIndexOutOfBoundsException(indicesOffset);
+		}
+
+		final int targetLength = target.length;
+		if(elements.length + indicesOffset > indices.length)
+		{
+			throw new ArrayIndexOutOfBoundsException(elements.length + indicesOffset);
+		}
+
+		final int indicesBound = indicesOffset + elements.length;
+		for(int i = indicesOffset; i < indicesBound; i++)
+		{
+			if(indices[i] >= targetLength)
+			{
+				// indices < 0 explicitly valid for allowing items to be skipped
+				throw new ArrayIndexOutOfBoundsException(indices[i]);
+			}
+		}
+
+		for(int i = indicesOffset; i < indicesBound; i++)
+		{
+			if(indices[i] < 0)
+			{
+				continue;
+			}
+			target[indices[i]] = elements[i - indicesOffset];
+		}
+		return target;
+	}
+
+	public static final int min(final int... data)
+	{
+		if(data.length == 0)
+		{
+			return 0;
+		}
+
+		int loopMinElement = data[0];
+		for(int i = 1; i < data.length; i++)
+		{
+			if(data[i] < loopMinElement)
+			{
+				loopMinElement = data[i];
+			}
+		}
+		return loopMinElement;
+	}
+
+	public static final int max(final int... data)
+	{
+		if(data.length == 0)
+		{
+			return 0;
+		}
+
+		int loopMaxElement = data[0];
+		for(int i = 1; i < data.length; i++)
+		{
+			if(data[i] >= loopMaxElement)
+			{
+				loopMaxElement = data[i];
+			}
+		}
+		
+		return loopMaxElement;
+	}
+	
+	public static final <T> boolean applies(final T[] array, final Predicate<? super T> predicate)
+	{
+		if(array.length == 0)
+		{
+			// must check for the special case of no entries (predicate cannot apply).
+			return false;
+		}
+		
+		for(final T t : array)
+		{
+			if(predicate.test(t))
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public static final <T> T search(final T[] array, final Predicate<? super T> predicate)
+	{
+		for(final T t : array)
+		{
+			if(predicate.test(t))
+			{
+				return t;
+			}
+		}
+		
+		return null;
+	}
+	
+	public static final <T> int count(final T[] array, final Predicate<? super T> predicate)
+	{
+		int count = 0;
+		for(final T t : array)
+		{
+			if(predicate.test(t))
+			{
+				count++;
+			}
+		}
+		
+		return count;
+	}
+	
 	/**
 	 * Reverse order counterpart to {@link System#arraycopy(Object, int, Object, int, int)}.
 	 * <p>
@@ -796,6 +1622,59 @@ public final class XArrays
 		return dest;
 	}
 
+	public static int[] reverseArraycopy(
+		final int[] src    ,
+		final int   srcPos ,
+		final int[] dest   ,
+		final int   destPos,
+		final int   length
+		)
+	{
+		if(srcPos >= src.length)
+		{
+			throw new ArrayIndexOutOfBoundsException(srcPos);
+		}
+		if(destPos < 0)
+		{
+			throw new ArrayIndexOutOfBoundsException(destPos);
+		}
+		if(length < 0)
+		{
+			throw new ArrayIndexOutOfBoundsException(length);
+		}
+		if(srcPos - length < -1)
+		{
+			throw new ArrayIndexOutOfBoundsException(srcPos - length);
+		}
+		if(destPos + length > dest.length)
+		{
+			throw new ArrayIndexOutOfBoundsException(destPos + length);
+		}
+
+		final int destBound = destPos + length;
+		for(int s = srcPos, d = destPos; d < destBound; s--, d++)
+		{
+			dest[d] = src[s];
+		}
+		return dest;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static final <T> T[] convertArray(final Object[] objects, final Class<T> type) throws ClassCastException
+	{
+		final T[] converted = (T[])Array.newInstance(type, objects.length);
+		for(int i = 0; i < objects.length; i++)
+		{
+			converted[i] = (T)objects[i];
+		}
+		return converted;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E> Class<E> componentType(final E[] array)
+	{
+		return (Class<E>)array.getClass().getComponentType();
+	}
 
 	public static final int arrayHashCode(final Object[] data, final int size)
 	{
@@ -863,6 +1742,18 @@ public final class XArrays
 	return true;  // all elements have been found, return true
 	}
 
+	public static final boolean contains(final int[] values, final int value)
+	{
+		for(final int v : values)
+		{
+			if(v == value)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static <E, I extends Consumer<? super E>> I iterate(
 		final E[] elements,
 		final I   iterator
@@ -876,6 +1767,73 @@ public final class XArrays
 		return iterator;
 	}
 
+	public static <E> void iterate(
+		final E[]                 elements,
+		final int                 offset  ,
+		final int                 length  ,
+		final Consumer<? super E> iterator
+	)
+	{
+		AbstractArrayStorage.validateRange0toUpperBound(elements.length, offset, length);
+
+		for(int i = offset; i < length; i++)
+		{
+			iterator.accept(elements[i]);
+		}
+	}
+	
+	public static void iterate(
+		final int[]         elements,
+		final _intProcedure iterator
+	)
+	{
+		for(final int e : elements)
+		{
+			iterator.accept(e);
+		}
+	}
+
+	public static void iterate(
+		final int[]         elements,
+		final int           offset  ,
+		final int           length  ,
+		final _intProcedure iterator
+	)
+	{
+		AbstractArrayStorage.validateRange0toUpperBound(elements.length, offset, length);
+
+		for(int i = offset; i < length; i++)
+		{
+			iterator.accept(elements[i]);
+		}
+	}
+	
+	public static void iterate(
+		final long[]         elements,
+		final _longProcedure iterator
+	)
+	{
+		for(final long e : elements)
+		{
+			iterator.accept(e);
+		}
+	}
+
+	public static void iterate(
+		final long[]         elements,
+		final int            offset  ,
+		final int            length  ,
+		final _longProcedure iterator
+	)
+	{
+		AbstractArrayStorage.validateRange0toUpperBound(elements.length, offset, length);
+
+		for(int i = offset; i < length; i++)
+		{
+			iterator.accept(elements[i]);
+		}
+	}
+	
 	public static final <T, S> int indexOf(final S sample, final T[] array, final BiPredicate<T, S> predicate)
 	{
 		for(int i = 0; i < array.length; i++)
@@ -902,10 +1860,190 @@ public final class XArrays
 		return -1;
 	}
 
+	public static final int indexOf(final byte value, final byte[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
 
+	public static final int indexOf(final boolean value, final boolean[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static final int indexOf(final short value, final short[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static final int indexOf(final char value, final char[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static final int indexOf(final int value, final int[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static final int indexOf(final float value, final float[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static final int indexOf(final long value, final long[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static final int indexOf(final double value, final double[] values)
+	{
+		for(int i = 0; i < values.length; i++)
+		{
+			if(values[i] == value)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static final int indexOf(final byte[] data, final byte[] subject)
+	{
+		return indexOf(data, subject, 0);
+	}
+	
+	public static final int indexOf(final byte[] data, final byte[] subject, final int startIndex)
+	{
+		final int  bound     = data.length - subject.length + 1;
+		final byte firstByte = subject[0];
+
+		outer:
+		for(int i = startIndex; i < bound; i++)
+		{
+			// quick check for fitting first byte
+			if(data[i] != firstByte)
+			{
+				continue;
+			}
+
+			// potential match location, check rest of the array
+			for(int j = 1; j < subject.length; j++)
+			{
+				if(data[i + j] != subject[j])
+				{
+					continue outer;
+				}
+			}
+
+			// all bytes matched, location found, return index.
+			return i;
+		}
+
+		// no match found until bounding index, return miss
+		return -1;
+	}
+	
 	public static final byte[] rebuild(final byte[] oldArray, final int newLength)
 	{
 		final byte[] newArray = new byte[newLength];
+		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
+		return newArray;
+	}
+	
+	public static final boolean[] rebuild(final boolean[] oldArray, final int newLength)
+	{
+		final boolean[] newArray = new boolean[newLength];
+		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
+		return newArray;
+	}
+	
+	public static final short[] rebuild(final short[] oldArray, final int newLength)
+	{
+		final short[] newArray = new short[newLength];
+		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
+		return newArray;
+	}
+	
+	public static final char[] rebuild(final char[] oldArray, final int newLength)
+	{
+		final char[] newArray = new char[newLength];
+		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
+		return newArray;
+	}
+	
+	public static final int[] rebuild(final int[] oldArray, final int newLength)
+	{
+		final int[] newArray = new int[newLength];
+		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
+		return newArray;
+	}
+	
+	public static final float[] rebuild(final float[] oldArray, final int newLength)
+	{
+		final float[] newArray = new float[newLength];
+		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
+		return newArray;
+	}
+	
+	public static final long[] rebuild(final long[] oldArray, final int newLength)
+	{
+		final long[] newArray = new long[newLength];
+		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
+		return newArray;
+	}
+	
+	public static final double[] rebuild(final double[] oldArray, final int newLength)
+	{
+		final double[] newArray = new double[newLength];
 		System.arraycopy(oldArray, 0, newArray, 0, Math.min(oldArray.length, newLength));
 		return newArray;
 	}
@@ -950,6 +2088,11 @@ public final class XArrays
 		bytes[index + 3] = (byte)(value >>> 3*Byte.SIZE);
 	}
 
+	public static final void set_floatInBytes(final byte[] bytes, final int index, final float value)
+	{
+		set_intInBytes(bytes, index, Float.floatToRawIntBits(value));
+	}
+
 	public static final void set_longInBytes(final byte[] bytes, final int index, final long value)
 	{
 		XArrays.validateArrayIndex(bytes.length, index + 7);
@@ -963,7 +2106,43 @@ public final class XArrays
 		bytes[index + 7] = (byte)(value >>> 7*Byte.SIZE);
 	}
 
+	public static final void set_doubleInBytes(final byte[] bytes, final int index, final double value)
+	{
+		set_longInBytes(bytes, index, Double.doubleToRawLongBits(value));
+	}
+	
 
+	
+	public static final int smoothCapacityIncrease(final int oldCapacity)
+	{
+		// see MainTestSmoothArrayResizing
+		
+		// 280 steps. Threshold 333 is the best value to smooth the highest increase when starting at 0.
+		// Also interesting: increment/threshold of 8/172 and 10/220
+		return oldCapacity < 333
+			? oldCapacity + 16
+			: oldCapacity < 2_021_161_081 // 2021161080 * 1,0625 = 2147483647
+				? oldCapacity + (oldCapacity >> 4)
+				: Integer.MAX_VALUE
+		;
+	}
+	
+	public static final int smoothCapacityDecrease(final int oldCapacity)
+	{
+		// see MainTestSmoothArrayResizing
+		
+		// 264 steps. Threshold 333 is the best value to smooth the lowest decrease when starting at max value.
+		// Also interesting: increment/threshold of 8/161 and 10/180
+		return oldCapacity >= 333
+			? oldCapacity - (oldCapacity >> 4)
+			: oldCapacity >= 16 //
+				? oldCapacity - 16
+				: 0
+		;
+	}
+	
+	
+	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////

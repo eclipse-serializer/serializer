@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections.old;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -140,7 +140,7 @@ public abstract class AbstractOldGettingSet<E> implements OldSet<E>
 	{
 		return this.subject.toArray();
 	}
-	
+
 	@Override
 	public <T> T[] toArray(final T[] target)
 	{

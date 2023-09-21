@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -39,7 +39,6 @@ import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.Aggregator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.reference.ReferenceType;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
@@ -416,7 +415,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 			return false; // size 0
 		}
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return true;
 		}
@@ -1403,7 +1402,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	public final int keyRemoveAll(final K[] elements, final int elementsOffset, final int elementsLength)
 	{
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return 0;
 		}
@@ -1535,7 +1534,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	public final int keyRetainAll(final K[] elements, final int elementsOffset, final int elementsLength)
 	{
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return 0;
 		}
@@ -1569,7 +1568,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	)
 	{
 		final int d;
-		if((d = validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
 		{
 			return 0;
 		}
@@ -1910,7 +1909,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	public final int keyReplaceAll(final K[] elements, final int elementsOffset, final int elementsLength, final K replacement)
 	{
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return 0;
 		}
@@ -2624,7 +2623,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 		}
 
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return true;
 		}
@@ -2662,7 +2661,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 		}
 
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return true;
 		}
@@ -3782,7 +3781,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	public final int valuesRemoveAll(final V[] elements, final int elementsOffset, final int elementsLength)
 	{
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return 0;
 		}
@@ -3816,7 +3815,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	)
 	{
 		final int d;
-		if((d = validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
 		{
 			return 0;
 		}
@@ -3982,7 +3981,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	public final int valuesRetainAll(final V[] elements, final int elementsOffset, final int elementsLength)
 	{
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return 0;
 		}
@@ -4017,7 +4016,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	)
 	{
 		final int d;
-		if((d = validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
 		{
 			return 0;
 		}
@@ -4398,7 +4397,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	public final int valuesReplaceAll(final V[] elements, final int elementsOffset, final int elementsLength, final V replacement)
 	{
 		final int d;
-		if((d = validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(elements, elementsOffset, elementsLength)) == 0)
 		{
 			return 0;
 		}
@@ -4432,7 +4431,7 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	)
 	{
 		final int d;
-		if((d = validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
+		if((d = ChainStorageStrong.validateArrayIteration(samples, samplesOffset, samplesLength)) == 0)
 		{
 			return 0;
 		}
@@ -4616,13 +4615,13 @@ extends AbstractChainKeyValueStorage<K, V, EN>
 	@Override
 	public final boolean valuesRemoveOne(final V element)
 	{
-		throw new NotImplementedYetError(); // FIXME ChainKeyValueStorage<K,V,EN>#valuesRemoveOne()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ChainKeyValueStorage<K,V,EN>#valuesRemoveOne()
 	}
 
 	@Override
 	public final boolean valuesRemoveOne(final V sample, final Equalator<? super V> equalator)
 	{
-		throw new NotImplementedYetError(); // FIXME ChainKeyValueStorage<K,V,EN>#valuesRemoveOne()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ChainKeyValueStorage<K,V,EN>#valuesRemoveOne()
 	}
 
 }

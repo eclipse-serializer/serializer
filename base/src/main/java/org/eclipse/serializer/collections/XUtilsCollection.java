@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -23,30 +23,102 @@ package org.eclipse.serializer.collections;
 import java.util.Comparator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.eclipse.serializer.chars.VarString;
+import org.eclipse.serializer.chars.XChars;
+import org.eclipse.serializer.collections.types.XAddingCollection;
 import org.eclipse.serializer.collections.types.XCollection;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.collections.types.XInsertingList;
+import org.eclipse.serializer.collections.types.XIterable;
+import org.eclipse.serializer.collections.types.XProcessingCollection;
 import org.eclipse.serializer.collections.types.XProcessingSequence;
+import org.eclipse.serializer.collections.types.XPuttingCollection;
 import org.eclipse.serializer.collections.types.XSettingList;
 import org.eclipse.serializer.collections.types.XSortableSequence;
+import org.eclipse.serializer.collections.types.XTable;
 import org.eclipse.serializer.equality.Equalator;
+import org.eclipse.serializer.exceptions.IndexBoundsException;
+import org.eclipse.serializer.functional.AggregateCountingAdd;
+import org.eclipse.serializer.functional.AggregateCountingPut;
 import org.eclipse.serializer.functional.AggregateMax;
 import org.eclipse.serializer.functional.AggregateMin;
+import org.eclipse.serializer.functional.AggregateOffsetLength;
+import org.eclipse.serializer.functional.Aggregator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.functional.IsCustomEqual;
 import org.eclipse.serializer.functional.IsGreater;
 import org.eclipse.serializer.functional.IsSmaller;
-import org.eclipse.serializer.meta.NotImplementedYetError;
+import org.eclipse.serializer.functional.XFunc;
+import org.eclipse.serializer.math.FastRandom;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 
 public final class XUtilsCollection
 {
+	private static <T> LimitList<T> buffer(final int srcSize, final long length)
+	{
+		int temp, minimum = srcSize;
+		if((temp = X.checkArrayRange(length < 0 ? -length : length)) < minimum)
+		{
+			minimum = temp;
+		}
+		return new LimitList<>(minimum);
+	}
+
+
 
 	private static final Object MARKER = new Object();
+
+
+	@SuppressWarnings("unchecked")
+	public static final <E, C extends XIterable<? extends E>> C iterate(
+		final C collection,
+		final Predicate<? super E> predicate,
+		final Consumer<? super E> procedure
+	)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.forwardConditionalIterate(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection),
+				0,
+				((AbstractSimpleArrayCollection<?>)collection).internalSize(),
+				predicate, procedure
+			);
+		}
+		else if(collection instanceof AbstractChainCollection<?, ?, ?, ?>)
+		{
+			((AbstractChainCollection<E, ?, ?, ?>)collection).getInternalStorageChain().iterate(predicate, procedure);
+		}
+		else
+		{
+			collection.iterate(XFunc.wrapWithPredicate(procedure, predicate));
+		}
+		return collection;
+	}
+
+
+	public static <K, E, C extends XTable<K, E>> C valueSortByValues(
+		final C                     collection,
+		final Comparator<? super E> order
+	)
+	{
+		valueSort(collection.values(), order);
+		return collection;
+	}
+
+	public static <V, E, C extends XTable<E, V>> C valueSortByKeys(
+		final C                     collection,
+		final Comparator<? super E> order
+	)
+	{
+		valueSort(collection.keys(), order);
+		return collection;
+	}
 
 
 	public static <E, C extends XSortableSequence<E>> C valueSort(
@@ -71,6 +143,109 @@ public final class XUtilsCollection
 	}
 
 
+	public static <E> void shuffle(final XSortableSequence<E> collection)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.shuffle(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection), XTypes.to_int(collection.size())
+			);
+		}
+		else
+		{
+			final FastRandom random = new FastRandom();
+			for(int i = XTypes.to_int(collection.size()); i > 1; i--)
+			{
+				collection.swap(i - 1, random.nextInt(i));
+			}
+		}
+	}
+
+	public static <E> void rngShuffle(final XSortableSequence<E> collection, final long offset, final long length)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.rangedShuffle(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection),
+				XTypes.to_int(collection.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length)
+			);
+		}
+		else
+		{
+			final FastRandom random = new FastRandom();
+			for(int i = XTypes.to_int(collection.size()); i > 1; i--)
+			{
+				collection.swap(i - 1, random.nextInt(i));
+			}
+		}
+	}
+
+	public static <E, C extends XGettingCollection<E>> C diverge(
+		final C elements,
+		final Consumer<? super E> positives,
+		final Consumer<? super E> negatives,
+		final Predicate<? super E> predicate
+	)
+	{
+		elements.iterate(e ->
+		{
+			if(predicate.test(e))
+			{
+				positives.accept(e);
+			}
+			else
+			{
+				negatives.accept(e);
+			}
+		});
+		return elements;
+	}
+
+	public static <E, C extends XProcessingCollection<E>> C partition(
+		final C collection,
+		final Predicate<? super E> predicate,
+		final Consumer<? super E> positiveTarget,
+		final Consumer<? super E> negativeTarget
+	)
+	{
+		collection.process(e ->
+		{
+			if(predicate.test(e))
+			{
+				positiveTarget.accept(e);
+			}
+			else
+			{
+				negativeTarget.accept(e);
+			}
+		});
+		return collection;
+	}
+
+	public static <E, C extends XGettingCollection<E>> C decide(
+		final C collection,
+		final Predicate<? super E> predicate,
+		final Consumer<? super E> positiveOperation,
+		final Consumer<? super E> negativeOperation
+	)
+	{
+		collection.iterate(e ->
+		{
+			if(predicate.test(e))
+			{
+				positiveOperation.accept(e);
+			}
+			else
+			{
+				negativeOperation.accept(e);
+			}
+		});
+		return collection;
+	}
+
+	
 	public static <E, C extends XCollection<E>> C subtract(
 		final C                               elements,
 		final XGettingCollection<? extends E> other
@@ -80,6 +255,76 @@ public final class XUtilsCollection
 		return elements;
 	}
 
+
+	private static String exceptionStringOffset(final int size, final long offset)
+	{
+		return "Invalid offset of " + offset + " for size " + size;
+	}
+
+	private static String exceptionStringRange(final int size, final long offset, final long length)
+	{
+		return "Invalid range (" + offset + ", " + length + " for size " + size;
+	}
+
+	public static <E> int rngBinarySearch(
+		final XGettingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final E element,
+		final Comparator<? super E> comparator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedBinarySearch(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				element,
+				comparator
+			);
+		}
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> boolean rngHasUniqueValues(
+		final XGettingSequence<E> sequence,
+		final long offset,
+		final long length
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedHasUniqueValues(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length)
+			);
+		}
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> boolean rngHasUniqueValues(
+		final XGettingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedHasUniqueValues(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				equalator
+			);
+		}
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
 
 	public static <E> boolean rngContainsAll(
 		final XGettingSequence<E> sequence,
@@ -99,7 +344,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> E rngMax(
@@ -120,7 +365,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> E rngMin(
@@ -141,7 +386,30 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E>
+	int rngIndexOf(
+		final XGettingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final E sample,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedScan(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				new IsCustomEqual<>(equalator, sample)
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E>
@@ -158,7 +426,30 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E>
+	int rngCount(
+		final XGettingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final E sample,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedConditionalCount(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				new IsCustomEqual<>(equalator, sample)
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E>
@@ -179,7 +470,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngIsSorted(
@@ -200,7 +491,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, C extends Consumer<? super E>> C rngCopyTo(
@@ -271,7 +562,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, C extends XGettingSequence<E>>
@@ -289,7 +580,7 @@ public final class XUtilsCollection
 			return sequence;
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, C extends XGettingSequence<E>> C rngIterate(
@@ -311,7 +602,31 @@ public final class XUtilsCollection
 			return sequence;
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E, C extends XGettingSequence<E>> C rngIterate(
+		final C                    sequence ,
+		final long                 offset   ,
+		final long                 length   ,
+		final Predicate<? super E> predicate,
+		final Consumer<? super E>  procedure
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.rangedConditionalIterate(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				predicate,
+				procedure
+			);
+			return sequence;
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, A> A rngJoin(
@@ -335,7 +650,30 @@ public final class XUtilsCollection
 			return aggregate;
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> E rngFind(
+		final XGettingSequence<E>  sequence ,
+		final long                 offset   ,
+		final long                 length   ,
+		final E                    sample   ,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedQueryElement(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				new IsCustomEqual<>(equalator, sample),
+				null
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngContains(
@@ -356,7 +694,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngContainsId(
@@ -377,7 +715,50 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> boolean rngContains(
+		final XGettingSequence<E>  sequence ,
+		final long                 offset   ,
+		final long                 length   ,
+		final E                    sample   ,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedContains(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				new IsCustomEqual<>(equalator, sample)
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> boolean rngContains(
+		final XGettingSequence<E>  sequence ,
+		final long                 offset   ,
+		final long                 length   ,
+		final Predicate<? super E> predicate
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedContains(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				predicate
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngContainsNull(final XGettingSequence<E> sequence, final long offset, final long length)
@@ -393,7 +774,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngApplies(
@@ -403,7 +784,7 @@ public final class XUtilsCollection
 		final Predicate<? super E> predicate
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngAppliesAll(
@@ -424,7 +805,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> int rngCount(
@@ -445,7 +826,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> int rngIndexOf(
@@ -466,7 +847,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> int rngScan(
@@ -487,7 +868,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> E rngGet(
@@ -510,7 +891,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> E rngSearch(
@@ -532,7 +913,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngEqualsContent(
@@ -555,7 +936,191 @@ public final class XUtilsCollection
 		}
 
 		// (13.03.2011)TODO: rngEqualsContent() ... tricky
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E, R> R rngAggregate(
+		final XGettingSequence<E>      sequence ,
+		final long                     offset   ,
+		final long                     length   ,
+		final Aggregator<? super E, R> aggregate
+	)
+	{
+		// implementation-specific optimized alternatives
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.rangedIterate(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				aggregate
+			);
+			return aggregate.yield();
+		}
+
+
+		// sanity checks
+		final int size = XTypes.to_int(sequence.size());
+		if(offset < 0 || offset >= size)
+		{
+			throw new IllegalArgumentException(exceptionStringOffset(size, offset));
+		}
+		if(length == 0)
+		{
+			return aggregate.yield(); // length 0, return default value of aggregate
+		}
+
+		final long bound = offset + length;
+		if(bound < -1 || bound > size)
+		{
+			throw new IllegalArgumentException(exceptionStringRange(size, offset, length));
+		}
+
+		// execute via stateful wrapper aggregate
+		final AggregateOffsetLength<E, R> wrappedAggregate;
+		sequence.iterate(wrappedAggregate = new AggregateOffsetLength<>(offset, length, aggregate));
+		return wrappedAggregate.yield();
+	}
+
+	public static <E> VarString rngAppendTo(
+		final XGettingSequence<E> sequence,
+		final long                offset  ,
+		final long                length  ,
+		final VarString           vs
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedAppendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				vs
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> VarString rngAppendTo(
+		final XGettingSequence<E> sequence ,
+		final long                offset   ,
+		final long                length   ,
+		final VarString           vs       ,
+		final String              separator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedAppendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				vs,
+				separator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> VarString rngAppendTo(
+		final XGettingSequence<E> sequence ,
+		final long                offset   ,
+		final long                length   ,
+		final VarString           vs       ,
+		final char                separator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedAppendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				vs,
+				separator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> VarString rngAppendTo(
+		final XGettingSequence<E>               sequence,
+		final long                              offset  ,
+		final long                              length  ,
+		final VarString                         vs      ,
+		final BiConsumer<VarString, ? super E> appender
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedAppendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				vs,
+				appender
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> VarString rngAppendTo(
+		final XGettingSequence<E>               sequence ,
+		final long                              offset   ,
+		final long                              length   ,
+		final VarString                         vc       ,
+		final BiConsumer<VarString, ? super E> appender ,
+		final char                              separator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedAppendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				vc,
+				appender,
+				separator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> VarString rngAppendTo(
+		final XGettingSequence<E>               sequence ,
+		final long                              offset   ,
+		final long                              length   ,
+		final VarString                         vs       ,
+		final BiConsumer<VarString, ? super E> appender ,
+		final String                            separator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedAppendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				vs,
+				appender,
+				separator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> int rngMaxIndex(
@@ -576,7 +1141,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E>
@@ -598,7 +1163,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, C extends Consumer<? super E>>
@@ -615,7 +1180,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, C extends Consumer<? super E>> C rngDistinct(
@@ -638,7 +1203,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, C extends Consumer<? super E>> C rngIntersect(
@@ -663,7 +1228,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E, C extends Consumer<? super E>> C rngUnion(
@@ -688,7 +1253,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 
 	}
 
@@ -714,8 +1279,115 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
+
+
+	///////////////////////////////////////////////////////////////////////////
+	// adding / putting //
+	/////////////////////
+
+	public static <E, C extends XAddingCollection<? super E>> C addAll(
+		final C target,
+		final E[] elements,
+		final long offset,
+		final long length,
+		final Predicate<? super E> predicate
+	)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+	public static <E, C extends XAddingCollection<? super E>> C addAll(
+		final C target,
+		final XGettingCollection<? extends E> elements,
+		final Predicate<? super E> predicate
+	)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E, C extends XAddingCollection<? super E>> C putAll(
+		final C target,
+		final E[] elements,
+		final long offset,
+		final long length,
+		final Predicate<? super E> predicate
+	)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+	public static <E, C extends XAddingCollection<? super E>> C putAll(
+		final C target,
+		final XGettingCollection<? extends E> elements,
+		final Predicate<? super E> predicate
+	)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E, C extends XInsertingList<? super E>> C insert(
+		final C target,
+		final int index,
+		final E[] elements,
+		final long offset,
+		final long length,
+		final Predicate<? super E> predicate
+	)
+	{
+		final int size;
+		if(index == (size = XTypes.to_int(target.size())))
+		{
+			XUtilsCollection.addAll(target, elements, offset, length, predicate);
+			return target;
+		}
+		if(index < 0 || index > size)
+		{
+			throw new IndexBoundsException(size, index);
+		}
+
+		// select elements into buffer
+		final LimitList<E> buffer = XUtilsCollection.addAll(
+			XUtilsCollection.<E>buffer(elements.length, length), elements, offset, length, predicate
+		);
+
+		// internal copying of selected elements
+		if(XTypes.to_int(buffer.size()) > 0)
+		{
+			target.insertAll(index, buffer.internalGetStorageArray(), 0, XTypes.to_int(buffer.size()));
+		}
+		return target;
+	}
+
+	public static <E, C extends XInsertingList<? super E>> C insert(
+		final C target,
+		final long index,
+		final XGettingCollection<? extends E> elements,
+		final Predicate<? super E> predicate
+	)
+	{
+		final long size;
+		if(index == (size = target.size()))
+		{
+			XUtilsCollection.addAll(target, elements, predicate);
+			return target;
+		}
+		if(index < 0 || index > size)
+		{
+			throw new IndexBoundsException(size, index);
+		}
+
+		// select elements into buffer
+		final LimitList<E> buffer = XUtilsCollection.addAll(new LimitList<>(XTypes.to_int(elements.size())), elements, predicate);
+
+		// internal copying of selected elements
+		if(buffer.size() > 0)
+		{
+			target.insertAll(index, buffer.internalGetStorageArray(), 0, XTypes.to_int(buffer.size()));
+		}
+		return target;
+	}
+
+
 
 	///////////////////////////////////////////////////////////////////////////
 	// removing //
@@ -741,7 +1413,32 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E> E rngRetrieve(
+		final XProcessingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final E sample,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedRetrieve(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				sample,
+				equalator,
+				(E)MARKER
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SuppressWarnings("unchecked")
@@ -764,7 +1461,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> boolean rngRemoveOne(
@@ -785,7 +1482,30 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> boolean rngRemoveOne(
+		final XProcessingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final E sample,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedRemoveOne(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				sample,
+				equalator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> int rngRemoveNull(
@@ -804,7 +1524,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> int rngRemove(
@@ -825,7 +1545,55 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> int rngRemove(
+		final XProcessingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final E sample,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedRemove(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				sample,
+				equalator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E> int rngRemoveAll(
+		final XProcessingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final XGettingCollection<? extends E> samples,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedRemoveAll(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				samples,
+				equalator,
+				(E)MARKER
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> int rngRemoveAll(
@@ -846,7 +1614,32 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E> int rngRetainAll(
+		final XProcessingSequence<E> sequence,
+		final long offset,
+		final long length,
+		final XGettingCollection<? extends E> samples,
+		final Equalator<? super E> equalator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.rangedRetainAll(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				(XGettingCollection<E>)samples,
+				equalator,
+				(E)MARKER
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SuppressWarnings("unchecked")
@@ -869,7 +1662,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SuppressWarnings("unchecked")
@@ -892,7 +1685,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SuppressWarnings("unchecked")
@@ -913,7 +1706,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SuppressWarnings("unchecked")
@@ -936,7 +1729,7 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SuppressWarnings("unchecked")
@@ -962,7 +1755,7 @@ public final class XUtilsCollection
 			return target;
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SuppressWarnings("unchecked")
@@ -986,7 +1779,7 @@ public final class XUtilsCollection
 			return sequence;
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	public static <E> void rngSort(
@@ -1007,7 +1800,107 @@ public final class XUtilsCollection
 			);
 		}
 
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> void rngShuffle(
+		final XSettingList<E> sequence,
+		final long offset,
+		final long length
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.rangedShuffle(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length)
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> void rngSortMerge(
+		final XSettingList<E> sequence,
+		final long offset,
+		final long length,
+		final Comparator<? super E> comparator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.rangedSortMerge(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				comparator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> void rngSortInsertion(
+		final XSettingList<E> sequence,
+		final long offset,
+		final long length,
+		final Comparator<? super E> comparator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.rangedSortInsertion(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				comparator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> void rngSortQuick(
+		final XSettingList<E> sequence,
+		final long offset,
+		final long length,
+		final Comparator<? super E> comparator
+	)
+	{
+		if(sequence instanceof AbstractSimpleArrayCollection<?>)
+		{
+			AbstractArrayStorage.rangedSortQuick(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)sequence),
+				XTypes.to_int(sequence.size()),
+				XTypes.to_int(offset),
+				XTypes.to_int(length),
+				comparator
+			);
+		}
+
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
+	}
+
+	public static <E> VarString appendTo(final XGettingCollection<E> collection, final VarString vc)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.appendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection), XTypes.to_int(collection.size()), vc
+			);
+		}
+
+		if(XTypes.to_int(collection.size()) == 0)
+		{
+			return vc;
+		}
+
+		collection.iterate(e -> vc.add(e).append(','));
+		return vc.deleteLast();
 	}
 
 	public static <E> VarString appendTo(final XGettingCollection<E> collection, final VarString vc, final char separator)
@@ -1029,8 +1922,231 @@ public final class XUtilsCollection
 		return vc.deleteLast();
 	}
 
+	public static <E> VarString appendTo(final XGettingCollection<E> collection, final VarString vc, final String separator)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.appendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection), XTypes.to_int(collection.size()), vc, separator
+			);
+		}
+
+		if(XTypes.to_int(collection.size()) == 0)
+		{
+			return vc;
+		}
+
+		final char[] sepp = XChars.readChars(separator);
+		collection.iterate(e -> vc.add(e).add(sepp));
+		return vc.deleteLast(sepp.length);
+	}
+
+	public static <E> VarString appendTo(
+		final XGettingCollection<E> collection,
+		final VarString vc,
+		final BiConsumer<VarString, ? super E> appender
+	)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.appendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection), XTypes.to_int(collection.size()), vc, appender
+			);
+		}
+
+		if(XTypes.to_int(collection.size()) == 0)
+		{
+			return vc;
+		}
+
+		collection.iterate(e ->
+		{
+			appender.accept(vc, e);
+			vc.append(',');
+		});
+		return vc.deleteLast();
+	}
+
+	public static <E> VarString appendTo(
+		final XGettingCollection<E> collection,
+		final VarString vc, final BiConsumer<VarString, ? super E> appender,
+		final char separator
+	)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.appendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection),
+				XTypes.to_int(collection.size()), vc, appender, separator
+			);
+		}
+
+		if(XTypes.to_int(collection.size()) == 0)
+		{
+			return vc;
+		}
+
+		collection.iterate(e ->
+		{
+			appender.accept(vc, e);
+			vc.append(separator);
+		});
+		return vc.deleteLast();
+	}
+
+	public static <E> VarString appendTo(
+		final XGettingCollection<E> collection,
+		final VarString vc, final BiConsumer<VarString, ? super E> appender,
+		final String separator
+	)
+	{
+		if(collection instanceof AbstractSimpleArrayCollection<?>)
+		{
+			return AbstractArrayStorage.appendTo(
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)collection),
+				XTypes.to_int(collection.size()), vc, appender, separator
+			);
+		}
+
+		if(XTypes.to_int(collection.size()) == 0)
+		{
+			return vc;
+		}
+
+		final char[] sepp = XChars.readChars(separator);
+		collection.iterate(e ->
+		{
+			appender.accept(vc, e);
+			vc.add(sepp);
+		});
+		return vc.deleteLast(sepp.length);
+	}
+
 	// counting add and put //
 
+	@SuppressWarnings("unchecked")
+	public static <E> int addAll(final XAddingCollection<E> target, final E... elements)
+	{
+		// parameter type ensures target really implements the internal adding methods
+		if(target instanceof AbstractExtendedCollection<?>)
+		{
+			return ((AbstractExtendedCollection<E>)target).internalCountingAddAll(elements);
+		}
+
+		int addCount = 0;
+		for(int i = 0; i < elements.length; i++)
+		{
+			if(target.add(elements[i]))
+			{
+				addCount++;
+			}
+		}
+		return addCount;
+	}
+	@SuppressWarnings("unchecked")
+	public static <E> int addAll(final XAddingCollection<E> target, final E[] elements, final int offset, final int length)
+	{
+		// parameter type ensures target really implements the internal adding methods
+		if(target instanceof AbstractExtendedCollection<?>)
+		{
+			return ((AbstractExtendedCollection<E>)target).internalCountingAddAll(
+				elements,
+				XTypes.to_int(offset),
+				XTypes.to_int(length)
+			);
+		}
+
+		final int d;
+		if((d = XArrays.validateArrayRange(elements, offset, length)) == 0)
+		{
+			return 0;
+		}
+
+		final int bound = XTypes.to_int(offset + length);
+		int addCount = 0;
+		for(int i = XTypes.to_int(offset); i != bound; i += d)
+		{
+			if(target.add(elements[i]))
+			{
+				addCount++;
+			}
+		}
+		return addCount;
+	}
+	@SuppressWarnings("unchecked")
+	public static <E> int addAll(final XAddingCollection<E> target, final XGettingCollection<? extends E> elements)
+	{
+		// parameter type ensures target really implements the internal adding methods
+		if(target instanceof AbstractExtendedCollection<?>)
+		{
+			return ((AbstractExtendedCollection<E>)target).internalCountingAddAll(elements);
+		}
+
+		return elements.iterate(new AggregateCountingAdd<>(target)).yield();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E> int putAll(final XPuttingCollection<E> target, final E... elements)
+	{
+		// parameter type ensures target really implements the internal putting methods
+		if(target instanceof AbstractExtendedCollection<?>)
+		{
+			return ((AbstractExtendedCollection<E>)target).internalCountingPutAll(elements);
+		}
+
+		int addCount = 0;
+		for(int i = 0; i < elements.length; i++)
+		{
+			if(target.put(elements[i]))
+			{
+				addCount++;
+			}
+		}
+		return addCount;
+	}
+	@SuppressWarnings("unchecked")
+	public static <E> int putAll(
+		final XPuttingCollection<E> target  ,
+		final E[]                   elements,
+		final int                   offset  ,
+		final int                   length
+	)
+	{
+		// parameter type ensures target really implements the internal putting methods
+		if(target instanceof AbstractExtendedCollection<?>)
+		{
+			return ((AbstractExtendedCollection<E>)target).internalCountingPutAll(elements, offset, length);
+		}
+
+		final int d;
+		if((d = XArrays.validateArrayRange(elements, offset, length)) == 0)
+		{
+			return 0;
+		}
+
+		final int bound = XTypes.to_int(offset + length);
+		int addCount = 0;
+		for(int i = XTypes.to_int(offset); i != bound; i += d)
+		{
+			if(target.put(elements[i]))
+			{
+				addCount++;
+			}
+		}
+		return addCount;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E> int putAll(final XPuttingCollection<E> target, final XGettingCollection<? extends E> elements)
+	{
+		// parameter type ensures target really implements the internal putting methods
+		if(target instanceof AbstractExtendedCollection<?>)
+		{
+			return ((AbstractExtendedCollection<E>)target).internalCountingPutAll(elements);
+		}
+
+		return elements.iterate(new AggregateCountingPut<>(target)).yield();
+	}
 
 	public static <E, S extends E> E[] toArray(
 		final XGettingCollection<S> collection        ,
@@ -1043,6 +2159,74 @@ public final class XUtilsCollection
 		return array;
 	}
 
+
+	@SafeVarargs
+	public static final <V> EqHashTable<Integer, V> toTable(final V... values)
+	{
+		final EqHashTable<Integer, V> table = EqHashTable.New();
+
+		for(int i = 0; i < values.length; i++)
+		{
+			table.add(i, values[i]);
+		}
+
+		return table;
+	}
+
+
+	/* (07.07.2011 TM)TODO: binarySearch()
+	 * Note: binarySearch must be a util method and can't be a sequence instance method
+	 * as unsorted sequence can't be (efficiently) guaranteed to be sorted according to
+	 * the passed comparator. Having to ensure "manually" to sort the sequence beforehand
+	 * would be an unnatural contract.
+	 * Furthermore, binarySearch can be inefficient for chain storage implementations,
+	 * further discouraging the declaration of binarySearch() in an interface type.
+	 *
+	 * And SortedSequences can't be explicitly binarySearch-ed either, as they use an
+	 * internal comparator. BinarySearch can be used internally when searching an element.
+	 *
+	 * Hence, the binarySearch() is best defined as an independent util method taking advantage
+	 * of proper delegation architecture.
+	 *
+	 */
+
+
+	/**
+	 * Creates an array containing the indices of all elements the passed predicate applies to.
+	 *
+	 * @param <E> the element type of the passed sequence.
+	 * @param sequence the sequence to be indexed.
+	 * @param predicate the predicate to be used to create the index.
+	 * @return the index describing the passed predicate for the passed sequence.
+	 */
+	public static <E> int[] index(final XGettingSequence<E> sequence, final Predicate<? super E> predicate)
+	{
+		final Indexer<E> indexer;
+		sequence.iterateIndexed(indexer = new Indexer<>(predicate));
+		return indexer.yield();
+	}
+
+	public static <E> int[] orderedIndex(final XGettingSequence<E> sequence, final Predicate<? super E> predicate)
+	{
+		final Indexer<E> indexer;
+		sequence.iterateIndexed(indexer = new Indexer<>(predicate));
+		return indexer.sortAndYield();
+	}
+	
+	public static <I, O, C extends XAddingCollection<? super O>> C projectInto(
+		final Iterable<? extends I> elements ,
+		final Function<I, O>        projector,
+		final C                     target
+	)
+	{
+		for(final I e : elements)
+		{
+			target.add(projector.apply(e));
+		}
+		return target;
+	}
+
+	
 
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //

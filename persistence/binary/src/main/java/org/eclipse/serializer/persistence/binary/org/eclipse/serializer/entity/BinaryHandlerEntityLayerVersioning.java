@@ -119,7 +119,7 @@ public class BinaryHandlerEntityLayerVersioning
 	{
 		final Object[] elements = (Object[])data.getHelper(instance);
 		final EqHashTable<Object, Object> versions = EqHashTable.<Object, Object>New(
-			(HashEqualator<? super Object>)EntityInternals.getContext(instance).equalator()
+				(HashEqualator<? super Object>)EntityInternals.getContext(instance).equalator()
 		);
 		for(int i = 0; i < elements.length; )
 		{

@@ -3,9 +3,9 @@ package org.eclipse.serializer.entity;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -29,7 +29,7 @@ import org.eclipse.serializer.collections.types.XGettingTable;
 public final class EntityLayerVersioning<K> extends EntityLayer
 {
 	EntityVersionContext<K> context ;
-	EqHashTable<K, Entity> versions;
+	EqHashTable<K, Entity>  versions;
 	
 	protected EntityLayerVersioning(
 		final Entity                  inner  ,

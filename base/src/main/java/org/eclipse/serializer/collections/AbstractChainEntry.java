@@ -1,7 +1,5 @@
 package org.eclipse.serializer.collections;
 
-import org.eclipse.serializer.chars.VarString;
-
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -22,8 +20,10 @@ import org.eclipse.serializer.chars.VarString;
  * #L%
  */
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.ChainStorage;
 import org.eclipse.serializer.typing.KeyValue;
+
 
 
 public abstract class AbstractChainEntry<E, K, V, EN extends AbstractChainEntry<E, K, V, EN>>

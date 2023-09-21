@@ -20,7 +20,6 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-
 import org.eclipse.serializer.collections.interfaces.ExtendedCollection;
 import org.eclipse.serializer.collections.types.XAddingCollection;
 import org.eclipse.serializer.collections.types.XGettingCollection;

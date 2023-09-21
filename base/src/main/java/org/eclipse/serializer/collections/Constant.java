@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -38,7 +38,6 @@ import org.eclipse.serializer.collections.types.XImmutableList;
 import org.eclipse.serializer.collections.types.XReferencing;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.TrivialIterator;
@@ -415,7 +414,7 @@ public class Constant<E> implements XImmutableList<E>, XImmutableEnum<E>, XRefer
 		final T                               target
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -431,7 +430,7 @@ public class Constant<E> implements XImmutableList<E>, XImmutableEnum<E>, XRefer
 		final T                               target
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME  not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME  not implemented yet
 	}
 
 	@Override
@@ -507,7 +506,7 @@ public class Constant<E> implements XImmutableList<E>, XImmutableEnum<E>, XRefer
 		final T                               target
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override

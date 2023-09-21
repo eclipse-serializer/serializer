@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -27,7 +27,6 @@ import java.util.function.Predicate;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XSettingList;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 
 
 public class SubListAccessor<E> extends SubListView<E> implements XSettingList<E>
@@ -54,25 +53,25 @@ public class SubListAccessor<E> extends SubListView<E> implements XSettingList<E
 	@Override
 	public  long replace(final E element, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public  boolean replaceOne(final E element, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public  long substitute(final Function<? super E, ? extends E> mapper)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public  long substitute(final Predicate<? super E> predicate, final Function<E, E> mapper)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -97,7 +96,7 @@ public class SubListAccessor<E> extends SubListView<E> implements XSettingList<E
 	@Override
 	public  boolean replaceOne(final Predicate<? super E> predicate, final E substitute)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -268,14 +267,14 @@ public class SubListAccessor<E> extends SubListView<E> implements XSettingList<E
 	@Override
 	public  long replace(final Predicate<? super E> predicate, final E substitute)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 
 	@Override
 	public  long replaceAll(final XGettingCollection<? extends E> elements, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override

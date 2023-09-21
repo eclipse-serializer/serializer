@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -38,7 +38,6 @@ import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.Aggregator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.reference.ReferenceType;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
@@ -344,28 +343,28 @@ extends AbstractChainStorage<E, K, V, EN>
 	@Override
 	public final void shiftBy(final long sourceIndex, final long distance)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final void shiftBy(final long sourceIndex, final long distance, final long length)
 	{
 		// FIXME not implemented yet
-		throw new NotImplementedYetError();
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}
 
 	@Override
 	public final void shiftTo(final long sourceIndex, final long targetIndex)
 	{
 		// FIXME not implemented yet
-		throw new NotImplementedYetError();
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}
 
 	@Override
 	public final void shiftTo(final long sourceIndex, final long targetIndex, final long length)
 	{
 		// FIXME not implemented yet
-		throw new NotImplementedYetError();
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}
 
 	private void swapEntries(final EN entryA, final EN entryB)
@@ -421,7 +420,7 @@ extends AbstractChainStorage<E, K, V, EN>
 	public final void retainRange(final long offset, final long length)
 	{
 		// FIXME ChainStrongStrongStorage#retainRange()
-		throw new NotImplementedYetError();
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}
 
 	/**
@@ -2330,7 +2329,7 @@ extends AbstractChainStorage<E, K, V, EN>
 	public final void shuffle()
 	{
 		// (04.04.2016 TM)NOTE: chain storage shuffling is currently not correct (and has never been used/tested/needed)
-		throw new NotImplementedYetError(); // FIXME ChainStorageStrong#shuffle()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ChainStorageStrong#shuffle()
 	}
 
 

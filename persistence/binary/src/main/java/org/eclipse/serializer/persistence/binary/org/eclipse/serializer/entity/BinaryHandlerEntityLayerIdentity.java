@@ -25,7 +25,6 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.entity.Entity;
@@ -42,6 +41,7 @@ import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.reflect.XReflect;
+import org.eclipse.serializer.util.X;
 
 public class BinaryHandlerEntityLayerIdentity<T extends EntityLayerIdentity>
 	extends AbstractBinaryHandlerCustomCollection<T>

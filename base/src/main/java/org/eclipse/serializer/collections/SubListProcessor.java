@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -31,7 +31,6 @@ import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XProcessingList;
 import org.eclipse.serializer.collections.types.XSortableSequence;
 import org.eclipse.serializer.equality.Equalator;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
 
 public class SubListProcessor<E> extends SubListView<E> implements XDecreasingList<E>
@@ -339,44 +338,44 @@ public class SubListProcessor<E> extends SubListView<E> implements XDecreasingLi
 	@Override
 	public final boolean replaceOne(final E element, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 
 	@Override
 	public final long replace(final E element, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final long replaceAll(final XGettingCollection<? extends E> elements, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final boolean replaceOne(final Predicate<? super E> predicate, final E substitute)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final long replace(final Predicate<? super E> predicate, final E substitute)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final long substitute(final Function<? super E, ? extends E> mapper)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final long substitute(final Predicate<? super E> predicate, final Function<E, E> mapper)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 
@@ -384,62 +383,62 @@ public class SubListProcessor<E> extends SubListView<E> implements XDecreasingLi
 	public final boolean set(final long index, final E element)
 		throws IndexOutOfBoundsException, ArrayIndexOutOfBoundsException
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final E setGet(final long index, final E element)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final void setFirst(final E element)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final void setLast(final E element)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XSortableSequence<E> shiftTo(final long sourceIndex, final long targetIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XSortableSequence<E> shiftTo(final long sourceIndex, final long targetIndex, final long length)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XSortableSequence<E> shiftBy(final long sourceIndex, final long distance)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XSortableSequence<E> shiftBy(final long sourceIndex, final long distance, final long length)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@SafeVarargs
 	@Override
 	public final XDecreasingList<E> setAll(final long index, final E... elements)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XDecreasingList<E> set(final long index, final E[] elements, final int offset, final int length)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -450,37 +449,37 @@ public class SubListProcessor<E> extends SubListView<E> implements XDecreasingLi
 		final long                           length
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XDecreasingList<E> swap(final long indexA, final long indexB)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XDecreasingList<E> swap(final long indexA, final long indexB, final long length)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XDecreasingList<E> reverse()
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XDecreasingList<E> fill(final long offset, final long length, final E element)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final XDecreasingList<E> sort(final Comparator<? super E> comparator)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 }

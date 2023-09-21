@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections.types;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -25,10 +25,9 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.interfaces.ExtendedSequence;
 import org.eclipse.serializer.branching.ThrowBreak;
+import org.eclipse.serializer.collections.interfaces.ExtendedSequence;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
-import org.eclipse.serializer.util.X;
 
 public interface XGettingSequence<E> extends XGettingCollection<E>, ExtendedSequence<E>, XIndexIterable<E>
 {
@@ -151,7 +150,7 @@ public interface XGettingSequence<E> extends XGettingCollection<E>, ExtendedSequ
 	 * In order to find the last element, this method must iterate over <b>all elements</b> of the collection
 	 * (opposed to {@link XGettingSequence#indexBy(Predicate)} and {@link XGettingSequence#lastIndexBy(Predicate)}).
 	 * <p>
-	 * Iteration can be safely canceled with a {@link ThrowBreak} ({@link X#BREAK})
+	 * Iteration can be safely canceled with a {@link ThrowBreak} ({@link one.microstream.X#BREAK})
 	 * @param predicate to define a valid element
 	 * @return the index of the last positively tested element.
 	 */

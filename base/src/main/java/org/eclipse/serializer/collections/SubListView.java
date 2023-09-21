@@ -3,9 +3,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -35,7 +35,6 @@ import org.eclipse.serializer.collections.types.XImmutableList;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.iterables.ReadOnlyListIterator;
 
@@ -466,7 +465,7 @@ public class SubListView<E> implements XGettingList<E>
 	@Override
 	public Object[] toArray()
 	{
-		throw new NotImplementedYetError(); // FIXME SubListView#toArray()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME SubListView#toArray()
 	}
 
 	@Override
@@ -538,7 +537,7 @@ public class SubListView<E> implements XGettingList<E>
 	@Override
 	public E[] toArray(final Class<E> type)
 	{
-		throw new NotImplementedYetError(); // FIXME SubListView#toArray()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME SubListView#toArray()
 	}
 
 	@Override
@@ -575,7 +574,7 @@ public class SubListView<E> implements XGettingList<E>
 	@Override
 	public boolean equalsContent(final XGettingCollection<? extends E> samples, final Equalator<? super E> equalator)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 

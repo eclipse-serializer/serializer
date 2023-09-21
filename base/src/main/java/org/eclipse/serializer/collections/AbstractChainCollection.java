@@ -23,6 +23,7 @@ package org.eclipse.serializer.collections;
 import org.eclipse.serializer.collections.interfaces.ChainStorage;
 
 
+
 public abstract class AbstractChainCollection<E, K, V, EN extends AbstractChainEntry<E, K, V, EN>>
 extends AbstractExtendedCollection<E>
 {

@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -37,7 +37,6 @@ import org.eclipse.serializer.collections.types.XImmutableTable;
 import org.eclipse.serializer.collections.types.XIterable;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.X;
 
@@ -156,13 +155,13 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 	@Override
 	public final XImmutableTable.EntriesBridge<K, V> old()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingMap<K, V>#old
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingMap<K, V>#old
 	}
 
 	@Override
 	public XImmutableTable.Bridge<K, V> oldMap()
 	{
-		throw new NotImplementedYetError(); // FIXME EmptyTable#oldMap()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EmptyTable#oldMap()
 	}
 
 	@Override
@@ -217,145 +216,145 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 	@Override
 	public Object[] toArray()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#toArray()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#toArray()
 	}
 
 	@Override
 	public KeyValue<K, V>[] toArray(final Class<KeyValue<K, V>> type)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#toArray()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#toArray()
 	}
 
 	@Override
 	public Equalator<? super KeyValue<K, V>> equality()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#equality()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#equality()
 	}
 
 	@Override
 	public boolean equals(final XGettingCollection<? extends KeyValue<K, V>> samples, final Equalator<? super KeyValue<K, V>> equalator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#equals()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#equals()
 	}
 
 	@Override
 	public boolean equalsContent(final XGettingCollection<? extends KeyValue<K, V>> samples, final Equalator<? super KeyValue<K, V>> equalator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#equalsContent()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#equalsContent()
 	}
 
 	@Override
 	public boolean nullContained()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#nullContained()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#nullContained()
 	}
 
 	@Override
 	public boolean containsId(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#containsId()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#containsId()
 	}
 
 	@Override
 	public boolean contains(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#contains()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#contains()
 	}
 
 	@Override
 	public boolean containsSearched(final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#contains()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#contains()
 	}
 
 	@Override
 	public boolean containsAll(final XGettingCollection<? extends KeyValue<K, V>> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#containsAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#containsAll()
 	}
 
 	@Override
 	public boolean applies(final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#applies()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#applies()
 	}
 
 	@Override
 	public long count(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#count()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#count()
 	}
 
 	@Override
 	public long countBy(final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#count()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#count()
 	}
 
 	@Override
 	public KeyValue<K, V> search(final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#search()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#search()
 	}
 
 	@Override
 	public KeyValue<K, V> seek(final KeyValue<K, V> sample)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#seek()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#seek()
 	}
 
 	@Override
 	public KeyValue<K, V> max(final Comparator<? super KeyValue<K, V>> comparator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#max()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#max()
 	}
 
 	@Override
 	public KeyValue<K, V> min(final Comparator<? super KeyValue<K, V>> comparator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#min()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#min()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T distinct(final T target)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#distinct()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#distinct()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T distinct(final T target, final Equalator<? super KeyValue<K, V>> equalator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#distinct()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#distinct()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T copyTo(final T target)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#copyTo()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#copyTo()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T filterTo(final T target, final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#filterTo()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#filterTo()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T union(final XGettingCollection<? extends KeyValue<K, V>> other, final Equalator<? super KeyValue<K, V>> equalator, final T target)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#union()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#union()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T intersect(final XGettingCollection<? extends KeyValue<K, V>> other, final Equalator<? super KeyValue<K, V>> equalator, final T target)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#intersect()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#intersect()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T except(final XGettingCollection<? extends KeyValue<K, V>> other, final Equalator<? super KeyValue<K, V>> equalator, final T target)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#except()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<KeyValue<K, V>>#except()
 	}
 
 	@Override
@@ -373,97 +372,97 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 	@Override
 	public XGettingEnum<KeyValue<K, V>> view(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingEnum<KeyValue<K, V>>#view()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingEnum<KeyValue<K, V>>#view()
 	}
 
 	@Override
 	public XGettingEnum<KeyValue<K, V>> range(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingEnum<KeyValue<K, V>>#range()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingEnum<KeyValue<K, V>>#range()
 	}
 
 	@Override
 	public KeyValue<K, V> at(final long index)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#get()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#get()
 	}
 
 	@Override
 	public KeyValue<K, V> first()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#first()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#first()
 	}
 
 	@Override
 	public KeyValue<K, V> last()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#last()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#last()
 	}
 
 	@Override
 	public KeyValue<K, V> poll()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#poll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#poll()
 	}
 
 	@Override
 	public KeyValue<K, V> peek()
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#peek()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#peek()
 	}
 
 	@Override
 	public long maxIndex(final Comparator<? super KeyValue<K, V>> comparator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#maxIndex()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#maxIndex()
 	}
 
 	@Override
 	public long minIndex(final Comparator<? super KeyValue<K, V>> comparator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#minIndex()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#minIndex()
 	}
 
 	@Override
 	public long indexOf(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#indexOf()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#indexOf()
 	}
 
 	@Override
 	public long indexBy(final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#indexOf()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#indexOf()
 	}
 
 	@Override
 	public long lastIndexOf(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#lastIndexOf()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#lastIndexOf()
 	}
 
 	@Override
 	public long lastIndexBy(final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#lastIndexOf()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#lastIndexOf()
 	}
 
 	@Override
 	public long scan(final Predicate<? super KeyValue<K, V>> predicate)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#scan()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#scan()
 	}
 
 	@Override
 	public boolean isSorted(final Comparator<? super KeyValue<K, V>> comparator)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#isSorted()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#isSorted()
 	}
 
 	@Override
 	public <T extends Consumer<? super KeyValue<K, V>>> T copySelection(final T target, final long... indices)
 	{
-		throw new NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#copySelection()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingSequence<KeyValue<K, V>>#copySelection()
 	}
 
 	@Override
@@ -837,7 +836,7 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 		@Override
 		public final OldList<V> old()
 		{
-			throw new NotImplementedYetError(); // FIXME XGettingCollection<V>#old()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<V>#old()
 		}
 
 		@Override
@@ -1200,7 +1199,7 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 		@Override
 		public final OldList<K> old()
 		{
-			throw new NotImplementedYetError(); // FIXME XGettingCollection<K>#old()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<K>#old()
 		}
 
 		@Override

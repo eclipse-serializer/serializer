@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -51,7 +51,6 @@ import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.hashing.XHashing;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
@@ -541,11 +540,11 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 	@Override
 	public final XImmutableTable.EntriesBridge<K, V> old()
 	{
-		throw new NotImplementedYetError(); // FIXME ConstHashTable#old()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable#old()
 	}
 
 	@Override
-	public Bridge<K, V> oldMap()
+	public org.eclipse.serializer.collections.types.XImmutableTable.Bridge<K, V> oldMap()
 	{
 		return new OldVarMap();
 	}
@@ -662,13 +661,13 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 	@Override
 	public final XEnum<KeyValue<K, V>> range(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME ConstHashTable.Entries#range()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Entries#range()
 	}
 
 	@Override
 	public final XGettingEnum<KeyValue<K, V>> view(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME ConstHashTable.Entries#view()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Entries#view()
 	}
 
 	@Override
@@ -1110,13 +1109,13 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		@Override
 		public final XEnum<K> range(final long lowIndex, final long highIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.Keys#range()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Keys#range()
 		}
 
 		@Override
 		public final XGettingEnum<K> view(final long lowIndex, final long highIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.Keys#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Keys#view()
 		}
 
 		@Override
@@ -1192,6 +1191,33 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		{
 			return true;
 		}
+
+//		/**
+//		 * As per definition of a set, this method always returns true.<br>
+//		 * Note that mutated elements whose hashcode has not been immuted by the employed hash logic
+//		 * can be contained multiple times, effectively breaking this method (because of breaking the hashing logic in the
+//		 * first place), so this information only has value if the elements' implementation is immutable or if the
+//		 * hash logic compensated their mutability (e.g. by using the identity hash code or by registering a once created
+//		 * hashcode, effectively "immuting" it).
+//		 *
+//		 * @return
+//		 * @see XGettingCollection#hasDistinctValues()
+//		 */
+//		@Override
+//		public final boolean hasDistinctValues()
+//		{
+//			return true;
+//		}
+//
+//		@Override
+//		public final boolean hasDistinctValues(final Equalator<? super K> equalator)
+//		{
+//			if(equalator instanceof IdentityEqualator<?>)
+//			{
+//				return true;
+//			}
+//			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Keys#hasDistinctValues()
+//		}
 
 		// boolean querying - applies //
 
@@ -1519,7 +1545,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		@Override
 		public final OldCollection<K> old()
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.Keys#old()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Keys#old()
 		}
 
 		@Override
@@ -1748,7 +1774,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		@Override
 		public final OldList<V> old()
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.Values#old()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Values#old()
 		}
 
 		@Override
@@ -1832,7 +1858,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		@Override
 		public final XImmutableList<V> view(final long fromIndex, final long toIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.Values#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Values#view()
 		}
 
 		@Override
@@ -1850,7 +1876,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		@Override
 		public final XImmutableList<V> range(final long fromIndex, final long toIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.Values#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Values#view()
 		}
 
 		@Override
@@ -1862,7 +1888,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		@Override
 		public final XImmutableList<V> view()
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.Values#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Values#view()
 		}
 
 		@Override
@@ -2050,7 +2076,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		@Override
 		public final Set<K> keySet()
 		{
-			throw new NotImplementedYetError(); // FIXME ConstHashTable.OldVarMap#keySet()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.OldVarMap#keySet()
 		}
 
 		@Override

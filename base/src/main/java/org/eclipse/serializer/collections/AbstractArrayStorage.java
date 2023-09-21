@@ -55,7 +55,6 @@ import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.math.FastRandom;
 import org.eclipse.serializer.math.XMath;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 
@@ -3932,7 +3931,7 @@ public abstract class AbstractArrayStorage
 		{
 			throw new IndexOutOfBoundsException(exceptionRange(size, offset, offset + elements.size() - 1));
 		}
-		throw new NotImplementedYetError(); // FIXME AbstractArrayStorage#set()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME AbstractArrayStorage#set()
 	}
 
 	public static final <E> void set(

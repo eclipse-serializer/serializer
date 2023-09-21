@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -40,7 +40,6 @@ import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XReference;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.TrivialIterator;
@@ -345,7 +344,7 @@ public class Singleton<E> implements XReference<E>
 	@Override
 	public final boolean containsAll(final XGettingCollection<? extends E> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -406,7 +405,7 @@ public class Singleton<E> implements XReference<E>
 	@Override
 	public final boolean equals(final XGettingCollection<? extends E> samples, final Equalator<? super E> equalator)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -415,7 +414,7 @@ public class Singleton<E> implements XReference<E>
 		final Equalator<? super E>            equalator
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -425,7 +424,7 @@ public class Singleton<E> implements XReference<E>
 		final T                               target
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -441,7 +440,7 @@ public class Singleton<E> implements XReference<E>
 		final T                               target
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -517,7 +516,7 @@ public class Singleton<E> implements XReference<E>
 		final T                               target
 	)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -549,31 +548,31 @@ public class Singleton<E> implements XReference<E>
 	@Override
 	public final boolean replaceOne(final E element, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final long replace(final E element, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final long replaceAll(final XGettingCollection<? extends E> elements, final E replacement)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final boolean replaceOne(final Predicate<? super E> predicate, final E substitute)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final long replace(final Predicate<? super E> predicate, final E substitute)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -589,7 +588,7 @@ public class Singleton<E> implements XReference<E>
 	@Override
 	public final long substitute(final Predicate<? super E> predicate, final Function<E, E> mapper)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -626,25 +625,25 @@ public class Singleton<E> implements XReference<E>
 	@Override
 	public final Singleton<E> shiftTo(final long sourceIndex, final long targetIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final Singleton<E> shiftTo(final long sourceIndex, final long targetIndex, final long length)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final Singleton<E> shiftBy(final long sourceIndex, final long distance)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public final Singleton<E> shiftBy(final long sourceIndex, final long distance, final long length)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -886,7 +885,7 @@ public class Singleton<E> implements XReference<E>
 		@Override
 		public final List<E> subList(final int fromIndex, final int toIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME not implemented yet
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 		}
 
 		@Override

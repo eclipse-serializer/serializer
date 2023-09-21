@@ -20,6 +20,8 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
+import static org.eclipse.serializer.collections.XArrays.removeAllFromArray;
+
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -1636,7 +1638,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	@Override
 	public final boolean nullPrepend()
 	{
-		return prepend(null);
+		return this.prepend(null);
 	}
 
 
@@ -1971,7 +1973,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	public final long remove(final E element)
 	{
 		int removeCount;
-		this.size -= removeCount = XArrays.removeAllFromArray(this.data, 0, this.size, element);
+		this.size -= removeCount = removeAllFromArray(this.data, 0, this.size, element);
 		return removeCount;
 	}
 
@@ -2059,7 +2061,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	public final long removeAll(final XGettingCollection<? extends E> elements)
 	{
 		final int removed;
-		this.size -= removed = XArrays.removeAllFromArray(elements, this.data, 0, this.size);
+		this.size -= removed = removeAllFromArray(elements, this.data, 0, this.size);
 		return removed;
 	}
 
