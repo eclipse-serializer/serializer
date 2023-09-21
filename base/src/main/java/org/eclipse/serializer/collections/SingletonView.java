@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -27,6 +27,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.eclipse.serializer.collections.Singleton.OldSingleton;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XReferencing;
 import org.eclipse.serializer.equality.Equalator;
@@ -117,7 +118,7 @@ public class SingletonView<E> implements XReferencing<E>
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public Singleton.OldSingleton old()
+	public OldSingleton old()
 	{
 		return this.subject.old();
 	}

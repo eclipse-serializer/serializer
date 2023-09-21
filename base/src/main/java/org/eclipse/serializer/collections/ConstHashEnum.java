@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -39,7 +39,6 @@ import org.eclipse.serializer.equality.IdentityEqualityLogic;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.hashing.XHashing;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.XTypes;
 
@@ -368,7 +367,7 @@ implements XImmutableEnum<E>, HashCollection<E>, Composition, IdentityEqualityLo
 	@Override
 	public final OldSet<E> old()
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable#old()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable#old()
 	}
 
 	@Override
@@ -434,13 +433,13 @@ implements XImmutableEnum<E>, HashCollection<E>, Composition, IdentityEqualityLo
 	@Override
 	public final XImmutableEnum<E> range(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#range()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#range()
 	}
 
 	@Override
 	public final XGettingEnum<E> view(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#view()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#view()
 	}
 
 	@Override

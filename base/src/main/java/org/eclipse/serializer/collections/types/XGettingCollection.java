@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections.types;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -29,11 +29,11 @@ import java.util.function.Predicate;
 
 import org.eclipse.serializer.collections.interfaces.CapacityCarrying;
 import org.eclipse.serializer.collections.interfaces.ExtendedCollection;
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.old.OldCollection;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.ToArrayAggregator;
 import org.eclipse.serializer.typing.Copyable;
+import org.eclipse.serializer.util.X;
 
 
 /**
@@ -45,9 +45,9 @@ public interface XGettingCollection<E>
 extends
 XIterable<E>,
 XJoinable<E>,
-        ExtendedCollection<E>,
+ExtendedCollection<E>,
 Iterable<E>,
-        CapacityCarrying,
+CapacityCarrying,
 Copyable
 {
 	/**
@@ -68,7 +68,7 @@ Copyable
 	 * maintained by this list.  (In other words, this method must allocate
 	 * a new array).  The caller is thus free to modify the returned array.
 	 *
-	 * <p>This method acts as bridge between this collections
+	 * <p>This method acts as bridge between MicroStream-based collections
 	 * and Java-native-based APIs.
 	 *
 	 * @return an array containing all the elements in this collection.
@@ -85,7 +85,7 @@ Copyable
 	 * maintained by this list.  (In other words, this method must allocate
 	 * a new array).  The caller is thus free to modify the returned array.
 	 *
-	 * <p>This method acts as bridge between this collections
+	 * <p>This method acts as bridge between MicroStream-based collections
 	 * and Java-native-based APIs.
 	 *
 	 * @param type the {@link Class} representing type {@code E} at runtime.
@@ -253,7 +253,7 @@ Copyable
 	 * elements of this collection. This means the elements are not equal to each other.<br>
 	 * Uniqueness is defined by the collections internal {@link Equalator}.
 	 * <p>
-	 * Since all our Collections implement the {@link Consumer} interface,
+	 * Since all MicroStream Collections implement the {@link Consumer} interface,
 	 * new collections can be used as target.
 	 * <p>
 	 * <b>Example:</b><br>
@@ -274,7 +274,7 @@ Copyable
 	 * elements of this collection. This means the elements are not equal to each other.<br>
 	 * Uniqueness is defined by the given {@link Equalator}.
 	 * <p>
-	 * Since all out Collections implement the {@link Consumer} interface,
+	 * Since all MicroStream Collections implement the {@link Consumer} interface,
 	 * new collections can be used as target.
 	 * <p>
 	 * <b>Example:</b><br>
@@ -294,7 +294,7 @@ Copyable
 	/**
 	 * Calls {@link Consumer#accept(Object)} on the target {@link Consumer} for all the elements of this collection.
 	 * <p>
-	 * Since all out Collections implement the {@link Consumer} interface,
+	 * Since all MicroStream Collections implement the {@link Consumer} interface,
 	 * new collections can be used as target.
 	 * <p>
 	 * <b>Example:</b><br>
@@ -314,7 +314,7 @@ Copyable
 	 * Calls {@link Consumer#accept(Object)} on the target {@link Consumer} for all the elements of this collection
 	 * which test {@code true} on the given predicate.
 	 * <p>
-	 * Since all our Collections implement the {@link Consumer} interface,
+	 * Since all MicroStream Collections implement the {@link Consumer} interface,
 	 * new collections can be used as target.
 	 * <p>
 	 * <b>Example:</b><br>
@@ -337,7 +337,7 @@ Copyable
 	 * (defined by the given {@link Equalator})<br>
 	 * Therefore it effectively creates a mathematical union between the two collections.
 	 * <p>
-	 * Since all our Collections implement the {@link Consumer} interface,
+	 * Since all MicroStream Collections implement the {@link Consumer} interface,
 	 * new collections can be used as target.
 	 * <p>
 	 * <b>Example:</b><br>
@@ -361,7 +361,7 @@ Copyable
 	 * equal elements.<br>
 	 * Therefore, it effectively creates a mathematical intersection between the two collections.
 	 * <p>
-	 * Since all our Collections implement the {@link Consumer} interface,
+	 * Since all MicroStream Collections implement the {@link Consumer} interface,
 	 * new collections can be used as target.
 	 * <p>
 	 * <b>Example:</b><br>
@@ -384,7 +384,7 @@ Copyable
 	 * Calls {@link Consumer#accept(Object)} on the target {@link Consumer} for each
 	 * element of this collection that is not contained in the other collection (through the given equalator).
 	 * <p>
-	 * Since all our Collections implement the {@link Consumer} interface,
+	 * Since all MicroStream Collections implement the {@link Consumer} interface,
 	 * new collections can be used as target.
 	 * <p>
 	 * <b>Example:</b><br>

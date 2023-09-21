@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -435,6 +435,13 @@ public final class SynchList<E> implements XList<E>, Synchronized
 		return this;
 	}
 
+	@Deprecated
+	@Override
+	public final synchronized boolean equals(final Object o)
+	{
+		return this.subject.equals(o);
+	}
+
 	@Override
 	public final synchronized boolean equals(final XGettingCollection<? extends E> samples, final Equalator<? super E> equalator)
 	{
@@ -518,6 +525,13 @@ public final class SynchList<E> implements XList<E>, Synchronized
 	public final synchronized E peek()
 	{
 		return this.subject.peek();
+	}
+
+	@Deprecated
+	@Override
+	public final synchronized int hashCode()
+	{
+		return this.subject.hashCode();
 	}
 
 	@Override

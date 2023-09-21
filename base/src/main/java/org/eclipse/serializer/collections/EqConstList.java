@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -38,7 +38,6 @@ import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.functional.IsCustomEqual;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
@@ -589,7 +588,7 @@ public final class EqConstList<E> extends AbstractSimpleArrayCollection<E> imple
 	@Override
 	public EqConstList<E> view(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override

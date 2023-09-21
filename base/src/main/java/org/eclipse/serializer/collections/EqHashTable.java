@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -56,7 +56,6 @@ import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
@@ -1033,11 +1032,11 @@ implements XTable<K, V>, HashCollection<K>, Composition
 	@Override
 	public final XTable.EntriesBridge<K, V> old()
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable#old()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable#old()
 	}
 
 	@Override
-	public Bridge<K, V> oldMap()
+	public org.eclipse.serializer.collections.types.XTable.Bridge<K, V> oldMap()
 	{
 		return new OldVarMap();
 	}
@@ -1410,7 +1409,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 	@Override
 	public long substitute(final Function<? super KeyValue<K, V>, ? extends KeyValue<K, V>> mapper)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable#substitute()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable#substitute()
 	}
 		
 
@@ -1422,13 +1421,13 @@ implements XTable<K, V>, HashCollection<K>, Composition
 	@Override
 	public final XEnum<KeyValue<K, V>> range(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#range()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#range()
 	}
 
 	@Override
 	public final XGettingEnum<KeyValue<K, V>> view(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#view()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#view()
 	}
 
 	@Override
@@ -2096,168 +2095,168 @@ implements XTable<K, V>, HashCollection<K>, Composition
 	@Override
 	public final boolean input(final long index, final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#input()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#input()
 	}
 
 	@SafeVarargs
 	@Override
 	public final long inputAll(final long index, final KeyValue<K, V>... elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#input()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#input()
 	}
 
 	@Override
 	public final long inputAll(final long index, final KeyValue<K, V>[] elements, final int offset, final int length)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#inputAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#inputAll()
 	}
 
 	@Override
 	public final long inputAll(final long index, final XGettingCollection<? extends KeyValue<K, V>> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#inputAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#inputAll()
 	}
 
 	@Override
 	public final boolean insert(final long index, final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#insert()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#insert()
 	}
 
 	@SafeVarargs
 	@Override
 	public final long insertAll(final long index, final KeyValue<K, V>... elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#insert()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#insert()
 	}
 
 	@Override
 	public final long insertAll(final long index, final KeyValue<K, V>[] elements, final int offset, final int length)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#insertAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#insertAll()
 	}
 
 	@Override
 	public final long insertAll(final long index, final XGettingCollection<? extends KeyValue<K, V>> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#insertAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#insertAll()
 	}
 
 	@Override
 	public final boolean prepend(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#prepend()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#prepend()
 	}
 
 	@Override
 	public final boolean preput(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#preput()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#preput()
 	}
 
 	@Override
 	public final boolean nullInput(final long index)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#nullInput()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#nullInput()
 	}
 
 	@Override
 	public final boolean nullInsert(final long index)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#nullInsert()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#nullInsert()
 	}
 
 	@Override
 	public final boolean nullPrepend()
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#nullPrepend()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#nullPrepend()
 	}
 
 	@SafeVarargs
 	@Override
 	public final EqHashTable<K, V> prependAll(final KeyValue<K, V>... elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#prepend()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#prepend()
 	}
 
 	@Override
 	public final EqHashTable<K, V> prependAll(final KeyValue<K, V>[] elements, final int srcStartIndex, final int srcLength)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#prependAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#prependAll()
 	}
 
 	@Override
 	public final EqHashTable<K, V> prependAll(final XGettingCollection<? extends KeyValue<K, V>> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#prependAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#prependAll()
 	}
 
 	@Override
 	public final boolean nullPreput()
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#nullPreput()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#nullPreput()
 	}
 
 	@SafeVarargs
 	@Override
 	public final EqHashTable<K, V> preputAll(final KeyValue<K, V>... elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#preput()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#preput()
 	}
 
 	@Override
 	public final EqHashTable<K, V> preputAll(final KeyValue<K, V>[] elements, final int offset, final int length)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#preputAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#preputAll()
 	}
 
 	@Override
 	public final EqHashTable<K, V> preputAll(final XGettingCollection<? extends KeyValue<K, V>> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#preputAll()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#preputAll()
 	}
 
 	@Override
 	public final boolean set(final long index, final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
 	}
 
 	@Override
 	public final KeyValue<K, V> setGet(final long index, final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#setGet()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#setGet()
 	}
 
 	@Override
 	public final void setFirst(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#setFirst()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#setFirst()
 	}
 
 	@Override
 	public final void setLast(final KeyValue<K, V> element)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#setLast()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#setLast()
 	}
 
 	@SafeVarargs
 	@Override
 	public final EqHashTable<K, V> setAll(final long index, final KeyValue<K, V>... elements)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
 	}
 
 	@Override
 	public final EqHashTable<K, V> set(final long index, final KeyValue<K, V>[] elements, final int offset, final int length)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
 	}
 
 	@Override
 	public final EqHashTable<K, V> set(final long index, final XGettingSequence<? extends KeyValue<K, V>> elements, final long offset, final long length)
 	{
-		throw new NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
 	}
 
 
@@ -2372,13 +2371,13 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final XEnum<K> range(final long lowIndex, final long highIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#range()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#range()
 		}
 
 		@Override
 		public final XGettingEnum<K> view(final long lowIndex, final long highIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#view()
 		}
 
 		@Override
@@ -3223,167 +3222,167 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final boolean input(final long index, final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#input()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#input()
 		}
 
 		@SafeVarargs
 		@Override
 		public final long inputAll(final long index, final K... elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#input()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#input()
 		}
 
 		@Override
 		public final long inputAll(final long index, final K[] elements, final int offset, final int length)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#inputAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#inputAll()
 		}
 
 		@Override
 		public final long inputAll(final long index, final XGettingCollection<? extends K> elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#inputAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#inputAll()
 		}
 
 		@Override
 		public final boolean insert(final long index, final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#insert()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#insert()
 		}
 
 		@SafeVarargs
 		@Override
 		public final long insertAll(final long index, final K... elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#insert()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#insert()
 		}
 
 		@Override
 		public final long insertAll(final long index, final K[] elements, final int offset, final int length)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#insertAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#insertAll()
 		}
 
 		@Override
 		public final long insertAll(final long index, final XGettingCollection<? extends K> elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#insertAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#insertAll()
 		}
 
 		@Override
 		public final boolean prepend(final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#prepend()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#prepend()
 		}
 
 		@Override
 		public final boolean preput(final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#preput()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#preput()
 		}
 
 		@Override
 		public final boolean nullInput(final long index)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#nullInput()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#nullInput()
 		}
 
 		@Override
 		public final boolean nullInsert(final long index)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#nullInsert()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#nullInsert()
 		}
 
 		@Override
 		public final boolean nullPrepend()
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#nullPrepend()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#nullPrepend()
 		}
 
 		@Override
 		public final Keys prependAll(@SuppressWarnings("unchecked") final K... elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#prepend()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#prepend()
 		}
 
 		@Override
 		public final Keys prependAll(final K[] elements, final int srcStartIndex, final int srcLength)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#prependAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#prependAll()
 		}
 
 		@Override
 		public final Keys prependAll(final XGettingCollection<? extends K> elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#prependAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#prependAll()
 		}
 
 		@Override
 		public final boolean nullPreput()
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#nullPreput()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#nullPreput()
 		}
 
 		@SafeVarargs
 		@Override
 		public final Keys preputAll(final K... elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#preput()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#preput()
 		}
 
 		@Override
 		public final Keys preputAll(final K[] elements, final int offset, final int length)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#preputAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#preputAll()
 		}
 
 		@Override
 		public final Keys preputAll(final XGettingCollection<? extends K> elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#preputAll()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#preputAll()
 		}
 
 		@Override
 		public final boolean set(final long index, final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
 		}
 
 		@Override
 		public final K setGet(final long index, final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#setGet()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#setGet()
 		}
 
 		@Override
 		public final void setFirst(final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#setFirst()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#setFirst()
 		}
 
 		@Override
 		public final void setLast(final K element)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#setLast()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#setLast()
 		}
 
 		@SafeVarargs
 		@Override
 		public final Keys setAll(final long index, final K... elements)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
 		}
 
 		@Override
 		public final Keys set(final long index, final K[] elements, final int offset, final int length)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
 		}
 
 		@Override
 		public final Keys set(final long index, final XGettingSequence<? extends K> elements, final long offset, final long length)
 		{
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Keys#set()
 		}
 
 		@Override
@@ -4033,7 +4032,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		)
 		{
 			// (23.01.2017 TM)NOTE: copyTo() removed. No time for a replacement, atm.
-			throw new NotImplementedYetError(); // FIXME EqHashTable.Values#set()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Values#set()
 			
 		}
 

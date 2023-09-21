@@ -41,7 +41,6 @@ import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.GenericListIterator;
@@ -204,9 +203,9 @@ public final class ArrayCollector<E> extends AbstractSimpleArrayCollection<E> im
 		if(elements instanceof AbstractSimpleArrayCollection<?>)
 		{
 			return this.internalCountingAddAll(
-					internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements),
-					0,
-					XTypes.to_int(elements.size())
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements),
+				0,
+				XTypes.to_int(elements.size())
 			);
 		}
 		final int oldSize = this.size;
@@ -258,9 +257,9 @@ public final class ArrayCollector<E> extends AbstractSimpleArrayCollection<E> im
 		if(elements instanceof AbstractSimpleArrayCollection<?>)
 		{
 			return this.internalCountingAddAll(
-					internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements),
-					0,
-					XTypes.to_int(elements.size())
+				AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements),
+				0,
+				XTypes.to_int(elements.size())
 			);
 		}
 
@@ -1214,25 +1213,25 @@ public final class ArrayCollector<E> extends AbstractSimpleArrayCollection<E> im
 	@Override
 	public final ArrayCollector<E> prependAll(final E... elements)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public ArrayCollector<E> prependAll(final E[] elements, final int srcStartIndex, final int srcLength)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public ArrayCollector<E> prependAll(final XGettingCollection<? extends E> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public boolean nullPrepend()
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 
@@ -1272,19 +1271,19 @@ public final class ArrayCollector<E> extends AbstractSimpleArrayCollection<E> im
 	@Override
 	public ArrayCollector<E> preputAll(final E[] elements, final int offset, final int length)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public ArrayCollector<E> preputAll(final XGettingCollection<? extends E> elements)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
 	public boolean nullPreput()
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 
@@ -1371,7 +1370,7 @@ public final class ArrayCollector<E> extends AbstractSimpleArrayCollection<E> im
 	@Override
 	public boolean nullInsert(final long index)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 
@@ -1457,7 +1456,7 @@ public final class ArrayCollector<E> extends AbstractSimpleArrayCollection<E> im
 	@Override
 	public boolean nullInput(final long index)
 	{
-		throw new NotImplementedYetError(); // FIXME ArrayCollector#nullInput()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ArrayCollector#nullInput()
 	}
 
 

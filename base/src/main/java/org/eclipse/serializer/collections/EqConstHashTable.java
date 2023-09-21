@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -49,7 +49,6 @@ import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.hashing.XHashing;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
@@ -699,7 +698,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 	@Override
 	public final XImmutableTable.EntriesBridge<K, V> old()
 	{
-		throw new NotImplementedYetError(); // FIXME EqConstHashTable#old()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable#old()
 	}
 
 	@Override
@@ -828,13 +827,13 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 	@Override
 	public final XEnum<KeyValue<K, V>> range(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME EqConstHashTable.Entries#range()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Entries#range()
 	}
 
 	@Override
 	public final XGettingEnum<KeyValue<K, V>> view(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME EqConstHashTable.Entries#view()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Entries#view()
 	}
 
 	@Override
@@ -1261,13 +1260,13 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final XEnum<K> range(final long lowIndex, final long highIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.Keys#range()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Keys#range()
 		}
 
 		@Override
 		public final XGettingEnum<K> view(final long lowIndex, final long highIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.Keys#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Keys#view()
 		}
 
 		@Override
@@ -1665,7 +1664,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final OldCollection<K> old()
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.Keys#old()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Keys#old()
 		}
 
 		@Override
@@ -1882,7 +1881,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final OldList<V> old()
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.Values#old()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Values#old()
 		}
 
 		@Override
@@ -1966,7 +1965,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final XImmutableList<V> view(final long fromIndex, final long toIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.Values#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Values#view()
 		}
 
 		@Override
@@ -1984,7 +1983,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final XImmutableList<V> range(final long fromIndex, final long toIndex)
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.Values#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Values#view()
 		}
 
 		@Override
@@ -1996,7 +1995,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final XImmutableList<V> view()
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.Values#view()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Values#view()
 		}
 
 		@Override
@@ -2178,7 +2177,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final Set<K> keySet()
 		{
-			throw new NotImplementedYetError(); // FIXME EqConstHashTable.OldVarMap#keySet()
+			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.OldVarMap#keySet()
 		}
 
 		@Override

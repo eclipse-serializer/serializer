@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.serializer.collections.interfaces.HashCollection;
+import org.eclipse.serializer.collections.interfaces.HashCollection.Analysis;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
@@ -33,7 +34,7 @@ public abstract class AbstractChainEntryLinked<E, K, V, EN extends AbstractChain
 extends AbstractChainEntry<E, K, V, EN>
 {
 	public static <E, K, V, C extends HashCollection<K>, EN extends AbstractChainEntryLinked<E, K, V, EN>>
-	HashCollection.Analysis<C> analyzeSlots(final C hashCollection, final EN[] slots)
+	Analysis<C> analyzeSlots(final C hashCollection, final EN[] slots)
 	{
 		final HashMap<Integer, int[]> distribution = new HashMap<>();
 

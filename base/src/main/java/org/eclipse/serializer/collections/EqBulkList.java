@@ -514,7 +514,7 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 	{
 		if(elements instanceof AbstractSimpleArrayCollection<?>)
 		{
-			return this.internalCountingAddAll(internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements), 0, XTypes.to_int(elements.size()));
+			return this.internalCountingAddAll(AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements), 0, XTypes.to_int(elements.size()));
 		}
 		final int oldSize = this.size;
 		elements.iterate(this);
@@ -564,7 +564,7 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 	{
 		if(elements instanceof AbstractSimpleArrayCollection<?>)
 		{
-			return this.internalCountingAddAll(internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements), 0, XTypes.to_int(elements.size()));
+			return this.internalCountingAddAll(AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements), 0, XTypes.to_int(elements.size()));
 		}
 
 		final int oldSize = this.size;
@@ -1334,7 +1334,7 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 	{
 		if(elements instanceof AbstractSimpleArrayCollection<?>)
 		{
-			return this.addAll(internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements), 0, XTypes.to_int(elements.size()));
+			return this.addAll(AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements), 0, XTypes.to_int(elements.size()));
 		}
 		return elements.iterate(this);
 	}
@@ -1628,7 +1628,7 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 			throw new IndexBoundsException(this.size, index);
 		}
 		final Object[] elementsToAdd = elements instanceof AbstractSimpleArrayCollection<?>
-			? internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements)
+			? AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements)
 			: elements.toArray() // anything else is probably not worth the hassle
 		;
 
@@ -1732,7 +1732,7 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 			throw new IndexBoundsException(this.size, index);
 		}
 		final Object[] elementsToAdd = elements instanceof AbstractSimpleArrayCollection<?>
-			? internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements)
+			? AbstractSimpleArrayCollection.internalGetStorageArray((AbstractSimpleArrayCollection<?>)elements)
 			: elements.toArray() // anything else is probably not worth the hassle
 		;
 		return this.internalInputArray((int)index, elementsToAdd, elementsToAdd.length);

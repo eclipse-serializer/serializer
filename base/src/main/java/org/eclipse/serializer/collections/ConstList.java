@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -39,7 +39,6 @@ import org.eclipse.serializer.equality.IdentityEqualityLogic;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.Aggregator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
@@ -647,7 +646,7 @@ implements XImmutableList<E>, Composition, IdentityEqualityLogic
 	@Override
 	public ConstList<E> view(final long lowIndex, final long highIndex)
 	{
-		throw new NotImplementedYetError(); // FIXME not implemented yet
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
 	@Override
@@ -655,7 +654,7 @@ implements XImmutableList<E>, Composition, IdentityEqualityLogic
 	{
 		// range check is done in constructor
 		// (14.06.2011 TM)FIXME: SubConstList
-		throw new NotImplementedYetError();
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}
 
 	@Override

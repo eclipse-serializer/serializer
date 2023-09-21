@@ -28,11 +28,11 @@ import org.eclipse.serializer.collections.interfaces.Truncateable;
 
 public interface XRemovingCollection<E>
 extends
-        ExtendedCollection<E>,
-        Truncateable,
-        ConsolidatableCollection,
-        OptimizableCollection,
-        ReleasingCollection<E>
+ExtendedCollection<E>,
+Truncateable,
+ConsolidatableCollection,
+OptimizableCollection,
+ReleasingCollection<E>
 {
 	public interface Factory<E> extends XFactory<E>
 	{

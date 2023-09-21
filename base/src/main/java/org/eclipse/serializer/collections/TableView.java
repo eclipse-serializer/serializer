@@ -2,9 +2,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -35,7 +35,6 @@ import org.eclipse.serializer.collections.types.XImmutableTable;
 import org.eclipse.serializer.collections.types.XIterable;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
 
@@ -442,13 +441,13 @@ public final class TableView<K, V> implements XGettingTable<K, V>
 	@Override
 	public final EntriesBridge<K, V> old()
 	{
-		throw new NotImplementedYetError(); // FIXME TableView#old
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME TableView#old
 	}
 
 	@Override
 	public Bridge<K, V> oldMap()
 	{
-		throw new NotImplementedYetError(); // FIXME TableView#oldMap()
+		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME TableView#oldMap()
 	}
 
 	@Override

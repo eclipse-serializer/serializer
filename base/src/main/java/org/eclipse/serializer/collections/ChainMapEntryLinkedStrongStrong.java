@@ -1,7 +1,5 @@
 package org.eclipse.serializer.collections;
 
-import org.eclipse.serializer.typing.KeyValue;
-
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -22,6 +20,7 @@ import org.eclipse.serializer.typing.KeyValue;
  * #L%
  */
 
+import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.X;
 
 final class ChainMapEntryLinkedStrongStrong<K, V>

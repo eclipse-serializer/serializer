@@ -3,9 +3,9 @@ package org.eclipse.serializer.collections;
 
 /*-
  * #%L
- * Eclipse Serializer Base
+ * microstream-base
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2019 - 2022 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -35,7 +35,6 @@ import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.iterables.ReadOnlyListIterator;
 
@@ -351,7 +350,7 @@ public class EnumView<E> implements XGettingEnum<E>
 	public XGettingEnum<E> view(final long lowIndex, final long highIndex)
 	{
 		// (24.08.2011)FIXME: SubEnumView
-		throw new NotImplementedYetError();
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}
 
 	@Override
