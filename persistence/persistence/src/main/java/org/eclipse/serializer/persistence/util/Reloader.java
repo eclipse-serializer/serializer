@@ -43,8 +43,6 @@ import org.eclipse.serializer.util.traversing.ObjectGraphTraverser;
  * reloader.reloadFlat(obj); // reloads only the given object, but not its references
  * reloader.reloadDeep(obj); // reloads the complete object graph
  * </pre>
- * 
- * @since 08.00.00
  */
 public interface Reloader
 {

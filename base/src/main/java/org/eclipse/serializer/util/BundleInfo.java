@@ -35,11 +35,7 @@ import java.util.jar.Manifest;
 
 import org.eclipse.serializer.chars.XChars;
 
-/**
- * 
- * @since 05.00.00
- *
- */
+
 public interface BundleInfo
 {
 	public String name();
