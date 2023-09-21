@@ -6,7 +6,7 @@ import static org.eclipse.serializer.util.X.notNull;
  * #%L
  * Eclipse Serializer Persistence
  * %%
- * Copyright (C) 2023 Eclipse Foundation
+ * Copyright (C) 2023 MicroStream Software
  * %%
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -43,8 +43,6 @@ import org.eclipse.serializer.util.traversing.ObjectGraphTraverser;
  * reloader.reloadFlat(obj); // reloads only the given object, but not its references
  * reloader.reloadDeep(obj); // reloads the complete object graph
  * </pre>
- * 
- * @since 08.00.00
  */
 public interface Reloader
 {
