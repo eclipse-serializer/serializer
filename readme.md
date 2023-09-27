@@ -58,3 +58,7 @@ byte[] data = serializer.serialize(company);
 // deserialize the data back to a company
 Company company = serializer.deserialize(data);
 ```
+
+## Contribute
+
+If you want to contribute to this project, please read our [guidelines](CONTRIBUTING.md).
