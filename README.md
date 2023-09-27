@@ -49,14 +49,21 @@ Classes evolve over time. Therefore, Eclipse Serializer provides a legacy type m
 ```
 
 ```java
+// create a company object
+Company company = new Company();
+company.setName("Acme Inc.");
 // create a serializer which handles byte arrays
-Serializer serializer = Serializer.Bytes();
+Serializer<byte[]> serializer = Serializer.Bytes();
 
 // serialize a company
 byte[] data = serializer.serialize(company);
 
 // deserialize the data back to a company
-Company company = serializer.deserialize(data);
+company = serializer.deserialize(data);
+
+if(company.getName().equals("Acme Inc.")) {
+    System.out.println("It works!");
+}
 ```
 
 ## Contribute
