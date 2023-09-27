@@ -62,3 +62,8 @@ Company company = serializer.deserialize(data);
 ## Contribute
 
 If you want to contribute to this project, please read our [guidelines](CONTRIBUTING.md).
+
+## Links
+
+- [Eclipse project page](https://projects.eclipse.org/projects/technology.serializer)
+- [Dev mailing list](https://accounts.eclipse.org/mailing-list/serializer-dev)
