@@ -46,8 +46,9 @@
 	</properties>
 
 	<modules>
-		<module>base</module>
 		<module>afs</module>
+		<module>base</module>
+		<module>configuration</module>
 		<module>persistence</module>
 		<module>serializer</module>
 		<module>tests</module>
