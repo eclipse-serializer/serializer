@@ -29,6 +29,7 @@ module org.eclipse.serializer.base
 	exports org.eclipse.serializer.collections.lazy;
 	exports org.eclipse.serializer.collections.sorting;
 	exports org.eclipse.serializer.collections.types;
+	exports org.eclipse.serializer.com;
 	exports org.eclipse.serializer.concurrency;
 	exports org.eclipse.serializer.entity;
 	exports org.eclipse.serializer.equality;

@@ -20,38 +20,29 @@ package org.eclipse.serializer.reflect;
  * #L%
  */
 
+import org.eclipse.serializer.branching.ThrowBreak;
+import org.eclipse.serializer.chars.XChars;
+import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.collections.XArrays;
+import org.eclipse.serializer.collections.types.XMap;
+import org.eclipse.serializer.collections.types.XReference;
+import org.eclipse.serializer.exceptions.*;
+import org.eclipse.serializer.functional.Instantiator;
+import org.eclipse.serializer.functional.XFunc;
+import org.eclipse.serializer.memory.XMemory;
+import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.UtilStackTrace;
+import org.eclipse.serializer.util.X;
 
-import static org.eclipse.serializer.util.X.notEmpty;
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.branching.ThrowBreak;
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.XArrays;
-import org.eclipse.serializer.collections.types.XMap;
-import org.eclipse.serializer.collections.types.XReference;
-import org.eclipse.serializer.exceptions.IllegalAccessRuntimeException;
-import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
-import org.eclipse.serializer.exceptions.MemoryException;
-import org.eclipse.serializer.exceptions.NoSuchFieldRuntimeException;
-import org.eclipse.serializer.exceptions.NoSuchMethodRuntimeException;
-import org.eclipse.serializer.functional.Instantiator;
-import org.eclipse.serializer.functional.XFunc;
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.chars.XChars;
-import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.util.UtilStackTrace;
+import static org.eclipse.serializer.util.X.notEmpty;
+import static org.eclipse.serializer.util.X.notNull;
 
 
 /**
@@ -60,7 +51,7 @@ import org.eclipse.serializer.util.UtilStackTrace;
  */
 public final class XReflect
 {
-	public static final <T> T defaultInstantiate(final Class<T> type)
+	public static <T> T defaultInstantiate(final Class<T> type)
 		throws NoSuchMethodRuntimeException, InstantiationRuntimeException
 	{
 		final Constructor<T> defaultConstructor;
@@ -72,7 +63,7 @@ public final class XReflect
 		{
 			throw new NoSuchMethodRuntimeException(e);
 		}
-
+		
 		try
 		{
 			return defaultConstructor.newInstance();
@@ -86,8 +77,8 @@ public final class XReflect
 			throw new RuntimeException(e);
 		}
 	}
-
-	public static final Field setAccessible(final Class<?> actualClass, final Field field)
+	
+	public static Field setAccessible(final Class<?> actualClass, final Field field)
 	{
 		try
 		{
@@ -106,52 +97,153 @@ public final class XReflect
 			throw new Error(toFullQualifiedFieldName(actualClass, field), e);
 		}
 	}
-
+	
 	// convenience method to allow simpler functional programming via method reference for that often needed use-case.
-	public static final Field setAccessible(final Field field)
+	public static Field setAccessible(final Field field)
 		throws SecurityException
 	{
 		field.setAccessible(true);
-
+		
 		return field;
 	}
 	
 	// convenience method to allow simpler functional programming via method reference for that often needed use-case.
-	public static final Method setAccessible(final Method method)
+	public static Method setAccessible(final Method method)
 		throws SecurityException
 	{
 		method.setAccessible(true);
-
+		
 		return method;
 	}
 	
 	// convenience method to allow simpler functional programming via method reference for that often needed use-case.
-	public static final <T> Constructor<T> setAccessible(final Constructor<T> constructor)
+	public static <T> Constructor<T> setAccessible(final Constructor<T> constructor)
 		throws SecurityException
 	{
 		constructor.setAccessible(true);
-
+		
 		return constructor;
 	}
-
-	public static final boolean isInstanceField(final Field field)
+	
+	public static boolean isInstanceField(final Field field)
 	{
 		return !Modifier.isStatic(field.getModifiers());
 	}
-
+	
+	public static String toFieldName(final Field field)
+	{
+		return field.getName();
+	}
+	
+	public static boolean isInterfaceOfType(
+		final Class<?> interfaceClass,
+		final Class<?> implementedSuperInterface
+	)
+	{
+		if(interfaceClass == implementedSuperInterface)
+		{
+			return true;
+		}
+		
+		final Class<?>[] interfaces = interfaceClass.getInterfaces();
+		boolean isInterfaceType = false;
+		for(final Class<?> i : interfaces)
+		{
+			isInterfaceType |= isInterfaceOfType(i, implementedSuperInterface);
+		}
+		return isInterfaceType;
+	}
+	
+	public static boolean implementsInterface(final Class<?> c, final Class<?> interfaceClass)
+	{
+		if(c == null || interfaceClass == null || !interfaceClass.isInterface())
+		{
+			return false;
+		}
+		
+		final Class<?>[] interfaces = XReflect.getClassHierarchyInterfaces(c);
+		for(final Class<?> i : interfaces)
+		{
+			if(isInterfaceOfType(i, interfaceClass))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public static Class<?>[] getClassHierarchyInterfaces(final Class<?> classClass)
+	{
+		if(classClass.isInterface() || classClass.isArray() || classClass.isPrimitive())
+		{
+			throw new IllegalArgumentException("Can only handle actual classes.");
+		}
+		
+		final BulkList<Class<?>[]> hierarchy = new BulkList<>();
+		int interfaceCount = 0;
+		
+		for(Class<?> current = classClass; current != Object.class; current = current.getSuperclass())
+		{
+			final Class<?>[] currentClassInterfaces;
+			interfaceCount += (currentClassInterfaces = current.getInterfaces()).length;
+			hierarchy.add(currentClassInterfaces);
+		}
+		
+		final Class<?>[] allInterfaces = new Class<?>[interfaceCount];
+		int allInterfacesIndex = 0;
+		for(int i = XTypes.to_int(hierarchy.size()); i-- > 0;)
+		{
+			final Class<?>[] currentClassInterfaces = hierarchy.at(i);
+			for(int j = 0; j < currentClassInterfaces.length; j++)
+			{
+				allInterfaces[allInterfacesIndex++] = currentClassInterfaces[j];
+			}
+		}
+		return allInterfaces;
+	}
+	
+	public static boolean isOfClassType(final Class<?> c, final Class<?> superclass)
+	{
+		if(c.isInterface() || superclass.isInterface())
+		{
+			return false;
+		}
+		
+		return c == superclass || isSubClassOf(c, superclass);
+	}
+	
+	public static boolean isSubClassOf(final Class<?> c, final Class<?> superclass)
+	{
+		if(c == null || superclass == null)
+		{
+			return false;
+		}
+		Class<?> currentType = c;
+		while(currentType != null)
+		{
+			currentType = currentType.getSuperclass();
+			if(currentType == superclass)
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	/*
 	 * Welcome to a method checking if a "Class" is a class
 	 */
-	public static final boolean isActualClass(final Class<?> type)
+	public static boolean isActualClass(final Class<?> type)
 	{
 		return !type.isInterface()
 			&& !type.isPrimitive()
 			&& !type.isAnnotation()
 			&& !type.isArray()
 			&& !type.isSynthetic()
-		;
+			;
 	}
-
+	
 	/**
 	 * Utility method fixing the WRONGLY implemented {@link Class#isEnum()}.
 	 * <p>
@@ -171,17 +263,17 @@ public final class XReflect
 	{
 		return java.lang.Enum.class.isAssignableFrom(c);
 	}
-
+	
 	public static boolean isDeclaredEnum(final Class<?> c)
 	{
 		return c != null && c.isEnum();
 	}
-
+	
 	public static boolean isSubEnum(final Class<?> c)
 	{
 		return c != null && isDeclaredEnum(c.getSuperclass());
 	}
-
+	
 	public static Class<?> getDeclaredEnumClass(final Class<?> c)
 	{
 		return !isEnum(c)
@@ -189,19 +281,19 @@ public final class XReflect
 			: isDeclaredEnum(c)
 				? c
 				: c.getSuperclass()
-		;
+			;
 	}
-
+	
 	public static Object resolveEnumConstantInstance(final Class<?> type, final int ordinal)
 	{
 		validateIsEnum(type);
-
+		
 		// Class detour required for AIC-like special subclass enums constants.
 		final Object[] jvmEnumConstants = XReflect.getDeclaredEnumClass(type).getEnumConstants();
-
+		
 		return jvmEnumConstants[ordinal];
 	}
-
+	
 	public static <T> T resolveEnumConstantInstanceTyped(final Class<T> type, final int ordinal)
 	{
 		/*
@@ -209,15 +301,16 @@ public final class XReflect
 		 * The instance is actually of type T, but it is stored in a "? super T" array of its parent enum type.
 		 */
 		final Object enumConstantInstance = XReflect.resolveEnumConstantInstance(type, ordinal);
-
+		
 		// compensate the subclass typing hassle
 		@SuppressWarnings("unchecked")
 		final T enumConstantinstance = (T)enumConstantInstance;
-
+		
 		return enumConstantinstance;
 	}
-
-
+	
+	
+	
 	public static <T> Class<T> validateIsEnum(final Class<T> type)
 	{
 		if(XReflect.isEnum(type))
@@ -226,7 +319,7 @@ public final class XReflect
 		}
 		throw new IllegalArgumentException("Not an enum type: " + type);
 	}
-
+	
 	/**
 	 * Alias for {@code iterateDeclaredFieldsUpwards(startingClass, Object.class, logic)}.
 	 *
@@ -237,14 +330,14 @@ public final class XReflect
 	 *
 	 * @return the passed {@literal logic}.
 	 */
-	public static final <L extends Consumer<Field>> L iterateDeclaredFieldsUpwards(
-		final Class<?> startingClass ,
-		final L        logic
+	public static <L extends Consumer<Field>> L iterateDeclaredFieldsUpwards(
+		final Class<?> startingClass,
+		final L logic
 	)
 	{
 		return iterateDeclaredFieldsUpwards(startingClass, Object.class, logic);
 	}
-
+	
 	/**
 	 * Iterates over every declared field of all classes upwards starting at {@literal startingClass}
 	 * until class {@literal boundingClass} is reached and executes the passed {@link Consumer} on it.
@@ -264,10 +357,10 @@ public final class XReflect
 	 *
 	 * @return the passed {@literal logic}.
 	 */
-	public static final <L extends Consumer<Field>> L iterateDeclaredFieldsUpwards(
+	public static <L extends Consumer<Field>> L iterateDeclaredFieldsUpwards(
 		final Class<?> startingClass,
 		final Class<?> boundingClass,
-		final L        logic
+		final L logic
 	)
 	{
 		// applies to Object.class, Void.class, interfaces, primitives. See Class.getSuperclass() JavaDoc.
@@ -275,7 +368,7 @@ public final class XReflect
 		{
 			return logic;
 		}
-
+		
 		try
 		{
 			for(Class<?> currentClass = startingClass; currentClass != Object.class; currentClass = currentClass.getSuperclass())
@@ -286,17 +379,17 @@ public final class XReflect
 					logic.accept(fields[i]);
 				}
 			}
-
+			
 		}
 		catch(final ThrowBreak b)
 		{
 			// abort iteration
 		}
-
+		
 		return logic;
 	}
-
-	public static final Field getDeclaredField(final Class<?> c, final String name) throws NoSuchFieldRuntimeException
+	
+	public static Field getDeclaredField(final Class<?> c, final String name) throws NoSuchFieldRuntimeException
 	{
 		try
 		{
@@ -308,7 +401,7 @@ public final class XReflect
 		}
 	}
 	
-	public static final Method getDeclaredMethod(final Class<?> c, final String name, final Class<?>... parameterTypes) throws NoSuchFieldRuntimeException
+	public static Method getDeclaredMethod(final Class<?> c, final String name, final Class<?>... parameterTypes) throws NoSuchFieldRuntimeException
 	{
 		try
 		{
@@ -320,7 +413,7 @@ public final class XReflect
 		}
 	}
 	
-	public static final <T> Constructor<T> getDeclaredConstructor(final Class<T> c, final Class<?>... parameterTypes) throws NoSuchFieldRuntimeException
+	public static <T> Constructor<T> getDeclaredConstructor(final Class<T> c, final Class<?>... parameterTypes) throws NoSuchFieldRuntimeException
 	{
 		try
 		{
@@ -331,16 +424,28 @@ public final class XReflect
 			throw new NoSuchMethodRuntimeException(e);
 		}
 	}
-
-	public static final Field getAnyField(final Class<?> c, final String name) throws NoSuchFieldRuntimeException
+	
+	public static Field getField(final Class<?> c, final String name) throws NoSuchFieldRuntimeException
+	{
+		try
+		{
+			return c.getField(name);
+		}
+		catch(final NoSuchFieldException e)
+		{
+			throw new NoSuchFieldRuntimeException(e);
+		}
+	}
+	
+	public static Field getAnyField(final Class<?> c, final String name) throws NoSuchFieldRuntimeException
 	{
 		notNull(name);
-
+		
 		try
 		{
 			return getAnyField(c, field ->
-			name.equals(field.getName())
-		);
+				name.equals(field.getName())
+			);
 		}
 		catch(final NoSuchFieldRuntimeException e)
 		{
@@ -350,8 +455,8 @@ public final class XReflect
 			);
 		}
 	}
-
-	public static final Field getAnyField(final Class<?> c, final Predicate<? super Field> predicate)
+	
+	public static Field getAnyField(final Class<?> c, final Predicate<? super Field> predicate)
 		throws NoSuchFieldRuntimeException
 	{
 		final XReference<Field> result = X.Reference(null);
@@ -363,16 +468,16 @@ public final class XReflect
 				throw X.BREAK();
 			}
 		});
-
+		
 		if(result.get() != null)
 		{
 			return result.get();
 		}
-
+		
 		throw new NoSuchFieldRuntimeException(new NoSuchFieldException());
 	}
-
-	public static final Field getInstanceFieldOfType(final Class<?> declaringType, final Class<?> fieldType)
+	
+	public static Field getInstanceFieldOfType(final Class<?> declaringType, final Class<?> fieldType)
 		throws NoSuchFieldRuntimeException
 	{
 		try
@@ -391,32 +496,163 @@ public final class XReflect
 			);
 		}
 	}
-
-	public static final boolean isFinal(final Member field)
+	
+	public static Method getAnyMethod(
+		final Class<?> c,
+		final String name
+	)
+		throws NoSuchMethodRuntimeException
+	{
+		notNull(name);
+		
+		try
+		{
+			return getAnyMethod(c, method ->
+				name.equals(method.getName())
+			);
+		}
+		catch(final NoSuchFieldRuntimeException e)
+		{
+			// (28.10.2013 TM)EXCP: proper exception
+			throw new NoSuchMethodRuntimeException(
+				new NoSuchMethodException("No method with name " + name + " found in type " + c)
+			);
+		}
+	}
+	
+	public static Method getAnyMethod(
+		final Class<?> c,
+		final Predicate<? super Method> predicate
+	)
+		throws NoSuchMethodRuntimeException
+	{
+		final XReference<Method> result = X.Reference(null);
+		iterateAllClassMethods(c, field ->
+		{
+			if(predicate.test(field))
+			{
+				result.set(field);
+				throw X.BREAK();
+			}
+		});
+		
+		if(result.get() != null)
+		{
+			return result.get();
+		}
+		
+		throw new NoSuchMethodRuntimeException(new NoSuchMethodException());
+	}
+	
+	public static <C extends Consumer<? super Method>> C iterateAllClassMethods(
+		final Class<?> clazz,
+		final C logic
+	)
+	{
+		return iterateAllClassMethods(clazz, Object.class, logic);
+	}
+	
+	public static <C extends Consumer<? super Method>> C iterateAllClassMethods(
+		final Class<?> clazz,
+		final Class<?> bound,
+		final C logic
+	)
+	{
+		// applies to Object.class, Void.class, interfaces, primitives. See Class.getSuperclass() JavaDoc.
+		if(clazz.isArray() || clazz.getSuperclass() == null)
+		{
+			return logic;
+		}
+		
+		try
+		{
+			for(Class<?> currentClass = clazz; currentClass != bound; currentClass = currentClass.getSuperclass())
+			{
+				for(final Method method : currentClass.getDeclaredMethods())
+				{
+					logic.accept(method);
+				}
+			}
+		}
+		catch(final ThrowBreak b)
+		{
+			/* abort inner iteration */
+		}
+		
+		return logic;
+	}
+	
+	public static boolean isFinal(final Member field)
 	{
 		return Modifier.isFinal(field.getModifiers());
 	}
-
-	public static final boolean isStatic(final Member field)
+	
+	public static boolean isStatic(final Member field)
 	{
 		return Modifier.isStatic(field.getModifiers());
 	}
-
-	public static final boolean isReference(final Field field)
+	
+	public static boolean isSynthetic(final Member field)
+	{
+		return Modifier.isSynchronized(field.getModifiers());
+	}
+	
+	public static boolean isStaticFinal(final Member field)
+	{
+		return isStatic(field) && isFinal(field);
+	}
+	
+	public static boolean isPrimitive(final Field field)
+	{
+		return field.getType().isPrimitive();
+	}
+	
+	public static boolean isReference(final Field field)
 	{
 		return !field.getType().isPrimitive();
 	}
-
-	public static final boolean isTransient(final Field field)
+	
+	public static boolean isTransient(final Field field)
 	{
 		return Modifier.isTransient(field.getModifiers());
 	}
-
-	public static final boolean isAbstract(final Class<?> type)
+	
+	public static boolean isNotTransient(final Field field)
+	{
+		return !Modifier.isTransient(field.getModifiers());
+	}
+	
+	public static boolean isPrivate(final Member field)
+	{
+		return Modifier.isPrivate(field.getModifiers());
+	}
+	
+	public static boolean isProtected(final Member field)
+	{
+		return Modifier.isProtected(field.getModifiers());
+	}
+	
+	public static boolean isPublic(final Member field)
+	{
+		return Modifier.isPublic(field.getModifiers());
+	}
+	
+	public static boolean isDefaultVisible(final Member field)
+	{
+		final int modifiers = field.getModifiers();
+		return !(Modifier.isPrivate(modifiers) || Modifier.isProtected(modifiers) || Modifier.isPublic(modifiers));
+	}
+	
+	public static boolean isAbstract(final Class<?> type)
 	{
 		return Modifier.isAbstract(type.getModifiers());
 	}
-
+	
+	public static boolean isAbstract(final Method method)
+	{
+		return Modifier.isAbstract(method.getModifiers());
+	}
+	
 	/**
 	 * Calls {@link Field#get(Object)} and wraps the abstraction-destroying checked
 	 * {@link IllegalAccessException} with a proper {@link IllegalAccessRuntimeException}.
@@ -426,7 +662,7 @@ public final class XReflect
 	 * @return the value of the represented field in object {@code obj};
 	 *         primitive values are wrapped in an appropriate object before being returned
 	 */
-	public static final Object getFieldValue(final Field field, final Object obj)
+	public static Object getFieldValue(final Field field, final Object obj)
 	{
 		try
 		{
@@ -438,31 +674,31 @@ public final class XReflect
 		}
 	}
 	
-	public static final <T> T invoke(final Constructor<T> constructor, final Object... args)
+	public static <T> T invoke(final Constructor<T> constructor, final Object... args)
 	{
 		try
 		{
 			return constructor.newInstance(args);
 		}
-		catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+		catch(final InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 		{
 			throw new RuntimeException(e);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static final <T> T invoke(final Method method, final Object instance, final Object... args)
+	public static <T> T invoke(final Method method, final Object instance, final Object... args)
 	{
 		try
 		{
 			return (T)method.invoke(instance, args);
 		}
-		catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+		catch(final IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 		{
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	/**
 	 * Calls {@link Field#set(Object, Object)} and wraps the abstraction-destroying checked
 	 * {@link IllegalAccessException} with a proper {@link IllegalAccessRuntimeException}.
@@ -471,7 +707,7 @@ public final class XReflect
 	 * @param obj the object whose field should be modified
 	 * @param value the new value for the field of {@code obj} being modified
 	 */
-	public static final void setFieldValue(final Field field, final Object obj, final Object value)
+	public static void setFieldValue(final Field field, final Object obj, final Object value)
 	{
 		try
 		{
@@ -482,7 +718,19 @@ public final class XReflect
 			throw new IllegalAccessRuntimeException(e);
 		}
 	}
-
+	
+	public static int getField_int(final Field f, final Object obj) throws IllegalAccessRuntimeException
+	{
+		try
+		{
+			return f.getInt(obj);
+		}
+		catch(final IllegalAccessException e)
+		{
+			throw new IllegalAccessRuntimeException(e);
+		}
+	}
+	
 	/**
 	 * Resolves the passed type name to a runtime type (instance of type {@link Class}).
 	 * In contrary to JDK's type resolving mechanisms, this method resolves primitive type names, as well.
@@ -503,22 +751,96 @@ public final class XReflect
 	 * @throws ExceptionInInitializerError see {@link Class#forName(String)}
 	 * @throws ClassNotFoundException see {@link Class#forName(String)}
 	 */
-	public static final Class<?> resolveType(final String typeName, final ClassLoader classLoader)
+	public static Class<?> resolveType(final String typeName, final ClassLoader classLoader)
 		throws LinkageError, ExceptionInInitializerError, ClassNotFoundException
 	{
 		final Class<?> type = tryResolvePrimitiveType(typeName);
 		return type != null
 			? type
 			: Class.forName(typeName, true, classLoader)
-		;
+			;
 	}
-
-
+	
 	/**
-	 * This method attempts to resolve the passed {@literal typeNames} to {@link Class} instances using
+	 * Uses {@link Class#forName(String)} which uses the calling class's {@link ClassLoader}.
+	 *
+	 * @param typeName the type name to be resolved, primitive name or full qualified type name.
+	 *
+	 * @return the resolved type instance (of type {@link Class})
+	 *
+	 * @throws LinkageError see {@link Class#forName(String)}
+	 * @throws ExceptionInInitializerError see {@link Class#forName(String)}
+	 * @throws ClassNotFoundException see {@link Class#forName(String)}
+	 */
+	public static Class<?> resolveTypeForName(final String typeName)
+		throws LinkageError, ExceptionInInitializerError, ClassNotFoundException
+	{
+		final Class<?> type = tryResolvePrimitiveType(typeName);
+		return type != null
+			? type
+			: Class.forName(typeName)
+			;
+	}
+	
+	/**
+	 * Calls {@link #resolveType(String, ClassLoader)}, but suppresses any {@link ClassNotFoundException} and returns
+	 * {@code null} instead. This is useful if the passed class name is only potentially resolvable
+	 * at runtime and is still valid if not. Example: resolving a old type dictionary as far as possible
+	 * and marking the not resolvable types as unresolvable.
+	 *
+	 * @param typeName the type name to be resolved, primitive name or full qualified type name.
+	 * @param classLoader class loader from which the class must be loaded
+	 * @return the {@link Class} instance representing the passed class name or {@code null} if unresolevable.
+	 */
+	public static Class<?> tryResolveType(final String typeName, final ClassLoader classLoader)
+	{
+		try
+		{
+			return XReflect.resolveType(typeName, classLoader);
+		}
+		catch(final ClassNotFoundException e)
+		{
+			// intentionally return null
+			return null;
+		}
+	}
+	
+	/**
+	 * Alias for {@link #tryIterativeResolveType(ClassLoader, String...)} with the following difference:<br>
+	 * If none of the passed {@literal typeNames} can be resolved, a {@link ClassNotFoundException} listing
+	 * all passed {@literal typeNames} is thrown.
+	 *
+	 * @param classLoader class loader from which the class must be loaded
+	 * @param typeNames the full qualified type names to be attempted to be resolved one by one.
+	 *
+	 * @return the first successfully resolved {@link Class} instance.
+	 *
+	 * @throws ClassNotFoundException if none of the passed {@literal typeNames} could have been resolved.
+	 *
+	 * @see #tryIterativeResolveType(ClassLoader, String...)
+	 */
+	public static Class<?> iterativeResolveType(
+		final ClassLoader classLoader,
+		final String... typeNames
+	)
+		throws ClassNotFoundException
+	{
+		final Class<?> type = tryIterativeResolveType(classLoader, typeNames);
+		if(type != null)
+		{
+			return type;
+		}
+		
+		// if none of the provided type names resulted in a match, a combined ClassNotFoundException is thrown
+		throw new ClassNotFoundException(Arrays.toString(typeNames));
+	}
+	
+	/**
+	 * This methods attempts to resolve the passed {@literal typeNames} to {@link Class} instances using
 	 * {@link #resolveType(String, ClassLoader)} one by one.
 	 * The {@link Class} instance of the first successful attempt is returned.
 	 * If none of the passed {@literal typeNames} can be resolved, {@literal null} is returned.
+	 * See {@link #iterativeResolveType(ClassLoader, String...)} for an exception-throwing version.
 	 * <p>
 	 * <b>Note:</b><br>
 	 * While it is generally a bad idea to just use a trial and error approach until something works,
@@ -539,14 +861,14 @@ public final class XReflect
 	 *
 	 * @see #resolveType(String, ClassLoader)
 	 */
-	public static final Class<?> tryIterativeResolveType(
+	public static Class<?> tryIterativeResolveType(
 		final ClassLoader classLoader,
-		final String...   typeNames
+		final String... typeNames
 	)
 	{
 		notNull(typeNames);
 		notEmpty(typeNames);
-
+		
 		for(final String typeName : typeNames)
 		{
 			try
@@ -561,21 +883,92 @@ public final class XReflect
 				continue;
 			}
 		}
-
+		
 		return null;
 	}
-
+	
 	/**
 	 * Local alias for {@link ClassLoader#getSystemClassLoader()}.
 	 *
 	 * @return the system class loader.
 	 */
-	public static final ClassLoader defaultTypeResolvingClassLoader()
+	public static ClassLoader defaultTypeResolvingClassLoader()
 	{
 		return ClassLoader.getSystemClassLoader();
 	}
-
-	public static final Class<?> tryResolvePrimitiveType(final String className)
+	
+	/**
+	 * Calls {@link #resolveType(String, ClassLoader)} with {@link #defaultTypeResolvingClassLoader()}.
+	 * Make sure this is a suitable {@link ClassLoader} when using this method.
+	 *
+	 * @param typeName the type name to be resolved, primitive name or full qualified type name.
+	 * @return the resolved type instance (of type {@link Class})
+	 *
+	 * @throws LinkageError see {@link Class#forName(String)}
+	 * @throws ExceptionInInitializerError see {@link Class#forName(String)}
+	 * @throws ClassNotFoundException see {@link Class#forName(String)}
+	 */
+	public static Class<?> resolveType(final String typeName)
+		throws LinkageError, ExceptionInInitializerError, ClassNotFoundException
+	{
+		return resolveType(typeName, defaultTypeResolvingClassLoader());
+	}
+	
+	/**
+	 * Calls {@link #tryResolveType(String, ClassLoader)} with {@link #defaultTypeResolvingClassLoader()}.
+	 * Make sure this is a suitable {@link ClassLoader} when using this method.
+	 *
+	 * @param typeName the type name to be resolved, primitive name or full qualified type name.
+	 * @return the {@link Class} instance representing the passed class name or {@code null} if unresolevable.
+	 */
+	public static Class<?> tryResolveType(final String typeName)
+	{
+		return tryResolveType(typeName, defaultTypeResolvingClassLoader());
+	}
+	
+	/**
+	 * Calls {@link #iterativeResolveType(ClassLoader, String...)} with {@link #defaultTypeResolvingClassLoader()}.
+	 * Make sure this is a suitable {@link ClassLoader} when using this method.
+	 *
+	 * @param typeNames the full qualified type names to be attempted to be resolved one by one.
+	 *
+	 * @return the first successfully resolved {@link Class} instance.
+	 *
+	 * @throws ClassNotFoundException if none of the passed {@literal typeNames} could have been resolved.
+	 */
+	public static Class<?> iterativeResolveType(final String... typeNames)
+		throws ClassNotFoundException
+	{
+		return iterativeResolveType(defaultTypeResolvingClassLoader(), typeNames);
+	}
+	
+	public static Class<?> tryIterativeResolveType(final String... typeNames)
+	{
+		return tryIterativeResolveType(defaultTypeResolvingClassLoader(), typeNames);
+	}
+	
+	public static Field tryGetDeclaredField(
+		final Class<?> declaringClass,
+		final String fieldName
+	)
+	{
+		if(declaringClass == null)
+		{
+			return null;
+		}
+		
+		try
+		{
+			return declaringClass.getDeclaredField(fieldName);
+		}
+		catch(final ReflectiveOperationException e)
+		{
+			// field may be unresolvable
+			return null;
+		}
+	}
+	
+	public static Class<?> tryResolvePrimitiveType(final String className)
 	{
 		switch(className)
 		{
@@ -591,14 +984,30 @@ public final class XReflect
 			default       : return null         ;
 		}
 	}
-
+	
 	public static boolean isPrimitiveTypeName(final String typeName)
 	{
 		return tryResolvePrimitiveType(typeName) != null;
 	}
-
-	public static final boolean isOfAnyType(
-		final Class<?>           subject   ,
+	
+	public static boolean isOfAnyType(
+		final Class<?> subject,
+		final Class<?>... supertypes
+	)
+	{
+		for(final Class<?> s : supertypes)
+		{
+			if(s.isAssignableFrom(subject))
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public static boolean isOfAnyType(
+		final Class<?> subject,
 		final Iterable<Class<?>> supertypes
 	)
 	{
@@ -609,31 +1018,31 @@ public final class XReflect
 				return true;
 			}
 		}
-
+		
 		return false;
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public static <T> Class<T> getClass(final T object)
 	{
 		return (Class<T>)object.getClass();
 	}
-
+	
 	public static char fieldIdentifierDelimiter()
 	{
 		return '#';
 	}
-
+	
 	public static String typename_enum()
 	{
 		return "enum";
 	}
-
+	
 	public static char nestedClassNameSeparator()
 	{
 		return '$';
 	}
-
+	
 	public static String toFullQualifiedFieldName(
 		final Class<?>                actualClass,
 		final java.lang.reflect.Field field
@@ -642,19 +1051,71 @@ public final class XReflect
 		return actualClass == field.getDeclaringClass()
 			? deriveFieldIdentifier(field)
 			: toFullQualifiedFieldName(actualClass, deriveFieldIdentifier(field))
-		;
+			;
 	}
-
+	
 	public static String deriveFieldIdentifier(final java.lang.reflect.Field field)
 	{
 		return toFullQualifiedFieldName(field.getDeclaringClass(), field.getName());
 	}
-
+	
 	public static String toFullQualifiedFieldName(final Class<?> c, final String fieldName)
 	{
 		return c.getName() + fieldIdentifierDelimiter() + fieldName;
 	}
-
+	
+	public static int getFieldIdentifierDelimiterIndex(final String identifier)
+	{
+		final int index = identifier.lastIndexOf(fieldIdentifierDelimiter());
+		if(index < 0)
+		{
+			throw new IllegalArgumentException("No delimiter found in identifier");
+		}
+		
+		return index;
+	}
+	
+	public static String getFieldIdentifierClassName(final String fieldIdentifier)
+	{
+		return fieldIdentifier.substring(0, getFieldIdentifierDelimiterIndex(fieldIdentifier));
+	}
+	
+	public static String getFieldIdentifierFieldName(final String fieldIdentifier)
+	{
+		return fieldIdentifier.substring(getFieldIdentifierDelimiterIndex(fieldIdentifier) + 1);
+	}
+	
+	public static <A> Class<A> validateInterfaceType(final Class<A> type)
+	{
+		if(!type.isInterface())
+		{
+			throw UtilStackTrace.cutStacktraceByOne(
+				new IllegalArgumentException("Not an interface type:" + type)
+			);
+		}
+		return type;
+	}
+	
+	public static <A> Class<A> validateNonInterfaceType(final Class<A> type)
+	{
+		if(type.isInterface())
+		{
+			throw UtilStackTrace.cutStacktraceByOne(new IllegalArgumentException("Interface type:" + type));
+		}
+		return type;
+	}
+	
+	public static <A> Class<A> validateNonArrayType(final Class<A> type)
+	{
+		if(type.isArray())
+		{
+			throw UtilStackTrace.cutStacktraceByOne(
+				new IllegalArgumentException("Array type:" + type)
+			);
+		}
+		return type;
+	}
+	
 	public static <A> Class<A> validateArrayType(final Class<A> arrayType)
 	{
 		if(!arrayType.isArray())
@@ -665,7 +1126,18 @@ public final class XReflect
 		}
 		return arrayType;
 	}
-
+	
+	public static <A> Class<A> validatePrimitiveType(final Class<A> primitiveType)
+	{
+		if(!primitiveType.isPrimitive())
+		{
+			throw UtilStackTrace.cutStacktraceByOne(
+				new IllegalArgumentException("Not a primitive type:" + primitiveType)
+			);
+		}
+		return primitiveType;
+	}
+	
 	public static <A> Class<A> validateNonPrimitiveType(final Class<A> primitiveType)
 	{
 		if(primitiveType.isPrimitive())
@@ -676,7 +1148,7 @@ public final class XReflect
 		}
 		return primitiveType;
 	}
-
+	
 	public static <T> Instantiator<T> WrapDefaultConstructor(final Class<T> type)
 		throws NoSuchMethodRuntimeException
 	{
@@ -695,7 +1167,7 @@ public final class XReflect
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	/**
 	 * Checks if the passed type is equal to or a sub type of {@link Collection} or {@link Map}.
 	 * <p>
@@ -713,9 +1185,9 @@ public final class XReflect
 	{
 		return Collection.class.isAssignableFrom(type)
 			|| Map.class.isAssignableFrom(type)
-		;
+			;
 	}
-
+	
 	public static boolean hasEnumeratedTypeName(final Class<?> type)
 	{
 		final String typeName  = type.getName();
@@ -727,17 +1199,17 @@ public final class XReflect
 			{
 				return false;
 			}
-
+			
 			final char c = typeName.charAt(i + 1);
 			if(XChars.isDigit(c))
 			{
 				return true;
 			}
 		}
-
+		
 		return false;
 	}
-
+	
 	public static boolean isProxyClass(final Class<?> c)
 	{
 		/* (20.08.2019 TM)NOTE:
@@ -768,14 +1240,42 @@ public final class XReflect
 		 */
 		return Proxy.class.isAssignableFrom(c);
 	}
-
-
-	public static final Field[] collectInstanceFields(final Class<?> objectClass)
+	
+	public static boolean isValidProxyClass(final Class<?> c)
+	{
+		// horribly wrong name for a validation method
+		return Proxy.isProxyClass(c);
+	}
+	
+	public static Field[] collectPrimitiveFieldsByByteSize(final Field[] fields, final int byteSize)
+	{
+		if(byteSize != XMemory.byteSize_byte()
+			&& byteSize != XMemory.byteSize_short()
+			&& byteSize != XMemory.byteSize_int()
+			&& byteSize != XMemory.byteSize_long()
+		)
+		{
+			throw new IllegalArgumentException("Invalid Java primitive byte size: " + byteSize);
+		}
+		
+		final Field[] primFields = new Field[fields.length];
+		int primFieldsCount = 0;
+		for(int i = 0; i < fields.length; i++)
+		{
+			if(fields[i].getType().isPrimitive() && XMemory.byteSizePrimitive(fields[i].getType()) == byteSize)
+			{
+				primFields[primFieldsCount++] = fields[i];
+			}
+		}
+		return Arrays.copyOf(primFields, primFieldsCount);
+	}
+	
+	public static Field[] collectInstanceFields(final Class<?> objectClass)
 	{
 		return collectInstanceFields(objectClass, XFunc.all());
 	}
-
-	public static final Field[] collectInstanceFields(final Class<?> objectClass, final Predicate<? super Field> selector)
+	
+	public static Field[] collectInstanceFields(final Class<?> objectClass, final Predicate<? super Field> selector)
 	{
 		final BulkList<Field> objectFields = BulkList.New(20);
 		XReflect.iterateDeclaredFieldsUpwards(objectClass, field ->
@@ -789,16 +1289,29 @@ public final class XReflect
 			{
 				return;
 			}
-
+			
 			objectFields.add(field);
 		});
-
+		
 		final Field[] array = XArrays.reverse(objectFields.toArray(Field.class));
-
+		
 		return array;
 	}
-
-
+	
+	public static int calculatePrimitivesLength(final Field[] primFields)
+	{
+		int length = 0;
+		for(int i = 0; i < primFields.length; i++)
+		{
+			if(!primFields[i].getType().isPrimitive())
+			{
+				throw new IllegalArgumentException("Not a primitive field: " + primFields[i]);
+			}
+			length += XMemory.byteSizePrimitive(primFields[i].getType());
+		}
+		return length;
+	}
+	
 	public static <T, S extends T> S copyFields(
 		final T source,
 		final S target
@@ -806,7 +1319,17 @@ public final class XReflect
 	{
 		return copyFields(source, target, XFunc.all(), CopyPredicate::all);
 	}
-
+	
+	public static <T, S extends T> S copyFields(
+		final T                        source       ,
+		final S                        target       ,
+		final Predicate<? super Field> fieldSelector
+	)
+	{
+		return copyFields(source, target, fieldSelector, CopyPredicate::all);
+	}
+	
+	
 	public static <T, S extends T> S copyFields(
 		final T                        source       ,
 		final S                        target       ,
@@ -816,7 +1339,7 @@ public final class XReflect
 	{
 		validateFamiliarClass(source, target);
 		final Field[] copyFields = collectInstanceFields(source.getClass(), fieldSelector);
-
+		
 		for(final Field field : copyFields)
 		{
 			try
@@ -827,16 +1350,44 @@ public final class XReflect
 			{
 				throw new MemoryException(
 					"Cannot copy value of field " + field
-					+ " from source instance " + XChars.systemString(source)
-					+ " to target instance "   + XChars.systemString(target) + ".",
+						+ " from source instance " + XChars.systemString(source)
+						+ " to target instance "   + XChars.systemString(target) + ".",
 					e
 				);
 			}
 		}
-
+		
 		return target;
 	}
-
+	
+	static <T, S extends T> S copyFields(
+		final T source,
+		final S target,
+		final Field[] copyFields,
+		final CopyPredicate copySelector
+	)
+	{
+		validateFamiliarClass(source, target);
+		for(final Field field : copyFields)
+		{
+			try
+			{
+				copyFieldValue(source, target, field, copySelector);
+			}
+			catch(final Exception e)
+			{
+				throw new MemoryException(
+					"Cannot copy value of field " + field
+						+ " from source instance " + XChars.systemString(source)
+						+ " to target instance "   + XChars.systemString(target) + ".",
+					e
+				);
+			}
+		}
+		
+		return target;
+	}
+	
 	private static <T, S extends T> void copyFieldValue(
 		final T             source      ,
 		final S             target      ,
@@ -847,22 +1398,22 @@ public final class XReflect
 	{
 		// must circumvent reflection access by low-level access due to warnings about JDK-internal reflection access.
 		final long fieldOffset = XMemory.objectFieldOffset(field);
-
+		
 		if(field.getType().isPrimitive())
 		{
 			copyPrimitiveFieldValue(source, target, field, fieldOffset, copySelector);
 			return;
 		}
-
+		
 		final Object value = XMemory.getObject(source, fieldOffset);
 		if(!copySelector.test(source, target, field, value))
 		{
 			return;
 		}
-
+		
 		XMemory.setObject(target, fieldOffset, value);
 	}
-
+	
 	private static <T, S extends T>void copyPrimitiveFieldValue(
 		final T             source        ,
 		final S             target        ,
@@ -876,7 +1427,7 @@ public final class XReflect
 		{
 			return;
 		}
-
+		
 		// must circumvent reflection access by low-level access due to warnings about JDK-internal reflection access.
 		final Class<?> primitiveType = primitiveField.getType();
 		if(primitiveType == int.class)
@@ -917,7 +1468,7 @@ public final class XReflect
 			throw new MemoryException("Field with unhandled primitive type: " + primitiveField);
 		}
 	}
-
+	
 	/**
 	 * Checks if {@code superClassInstance.getClass().isAssignableFrom(sameOrSubClassInstance.getClass())}
 	 *
@@ -936,28 +1487,28 @@ public final class XReflect
 		{
 			return;
 		}
-
+		
 		throw new IllegalArgumentException(
 			XChars.systemString(sameOrSubClassInstance)
-			+ " is not of the same class or a sub class of "
-			+ XChars.systemString(superClassInstance)
+				+ " is not of the same class or a sub class of "
+				+ XChars.systemString(superClassInstance)
 		);
 	}
-
-	public final static Class<?> getSuperClassNonNull(final Class<?> c)
+	
+	public static Class<?> getSuperClassNonNull(final Class<?> c)
 	{
 		return c == Object.class
 			? c
 			: c.getSuperclass()
-		;
+			;
 	}
-
-
-
+	
+	
+	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
-
+	
 	/**
 	 * Dummy constructor to prevent instantiation of this static-only utility class.
 	 *
@@ -968,5 +1519,5 @@ public final class XReflect
 		// static only
 		throw new UnsupportedOperationException();
 	}
-
+	
 }

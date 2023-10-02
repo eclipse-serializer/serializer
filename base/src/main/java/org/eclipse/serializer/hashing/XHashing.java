@@ -22,6 +22,9 @@ package org.eclipse.serializer.hashing;
 
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.typing.KeyValue;
+import org.eclipse.serializer.typing.XTypes;
+
+import java.util.Objects;
 
 
 /**
@@ -39,101 +42,121 @@ public final class XHashing
 		{
 			super();
 		}
-
+		
 		@Override
-		public final int hash(final Object object)
+		public int hash(final Object object)
 		{
 			return System.identityHashCode(object);
 		}
-
+		
 		@Override
-		public final boolean equal(final Object object1, final Object object2)
+		public boolean equal(final Object object1, final Object object2)
 		{
 			return object1 == object2;
 		}
 	}
-
+	
 	static final class SingletonValueHashEqualator implements HashEqualator.ValueTypeHashEqualator<Object>
 	{
 		SingletonValueHashEqualator()
 		{
 			super();
 		}
-
+		
 		@Override
-		public final int hash(final Object object)
+		public int hash(final Object object)
 		{
 			return object == null ? 0 : object.hashCode();
 		}
-
+		
 		@Override
-		public final boolean equal(final Object object1, final Object object2)
+		public boolean equal(final Object object1, final Object object2)
 		{
-			return object1 == object2 || object1 != null && object1.equals(object2);
+			return Objects.equals(object1, object2);
 		}
 	}
-
+	
+	static final class NonNullSingletonValueHashEqualator implements HashEqualator.ValueTypeHashEqualator<Object>
+	{
+		NonNullSingletonValueHashEqualator()
+		{
+			super();
+		}
+		
+		@Override
+		public int hash(final Object object)
+		{
+			return object.hashCode();
+		}
+		
+		@Override
+		public boolean equal(final Object object1, final Object object2)
+		{
+			return object1.equals(object2);
+		}
+	}
+	
 	static final class SingletonKeyValueIdentityHashEqualator
-	implements HashEqualator.IdentityHashEqualator<KeyValue<Object, Object>>
+		implements HashEqualator.IdentityHashEqualator<KeyValue<Object, Object>>
 	{
 		SingletonKeyValueIdentityHashEqualator()
 		{
 			super();
 		}
-
+		
 		@Override
-		public final int hash(final KeyValue<Object, Object> kv)
+		public int hash(final KeyValue<Object, Object> kv)
 		{
 			return System.identityHashCode(kv.key());
 		}
-
+		
 		@Override
-		public final boolean equal(final KeyValue<Object, Object> kv1, final KeyValue<Object, Object> kv2)
+		public boolean equal(final KeyValue<Object, Object> kv1, final KeyValue<Object, Object> kv2)
 		{
 			return kv1.key() == kv2.key();
 		}
 	}
-
-
+	
+	
 	/**
 	 * Central stateless {@link HashEqualator} function instance with identity hash equality.
 	 */
 	static final SingletonIdentityHashEqualator HASH_EQUALITY_IDENTITY = new SingletonIdentityHashEqualator();
-
+	
 	/**
 	 * Central stateless {@link HashEqualator} function instance with
 	 * {@link Object#hashCode()} / {@link Object#equals(Object)} equlity (value type equality).
 	 */
 	static final SingletonValueHashEqualator HASH_EQUALITY_VALUE = new SingletonValueHashEqualator();
-
+	
 	static final SingletonKeyValueIdentityHashEqualator HASH_EQUALITY_IDENTITY_KV =
 		new SingletonKeyValueIdentityHashEqualator()
-	;
-
+		;
+	
 	@SuppressWarnings("unchecked")
-	public static final <E> HashEqualator<E> hashEqualityIdentity()
+	public static <E> HashEqualator<E> hashEqualityIdentity()
 	{
 		return (HashEqualator<E>)HASH_EQUALITY_IDENTITY;
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	public static final <E> HashEqualator<E> hashEqualityValue()
+	public static <E> HashEqualator<E> hashEqualityValue()
 	{
 		return (HashEqualator<E>)HASH_EQUALITY_VALUE;
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	public static final <KV extends KeyValue<?, ?>> HashEqualator<KV> keyValueHashEqualityKeyIdentity()
+	public static <KV extends KeyValue<?, ?>> HashEqualator<KV> keyValueHashEqualityKeyIdentity()
 	{
 		return (HashEqualator<KV>)HASH_EQUALITY_IDENTITY_KV;
 	}
 	
-	public static final int calculateHashLength(final long desiredCapacity, final float hashDensity)
+	public static int calculateHashLength(final long desiredCapacity, final float hashDensity)
 	{
 		return padHashLength((long)Math.ceil(desiredCapacity / hashDensity));
 	}
-
-	public static final int padHashLength(final long desiredHashLength)
+	
+	public static int padHashLength(final long desiredHashLength)
 	{
 		if(XMath.isGreaterThanOrEqualHighestPowerOf2(desiredHashLength))
 		{
@@ -150,12 +173,12 @@ public final class XHashing
 		return capacity;
 	}
 	
-	public static final boolean isValidHashDensity(final float hashDensity)
+	public static boolean isValidHashDensity(final float hashDensity)
 	{
 		return hashDensity > 0 && !Float.isNaN(hashDensity);
 	}
-
-	public static final float validateHashDensity(final float hashDensity)
+	
+	public static float validateHashDensity(final float hashDensity)
 	{
 		if(!isValidHashDensity(hashDensity))
 		{
@@ -164,28 +187,28 @@ public final class XHashing
 		
 		return hashDensity;
 	}
-
+	
 	/**
 	 * Wrappers the passed {@link HashEqualator} instance as a {@link KeyValue} {@link HashEqualator} instance, using
 	 * the {@link KeyValue} instance's key as the hash element.
-	 * 
+	 *
 	 * @param <K> the key type
 	 * @param <V> the value type
 	 * @param hashEqualator single element {@link HashEqualator} instance to be wrapped.
 	 * @return the passed instance as a {@link KeyValue} {@link HashEqualator} instance.
 	 */
-	public static final <K, V> HashEqualator<KeyValue<K, V>> wrapAsKeyValue(
+	public static <K, V> HashEqualator<KeyValue<K, V>> wrapAsKeyValue(
 		final HashEqualator<? super K> hashEqualator
 	)
 	{
-		return new HashEqualator<>()
+		return new HashEqualator<KeyValue<K, V>>()
 		{
 			@Override
 			public int hash(final KeyValue<K, V> kv)
 			{
 				return kv == null ? 0 : hashEqualator.hash(kv.key());
 			}
-
+			
 			@Override
 			public boolean equal(final KeyValue<K, V> kv1, final KeyValue<K, V> kv2)
 			{
@@ -193,15 +216,24 @@ public final class XHashing
 			}
 		};
 	}
-
-
+	
+	public static <E> HashEqualator<E> deriveHashEquality(final Class<E> type)
+	{
+		return XTypes.isValueType(type)
+			? XHashing.hashEqualityValue()
+			: XHashing.hashEqualityIdentity()
+			;
+	}
+	
+	
+	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
-
+	
 	/**
 	 * Dummy constructor to prevent instantiation of this static-only utility class.
-	 * 
+	 *
 	 * @throws UnsupportedOperationException when called
 	 */
 	private XHashing()
