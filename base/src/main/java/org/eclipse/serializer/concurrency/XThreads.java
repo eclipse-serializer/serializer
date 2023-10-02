@@ -45,7 +45,7 @@ public final class XThreads
 	 * create inconsistent state, waiting threads are selected randomly, etc.) and definitely not suitable
 	 * for complex applications, it can be a conveniently simple, working way to make concurrency-wise
 	 * simple applications sufficiently concurrency-safe.
-	 * 
+	 *
 	 * @param <T> the return value type
 	 * @param logic the logic to execute
 	 * @return the supplier's value
@@ -60,7 +60,7 @@ public final class XThreads
 	
 	/**
 	 * @param logic the logic to execute
-	 * 
+	 *
 	 * @see #executeSynchronized(Supplier)
 	 */
 	public static void executeSynchronized(final Runnable logic)
@@ -73,21 +73,21 @@ public final class XThreads
 	
 	
 	
-	public static final <T extends Thread> T start(final T thread)
+	public static <T extends Thread> T start(final T thread)
 	{
 		thread.start();
 		return thread;
 	}
-
-	public static final Thread start(final Runnable runnable)
+	
+	public static Thread start(final Runnable runnable)
 	{
 		final Thread t = new Thread(runnable);
 		t.start();
 		return t;
 	}
-
 	
-
+	
+	
 	/**
 	 * Causes the current thread to sleep the specified amount of milliseconds by calling {@link Thread#sleep(long)}.
 	 * Should an {@link InterruptedException} of {@link Thread#sleep(long)} occur, this method restored the
@@ -96,14 +96,14 @@ public final class XThreads
 	 * The underlying rationale to this behavior is explained in an internal comment.<br>
 	 * In short: generically interrupting a thread while ignoring the application/library state and logic is just
 	 * as naive and dangerous as {@link Thread#stop()} is.
-	 * 
+	 *
 	 * @param  millis
 	 *         the length of time to sleep in milliseconds
-	 * 
+	 *
 	 * @see Thread#sleep(long)
 	 * @see Thread#stop()
 	 */
-	public static final void sleep(final long millis)
+	public static void sleep(final long millis)
 	{
 		try
 		{
@@ -114,7 +114,7 @@ public final class XThreads
 			/*
 			 * Explanations about the meaning of InterruptedException like the following are naive:
 			 * https://stackoverflow.com/questions/3976344/handling-interruptedexception-in-java
-			 * 
+			 *
 			 * Interrupting an application's (/library's) internal thread that has a certain purpose, state and
 			 * dependency to other parts of the application state by a generic technical is pretty much the same
 			 * dangerous nonsense as Thread#stop:
@@ -126,12 +126,12 @@ public final class XThreads
 			 * No external interference bypassing the specific logic and ignoring the state and complexity of the
 			 * application makes sense. It is pure and utter nonsense to interrupt such a thread in such a generic
 			 * and ignorant way.
-			 * 
+			 *
 			 * Whoever (in terms of program logic, of course) wants a certain thread to stop must use the proper
 			 * methods to do so, that properly control the application state, etc.
 			 * If there are none provided, then the thread is not supposed to be stoppable or interrupt-able.
 			 * It's that simple.
-			 * 
+			 *
 			 * If a managing layer (like the OS) wants to shut down the application, it has to use its proper
 			 * interfacing means for that, but never pick out single threads and stop or interrupt them one by one.
 			 * Generic interruption CAN be useful IF the logic explicitly supports it.
@@ -151,17 +151,17 @@ public final class XThreads
 	 * Causes the current thread to sleep the specified amount of milliseconds by calling {@link Thread#sleep(long, int)}.
 	 * <p>
 	 * Also see the explanations in {@link #sleep(long)}
-	 * 
+	 *
 	 * @param  millis
 	 *         the length of time to sleep in milliseconds
 	 *
 	 * @param  nanos
 	 *         {@code 0-999999} additional nanoseconds to sleep
-	 * 
+	 *
 	 * @see Thread#sleep(long)
 	 * @see Thread#stop()
 	 */
-	public static final void sleep(final long millis, final int nanos)
+	public static void sleep(final long millis, final int nanos)
 	{
 		try
 		{
@@ -178,8 +178,8 @@ public final class XThreads
 			throw new RuntimeException(e);
 		}
 	}
-
-	public static final void executeDelayed(final long millis, final Runnable action)
+	
+	public static void executeDelayed(final long millis, final Runnable action)
 	{
 		new Thread()
 		{
@@ -191,31 +191,31 @@ public final class XThreads
 			}
 		}.start();
 	}
-
-
-
-	public static final String getSourcePosition()
+	
+	
+	
+	public static String getSourcePosition()
 	{
 		// index 0 is always safely this method call itself, index 1 is always safely the calling context
 		final String stackTraceElementString = new Throwable().getStackTrace()[1].toString();
-
+		
 		// every StackTraceElement string is guaranteed to be in the pattern [class].[method]([class].java:[line])
 		return stackTraceElementString.substring(stackTraceElementString.indexOf('.'));
 	}
-
-
-
+	
+	
+	
 	///////////////////////////////////////////////////////////////////////////
 	// Throwable.getStackTraceElement workaround //
 	//////////////////////////////////////////////
-
+	
 	// CHECKSTYLE.OFF: ConstantName: method names are intentionally unchanged
-
+	
 	private static final Method Throwable_getStackTraceElement = getThrowable_getStackTraceElement();
-
+	
 	// CHECKSTYLE.ON: ConstantName
-
-	private static final Method getThrowable_getStackTraceElement()
+	
+	private static Method getThrowable_getStackTraceElement()
 	{
 		try
 		{
@@ -230,7 +230,7 @@ public final class XThreads
 	}
 	
 	private static final Integer ONE = 1;
-	public static final StackTraceElement getStackTraceElement()
+	public static StackTraceElement getStackTraceElement()
 	{
 		try
 		{
@@ -243,7 +243,7 @@ public final class XThreads
 		}
 	}
 	
-	public static final StackTraceElement getStackTraceElement(final Integer index)
+	public static StackTraceElement getStackTraceElement(final Integer index)
 	{
 		try
 		{
@@ -296,12 +296,12 @@ public final class XThreads
 		
 		return null;
 	}
-
+	
 	public static String getCurrentMethodName()
 	{
 		return new Throwable().getStackTrace()[1].getMethodName();
 	}
-
+	
 	/**
 	 * A copy of the JDK's default behavior for handling ultimately uncaught exceptions, as implemented in
 	 * the last fallback case of {@link ThreadGroup#uncaughtException(Thread, Throwable)}.
@@ -321,21 +321,21 @@ public final class XThreads
 		// copied from java.lang.ThreadGroup#uncaughtException, JDK 1.8.0_20
 		if(e instanceof ThreadDeath)
 		{
-			 return; // changed for debug-friendly control flow and less parenthesis
+			return; // changed for debug-friendly control flow and less parenthesis
 		}
 		System.err.print("Exception in thread \"" + t.getName() + "\" ");
 		e.printStackTrace(System.err);
 	}
-
 	
-
+	
+	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
-
+	
 	/**
 	 * Dummy constructor to prevent instantiation of this static-only utility class.
-	 * 
+	 *
 	 * @throws UnsupportedOperationException when called
 	 */
 	private XThreads()
@@ -344,4 +344,3 @@ public final class XThreads
 		throw new UnsupportedOperationException();
 	}
 }
-

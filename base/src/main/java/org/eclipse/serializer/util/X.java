@@ -20,46 +20,14 @@ package org.eclipse.serializer.util;
  * #L%
  */
 
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.StreamSupport;
-
 import org.eclipse.serializer.branching.AbstractBranchingThrow;
 import org.eclipse.serializer.branching.ThrowBreak;
 import org.eclipse.serializer.chars.VarString;
-import org.eclipse.serializer.collections.ArrayView;
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.ConstHashEnum;
-import org.eclipse.serializer.collections.ConstList;
-import org.eclipse.serializer.collections.Constant;
-import org.eclipse.serializer.collections.Empty;
-import org.eclipse.serializer.collections.EmptyTable;
-import org.eclipse.serializer.collections.HashEnum;
-import org.eclipse.serializer.collections.HashTable;
-import org.eclipse.serializer.collections.LimitList;
-import org.eclipse.serializer.collections.Singleton;
-import org.eclipse.serializer.collections.SynchCollection;
-import org.eclipse.serializer.collections.SynchList;
-import org.eclipse.serializer.collections.SynchSet;
+import org.eclipse.serializer.collections.*;
 import org.eclipse.serializer.collections.interfaces.Sized;
 import org.eclipse.serializer.collections.old.AbstractBridgeXList;
 import org.eclipse.serializer.collections.old.AbstractBridgeXSet;
-import org.eclipse.serializer.collections.types.XCollection;
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.collections.types.XList;
-import org.eclipse.serializer.collections.types.XMap;
-import org.eclipse.serializer.collections.types.XReference;
-import org.eclipse.serializer.collections.types.XSet;
+import org.eclipse.serializer.collections.types.*;
 import org.eclipse.serializer.concurrency.ThreadSafe;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
@@ -70,6 +38,15 @@ import org.eclipse.serializer.functional._intProcedure;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing._longKeyValue;
+
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Array;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.StreamSupport;
 
 /**
  * Central class for general utility methods regarding collections, arrays and some basic general functionality that is
@@ -97,7 +74,7 @@ public final class X
 	/**
 	 * {@link AbstractBranchingThrow} to indicate the abort of a loop or procedure, with a negative or unknown result.
 	 */
-	private static final transient ThrowBreak BREAK = new ThrowBreak();
+	private static final ThrowBreak BREAK = new ThrowBreak();
 		
 	private static final long INTEGER_RANGE_BOUND = Integer.MAX_VALUE + 1L;
 	
@@ -108,13 +85,13 @@ public final class X
 	///////////////////
 
 	@SuppressWarnings("unchecked")
-	public static final <T> Empty<T> empty()
+	public static <T> Empty<T> empty()
 	{
 		return (Empty<T>)EMPTY;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static final <K, V> EmptyTable<K, V> emptyTable()
+	public static <K, V> EmptyTable<K, V> emptyTable()
 	{
 		return (EmptyTable<K, V>)EMPTY_TABLE;
 	}
@@ -145,7 +122,7 @@ public final class X
 	 * @return the safely downcasted capacity as an int value.
 	 * @throws ArrayCapacityException if the passed capacity is greater than {@link Integer}.MAX_VALUE
 	 */
-	public static final int checkArrayRange(final long capacity) throws ArrayCapacityException
+	public static int checkArrayRange(final long capacity) throws ArrayCapacityException
 	{
 		// " >= " proved to be faster in tests than ">" (probably due to simple sign checking)
 		if(capacity >= INTEGER_RANGE_BOUND)
@@ -166,7 +143,7 @@ public final class X
 	 * @return the passed object, guaranteed to be not {@code null}.
 	 * @throws NullPointerException if {@code null} was passed.
 	 */
-	public static final <T> T notNull(final T object) throws NullPointerException
+	public static <T> T notNull(final T object) throws NullPointerException
 	{
 		if(object == null)
 		{
@@ -186,7 +163,7 @@ public final class X
 	 * @param object the passed reference.
 	 * @return the passed reference without doing ANYTHING else.
 	 */
-	public static final <T> T mayNull(final T object)
+	public static <T> T mayNull(final T object)
 	{
 		return object;
 	}
@@ -199,9 +176,9 @@ public final class X
 	 * @param b a {@code Boolean} object.<br>
 	 * @return <code>false</code> if {@code b} is {@code null} or <code>false</code>
 	 */
-	public static final boolean isTrue(final Boolean b)
+	public static boolean isTrue(final Boolean b)
 	{
-		return b == null ? false : b;
+		return b != null && b;
 	}
 
 	/**
@@ -211,9 +188,9 @@ public final class X
 	 * @param b a {@code Boolean} object.
 	 * @return <code>false</code> if {@code b} is {@code null} or <code>true</code>, otherwise <code>true</code>
 	 */
-	public static final boolean isFalse(final Boolean b)
+	public static boolean isFalse(final Boolean b)
 	{
-		return b == null ? false : !b;
+		return b != null && !b;
 	}
 
 	/**
@@ -223,9 +200,9 @@ public final class X
 	 * @param b a {@code Boolean} object.
 	 * @return <code>true</code> if {@code b} is {@code null} or <code>false</code>, otherwise <code>false</code>
 	 */
-	public static final boolean isNotTrue(final Boolean b)
+	public static boolean isNotTrue(final Boolean b)
 	{
-		return b == null ? true : !b;
+		return b == null || !b;
 	}
 
 	/**
@@ -235,25 +212,25 @@ public final class X
 	 * @param b a {@code Boolean} object.
 	 * @return <code>true</code> if {@code b} is {@code null} or <code>true</code>, otherwise <code>false</code>
 	 */
-	public static final boolean isNotFalse(final Boolean b)
+	public static boolean isNotFalse(final Boolean b)
 	{
-		return b == null ? true : b;
+		return b == null || b;
 	}
 
 	
 	
-	public static final boolean isNull(final Object reference)
+	public static boolean isNull(final Object reference)
 	{
 		return reference == null;
 	}
 	
-	public static final boolean isNotNull(final Object reference)
+	public static boolean isNotNull(final Object reference)
 	{
 		return reference != null;
 	}
 
 	
-	public static final <T> T coalesce(final T firstElement, final T secondElement)
+	public static <T> T coalesce(final T firstElement, final T secondElement)
 	{
 		return firstElement == null
 			? secondElement
@@ -262,7 +239,7 @@ public final class X
 	}
 	
 	@SafeVarargs
-	public static final <T> T coalesce(final T... elements)
+	public static <T> T coalesce(final T... elements)
 	{
 		for(int i = 0; i < elements.length; i++)
 		{
@@ -277,18 +254,16 @@ public final class X
 
 	
 	
-	public static final <T> boolean equal(final T o1, final T o2)
+	public static <T> boolean equal(final T o1, final T o2)
 	{
 		// leave identity comparison to equals() implementation as this method should mostly be called on value types
-		return o1 == null
-			? o2 == null
-			: o1.equals(o2)
+		return Objects.equals(o1, o2)
 		;
 	}
 	
 	
 	
-	public static final byte unbox(final Byte d)
+	public static byte unbox(final Byte d)
 	{
 		return d == null
 			? 0
@@ -296,7 +271,7 @@ public final class X
 		;
 	}
 
-	public static final byte unbox(final Byte d, final byte nullSubstitute)
+	public static byte unbox(final Byte d, final byte nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -304,12 +279,12 @@ public final class X
 		;
 	}
 	
-	public static final boolean unbox(final Boolean d)
+	public static boolean unbox(final Boolean d)
 	{
 		return d != null && d.booleanValue();
 	}
 
-	public static final boolean unbox(final Boolean d, final boolean nullSubstitute)
+	public static boolean unbox(final Boolean d, final boolean nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -317,7 +292,7 @@ public final class X
 		;
 	}
 	
-	public static final short unbox(final Short d)
+	public static short unbox(final Short d)
 	{
 		return d == null
 			? 0
@@ -325,7 +300,7 @@ public final class X
 		;
 	}
 
-	public static final short unbox(final Short d, final short nullSubstitute)
+	public static short unbox(final Short d, final short nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -333,7 +308,7 @@ public final class X
 		;
 	}
 	
-	public static final char unbox(final Character d)
+	public static char unbox(final Character d)
 	{
 		return d == null
 			? (char) 0
@@ -341,7 +316,7 @@ public final class X
 		;
 	}
 	
-	public static final int unbox(final Integer d)
+	public static int unbox(final Integer d)
 	{
 		return d == null
 			? 0
@@ -349,7 +324,7 @@ public final class X
 		;
 	}
 
-	public static final int unbox(final Integer d, final int nullSubstitute)
+	public static int unbox(final Integer d, final int nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -357,7 +332,7 @@ public final class X
 		;
 	}
 
-	public static final char unbox(final Character d, final char nullSubstitute)
+	public static char unbox(final Character d, final char nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -365,7 +340,7 @@ public final class X
 		;
 	}
 	
-	public static final float unbox(final Float d)
+	public static float unbox(final Float d)
 	{
 		return d == null
 			? 0f
@@ -373,7 +348,7 @@ public final class X
 		;
 	}
 
-	public static final float unbox(final Float d, final float nullSubstitute)
+	public static float unbox(final Float d, final float nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -381,7 +356,7 @@ public final class X
 		;
 	}
 	
-	public static final long unbox(final Long d)
+	public static long unbox(final Long d)
 	{
 		return d == null
 			? 0L
@@ -389,7 +364,7 @@ public final class X
 		;
 	}
 
-	public static final long unbox(final Long d, final long nullSubstitute)
+	public static long unbox(final Long d, final long nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -397,7 +372,7 @@ public final class X
 		;
 	}
 	
-	public static final double unbox(final Double d)
+	public static double unbox(final Double d)
 	{
 		return d == null
 			? 0.0D
@@ -405,7 +380,7 @@ public final class X
 		;
 	}
 
-	public static final double unbox(final Double d, final double nullSubstitute)
+	public static double unbox(final Double d, final double nullSubstitute)
 	{
 		return d == null
 			? nullSubstitute
@@ -415,7 +390,7 @@ public final class X
 	
 	
 	
-	public static final Byte[] box(final byte... values)
+	public static Byte[] box(final byte... values)
 	{
 		if(values == null)
 		{
@@ -432,7 +407,7 @@ public final class X
 		return result;
 	}
 	
-	public static final Boolean[] box(final boolean... values)
+	public static Boolean[] box(final boolean... values)
 	{
 		if(values == null)
 		{
@@ -449,7 +424,7 @@ public final class X
 		return result;
 	}
 	
-	public static final Short[] box(final short... values)
+	public static Short[] box(final short... values)
 	{
 		if(values == null)
 		{
@@ -466,7 +441,7 @@ public final class X
 		return result;
 	}
 	
-	public static final Integer[] box(final int... values)
+	public static Integer[] box(final int... values)
 	{
 		if(values == null)
 		{
@@ -483,7 +458,7 @@ public final class X
 		return result;
 	}
 	
-	public static final Character[] box(final char... values)
+	public static Character[] box(final char... values)
 	{
 		if(values == null)
 		{
@@ -500,7 +475,7 @@ public final class X
 		return result;
 	}
 	
-	public static final Float[] box(final float... values)
+	public static Float[] box(final float... values)
 	{
 		if(values == null)
 		{
@@ -517,7 +492,7 @@ public final class X
 		return result;
 	}
 	
-	public static final Long[] box(final long... values)
+	public static Long[] box(final long... values)
 	{
 		if(values == null)
 		{
@@ -534,7 +509,7 @@ public final class X
 		return result;
 	}
 	
-	public static final Double[] box(final double... values)
+	public static Double[] box(final double... values)
 	{
 		if(values == null)
 		{
@@ -551,12 +526,12 @@ public final class X
 		return result;
 	}
 	
-	public static final int[] unbox(final Integer[] array)
+	public static int[] unbox(final Integer[] array)
 	{
 		return unbox(array, 0);
 	}
 
-	public static final int[] unbox(final Integer[] array, final int nullReplacement)
+	public static int[] unbox(final Integer[] array, final int nullReplacement)
 	{
 		if(array == null)
 		{
@@ -576,12 +551,12 @@ public final class X
 		return result;
 	}
 	
-	public static final long[] unbox(final Long[] array)
+	public static long[] unbox(final Long[] array)
 	{
 		return unbox(array, 0);
 	}
 
-	public static final long[] unbox(final Long[] array, final long nullReplacement)
+	public static long[] unbox(final Long[] array, final long nullReplacement)
 	{
 		if(array == null)
 		{
@@ -601,12 +576,12 @@ public final class X
 		return result;
 	}
 
-	public static final int[] unbox(final XGettingCollection<Integer> ints)
+	public static int[] unbox(final XGettingCollection<Integer> ints)
 	{
 		return unbox(ints, 0);
 	}
 
-	public static final int[] unbox(final XGettingCollection<Integer> ints, final int nullReplacement)
+	public static int[] unbox(final XGettingCollection<Integer> ints, final int nullReplacement)
 	{
 		if(ints == null)
 		{
@@ -811,7 +786,7 @@ public final class X
 		{
 			return HashEnum.New();
 		}
-		return HashEnum.<E>New(elements);
+		return HashEnum.New(elements);
 	}
 	
 	public static <E> HashEnum<E> Enum(final Iterable<? extends E> elements)
@@ -829,7 +804,7 @@ public final class X
 		{
 			return ConstHashEnum.New();
 		}
-		return ConstHashEnum.<E>New(elements);
+		return ConstHashEnum.New(elements);
 	}
 
 	public static <K, V> HashTable<K, V> Table(final K key, final V value)
@@ -844,7 +819,7 @@ public final class X
 		{
 			return HashTable.New();
 		}
-		return HashTable.<K, V>New(elements);
+		return HashTable.New(elements);
 	}
 
 	public static <T> XReference<T> Reference(final T object)
@@ -876,7 +851,7 @@ public final class X
 	
 	
 	@SuppressWarnings("unchecked")
-	public static final <T> T[] ArrayForElementType(final T sampleInstance, final int length)
+	public static <T> T[] ArrayForElementType(final T sampleInstance, final int length)
 	{
 		return (T[])Array.newInstance(sampleInstance.getClass(), length);
 	}
@@ -888,7 +863,7 @@ public final class X
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static final <E> E[] ArrayOfSameType(final E[] sampleArray)
+	public static <E> E[] ArrayOfSameType(final E[] sampleArray)
 	{
 		return (E[])Array.newInstance(sampleArray.getClass().getComponentType(), sampleArray.length);
 	}
@@ -1090,7 +1065,7 @@ public final class X
 		return collection == null || collection.isEmpty();
 	}
 
-	public static final <S extends Sized> S notEmpty(final S sized)
+	public static <S extends Sized> S notEmpty(final S sized)
 	{
 		if(sized.isEmpty())
 		{
@@ -1099,7 +1074,7 @@ public final class X
 		return sized;
 	}
 
-	public static final <E> E[] notEmpty(final E[] array)
+	public static <E> E[] notEmpty(final E[] array)
 	{
 		if(array.length == 0)
 		{
@@ -1135,7 +1110,7 @@ public final class X
 		// CHECKSTYLE.ON: MagicNumber
 	}
 
-	public static VarString assembleString(final VarString vs, final XGettingCollection<?> collection)
+	public static <T> VarString assembleString(final VarString vs, final XGettingCollection<T> collection)
 	{
 		if(collection.isEmpty())
 		{
@@ -1261,13 +1236,13 @@ public final class X
 	}
 	
 
-	public static final <T extends Throwable> T addSuppressed(final T throwable, final Throwable suppressed)
+	public static <T extends Throwable> T addSuppressed(final T throwable, final Throwable suppressed)
 	{
 		throwable.addSuppressed(suppressed);
 		return throwable;
 	}
 
-	public static final <T extends Throwable> T addSuppressed(final T throwable, final Throwable... suppresseds)
+	public static <T extends Throwable> T addSuppressed(final T throwable, final Throwable... suppresseds)
 	{
 		for(final Throwable suppressed : suppresseds)
 		{
@@ -1294,7 +1269,7 @@ public final class X
 	 * @param logic the logic to execute
 	 * @return the subject
 	 */
-	public static final <S> S on(final S subject, final Consumer<? super S> logic)
+	public static <S> S on(final S subject, final Consumer<? super S> logic)
 	{
 		logic.accept(subject);
 		return subject;
@@ -1412,7 +1387,7 @@ public final class X
 		return logic;
 	}
 		
-	public static final long validateIndex(
+	public static long validateIndex(
 		final long availableLength,
 		final long index
 	)
@@ -1430,7 +1405,7 @@ public final class X
 		return index;
 	}
 	
-	public static final long validateRange(final long bound, final long startIndex, final long length)
+	public static long validateRange(final long bound, final long startIndex, final long length)
 	{
 		if(startIndex < 0)
 		{
@@ -1453,12 +1428,12 @@ public final class X
 		return startIndex + length;
 	}
 	
-	public static final IndexBoundsException IndexBoundsException(
-		final long   startIndex        ,
-		final long   indexBound        ,
-		final long   index             ,
-		final String message           ,
-		final int    stackTraceCutDepth
+	public static IndexBoundsException IndexBoundsException(
+		final long startIndex,
+		final long indexBound,
+		final long index,
+		final String message,
+		final int stackTraceCutDepth
 	)
 	{
 		return UtilStackTrace.cutStacktraceByN(
