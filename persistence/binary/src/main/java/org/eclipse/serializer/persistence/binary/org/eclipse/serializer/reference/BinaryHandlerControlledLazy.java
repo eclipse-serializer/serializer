@@ -20,8 +20,6 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.referen
  * #L%
  */
 
-import java.lang.reflect.Constructor;
-
 import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
@@ -32,9 +30,11 @@ import org.eclipse.serializer.reference.Lazy;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reflect.XReflect;
 
+import java.lang.reflect.Constructor;
+
 /**
  * Nearly identical to {@link BinaryHandlerLazyDefault} except
- * the handled type. That is {@link one.microstream.reference.ControlledLazyReference.Default}.
+ * the handled type. That is {@link ControlledLazyReference.Default}.
  * 
  */
 public final class BinaryHandlerControlledLazy extends AbstractBinaryHandlerCustom<ControlledLazyReference.Default<?>>
