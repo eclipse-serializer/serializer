@@ -1,57 +1,36 @@
 package org.eclipse.serializer;
 
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.nio.ByteBuffer;
-import java.util.function.Function;
-
-import org.eclipse.serializer.collections.HashTable;
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.hashing.XHashing;
-import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.types.Binary;
-import org.eclipse.serializer.persistence.binary.types.BinaryStorer;
-import org.eclipse.serializer.persistence.binary.types.ChunksBuffer;
-import org.eclipse.serializer.persistence.binary.types.ChunksBufferByteReversing;
-import org.eclipse.serializer.persistence.binary.types.ChunksWrapper;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfer;
-import org.eclipse.serializer.persistence.types.PersistenceIdSet;
-import org.eclipse.serializer.persistence.types.PersistenceManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
-import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
-import org.eclipse.serializer.persistence.types.PersistenceSource;
-import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
-import org.eclipse.serializer.persistence.types.PersistenceStorer;
-import org.eclipse.serializer.persistence.types.PersistenceTarget;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
-import org.eclipse.serializer.persistence.types.Storer;
-import org.eclipse.serializer.reference.Lazy;
-import org.eclipse.serializer.reference.ObjectSwizzling;
-import org.eclipse.serializer.reference.Swizzling;
-import org.eclipse.serializer.util.BufferSizeProviderIncremental;
-
 /*-
  * #%L
  * Eclipse Serializer
  * %%
  * Copyright (C) 2023 MicroStream Software
  * %%
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0.
- * 
- * This Source Code may also be made available under the following Secondary
- * Licenses when the conditions for such availability set forth in the Eclipse
- * Public License, v. 2.0 are satisfied: GNU General Public License, version 2
- * with the GNU Classpath Exception which is
- * available at https://www.gnu.org/software/classpath/license.html.
- * 
- * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import org.eclipse.serializer.collections.HashTable;
+import org.eclipse.serializer.collections.types.XGettingCollection;
+import org.eclipse.serializer.hashing.XHashing;
+import org.eclipse.serializer.memory.XMemory;
+import org.eclipse.serializer.persistence.binary.types.*;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfer;
+import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.reference.Lazy;
+import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.reference.Swizzling;
+import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
+
+import java.nio.ByteBuffer;
+import java.util.function.Function;
+
+import static org.eclipse.serializer.util.X.notNull;
 
 /**
  * Convenient API layer to use the binary persistence functionality for a simple serializer.
