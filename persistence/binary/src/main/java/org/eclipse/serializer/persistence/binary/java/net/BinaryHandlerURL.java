@@ -17,7 +17,7 @@ package org.eclipse.serializer.persistence.binary.java.net;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomValueVariableLength;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomValueVariableLength;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;

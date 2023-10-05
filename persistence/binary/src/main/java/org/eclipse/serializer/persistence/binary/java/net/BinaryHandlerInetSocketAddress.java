@@ -17,9 +17,9 @@ package org.eclipse.serializer.persistence.binary.java.net;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import org.eclipse.serializer.persistence.binary.internal.CustomBinaryHandler;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.binary.types.BinaryField;
+import org.eclipse.serializer.persistence.binary.types.CustomBinaryHandler;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.reflect.XReflect;
 

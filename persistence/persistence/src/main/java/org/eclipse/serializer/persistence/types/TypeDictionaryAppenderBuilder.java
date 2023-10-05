@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.internal;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
@@ -16,10 +16,6 @@ package org.eclipse.serializer.persistence.internal;
 
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.functional.Aggregator;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMemberFieldGeneric;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMember;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMemberAppender;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMemberFieldReflective;
 
 public final class TypeDictionaryAppenderBuilder
 implements Aggregator<PersistenceTypeDescriptionMember, PersistenceTypeDescriptionMemberAppender>

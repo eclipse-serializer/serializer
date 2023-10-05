@@ -19,7 +19,7 @@ import java.util.IdentityHashMap;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomCollection;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;

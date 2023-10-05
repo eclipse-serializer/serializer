@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -16,43 +16,32 @@ package org.eclipse.serializer.persistence.binary.internal;
 
 import static org.eclipse.serializer.util.X.notNull;
 
-import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
-import org.eclipse.serializer.reflect.XReflect;
 
 
-public final class BinaryHandlerStatelessConstant<T> extends AbstractBinaryHandlerTrivial<T>
+public final class BinaryHandlerStateless<T> extends AbstractBinaryHandlerTrivial<T>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
 	///////////////////
 	
-	public static <T> BinaryHandlerStatelessConstant<T> New(final T constantInstance)
+	public static <T> BinaryHandlerStateless<T> New(final Class<T> type)
 	{
-		return new BinaryHandlerStatelessConstant<>(
-			notNull(constantInstance)
+		return new BinaryHandlerStateless<>(
+			notNull(type)
 		);
 	}
-	
-	
-	
-	///////////////////////////////////////////////////////////////////////////
-	// instance fields //
-	////////////////////
-	
-	private final T constantInstance;
-	
 	
 	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
 
-	BinaryHandlerStatelessConstant(final T constantInstance)
+	BinaryHandlerStateless(final Class<T> type)
 	{
-		super(XReflect.getClass(constantInstance));
-		this.constantInstance = constantInstance;
+		super(type);
 	}
 	
 	
@@ -75,7 +64,7 @@ public final class BinaryHandlerStatelessConstant<T> extends AbstractBinaryHandl
 	@Override
 	public final T create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		return this.constantInstance;
+		return XMemory.instantiateBlank(this.type());
 	}
 
 }

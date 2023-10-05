@@ -15,7 +15,6 @@ package org.eclipse.serializer.persistence.types;
  */
 
 import org.eclipse.serializer.afs.types.AFile;
-import org.eclipse.serializer.persistence.internal.PersistenceTypeDictionaryFileHandler;
 
 public interface PersistenceTypeDictionaryIoHandler
 extends PersistenceTypeDictionaryLoader, PersistenceTypeDictionaryStorer

@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -15,7 +15,6 @@ package org.eclipse.serializer.persistence.binary.internal;
  */
 
 import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;

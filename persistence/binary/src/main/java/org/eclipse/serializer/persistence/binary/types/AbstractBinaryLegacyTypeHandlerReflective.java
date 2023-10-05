@@ -15,7 +15,6 @@ package org.eclipse.serializer.persistence.binary.types;
  */
 
 import org.eclipse.serializer.exceptions.TypeCastException;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryLegacyTypeHandlerTranslating;
 import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandlingListener;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;

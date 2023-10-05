@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.binary.types;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;

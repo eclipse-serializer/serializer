@@ -18,7 +18,6 @@ import org.eclipse.serializer.collections.Set_long;
 
 import org.eclipse.serializer.collections.types.XGettingTable;
 import org.eclipse.serializer.hashing.HashStatistics;
-import org.eclipse.serializer.persistence.internal.DefaultObjectRegistry;
 import org.eclipse.serializer.util.Cloneable;
 
 /**

@@ -18,7 +18,7 @@ import java.lang.reflect.Field;
 
 import org.eclipse.serializer.collections.lazy.LazyHashMap;
 import org.eclipse.serializer.collections.lazy.LazyHashSet;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;

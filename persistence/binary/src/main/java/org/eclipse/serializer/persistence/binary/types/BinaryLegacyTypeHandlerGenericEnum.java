@@ -18,7 +18,6 @@ import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 
 import org.eclipse.serializer.collections.types.XGettingEnum;
-import org.eclipse.serializer.persistence.binary.internal.BinaryHandlerGenericEnum;
 import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandlingListener;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;

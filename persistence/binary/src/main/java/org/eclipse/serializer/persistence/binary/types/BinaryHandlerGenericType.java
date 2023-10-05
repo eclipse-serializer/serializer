@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -19,7 +19,6 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.lang.reflect.Field;
 
 import org.eclipse.serializer.collections.types.XGettingEnum;
-import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceFieldLengthResolver;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;

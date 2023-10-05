@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.internal;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
@@ -24,12 +24,6 @@ import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XGettingMap;
 import org.eclipse.serializer.collections.types.XGettingSet;
 import org.eclipse.serializer.collections.types.XGettingTable;
-import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeMapper;
-import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeMappingResult;
-import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeMappingResultor;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.util.logging.Logging;
 import org.eclipse.serializer.util.similarity.MultiMatch;
 import org.eclipse.serializer.util.similarity.Similarity;

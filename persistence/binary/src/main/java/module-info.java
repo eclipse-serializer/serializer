@@ -14,7 +14,6 @@
 module org.eclipse.serializer.persistence.binary
 {
 	exports org.eclipse.serializer.persistence.binary.exceptions;
-	exports org.eclipse.serializer.persistence.binary.internal; /* FIXME Do not export internal stuff */
 	exports org.eclipse.serializer.persistence.binary.java.io;
 	exports org.eclipse.serializer.persistence.binary.java.nio.file;
 	exports org.eclipse.serializer.persistence.binary.java.lang;

@@ -18,8 +18,8 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.util.Stack;
 
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomIterableSizedArray;
 import org.eclipse.serializer.persistence.binary.jdk8.types.SunJdk8Internals;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterableSizedArray;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;

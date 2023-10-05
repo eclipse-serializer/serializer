@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -15,24 +15,24 @@ package org.eclipse.serializer.persistence.binary.internal;
  */
 
 import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
+import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 
 
-public abstract class AbstractBinaryHandlerCustomValueVariableLength<T, S>
+public abstract class AbstractBinaryHandlerCustomValueFixedLength<T, S>
 extends AbstractBinaryHandlerCustomValue<T, S>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
 
-	public AbstractBinaryHandlerCustomValueVariableLength(
-		final Class<T>                                                                type        ,
-		final XGettingSequence<? extends PersistenceTypeDefinitionMemberFieldGeneric> customFields
+	public AbstractBinaryHandlerCustomValueFixedLength(
+		final Class<T>                                                    type  ,
+		final XGettingSequence<? extends PersistenceTypeDefinitionMember> fields
 	)
 	{
-		super(type, customFields);
+		super(type, fields);
 	}
-	
+
 	
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -42,13 +42,13 @@ extends AbstractBinaryHandlerCustomValue<T, S>
 	@Override
 	public final boolean hasPersistedVariableLength()
 	{
-		return true;
+		return false;
 	}
 	
 	@Override
 	public final boolean hasVaryingPersistedLengthInstances()
 	{
-		return true;
+		return false;
 	}
 	
 }

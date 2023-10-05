@@ -21,7 +21,7 @@ import org.eclipse.serializer.collections.EqHashEnum;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomCollection;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;

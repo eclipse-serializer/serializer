@@ -21,7 +21,7 @@ import org.eclipse.serializer.collections.lazy.LazyArrayList;
 import org.eclipse.serializer.collections.lazy.LazySegment;
 import org.eclipse.serializer.collections.lazy.LazySegmentUnloader;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomCollection;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;

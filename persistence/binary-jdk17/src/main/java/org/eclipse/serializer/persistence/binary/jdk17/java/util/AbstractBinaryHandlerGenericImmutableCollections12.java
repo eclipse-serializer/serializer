@@ -17,7 +17,7 @@ package org.eclipse.serializer.persistence.binary.jdk17.java.util;
 import java.util.Collection;
 
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;

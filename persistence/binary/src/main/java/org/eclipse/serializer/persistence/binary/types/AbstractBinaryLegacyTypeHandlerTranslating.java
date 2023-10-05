@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -19,10 +19,6 @@ import java.util.function.Predicate;
 
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.types.XGettingEnum;
-import org.eclipse.serializer.persistence.binary.types.Binary;
-import org.eclipse.serializer.persistence.binary.types.BinaryLegacyTypeHandler;
-import org.eclipse.serializer.persistence.binary.types.BinaryReferenceTraverser;
-import org.eclipse.serializer.persistence.binary.types.BinaryValueSetter;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;

@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -15,23 +15,28 @@ package org.eclipse.serializer.persistence.binary.internal;
  */
 
 import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 
 
-public abstract class AbstractBinaryHandlerCustomNonReferentialFixedLength<T>
-extends AbstractBinaryHandlerCustomNonReferential<T>
+/**
+ * Handler for types that are mutable but have no references. E.g. {@link java.util.Date}.
+ *
+ * @param <T> the handled type
+ */
+public abstract class AbstractBinaryHandlerCustomNonReferential<T>
+extends AbstractBinaryHandlerCustom<T>
 {
-
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
 	
-	protected AbstractBinaryHandlerCustomNonReferentialFixedLength(final Class<T> type)
+	protected AbstractBinaryHandlerCustomNonReferential(final Class<T> type)
 	{
 		super(type);
 	}
 
-	protected AbstractBinaryHandlerCustomNonReferentialFixedLength(
+	protected AbstractBinaryHandlerCustomNonReferential(
 		final Class<T>                                                    type   ,
 		final XGettingSequence<? extends PersistenceTypeDefinitionMember> members
 	)
@@ -39,7 +44,7 @@ extends AbstractBinaryHandlerCustomNonReferential<T>
 		super(type, members);
 	}
 	
-	protected AbstractBinaryHandlerCustomNonReferentialFixedLength(
+	protected AbstractBinaryHandlerCustomNonReferential(
 		final Class<T>                                                    type    ,
 		final String                                                      typeName,
 		final XGettingSequence<? extends PersistenceTypeDefinitionMember> members
@@ -54,8 +59,15 @@ extends AbstractBinaryHandlerCustomNonReferential<T>
 	// methods //
 	////////////
 
+
 	@Override
-	public final boolean hasVaryingPersistedLengthInstances()
+	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
+	{
+		// no-op
+	}
+	
+	@Override
+	public final boolean hasPersistedReferences()
 	{
 		return false;
 	}

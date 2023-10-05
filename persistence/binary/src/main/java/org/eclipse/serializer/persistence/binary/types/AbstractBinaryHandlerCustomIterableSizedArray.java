@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -15,7 +15,6 @@ package org.eclipse.serializer.persistence.binary.internal;
  */
 
 import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceSizedArrayLengthController;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
 

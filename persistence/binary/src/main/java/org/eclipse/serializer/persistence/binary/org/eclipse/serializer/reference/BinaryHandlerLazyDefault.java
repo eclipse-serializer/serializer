@@ -16,7 +16,7 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.referen
 
 import java.lang.reflect.Constructor;
 
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;

@@ -23,8 +23,6 @@ import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XMap;
 import org.eclipse.serializer.exceptions.MissingFoundationPartException;
 import org.eclipse.serializer.functional.InstanceDispatcherLogic;
-import org.eclipse.serializer.persistence.internal.LoggingLegacyTypeMappingResultor;
-import org.eclipse.serializer.persistence.internal.PersistenceTypeHandlerProviderCreating;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Reference;
 import org.eclipse.serializer.reflect.ClassLoaderProvider;
