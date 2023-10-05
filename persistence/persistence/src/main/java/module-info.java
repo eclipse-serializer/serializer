@@ -14,10 +14,6 @@
 module org.eclipse.serializer.persistence
 {
 	exports org.eclipse.serializer.persistence.exceptions;
-	exports org.eclipse.serializer.persistence.internal;
-	/* .internal but LoggingLegacyTypeMappingResultor and PersistenceTypeDictionaryFileHandler used in Eclipse Store
-	FIXME These 2 classes need to be moved.
-	 */
 	exports org.eclipse.serializer.persistence.types;
 	exports org.eclipse.serializer.persistence.util;
 

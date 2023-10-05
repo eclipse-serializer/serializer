@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.internal;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
@@ -28,9 +28,6 @@ import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.io.XIO;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionSource;
-import org.eclipse.serializer.persistence.types.Persistence;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryIoHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryStorer;
 
 public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDictionaryIoHandler
 {

@@ -18,7 +18,7 @@ import static org.eclipse.serializer.util.X.Constant;
 
 import java.time.ZoneOffset;
 
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomValueFixedLength;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomValueFixedLength;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;

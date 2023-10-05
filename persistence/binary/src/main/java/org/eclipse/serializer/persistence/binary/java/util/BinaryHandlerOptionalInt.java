@@ -17,7 +17,7 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.OptionalInt;
 
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomValueFixedLength;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomValueFixedLength;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;

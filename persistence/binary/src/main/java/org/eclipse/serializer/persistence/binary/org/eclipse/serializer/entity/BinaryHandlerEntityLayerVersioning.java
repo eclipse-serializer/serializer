@@ -21,7 +21,7 @@ import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
 import org.eclipse.serializer.entity.EntityLayerVersioning;
 import org.eclipse.serializer.entity.EntityVersionContext;
 import org.eclipse.serializer.hashing.HashEqualator;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.binary.types.BinaryTypeHandler;
 import org.eclipse.serializer.persistence.types.Persistence;

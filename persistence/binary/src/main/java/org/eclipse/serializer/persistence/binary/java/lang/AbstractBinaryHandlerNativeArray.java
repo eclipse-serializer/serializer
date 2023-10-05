@@ -17,7 +17,7 @@ package org.eclipse.serializer.persistence.binary.java.lang;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XImmutableSequence;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGenericComplex;
 

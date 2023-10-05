@@ -35,7 +35,6 @@ import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExc
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExceptionInvalidList;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExceptionInvalidListElements;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExceptionStateArrayLength;
-import org.eclipse.serializer.persistence.binary.internal.CustomBinaryHandler;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdAcceptor;

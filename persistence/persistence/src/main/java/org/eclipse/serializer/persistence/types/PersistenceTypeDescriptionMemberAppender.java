@@ -20,7 +20,6 @@ import java.util.function.Consumer;
 
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.persistence.internal.TypeDictionaryAppenderBuilder;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDictionary.Symbols;
 
 

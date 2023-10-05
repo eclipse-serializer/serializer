@@ -19,7 +19,7 @@ import static org.eclipse.serializer.util.X.notNull;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.types.XGettingTable;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;

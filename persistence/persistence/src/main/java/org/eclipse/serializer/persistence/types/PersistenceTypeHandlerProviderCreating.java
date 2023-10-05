@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.internal;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
@@ -21,13 +21,6 @@ import java.util.function.Consumer;
 
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
-import org.eclipse.serializer.persistence.types.PersistenceDataTypeHolder;
-import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerEnsurer;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerProvider;
-import org.eclipse.serializer.persistence.types.PersistenceTypeLink;
-import org.eclipse.serializer.persistence.types.PersistenceTypeManager;
 
 public final class PersistenceTypeHandlerProviderCreating<D>
 extends PersistenceDataTypeHolder.Default<D>

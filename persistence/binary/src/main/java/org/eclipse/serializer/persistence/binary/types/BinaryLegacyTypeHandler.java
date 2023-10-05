@@ -15,7 +15,6 @@ package org.eclipse.serializer.persistence.binary.types;
  */
 
 import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;

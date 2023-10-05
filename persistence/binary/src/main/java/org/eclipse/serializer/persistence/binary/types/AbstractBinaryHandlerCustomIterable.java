@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -15,17 +15,19 @@ package org.eclipse.serializer.persistence.binary.internal;
  */
 
 import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.persistence.types.Persistence;
+import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
 
 
-public abstract class AbstractBinaryHandlerCustomCollection<T>
-extends AbstractBinaryHandlerCustom<T>
+public abstract class AbstractBinaryHandlerCustomIterable<T extends Iterable<?>>
+extends AbstractBinaryHandlerCustomCollection<T>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
 
-	public AbstractBinaryHandlerCustomCollection(
+	public AbstractBinaryHandlerCustomIterable(
 		final Class<T>                                                                type        ,
 		final XGettingSequence<? extends PersistenceTypeDefinitionMemberFieldGeneric> customFields
 	)
@@ -38,23 +40,11 @@ extends AbstractBinaryHandlerCustom<T>
 	///////////////////////////////////////////////////////////////////////////
 	// methods //
 	////////////
-	
-	@Override
-	public final boolean hasPersistedReferences()
-	{
-		return true;
-	}
-	
-	@Override
-	public boolean hasPersistedVariableLength()
-	{
-		return true;
-	}
-	
-	@Override
-	public boolean hasVaryingPersistedLengthInstances()
-	{
-		return true;
-	}
 
+	@Override
+	public void iterateInstanceReferences(final T instance, final PersistenceFunction iterator)
+	{
+		Persistence.iterateReferencesIterable(iterator, instance);
+	}
+	
 }

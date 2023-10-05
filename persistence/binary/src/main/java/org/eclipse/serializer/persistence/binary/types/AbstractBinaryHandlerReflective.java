@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.internal;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -26,12 +26,6 @@ import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.exceptions.TypeCastException;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.types.BinaryTypeHandler;
-import org.eclipse.serializer.persistence.binary.types.BinaryValueFunctions;
-import org.eclipse.serializer.persistence.binary.types.Binary;
-import org.eclipse.serializer.persistence.binary.types.BinaryPersistence;
-import org.eclipse.serializer.persistence.binary.types.BinaryValueSetter;
-import org.eclipse.serializer.persistence.binary.types.BinaryValueStorer;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeConsistency;
 import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceFieldLengthResolver;

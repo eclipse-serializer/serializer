@@ -21,7 +21,6 @@ import java.nio.ByteBuffer;
 
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryLegacyTypeHandlerTranslating;
 import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandlingListener;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;

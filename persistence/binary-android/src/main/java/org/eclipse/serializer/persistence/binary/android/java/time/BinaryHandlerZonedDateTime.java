@@ -16,7 +16,8 @@ package org.eclipse.serializer.persistence.binary.android.java.time;
 
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomNonReferential;
+
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomNonReferential;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;

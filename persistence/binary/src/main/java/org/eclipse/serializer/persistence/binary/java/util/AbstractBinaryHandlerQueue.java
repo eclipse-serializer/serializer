@@ -17,7 +17,7 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Queue;
 
 import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomIterableSimpleListElements;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterableSimpleListElements;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 

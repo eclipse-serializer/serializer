@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.internal;
+package org.eclipse.serializer.persistence.types;
 
 /*-
  * #%L
@@ -34,9 +34,6 @@ import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.meta.XDebug;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionInvalidObjectRegistryCapacity;
-import org.eclipse.serializer.persistence.types.ObjectIdsProcessor;
-import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistry;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.logging.Logging;

@@ -27,7 +27,7 @@ import org.eclipse.serializer.entity.EntityLayerIdentity;
 import org.eclipse.serializer.exceptions.NoSuchMethodRuntimeException;
 import org.eclipse.serializer.functional.Instantiator;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomCollection;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;

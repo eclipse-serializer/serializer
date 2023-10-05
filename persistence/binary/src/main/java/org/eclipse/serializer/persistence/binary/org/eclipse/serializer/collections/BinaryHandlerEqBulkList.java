@@ -22,7 +22,7 @@ import org.eclipse.serializer.collections.EqBulkList;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.internal.AbstractBinaryHandlerCustomIterableSizedArray;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterableSizedArray;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
