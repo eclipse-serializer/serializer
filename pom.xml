@@ -48,6 +48,7 @@
 	<modules>
 		<module>afs</module>
 		<module>base</module>
+		<module>codegen</module>
 		<module>configuration</module>
 		<module>persistence</module>
 		<module>serializer</module>

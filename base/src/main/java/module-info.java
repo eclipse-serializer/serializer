@@ -47,6 +47,7 @@ module org.eclipse.serializer.base
 	exports org.eclipse.serializer.util.similarity;
 	exports org.eclipse.serializer.util.traversing;
 	exports org.eclipse.serializer.util.xcsv;
+	exports org.eclipse.serializer.wrapping;
 
 	requires transitive java.management;
 	requires transitive jdk.unsupported;
