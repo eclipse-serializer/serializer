@@ -11,7 +11,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>entity</artifactId>
+	<artifactId>codegen-entity</artifactId>
 	
 	<name>Eclipse Serializer Codegen for Entities</name>
 	<description>Eclipse Serializer Code Generator for Layered Entities</description>
