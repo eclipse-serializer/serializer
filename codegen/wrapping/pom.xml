@@ -11,7 +11,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>wrapping</artifactId>
+	<artifactId>codegen-wrapping</artifactId>
 	
 	<name>Eclipse Serializer Codegen for Wrapping</name>
 	<description>Eclipse Serializer Code Generator for Wrapper Layer</description>
