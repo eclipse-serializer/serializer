@@ -28,7 +28,7 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-passphrase: PASSPHRASE
-      - name: Make a snapshot
+      - name: Make a release
         run: mvn -Pdeploy -Pproduction --no-transfer-progress --batch-mode clean deploy
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
