@@ -20,6 +20,13 @@
 		<url>https://microstream.one</url>
 	</organization>
 
+	<developers>
+		<developer>
+			<name>MicroStream Software</name>
+			<url>https://microstream.one</url>
+		</developer>
+	</developers>
+
 	<licenses>
 		<license>
 			<name>Eclipse Public License - v 2.0</name>
