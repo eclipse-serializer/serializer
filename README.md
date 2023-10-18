@@ -1,3 +1,8 @@
+![GitHub](https://img.shields.io/github/license/eclipse-serializer/serializer?style=for-the-badge)
+![GitHub issues](https://img.shields.io/github/issues/eclipse-serializer/serializer?style=for-the-badge)
+![Maven Central](https://img.shields.io/maven-central/v/org.eclipse.serializer/serializer?style=for-the-badge)
+
+
 # Eclipse Serializer
 ## High secure serialization for the JVM and Android
 
