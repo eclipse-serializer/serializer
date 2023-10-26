@@ -59,7 +59,7 @@ public class LazyReferenceManagerMonitor implements LazyReferenceManagerMonitorM
 		
 	@Override
 	public void unloadAll() {
-		this.lazyReferenceManager.clear();
+		this.lazyReferenceManager.get().clear();
 	}
 	
 	public synchronized void update()
