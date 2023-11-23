@@ -39,7 +39,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.afs.types.AFS;
 import org.eclipse.serializer.afs.types.AFile;
 import org.eclipse.serializer.chars.StringTable;
@@ -64,6 +63,7 @@ import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.xcsv.XCSV;
 import org.eclipse.serializer.util.xcsv.XCsvConfiguration;
 import org.eclipse.serializer.util.xcsv.XCsvDataType;
@@ -611,10 +611,10 @@ public class Persistence
 		Iterator.class,
 
 		// it makes no sense to support/allow these "magical" volatile references in a persistent context.
-		Reference.class,
+		Reference.class
 
 		// for now, not supported because of JVM-managed fields etc.
-		Throwable.class
+		// Throwable.class
 
 		// note: lambdas don't have a super class as such. See usages of "LambdaTypeRecognizer" instead
 	);
