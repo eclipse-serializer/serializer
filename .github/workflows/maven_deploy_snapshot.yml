@@ -5,7 +5,9 @@ name: Make snapshot and deploy
 
 on:
   push:
-    branches: [development]
+    branches:
+      - main
+      - 'release/**'
 
 jobs:
   publish:
