@@ -16,15 +16,10 @@ package org.eclipse.serializer.persistence.types;
 
 import static org.eclipse.serializer.util.X.KeyValue;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObjectId;
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionImproperObjectId;
-import org.slf4j.Logger;
-
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.collections.XSort;
@@ -33,10 +28,16 @@ import org.eclipse.serializer.hashing.HashStatisticsBucketBased;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.meta.XDebug;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObjectId;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionImproperObjectId;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionInvalidObjectRegistryCapacity;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.typing.KeyValue;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 {
@@ -194,7 +195,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	private Object[]                  constantsColdStorageObjects  ;
 	private long[]                    constantsColdStorageObjectIds;
 
-	
+	private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
@@ -627,7 +628,8 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 				objectId,
 				object,
 				this.oidHashTable[(int)objectId & this.hashRange],
-				this.refHashTable[ hash(object) & this.hashRange]
+				this.refHashTable[ hash(object) & this.hashRange],
+				this.queue
 			)
 		;
 
@@ -695,12 +697,16 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	
 	private void synchRemoveEntry(final Entry entry)
 	{
-		removeFromOidTable(this.oidHashTable, (int)entry.objectId & this.hashRange, entry);
-		removeFromRefTable(this.refHashTable,      entry.refHash  & this.hashRange, entry);
-		this.size--;
+		logger.debug("remove entry {}", entry.objectId);
+		final boolean removeOid = removeFromOidTable(this.oidHashTable, (int)entry.objectId & this.hashRange, entry);
+		final boolean removeRef = removeFromRefTable(this.refHashTable,      entry.refHash  & this.hashRange, entry);
+		if(removeOid || removeRef)
+		{
+			this.size--;
+		}
 	}
 	
-	private static void removeFromOidTable(final Entry[] table, final int index, final Entry entry)
+	private static boolean removeFromOidTable(final Entry[] table, final int index, final Entry entry)
 	{
 		for(Entry e = table[index], last = null; e != null; e = (last = e).oidNext)
 		{
@@ -714,11 +720,13 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 				{
 					last.oidNext = e.oidNext;
 				}
+				return true;
 			}
 		}
+		return false;
 	}
 	
-	private static void removeFromRefTable(final Entry[] table, final int index, final Entry entry)
+	private static boolean removeFromRefTable(final Entry[] table, final int index, final Entry entry)
 	{
 		for(Entry e = table[index], last = null; e != null; e = (last = e).refNext)
 		{
@@ -732,8 +740,10 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 				{
 					last.refNext = e.refNext;
 				}
+				return true;
 			}
 		}
+		return false;
 	}
 		
 	private void synchValidateObjectNotYetRegistered(final long objectId, final Object object)
@@ -789,6 +799,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		}
 		
 		this.size -= orphanCount;
+		logger.debug("removed {} orphans, new size: {}!", orphanCount, this.size);
 		
 		return this.checkForDecrease();
 	}
@@ -1222,7 +1233,24 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		distributionTable.keys().sort(XSort::compare);
 	}
 
+	@Override
+	public void cleanUp()
+	{
+		synchronized (this.mutex)
+		{
+			long counter = 0;
 
+			for (Reference<? extends Object> e; (e = this.queue.poll()) != null; )
+			{
+				this.synchRemoveEntry((Entry)e);
+				counter++;
+			}
+			
+			logger.debug("Cleaned {} gc entries", counter);
+			
+			this.checkForDecrease();
+		}
+	}
 
 	///////////////////////////////////////////////////////////////////////////
 	// member types //
@@ -1234,9 +1262,9 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		      int  refHash ;
 		      Entry oidNext, refNext;
 		
-		Entry(final long objectId, final Object referent, final Entry oidNext, final Entry refnext)
+		Entry(final long objectId, final Object referent, final Entry oidNext, final Entry refnext, final ReferenceQueue<Object> queue)
 		{
-			super(referent);
+			super(referent, queue);
 			this.objectId = objectId;
 			this.refHash  = hash(referent);
 			this.oidNext  = oidNext;
