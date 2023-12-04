@@ -9,7 +9,7 @@ package org.eclipse.serializer.persistence.binary.jdk17.java.util;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -26,12 +26,12 @@ import org.eclipse.serializer.reference.Swizzling;
 
 /**
  * Generic abstract class for specialized handler for
- * java.util.ImmutableCollections.Set12<E> and java.util.ImmutableCollections.List12<E>
+ * java.util.ImmutableCollections.Set12 and java.util.ImmutableCollections.List12
  * in JDK 15 and later
- * <p></p>
+ * <br><br>
  * The handler takes the internal constant java.util.ImmutableCollections.EMPTY
  * into account which must not be persisted.
- * 
+ *
  * @param <T> the handled type.
  */
 public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> extends AbstractBinaryHandlerCustom<T>
@@ -55,11 +55,11 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	///////////////////////////////////////////////////////////////////////////
 	// instance fields //
 	////////////////////
-	
+
 	final int memoryOffset_e0;
 	final int memoryOffset_e1;
 
-	
+
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
@@ -71,7 +71,7 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 				CustomField(Object.class, "e0"),
 				CustomField(Object.class, "e1")
 				));
-		
+
 		this.memoryOffset_e0 = XMemory.byteSizeObjectHeader(type);
 		this.memoryOffset_e1 = this.memoryOffset_e0 + XMemory.byteSizeReference();
 	}
@@ -111,13 +111,13 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	{
 		final Object e0 = handler.lookupObject(data.read_long(BINARY_OFFSET_E0));
 		XMemory.setObject(instance, this.memoryOffset_e0, e0);
-		
+
 		final long objectE1Id = data.read_long(BINARY_OFFSET_E1);
 		if(Swizzling.isNotProperId(objectE1Id))
 		{
 			return;
 		}
-				
+
 		final Object e1 = handler.lookupObject(objectE1Id);
 		XMemory.setObject(instance, this.memoryOffset_e1, e1);
 	}
