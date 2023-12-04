@@ -15,7 +15,7 @@ package org.eclipse.serializer.reference;
  */
 
 /**
- * Classes that implement that interface can utilize {@link one.microstream.reference.ControlledLazyReference.Default}
+ * Classes that implement that interface can utilize {@link org.eclipse.serializer.reference.ControlledLazyReference.Default}
  * to gain control of the unloading of {@link Lazy} references.
  */
 public interface LazyClearController
