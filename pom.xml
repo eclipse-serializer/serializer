@@ -215,7 +215,7 @@
 					<version>3.5.0</version>
 					<configuration>
 						<doclint>none</doclint>
-						<failOnError>false</failOnError>
+						<failOnError>${javadoc.failed.on.error}</failOnError>
 						<notree>true</notree>
 						<source>8</source>
 						<doctitle>Eclipse Serializer API</doctitle>
