@@ -15,7 +15,7 @@
 	
 	<name>Eclipse Serializer Communication Parent</name>
 	<description>Eclipse Serializer Object Graph Communication</description>
-	<url>https://microstream.one</url>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 	
 	<dependencies>
 		<dependency>
