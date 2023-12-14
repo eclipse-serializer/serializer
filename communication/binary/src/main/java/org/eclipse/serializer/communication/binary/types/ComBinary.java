@@ -35,7 +35,7 @@ public class ComBinary
 	/**
 	 * The length of the fixed-size chunk header.<p>
 	 * So far, the header only consists of one field holding the length of the chunk content.
-	 * See {@link Binary#lengthLength()}.
+	 * See {@link org.eclipse.serializer.persistence.binary.types.Binary#lengthLength() Binary.lengthLength()}.
 	 * And a crc32 checksum of the chunk content length
 	 * <p>
 	 * In the future, the header might contain validation values like protocol name, version, byte order, etc.<br>
