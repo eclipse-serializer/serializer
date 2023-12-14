@@ -1,5 +1,19 @@
 package org.eclipse.serializer.persistence.binary.types;
 
+/*-
+ * #%L
+ * Eclipse Serializer Persistence Binary
+ * %%
+ * Copyright (C) 2023 MicroStream Software
+ * %%
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * 
+ * SPDX-License-Identifier: EPL-2.0
+ * #L%
+ */
+
 import java.lang.reflect.Field;
 
 import org.eclipse.serializer.collections.EqHashTable;
@@ -10,7 +24,7 @@ public interface BinaryFieldHandlerProvider
 {
 	/**
 	 * Register a BinaryFieldStorerCreator.
-	 * @param fieldStorer BinaryFieldStorerCreator to be registered.
+	 * @param fieldStorerCreator BinaryFieldStorerCreator to be registered.
 	 */
 	public void registerFieldStorerCreator(BinaryFieldStorerCreator<?> fieldStorerCreator);
 	
@@ -25,15 +39,15 @@ public interface BinaryFieldHandlerProvider
 	/**
 	 * Lookup the BinaryValueStorer registered for the specified field.
 	 * @param field the field.
-	 * @param switchByteOrder true if inversed byte order.
-	 * @param isEager true if eager stroing.
+	 * @param isEager true if eager storing.
+	 * @param switchByteOrder true if inversed byte order.	 *
 	 * @return the registered BinaryValueStorer or null.
 	 */
 	public BinaryValueStorer lookupFieldStorer(Field field, boolean isEager, boolean switchByteOrder);
 
 	/**
 	 * Register a removeFieldSetterCreator.
-	 * @param fieldSetter removeFieldSetterCreator to be registered.
+	 * @param fieldSetterCreator removeFieldSetterCreator to be registered.
 	 */
 	public void registerFieldSetterCreator(BinaryFieldSetterCreator<?> fieldSetterCreator);
 	
