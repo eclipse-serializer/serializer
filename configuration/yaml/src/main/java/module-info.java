@@ -17,4 +17,5 @@ module org.eclipse.serializer.configuration.yaml
 	
 	requires transitive org.eclipse.serializer.configuration;
 	requires transitive org.yaml.snakeyaml;
+	requires org.slf4j;
 }
