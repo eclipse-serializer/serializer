@@ -19,6 +19,6 @@ module org.eclipse.serializer.persistence
 
 	requires transitive org.eclipse.serializer.afs;
 	/* To indicate we use these modules directly, but they also come through org.eclipse.serializer.afs */
-	requires org.eclipse.serializer.base;
-	requires org.slf4j;
+	requires transitive org.eclipse.serializer.base;
+	requires transitive org.slf4j;
 }

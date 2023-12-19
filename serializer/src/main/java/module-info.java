@@ -17,5 +17,4 @@ module org.eclipse.serializer
     exports org.eclipse.serializer;
 
     requires transitive org.eclipse.serializer.persistence.binary;
-    requires org.slf4j;
 }

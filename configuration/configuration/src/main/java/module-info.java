@@ -18,7 +18,6 @@ module org.eclipse.serializer.configuration
 	
 	requires transitive java.xml;
 	requires transitive org.eclipse.serializer.base;
-	requires org.slf4j;
 
 	uses org.eclipse.serializer.configuration.types.ConfigurationBasedCreator;
 

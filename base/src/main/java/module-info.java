@@ -51,5 +51,5 @@ module org.eclipse.serializer.base
 
 	requires transitive java.management;
 	requires transitive jdk.unsupported;
-	requires org.slf4j;
+	requires transitive org.slf4j;
 }
