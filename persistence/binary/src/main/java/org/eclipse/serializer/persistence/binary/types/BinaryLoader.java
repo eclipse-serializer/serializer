@@ -26,16 +26,7 @@ import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerSingleton;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistencyUnhandledTypeId;
-import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
-import org.eclipse.serializer.persistence.types.PersistenceLoader;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistry;
-import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
-import org.eclipse.serializer.persistence.types.PersistenceRoots;
-import org.eclipse.serializer.persistence.types.PersistenceSource;
-import org.eclipse.serializer.persistence.types.PersistenceSourceSupplier;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerLookup;
-import org.eclipse.serializer.persistence.types.Persister;
+import org.eclipse.serializer.persistence.types.*;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
@@ -58,7 +49,7 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 		return new BinaryLoader.CreatorSimple(switchByteOrder);
 	}
 
-	public static BinaryLoader.Default New(
+	public static BinaryLoader New(
 		final PersistenceTypeHandlerLookup<Binary> typeLookup     ,
 		final PersistenceObjectRegistry            registry       ,
 		final Persister                            persister      ,
@@ -910,6 +901,15 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 		{
 			// add-logic: only put if not contained yet (single lookup)
 			this.loadItems.addLoadItem(objectId);
+		}
+
+		@Override
+		public void iterateEntries(final PersistenceAcceptor iterator)
+		{
+			synchronized(this.objectRegistry)
+			{
+				this.objectRegistry.iterateEntries(iterator);
+			}
 		}
 		
 	}
