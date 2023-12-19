@@ -11,7 +11,7 @@ on:
 
 jobs:
   publish:
-    if: github.repository == 'eclipse-store/store'
+    if: github.repository == 'eclipse-store/serializer'
     runs-on: ubuntu-latest
     steps:
       - id: install-secret-key
