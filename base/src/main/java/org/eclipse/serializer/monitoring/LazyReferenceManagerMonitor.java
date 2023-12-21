@@ -58,7 +58,8 @@ public class LazyReferenceManagerMonitor implements LazyReferenceManagerMonitorM
 	}
 		
 	@Override
-	public void unloadAll() {
+	public void unloadAll() 
+	{
 		this.lazyReferenceManager.get().clear();
 	}
 	
@@ -67,10 +68,13 @@ public class LazyReferenceManagerMonitor implements LazyReferenceManagerMonitorM
 		this.lazyRefCount.set(0);
 		this.lazyRefLoadedCount.set(0);
 
-		this.lazyReferenceManager.get().iterate( lazy -> {
+		this.lazyReferenceManager.get().iterate(lazy -> 
+		{
 			this.lazyRefCount.incrementAndGet();
-			if( lazy.isLoaded()) {
-			this.lazyRefLoadedCount.incrementAndGet(); };
+			if(lazy.isLoaded()) 
+			{
+				this.lazyRefLoadedCount.incrementAndGet();
+			};
 		});
 	}
 	
