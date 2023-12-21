@@ -18,6 +18,8 @@ import java.lang.ref.WeakReference;
 import java.util.function.Consumer;
 
 import org.eclipse.serializer.memory.MemoryStatistics;
+import org.eclipse.serializer.monitoring.LazyReferenceManagerMonitor;
+import org.eclipse.serializer.monitoring.MonitoringManager;
 import org.eclipse.serializer.time.XTime;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
@@ -142,24 +144,31 @@ public interface LazyReferenceManager
 
 	public static LazyReferenceManager New(
 		final Lazy.Checker checker               ,
-		final long    milliTimeCheckInterval,
-		final long    nanoTimeBudget
+		final long         milliTimeCheckInterval,
+		final long         nanoTimeBudget
 	)
 	{
 		return New(
 			checker,
 			_longReference.New(milliTimeCheckInterval),
-			_longReference.New(nanoTimeBudget)
+			_longReference.New(nanoTimeBudget)        ,
+			MonitoringManager.New()
 		);
 	}
 	
 	public static LazyReferenceManager New(
-		final Lazy.Checker checker                       ,
+		final Lazy.Checker      checker                       ,
 		final _longReference    milliTimeCheckIntervalProvider,
-		final _longReference    nanoTimeBudgetProvider
+		final _longReference    nanoTimeBudgetProvider        ,
+		final MonitoringManager monitoringManager
 	)
 	{
-		return new Default(checker, milliTimeCheckIntervalProvider, nanoTimeBudgetProvider);
+		return new Default(
+			checker,
+			milliTimeCheckIntervalProvider,
+			nanoTimeBudgetProvider,
+			monitoringManager
+		);
 	}
 
 	public final class Default implements LazyReferenceManager
@@ -168,7 +177,7 @@ public interface LazyReferenceManager
 		// constants //
 		//////////////
 
-		final static Logger logger = Logging.getLogger(LazyReferenceManager.class);
+		final static Logger logger = Logging.getLogger(Default.class);
 		
 		private static final Clearer CLEARER = new Clearer();
 
@@ -182,7 +191,7 @@ public interface LazyReferenceManager
 		// instance fields //
 		////////////////////
 
-		private final Lazy.Checker checker                       ;
+		private final Lazy.Checker checker                            ;
 		private final    _longReference millitimeCheckIntervalProvider;
 		private final    _longReference nanoTimeBudgetProvider        ;
 		private final    Entry          head   = new Entry(null)      ;
@@ -193,22 +202,29 @@ public interface LazyReferenceManager
 		private ControllerEntry headController ;
 		private long            controllerCount;
 		
-		
+		private final MonitoringManager           monitorManager;
+		private final LazyReferenceManagerMonitor monitor       ;
+
 		
 		///////////////////////////////////////////////////////////////////////////
 		// constructors //
 		/////////////////
 
 		Default(
-			final Lazy.Checker checker               ,
+			final Lazy.Checker checker                 ,
 			final _longReference checkIntervalProvider ,
-			final _longReference nanoTimeBudgetProvider
+			final _longReference nanoTimeBudgetProvider,
+			final MonitoringManager monitorManager
 		)
 		{
 			super();
 			this.checker                        = checker               ;
 			this.millitimeCheckIntervalProvider = checkIntervalProvider ;
 			this.nanoTimeBudgetProvider         = nanoTimeBudgetProvider;
+			this.monitorManager                 = monitorManager        ;
+			
+			this.monitor = new LazyReferenceManagerMonitor(this);
+			this.monitorManager.registerMonitor(this.monitor);
 		}
 		
 		private synchronized boolean mayRun()
@@ -402,6 +418,8 @@ public interface LazyReferenceManager
 			this.cursor = last;
 
 			checker.endCheckCycle();
+			
+			this.monitor.update();
 		}
 
 		final void cleanUpBudgeted()
@@ -488,6 +506,7 @@ public interface LazyReferenceManager
 		public synchronized LazyReferenceManager stop()
 		{
 			this.running = false;
+			this.monitorManager.shutdown();
 			return this;
 		}
 		
