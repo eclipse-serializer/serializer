@@ -41,10 +41,9 @@ import org.eclipse.serializer.wrapping.GenerateWrapper;
 import org.eclipse.serializer.wrapping.GenerateWrapperFor;
 
 
-@SuppressWarnings("exports")
 public class WrapperProcessor extends AbstractProcessor
 {
-	private final static String     OPTION_TYPES = "microstream.wrapper.types";
+	private final static String     OPTION_TYPES = "wrapper.types";
 	
 	private List<ExecutableElement> javaLangObjectMethods;
 	private boolean                 processed    = false;
