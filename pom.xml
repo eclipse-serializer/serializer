@@ -59,6 +59,7 @@
 		<module>base</module>
 		<module>codegen</module>
 		<module>configuration</module>
+		<module>communication</module>
 		<module>persistence</module>
 		<module>serializer</module>
 		<module>tests</module>
