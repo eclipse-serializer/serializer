@@ -1,3 +1,6 @@
+
+# DO NOT MERGE / Test only
+
 # Notices for Eclipse Serializer
 
 This content is produced and maintained by the Eclipse Serializer project.
