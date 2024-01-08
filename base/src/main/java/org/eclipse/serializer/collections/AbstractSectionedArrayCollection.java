@@ -46,7 +46,7 @@ public abstract class AbstractSectionedArrayCollection<E> extends AbstractArrayC
 	 * comprised of two sections: one ranging from index i to array.length - 1 (with the oldest element located at i)
 	 * and one ranging from 0 to i - 1 (with the newest element located at i - 1).
 	 *
-	 * @return a list of index pairs defining all sections of the storage array in logical order.
+	 * @return an array of index pairs defining all sections of the storage array in logical order.
 	 */
 	protected abstract int[] internalGetSectionIndices();
 

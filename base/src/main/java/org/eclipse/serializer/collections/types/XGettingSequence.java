@@ -144,7 +144,7 @@ public interface XGettingSequence<E> extends XGettingCollection<E>, ExtendedSequ
 	 * In order to find the last element, this method must iterate over <b>all elements</b> of the collection
 	 * (opposed to {@link XGettingSequence#indexBy(Predicate)} and {@link XGettingSequence#lastIndexBy(Predicate)}).
 	 * <p>
-	 * Iteration can be safely canceled with a {@link ThrowBreak} ({@link one.microstream.X#BREAK})
+	 * Iteration can be safely canceled with a {@link ThrowBreak} ({@link org.eclipse.serializer.util.X#BREAK})
 	 * @param predicate to define a valid element
 	 * @return the index of the last positively tested element.
 	 */

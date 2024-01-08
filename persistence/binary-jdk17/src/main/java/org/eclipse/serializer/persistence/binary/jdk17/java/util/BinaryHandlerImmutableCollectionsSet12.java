@@ -18,10 +18,10 @@ import java.util.Set;
 
 /**
  * Specialized handler for immutable Set implementations in Java 15 and later
- * as found in java.util.ImmutableCollections.Set12<E>
- * <p></p>
+ * as found in java.util.ImmutableCollections.Set12
+ * <br><br>
  * the implementations are returned from Set.of(), Set.of(E e1) and  Set.of(E e1, E e2)
- * <p></p>
+ * <br><br>
  * The handler takes the internal constant java.util.ImmutableCollections.EMPTY
  * into account which must not be persisted.
  * 

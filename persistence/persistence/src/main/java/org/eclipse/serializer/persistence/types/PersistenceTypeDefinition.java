@@ -127,7 +127,7 @@ public interface PersistenceTypeDefinition extends PersistenceTypeDescription, P
 	 * <li>all fixed length types (see {@link #hasVaryingPersistedLengthInstances()}</li>
 	 * </ul>
 	 * 
-	 * @return if one particular instance can have variing binary length from one store to another
+	 * @return if one particular instance can have varying binary length from one store to another
 	 */
 	public boolean hasVaryingPersistedLengthInstances();
 	
