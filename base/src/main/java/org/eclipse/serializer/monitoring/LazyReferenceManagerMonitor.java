@@ -2,6 +2,8 @@ package org.eclipse.serializer.monitoring;
 
 import java.lang.ref.WeakReference;
 
+import org.eclipse.serializer.reference.LazyReferenceManager;
+
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -22,16 +24,12 @@ import java.lang.ref.WeakReference;
  * #L%
  */
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.eclipse.serializer.reference.LazyReferenceManager;
-
 public class LazyReferenceManagerMonitor implements LazyReferenceManagerMonitorMBean, MetricMonitor
 {
 	private final WeakReference<LazyReferenceManager> lazyReferenceManager;
 	
-	final AtomicInteger lazyRefCount = new AtomicInteger();
-	final AtomicInteger lazyRefLoadedCount = new AtomicInteger();
+	int lazyRefCount;
+	int lazyRefLoadedCount;
 
 	public LazyReferenceManagerMonitor(final LazyReferenceManager lazyReferenceManager)
 	{
@@ -42,45 +40,36 @@ public class LazyReferenceManagerMonitor implements LazyReferenceManagerMonitorM
 	@Override
 	public int getRegisteredLazyReferencesCount()
 	{
-		return this.lazyRefCount.get();
+		return this.lazyRefCount;
 	}
 	
 	@Override
 	public int getLoadedLazyReferencesCount()
 	{
-		return this.lazyRefLoadedCount.get();
+		return this.lazyRefLoadedCount;
 	}
 	
 	@Override
 	public int getUnLoadedLazyReferencesCount()
 	{
-		return this.lazyRefCount.get() - this.lazyRefLoadedCount.get();
+		return this.lazyRefCount - this.lazyRefLoadedCount;
 	}
 		
 	@Override
-	public void unloadAll() 
+	public void unloadAll()
 	{
 		this.lazyReferenceManager.get().clear();
 	}
-	
-	public synchronized void update()
-	{
-		this.lazyRefCount.set(0);
-		this.lazyRefLoadedCount.set(0);
-
-		this.lazyReferenceManager.get().iterate(lazy -> 
-		{
-			this.lazyRefCount.incrementAndGet();
-			if(lazy.isLoaded()) 
-			{
-				this.lazyRefLoadedCount.incrementAndGet();
-			};
-		});
-	}
-	
+		
 	@Override
 	public String getName()
 	{
 		return "name=LazyReferenceManager";
+	}
+
+	public void update(int lazyReferences, int loadedLazyReferences)
+	{
+		this.lazyRefCount = lazyReferences;
+		this.lazyRefLoadedCount = loadedLazyReferences;
 	}
 }

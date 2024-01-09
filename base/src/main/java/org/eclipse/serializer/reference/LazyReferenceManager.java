@@ -419,7 +419,30 @@ public interface LazyReferenceManager
 
 			checker.endCheckCycle();
 			
-			this.monitor.update();
+			this.updateStatistics();
+		}
+		
+		private void updateStatistics()
+		{
+			/*
+			 * This method is intentionally not synchronized.
+			 * locking the LazyReferenceManager instance here may
+			 * cause deadlocks. See comments in internalCleanUp above.
+			 */
+			
+			int lazyReferences       = 0;
+			int loadedLazyReferences = 0;
+			
+			for(Entry e = this.head; (e = e.nextLazyManagerEntry) != null;)
+			{
+				lazyReferences++;
+				if(e.get().isLoaded())
+				{
+					loadedLazyReferences++;
+				}
+			}
+			
+			this.monitor.update(lazyReferences, loadedLazyReferences);
 		}
 
 		final void cleanUpBudgeted()
