@@ -39,7 +39,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.afs.types.AFS;
 import org.eclipse.serializer.afs.types.AFile;
 import org.eclipse.serializer.chars.StringTable;
@@ -64,6 +63,7 @@ import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
+import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.xcsv.XCSV;
 import org.eclipse.serializer.util.xcsv.XCsvConfiguration;
 import org.eclipse.serializer.util.xcsv.XCsvDataType;
@@ -574,7 +574,7 @@ public class Persistence
 	 * supposed to do so), it can still be handled by explicitely registering a custom type handler for it.
 	 *
 	 * Various SubLists:
-	 * The JDK in its usual progamming quality, lacking use of proper interfaces, etc., sadly provides no way
+	 * The JDK in its usual programming quality, lacking use of proper interfaces, etc., sadly provides no way
 	 * of reading the offset values used in sub lists (similar to loadFactor in hashing collections).
 	 * Thus, there is no way to store the required data of JDK sub lists in generic way.
 	 * A tailored (and JDK-version-specific) custom handler implementation can always be registered as an override
@@ -601,7 +601,7 @@ public class Persistence
 		ChainStorage.Entry.class,
 		Map.Entry.class,
 
-		// there is sadly no (plain-string-independant) sane way to get these. Classical JDK.
+		// there is sadly no (plain-string-independent) sane way to get these. Classical JDK.
 		new LinkedList<>().subList(0, 0).getClass()          , // java.util.SubList
 		new ArrayList<>(0).subList(0, 0).getClass()          , // java.util.ArrayList$SubList
 		Collections.emptyList().subList(0, 0).getClass()     , // java.util.RandomAccessSubList
@@ -611,10 +611,11 @@ public class Persistence
 		Iterator.class,
 
 		// it makes no sense to support/allow these "magical" volatile references in a persistent context.
-		Reference.class,
+		Reference.class
 
-		// for now, not supported because of JVM-managed fields etc.
-		Throwable.class
+		// for now, not supported because of JVM-managed fields etc.//
+		// Throwable is supported from version 1.1.0 Eclipse
+		// Throwable.class
 
 		// note: lambdas don't have a super class as such. See usages of "LambdaTypeRecognizer" instead
 	);
