@@ -86,7 +86,7 @@ public class BinaryFieldStorerThrowableStackTraceCreator implements BinaryFieldS
 		{
 			Throwable t = (Throwable)source;
 			t.getStackTrace();
-			XMemory.set_long(targetAddress, persister.apply(XMemory.getObject(source, sourceOffset)));
+			this.setObject(targetAddress, persister, source, sourceOffset);
 			return targetAddress + Binary.objectIdByteLength();
 		}
 	}
