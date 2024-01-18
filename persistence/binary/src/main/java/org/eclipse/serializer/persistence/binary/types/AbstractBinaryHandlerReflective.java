@@ -48,7 +48,7 @@ implements PersistenceTypeHandlerReflective<Binary, T>
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
 	///////////////////
-	
+		
 	protected static <D extends PersistenceTypeDefinitionMember> EqHashEnum<D> MemberEnum()
 	{
 		return EqHashEnum.New(
@@ -116,10 +116,11 @@ implements PersistenceTypeHandlerReflective<Binary, T>
 	}
 			
 	protected static void createStorers(
-		final Class<?>                                                 entityType     ,
-		final Iterable<PersistenceTypeDefinitionMemberFieldReflective> storingMembers ,
-		final BinaryValueStorer[]                                      storers        ,
-		final PersistenceEagerStoringFieldEvaluator                    eagerEvaluator ,
+		final Class<?>                                                 entityType          ,
+		final Iterable<PersistenceTypeDefinitionMemberFieldReflective> storingMembers      ,
+		final BinaryValueStorer[]                                      storers             ,
+		final PersistenceEagerStoringFieldEvaluator                    eagerEvaluator      ,
+		final BinaryFieldHandlerProvider				               fieldHandlerProvider,
 		final boolean                                                  switchByteOrder
 	)
 	{
@@ -127,7 +128,16 @@ implements PersistenceTypeHandlerReflective<Binary, T>
 		for(final PersistenceTypeDefinitionMemberFieldReflective member : storingMembers)
 		{
 			final boolean isEager = eagerEvaluator.isEagerStoring(entityType, member.field());
-			storers[i++] = BinaryValueFunctions.getObjectValueStorer(member.type(), isEager, switchByteOrder);
+			
+			BinaryValueStorer customFieldStorer = fieldHandlerProvider.lookupFieldStorer(member.field(), isEager, switchByteOrder);
+			if (customFieldStorer != null)
+			{
+				storers[i++] = customFieldStorer;
+			}
+			else
+			{
+				storers[i++] = BinaryValueFunctions.getObjectValueStorer(member.type(), isEager, switchByteOrder);
+			}
 		}
 	}
 	
@@ -221,6 +231,8 @@ implements PersistenceTypeHandlerReflective<Binary, T>
 	private final Field[] persisterFields;
 	
 	private final boolean switchByteOrder;
+
+	private final BinaryFieldHandlerProvider fieldHandlerProvider;
 	
 	/* (28.10.2019 TM)TODO: encapsulate / abstract BinaryValue~ handling types.
 	 * While the per-field handling via the BinaryValue~ handling types is perfectly fine for JDK
@@ -238,18 +250,20 @@ implements PersistenceTypeHandlerReflective<Binary, T>
 	/////////////////
 
 	protected AbstractBinaryHandlerReflective(
-		final Class<T>                              type             ,
-		final String                                typeName         ,
-		final XGettingEnum<Field>                   persistableFields,
-		final XGettingEnum<Field>                   persisterFields  ,
-		final PersistenceFieldLengthResolver        lengthResolver   ,
-		final PersistenceEagerStoringFieldEvaluator eagerEvaluator   ,
+		final Class<T>                              type                ,
+		final String                                typeName            ,
+		final XGettingEnum<Field>                   persistableFields   ,
+		final XGettingEnum<Field>                   persisterFields     ,
+		final PersistenceFieldLengthResolver        lengthResolver      ,
+		final PersistenceEagerStoringFieldEvaluator eagerEvaluator      ,
+		final BinaryFieldHandlerProvider            fieldHandlerProvider,
 		final boolean                               switchByteOrder
 	)
 	{
 		super(type, typeName);
 		
 		this.switchByteOrder = switchByteOrder;
+		this.fieldHandlerProvider = fieldHandlerProvider;
 		
 		/*
 		 * Unsafe JavaDoc says ensureClassInitialized is "often needed" for getting the field base, so better do it.
@@ -283,7 +297,7 @@ implements PersistenceTypeHandlerReflective<Binary, T>
 
 		// storers set a field's value from the instance in memory to a buffered persistent form.
 		this.storers = new BinaryValueStorer[this.storingMembers.intSize()];
-		createStorers(type, this.storingMembers, this.storers, eagerEvaluator, switchByteOrder);
+		createStorers(type, this.storingMembers, this.storers, eagerEvaluator, fieldHandlerProvider, switchByteOrder);
 		
 		// setters set a field's value from a buffered persistent form to the instance in memory.
 		this.setters = this.deriveSetters();
@@ -338,7 +352,15 @@ implements PersistenceTypeHandlerReflective<Binary, T>
 		final PersistenceTypeDefinitionMemberFieldReflective member
 	)
 	{
-		return BinaryValueFunctions.getObjectValueSetter(member.type(), this.isSwitchedByteOrder());
+		BinaryValueSetter customFieldSetter = this.fieldHandlerProvider.lookupFieldSetter(member.field(), this.isSwitchedByteOrder());
+		if (customFieldSetter != null)
+		{
+			return customFieldSetter;
+		}
+		else
+		{
+			return BinaryValueFunctions.getObjectValueSetter(member.type(), this.isSwitchedByteOrder());
+		}
 	}
 	
 	protected long[] initializeStoringRefMemOffsets()
