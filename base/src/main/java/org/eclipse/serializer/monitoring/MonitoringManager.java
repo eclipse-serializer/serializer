@@ -17,6 +17,7 @@ package org.eclipse.serializer.monitoring;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.InstanceNotFoundException;
@@ -32,6 +33,15 @@ import org.slf4j.Logger;
 
 /**
  * Helper for managing metrics and monitoring
+ * <p>
+ * A note on JMX beans registration name:
+ * <p>
+ * If there are more then one storage started in one vm
+ * an instance counter is used to generate unique bean registration
+ * names for each MonitoringManager.
+ * If a custom name is configured the counter is not applied and the
+ * application is responsible to ensure unique names for each storage
+ * started.
  * 
  */
 public interface MonitoringManager
@@ -78,6 +88,8 @@ public interface MonitoringManager
 	{
 		private final static Logger logger = Logging.getLogger(MonitoringManager.class);
 		
+		private static AtomicInteger instanceID = new AtomicInteger();
+		
 		///////////////////////////////////////////////////////////////////////////
 		// instance fields //
 		////////////////////
@@ -93,7 +105,9 @@ public interface MonitoringManager
 		public JMX()
 		{
 			super();
-			this.storageName = null;
+			this.storageName = "storage" + instanceID.getAndIncrement();
+			
+			logger.debug("create MonitoringManager for storage: " + this.storageName);
 		}
 		
 		public JMX(final String storageName)
