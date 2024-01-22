@@ -36,8 +36,8 @@ import org.slf4j.Logger;
  * <p>
  * A note on JMX beans registration name:
  * <p>
- * If there are more then one storage started in one vm
- * an instance counter is used to generate unique bean registration
+ * If there is more then one storage started in one vm
+ * an instance counter is used to generate a unique bean registration
  * names for each MonitoringManager.
  * If a custom name is configured the counter is not applied and the
  * application is responsible to ensure unique names for each storage
