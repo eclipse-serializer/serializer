@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.eclipse.serializer</groupId>
 		<artifactId>codegen-parent</artifactId>
-		<version>1.1.0</version>
+		<version>1.1.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -21,7 +21,7 @@
 		<dependency>
 			<groupId>org.eclipse.serializer</groupId>
 			<artifactId>base</artifactId>
-			<version>1.1.0</version>
+			<version>1.1.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
