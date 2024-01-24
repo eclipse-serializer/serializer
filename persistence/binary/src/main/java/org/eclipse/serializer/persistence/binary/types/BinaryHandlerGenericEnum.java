@@ -138,6 +138,7 @@ public final class BinaryHandlerGenericEnum<T extends Enum<T>> extends AbstractB
 		final XGettingEnum<Field>                   persisterFields           ,
 		final PersistenceFieldLengthResolver        lengthResolver            ,
 		final PersistenceEagerStoringFieldEvaluator eagerStoringFieldEvaluator,
+		final BinaryFieldHandlerProvider            fieldHandlerProvider      ,
 		final boolean                               switchByteOrder
 	)
 	{
@@ -148,6 +149,7 @@ public final class BinaryHandlerGenericEnum<T extends Enum<T>> extends AbstractB
 			persisterFields           ,
 			lengthResolver            ,
 			eagerStoringFieldEvaluator,
+			fieldHandlerProvider      ,
 			switchByteOrder
 		);
 	}
@@ -180,10 +182,11 @@ public final class BinaryHandlerGenericEnum<T extends Enum<T>> extends AbstractB
 		final XGettingEnum<Field>                   persisterFields           ,
 		final PersistenceFieldLengthResolver        lengthResolver            ,
 		final PersistenceEagerStoringFieldEvaluator eagerStoringFieldEvaluator,
+		final BinaryFieldHandlerProvider            fieldHandlerProvider      ,
 		final boolean                               switchByteOrder
 	)
 	{
-		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, switchByteOrder);
+		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, fieldHandlerProvider, switchByteOrder);
 				
 		// these are instance members in persistent order. Not to be mixed up with members in declared order
 		this.allMembers = this.deriveAllMembers(this.instanceMembers());

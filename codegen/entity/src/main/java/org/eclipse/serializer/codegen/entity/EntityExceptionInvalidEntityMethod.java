@@ -21,7 +21,6 @@ import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.entity.EntityException;
 
 
-@SuppressWarnings("exports")
 public class EntityExceptionInvalidEntityMethod extends EntityException
 {
 	private final ExecutableElement method;

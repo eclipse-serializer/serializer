@@ -27,24 +27,26 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeInstantiator;
 public final class BinaryHandlerGenericType<T> extends AbstractBinaryHandlerReflective<T>
 {
 	public static <T> BinaryHandlerGenericType<T> New(
-		final Class<T>                               type                      ,
-		final String                                 typeName                  ,
-		final XGettingEnum<Field>                    persistableFields         ,
-		final XGettingEnum<Field>                    persisterFields           ,
-		final PersistenceFieldLengthResolver         lengthResolver            ,
-		final PersistenceEagerStoringFieldEvaluator  eagerStoringFieldEvaluator,
-		final PersistenceTypeInstantiator<Binary, T> instantiator              ,
+		final Class<T>                               type                       ,
+		final String                                 typeName                   ,
+		final XGettingEnum<Field>                    persistableFields          ,
+		final XGettingEnum<Field>                    persisterFields            ,
+		final PersistenceFieldLengthResolver         lengthResolver             ,
+		final PersistenceEagerStoringFieldEvaluator  eagerStoringFieldEvaluator ,
+		final PersistenceTypeInstantiator<Binary, T> persistenceTypeInstantiator,
+		final BinaryFieldHandlerProvider             fieldHandlerProvider       ,
 		final boolean                                switchByteOrder
 	)
 	{
 		return new BinaryHandlerGenericType<>(
-			type                      ,
-			typeName                  ,
-			persistableFields         ,
-			persisterFields           ,
-			lengthResolver            ,
-			eagerStoringFieldEvaluator,
-			instantiator              ,
+			type                       ,
+			typeName                   ,
+			persistableFields          ,
+			persisterFields            ,
+			lengthResolver             ,
+			eagerStoringFieldEvaluator ,
+			persistenceTypeInstantiator,
+			fieldHandlerProvider       ,
 			switchByteOrder
 		);
 	}
@@ -71,10 +73,11 @@ public final class BinaryHandlerGenericType<T> extends AbstractBinaryHandlerRefl
 		final PersistenceFieldLengthResolver         lengthResolver            ,
 		final PersistenceEagerStoringFieldEvaluator  eagerStoringFieldEvaluator,
 		final PersistenceTypeInstantiator<Binary, T> instantiator              ,
+		final BinaryFieldHandlerProvider             fieldHandlerProvider      ,
 		final boolean                                switchByteOrder
 	)
 	{
-		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, switchByteOrder);
+		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, fieldHandlerProvider, switchByteOrder);
 		this.instantiator = notNull(instantiator);
 	}
 

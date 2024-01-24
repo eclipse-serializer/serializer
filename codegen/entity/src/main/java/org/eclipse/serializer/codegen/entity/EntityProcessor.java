@@ -42,11 +42,10 @@ import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.entity.Entity;
 
 
-@SuppressWarnings("exports")
 public class EntityProcessor extends AbstractProcessor
 {
-	private final static String     OPTION_HASHEQUALATOR = "microstream.entity.hashequalator";
-	private final static String     OPTION_APPENDABLE    = "microstream.entity.appendable";
+	private final static String     OPTION_HASHEQUALATOR = "entity.hashequalator";
+	private final static String     OPTION_APPENDABLE    = "entity.appendable";
 	
 	private boolean                 generateHashEqualator;
 	private boolean                 generateAppendable;

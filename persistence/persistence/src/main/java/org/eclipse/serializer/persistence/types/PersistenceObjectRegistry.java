@@ -166,7 +166,14 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 	 */
 	public Set_long selectLiveObjectIds(Set_long objectIdsBaseSet);
 	
-	
+	/**
+	 * Cleanup object registry.
+	 */
+	public default void cleanUp()
+	{
+		//by default do nothing
+		return;
+	}
 	
 	public static DefaultObjectRegistry New()
 	{
