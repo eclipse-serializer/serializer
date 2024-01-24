@@ -48,6 +48,7 @@ extends PersistenceFoundation<Binary, F>
 	
 	public BinaryValueTranslatorProvider getValueTranslatorProvider();
 			
+	public BinaryFieldHandlerProvider getFieldHandlerProvider();
 	
 	
 	public F setCustomTranslatorLookup(
@@ -64,6 +65,10 @@ extends PersistenceFoundation<Binary, F>
 	
 	public F setValueTranslatorMappingProvider(
 		BinaryValueTranslatorMappingProvider valueTranslatorMappingProvider
+	);
+	
+	public F setFieldHandlerProvider(
+		BinaryFieldHandlerProvider fieldHandlerProvider
 	);
 	
 	@Override
@@ -88,6 +93,7 @@ extends PersistenceFoundation<Binary, F>
 		private XEnum<BinaryValueTranslatorKeyBuilder> translatorKeyBuilders  ;
 		private BinaryValueTranslatorMappingProvider   valueTranslatorMapping ;
 		private BinaryValueTranslatorProvider          valueTranslatorProvider;
+		private BinaryFieldHandlerProvider             fieldHandlerProvider   ;
 		
 		
 		
@@ -162,6 +168,16 @@ extends PersistenceFoundation<Binary, F>
 			return this.valueTranslatorProvider;
 		}
 		
+		@Override
+		public BinaryFieldHandlerProvider getFieldHandlerProvider()
+		{
+			if(this.fieldHandlerProvider == null)
+			{
+				this.fieldHandlerProvider = this.dispatch(this.ensureFieldHandlerProvider());
+			}
+			
+			return this.fieldHandlerProvider;
+		}
 		
 		
 		///////////////////////////////////////////////////////////////////////////
@@ -196,6 +212,12 @@ extends PersistenceFoundation<Binary, F>
 			return this.$();
 		}
 		
+		@Override
+		public F setFieldHandlerProvider(final BinaryFieldHandlerProvider fieldHandlerProvider)
+		{
+			this.fieldHandlerProvider = fieldHandlerProvider;
+			return this.$();
+		}
 	
 
 		///////////////////////////////////////////////////////////////////////////
@@ -229,6 +251,7 @@ extends PersistenceFoundation<Binary, F>
 				this.getReferenceFieldEagerEvaluator(),
 				this.getInstantiatorProvider(),
 				this.referenceTypeHandlerManager(),
+				this.getFieldHandlerProvider(),
 				this.isByteOrderMismatch()
 			);
 		}
@@ -314,6 +337,10 @@ extends PersistenceFoundation<Binary, F>
 			);
 		}
 		
+		protected BinaryFieldHandlerProvider ensureFieldHandlerProvider()
+		{
+			return BinaryFieldHandlerProvider.New();
+		}
 	}
 
 }

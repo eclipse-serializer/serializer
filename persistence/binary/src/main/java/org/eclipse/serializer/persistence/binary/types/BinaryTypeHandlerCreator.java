@@ -31,14 +31,14 @@ import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExc
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExceptionUnhandledCollectionType;
 import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArrayObject;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericCollection;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericList;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericMap;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericQueue;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericSet;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity.BinaryHandlerEntityLayerIdentity;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity.BinaryHandlerEntityLayerVersioning;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity.BinaryHandlerEntityLoading;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity.EntityTypeHandlerManager;
-import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericList;
-import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericQueue;
-import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerGenericSet;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
 import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceFieldLengthResolver;
@@ -89,6 +89,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 		final PersistenceEagerStoringFieldEvaluator              eagerStoringFieldEvaluator,
 		final PersistenceTypeInstantiatorProvider<Binary>        instantiatorProvider      ,
 		final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager        ,
+		final BinaryFieldHandlerProvider                         fieldHandlerProvider      ,
 		final boolean                                            switchByteOrder
 	)
 	{
@@ -99,6 +100,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 			notNull(eagerStoringFieldEvaluator),
 			notNull(instantiatorProvider)      ,
 			notNull(typeHandlerManager)        ,
+			notNull(fieldHandlerProvider)      ,
 			switchByteOrder
 		);
 	}
@@ -115,6 +117,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 		final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager      ;
 		final boolean                                            switchByteOrder         ;
 		      EntityTypeHandlerManager entityTypeHandlerManager;
+		final private BinaryFieldHandlerProvider                 fieldHandlerProvider    ;
 		
 		
 		///////////////////////////////////////////////////////////////////////////
@@ -122,18 +125,20 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 		/////////////////
 
 		Default(
-			final PersistenceTypeAnalyzer                              typeAnalyzer              ,
-			final PersistenceTypeResolver                              typeResolver              ,
-			final PersistenceFieldLengthResolver                       lengthResolver            ,
-			final PersistenceEagerStoringFieldEvaluator                eagerStoringFieldEvaluator,
-			final PersistenceTypeInstantiatorProvider<Binary>          instantiatorProvider      ,
-			final Referencing<PersistenceTypeHandlerManager<Binary>>   typeHandlerManager        ,
-			final boolean                                              switchByteOrder
+			final PersistenceTypeAnalyzer                            typeAnalyzer              ,
+			final PersistenceTypeResolver                            typeResolver              ,
+			final PersistenceFieldLengthResolver                     lengthResolver            ,
+			final PersistenceEagerStoringFieldEvaluator              eagerStoringFieldEvaluator,
+			final PersistenceTypeInstantiatorProvider<Binary>        instantiatorProvider      ,
+			final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager        ,
+			final BinaryFieldHandlerProvider                         fieldHandlerProvider      ,
+			final boolean                                            switchByteOrder
 		)
 		{
 			super(typeAnalyzer, typeResolver, lengthResolver, eagerStoringFieldEvaluator);
 			this.instantiatorProvider = instantiatorProvider;
 			this.typeHandlerManager   = typeHandlerManager  ;
+			this.fieldHandlerProvider = fieldHandlerProvider;
 			this.switchByteOrder      = switchByteOrder     ;
 		}
 
@@ -251,6 +256,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 				this.lengthResolver(),
 				this.eagerStoringFieldEvaluator(),
 				this.instantiatorProvider.provideTypeInstantiator(type),
+				this.fieldHandlerProvider        ,
 				this.switchByteOrder
 			);
 		}
@@ -330,6 +336,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 				persisterFields                  ,
 				this.lengthResolver()            ,
 				this.eagerStoringFieldEvaluator(),
+				this.fieldHandlerProvider        ,
 				this.switchByteOrder
 			);
 		}

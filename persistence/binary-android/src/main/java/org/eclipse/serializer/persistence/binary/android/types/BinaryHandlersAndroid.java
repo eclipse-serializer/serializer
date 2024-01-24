@@ -33,7 +33,6 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerRegistrati
 /**
  * Registers special type handlers written for Android.
  * Some of them have to sacrifice referential integrity for functionality.
- * <p>
  */
 public final class BinaryHandlersAndroid
 {
