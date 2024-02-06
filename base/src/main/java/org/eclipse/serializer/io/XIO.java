@@ -14,6 +14,27 @@ package org.eclipse.serializer.io;
  * #L%
  */
 
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.BulkList;
@@ -24,24 +45,52 @@ import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.util.UtilStackTrace;
 import org.eclipse.serializer.util.X;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.*;
-import java.util.Arrays;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
-
 public final class XIO
 {
+	/**
+	 * System property name definition.
+	 * If a system property with that name exists and has the value "true"
+	 * all file write operations will force channel updates to be written to the storage
+     * device before they return.
+	 * 
+	 * <p>The system property is only evaluated once at class initialization."
+	 * <p>The default value id false, not forcing channel updates to be written to the storage
+     * device.
+	 * 
+	 */
+	public static final String ENFORCE_WRITE = "org.eclipse.store.enforceWrite";
+	
+	/**
+	 * Enforce a channel write if true.
+	 */
+	private static boolean enforceWrite = Boolean.getBoolean(ENFORCE_WRITE);
+		
 	///////////////////////////////////////////////////////////////////////////
 	// methods //
 	////////////
+	
+	/**
+	 * Returns true if the system enforces channel updates to be written to the storage
+     * device.
+	 * 
+	 * @return true if write operations are enforced.
+	 */
+	public static boolean enforceWrite()
+	{
+		return enforceWrite;
+	}
+	
+	/**
+	 * Enable / disable forcing channel updates to be written to the storage
+     * device.
+	 * 
+	 * @param enable enabled if true.
+	 * @return the current state.
+	 */
+	public static boolean enforceWrite(boolean enable)
+	{
+		return enforceWrite = enable;
+	}
 	
 	public static char fileSuffixSeparator()
 	{
@@ -1016,6 +1065,11 @@ public final class XIO
 			writeCount += fileChannel.write(byteBuffers);
 		}
 		
+		if(writeCount > 0)
+		{
+			flush(fileChannel);
+		}
+		
 		return writeCount;
 	}
 	
@@ -1145,7 +1199,10 @@ public final class XIO
 		 * force() is needed to flush, because close() may not be called in case the process gets killed
 		 * by the system without a proper shutdown.
 		 */
-		fileChannel.force(true);
+		if(enforceWrite)
+		{
+			fileChannel.force(true);
+		}
 	}
 	
 	public static <T> T performClosingOperation(
@@ -1359,7 +1416,14 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return targetChannel.transferFrom(sourceChannel, targetPosition, sourceChannel.size());
+		long writeCount = targetChannel.transferFrom(sourceChannel, targetPosition, sourceChannel.size());
+		
+		if(writeCount > 0)
+		{
+			flush(targetChannel);
+		}
+		
+		return writeCount;
 	}
 	
 	public static long copyFile(
@@ -1380,7 +1444,14 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return sourceChannel.transferTo(sourcePosition, length, targetChannel);
+		long writeCount = sourceChannel.transferTo(sourcePosition, length, targetChannel);
+		
+		if(writeCount > 0)
+		{
+			flush(targetChannel);
+		}
+		
+		return writeCount;
 	}
 	
 	public static long copyFile(
@@ -1391,7 +1462,14 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return targetChannel.transferFrom(sourceChannel, targetPosition, length);
+		long writeCount = targetChannel.transferFrom(sourceChannel, targetPosition, length);
+		
+		if(writeCount > 0)
+		{
+			flush(targetChannel);
+		}
+		
+		return writeCount;
 	}
 	
 	// breaks naming conventions intentionally to indicate a modification of called methods instead of a type
