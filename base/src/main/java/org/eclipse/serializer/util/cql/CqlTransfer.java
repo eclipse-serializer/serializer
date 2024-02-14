@@ -118,7 +118,15 @@ public interface CqlTransfer<I, R extends XIterable<I>> extends CqlIteration<I, 
 	@Override
 	public default <P extends Consumer<I>>P executeInto(final XIterable<? extends I> source, final P target)
 	{
-		return this.executeSelection(source, target);
+		// same as super implementation, but without projector since the target expects type I
+		return CQL.executeQuery(
+			source             ,
+			this.getSkip()     ,
+			this.getLimit()    ,
+			this.getSelector() ,
+			target             ,
+			this.getOrder()
+		);
 	}
 
 	public static <I> CqlTransfer<I, XSequence<I>> New()
