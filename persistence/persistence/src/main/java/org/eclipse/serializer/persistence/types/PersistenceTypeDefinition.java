@@ -17,10 +17,10 @@ package org.eclipse.serializer.persistence.types;
 import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
+import org.eclipse.serializer.util.X;
 
 public interface PersistenceTypeDefinition extends PersistenceTypeDescription, PersistenceTypeLink
 {
@@ -117,7 +117,7 @@ public interface PersistenceTypeDefinition extends PersistenceTypeDescription, P
 	 * Examples for variable length instances:
 	 * <ul>
 	 * <li> variable size collection instances</li>
-	 * <li> variable size pesudo collection instances like {@code java.util.StringBuilder}</li>
+	 * <li> variable size pseudo collection instances like {@code java.util.StringBuilder}</li>
 	 * <li> instances of custom defined types similar to collections</li>
 	 * </ul><p>
 	 * Examples for fixed length instances:
