@@ -1,5 +1,10 @@
 package org.eclipse.serializer;
 
+import static org.eclipse.serializer.util.X.notNull;
+
+import java.nio.ByteBuffer;
+import java.util.function.Function;
+
 /*-
  * #%L
  * Eclipse Serializer
@@ -18,19 +23,29 @@ import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.persistence.binary.types.*;
+import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.binary.types.BinaryStorer;
+import org.eclipse.serializer.persistence.binary.types.ChunksBuffer;
+import org.eclipse.serializer.persistence.binary.types.ChunksBufferByteReversing;
+import org.eclipse.serializer.persistence.binary.types.ChunksWrapper;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfer;
-import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.persistence.types.PersistenceIdSet;
+import org.eclipse.serializer.persistence.types.PersistenceManager;
+import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
+import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
+import org.eclipse.serializer.persistence.types.PersistenceSource;
+import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.persistence.types.PersistenceStorer;
+import org.eclipse.serializer.persistence.types.PersistenceTarget;
+import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
+import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
+import org.eclipse.serializer.persistence.types.Persister;
+import org.eclipse.serializer.persistence.types.Storer;
 import org.eclipse.serializer.reference.Lazy;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
-
-import java.nio.ByteBuffer;
-import java.util.function.Function;
-
-import static org.eclipse.serializer.util.X.notNull;
 
 /**
  * Convenient API layer to use the binary persistence functionality for a simple serializer.
@@ -255,7 +270,8 @@ public interface Serializer<M> extends AutoCloseable
 					final PersistenceObjectManager<Binary>      objectManager     ,
 					final ObjectSwizzling                       objectRetriever   ,
 					final PersistenceTarget<Binary>             target            ,
-					final BufferSizeProviderIncremental         bufferSizeProvider
+					final BufferSizeProviderIncremental         bufferSizeProvider,
+					final Persister                             persister
 				)
 				{
 					return this.createEagerStorer(
@@ -263,7 +279,8 @@ public interface Serializer<M> extends AutoCloseable
 						objectManager     ,
 						objectRetriever   ,
 						target            ,
-						bufferSizeProvider
+						bufferSizeProvider,
+						persister
 					);
 				}
 
@@ -273,7 +290,8 @@ public interface Serializer<M> extends AutoCloseable
 					final PersistenceObjectManager<Binary>      objectManager     ,
 					final ObjectSwizzling                       objectRetriever   ,
 					final PersistenceTarget<Binary>             target            ,
-					final BufferSizeProviderIncremental         bufferSizeProvider
+					final BufferSizeProviderIncremental         bufferSizeProvider,
+					final Persister                             persister
 				)
 				{
 					final SerializerStorer storer = new SerializerStorer(
@@ -282,7 +300,8 @@ public interface Serializer<M> extends AutoCloseable
 						typeManager         ,
 						target              ,
 						bufferSizeProvider  ,
-						this.switchByteOrder
+						this.switchByteOrder,
+						persister
 					);
 					return storer;
 				}
@@ -302,6 +321,7 @@ public interface Serializer<M> extends AutoCloseable
 			private final ObjectSwizzling                       objectRetriever;
 			private final PersistenceTypeHandlerManager<Binary> typeManager    ;
 			private final PersistenceTarget<Binary>             target         ;
+			private final Persister                             persister      ;
 			
 			private final BufferSizeProviderIncremental bufferSizeProvider;
 			
@@ -317,7 +337,8 @@ public interface Serializer<M> extends AutoCloseable
 				final PersistenceTypeHandlerManager<Binary> typeManager       ,
 				final PersistenceTarget<Binary>             target            ,
 				final BufferSizeProviderIncremental         bufferSizeProvider,
-				final boolean                               switchByteOrder
+				final boolean                               switchByteOrder   ,
+				final Persister                             persister
 			)
 			{
 				super();
@@ -327,6 +348,7 @@ public interface Serializer<M> extends AutoCloseable
 				this.target             = notNull(target)            ;
 				this.bufferSizeProvider = notNull(bufferSizeProvider);
 				this.switchByteOrder    =         switchByteOrder    ;
+				this.persister          = notNull(persister)         ;
 				
 				this.defaultInitialize();
 			}
@@ -666,6 +688,11 @@ public interface Serializer<M> extends AutoCloseable
 				return item;
 			}
 
+			@Override
+			public Persister getPersister()
+			{
+				return this.persister;
+			}
 
 			
 			static final class Item

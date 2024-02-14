@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.old.OldCollections;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterable;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -25,6 +24,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerPriorityQueue
@@ -171,7 +171,7 @@ extends AbstractBinaryHandlerCustomIterable<PriorityQueue<?>>
 	@Override
 	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_COMPARATOR));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_COMPARATOR));
 		data.iterateListElementReferences(BINARY_OFFSET_ELEMENTS, iterator);
 	}
 	

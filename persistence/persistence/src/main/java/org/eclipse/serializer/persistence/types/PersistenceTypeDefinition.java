@@ -145,6 +145,11 @@ public interface PersistenceTypeDefinition extends PersistenceTypeDescription, P
 		final XGettingSequence<? extends PersistenceTypeDescriptionMember> members
 	)
 	{
+		if(members == null)
+		{
+			return false;
+		}
+		
 		for(final PersistenceTypeDescriptionMember member : members)
 		{
 			if(member.isVariableLength())

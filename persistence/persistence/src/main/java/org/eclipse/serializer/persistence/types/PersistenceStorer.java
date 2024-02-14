@@ -63,6 +63,7 @@ public interface PersistenceStorer extends Storer
 		 * @param objectManager the provided object manager
 		 * @param objectRetriever the provided object retriever
 		 * @param target the provided persistence target
+		 * @param persister the provided storage context
 		 * @param bufferSizeProvider the provided buffer size provider
 		 * @return a new lazy storer
 		 */
@@ -71,7 +72,8 @@ public interface PersistenceStorer extends Storer
 			PersistenceObjectManager<D>      objectManager     ,
 			ObjectSwizzling                  objectRetriever   ,
 			PersistenceTarget<D>             target            ,
-			BufferSizeProviderIncremental    bufferSizeProvider
+			BufferSizeProviderIncremental    bufferSizeProvider,
+			Persister                        persister
 		);
 		
 		/**
@@ -82,6 +84,7 @@ public interface PersistenceStorer extends Storer
 		 * @param objectManager the provided object manager
 		 * @param objectRetriever the provided object retriever
 		 * @param target the provided persistence target
+		 * @param persister the provided storage context
 		 * @param bufferSizeProvider the provided buffer size provider
 		 * @return a new storer
 		 */
@@ -90,10 +93,11 @@ public interface PersistenceStorer extends Storer
 			final PersistenceObjectManager<D>      objectManager     ,
 			final ObjectSwizzling                  objectRetriever   ,
 			final PersistenceTarget<D>             target            ,
-			final BufferSizeProviderIncremental    bufferSizeProvider
+			final BufferSizeProviderIncremental    bufferSizeProvider,
+			final Persister                        persister
 		)
 		{
-			return this.createLazyStorer(typeManager, objectManager, objectRetriever, target, bufferSizeProvider);
+			return this.createLazyStorer(typeManager, objectManager, objectRetriever, target, bufferSizeProvider, persister);
 		}
 		
 		/**
@@ -118,7 +122,8 @@ public interface PersistenceStorer extends Storer
 			PersistenceObjectManager<D>      objectManager     ,
 			ObjectSwizzling                  objectRetriever   ,
 			PersistenceTarget<D>             target            ,
-			BufferSizeProviderIncremental    bufferSizeProvider
+			BufferSizeProviderIncremental    bufferSizeProvider,
+			Persister                        persister
 		);
 	}
 	

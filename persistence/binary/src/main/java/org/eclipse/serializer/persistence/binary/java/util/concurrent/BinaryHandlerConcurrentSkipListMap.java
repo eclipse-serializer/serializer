@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.binary.java.util.concurrent;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
 import org.eclipse.serializer.collections.old.OldCollections;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
@@ -27,6 +26,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerConcurrentSkipListMap
@@ -62,7 +62,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListMap<?, ?>>
 		final PersistenceLoadHandler handler
 	)
 	{
-		return (Comparator<? super E>)handler.lookupObject(data.read_long(BINARY_OFFSET_COMPARATOR));
+		return (Comparator<? super E>)data.readReference(BINARY_OFFSET_COMPARATOR, handler);
 	}
 	
 	public static BinaryHandlerConcurrentSkipListMap New()
@@ -168,7 +168,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListMap<?, ?>>
 	@Override
 	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_COMPARATOR));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_COMPARATOR));
 		data.iterateKeyValueEntriesReferences(BINARY_OFFSET_ELEMENTS, iterator);
 	}
 	

@@ -237,7 +237,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 		
@@ -249,7 +250,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 
@@ -261,7 +263,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 		
@@ -273,7 +276,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 

@@ -317,7 +317,7 @@ public final class BinaryHandlerGenericEnum<T extends Enum<T>> extends AbstractB
 	
 	public String getName(final Binary data, final PersistenceLoadHandler handler)
 	{
-		return (String)handler.lookupObject(data.read_long(this.binaryOffsetName));
+		return (String)data.readReference(this.binaryOffsetName, handler);
 	}
 	
 	private void validate(

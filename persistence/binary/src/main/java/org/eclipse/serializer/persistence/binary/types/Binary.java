@@ -395,7 +395,7 @@ public abstract class Binary implements Chunk
 		;
 	}
 			
-	public abstract void storeEntityHeader(
+	public abstract long storeEntityHeader(
 		long entityContentLength,
 		long entityTypeId       ,
 		long entityObjectId
@@ -452,10 +452,24 @@ public abstract class Binary implements Chunk
 		return this.get_longFromAddress(this.loadItemEntityContentAddress() + offset);
 	}
 
+	public final long readObjectId(final long offset)
+	{
+		// (29.01.2019 TM)FIXME: priv#70: offset validation
+		return this.get_longFromAddress(this.loadItemEntityContentAddress() + offset);
+	}
+
 	public final double read_double(final long offset)
 	{
 		// (29.01.2019 TM)FIXME: priv#70: offset validation
 		return this.get_doubleFromAddress(this.loadItemEntityContentAddress() + offset);
+	}
+
+	public final Object readReference(final long offset, final PersistenceLoadHandler loadHandler)
+	{
+		// (29.01.2019 TM)FIXME: priv#70: offset validation
+		return loadHandler.lookupObject(
+			this.get_longFromAddress(this.loadItemEntityContentAddress() + offset)
+		);
 	}
 					
 	public abstract Binary channelChunk(int channelIndex);
@@ -1708,6 +1722,15 @@ public abstract class Binary implements Chunk
 			address = setters[i].setValueToMemory(address, null, targetAddress + targetOffsets[i], null);
 		}
 	}
+	
+	public final void copyToAddress(
+		final long entityContentAddressOffset,
+		final long targetAddress,
+		final long length
+	)
+	{
+		XMemory.copyRange(this.address + entityContentAddressOffset, targetAddress, length);
+	}
 
 	public final void storeListHeader(
 		final long offset              ,
@@ -1946,7 +1969,7 @@ public abstract class Binary implements Chunk
 		return this.loadItemEntityContentAddress() + toBinaryListElementsOffset(binaryListOffset);
 	}
 			
-	abstract long loadItemEntityContentAddress();
+	public abstract long loadItemEntityContentAddress();
 	
 	private boolean isSkipItem()
 	{
@@ -2305,6 +2328,14 @@ public abstract class Binary implements Chunk
 		);
 	}
 	
+	public final void copyFromAddress(
+		final long entityContentAddressOffset,
+		final long sourceAddress,
+		final long length
+	)
+	{
+		XMemory.copyRange(sourceAddress, this.address + entityContentAddressOffset, length);
+	}
 	
 	long calculateAddress(final ByteBuffer byteBuffer, final long offset)
 	{
@@ -2476,7 +2507,6 @@ public abstract class Binary implements Chunk
 		XMemory.copyArrayToAddress(values, address);
 	}
 
-
 	void store_intsToAddress(final long address, final int[] values)
 	{
 		XMemory.copyArrayToAddress(values, address);
@@ -2497,7 +2527,53 @@ public abstract class Binary implements Chunk
 		XMemory.copyArrayToAddress(values, address);
 	}
 	
+	void storeReferencesToAddress(
+		final long                address   ,
+		final PersistenceFunction persister ,
+		final Object[]            references
+	)
+	{
+		this.storeReferencesToAddress(address, persister, references, 0, references.length);
+	}
 
+	void storeReferencesToAddress(
+		final long                address   ,
+		final PersistenceFunction persister ,
+		final Object[]            references,
+		final int                 offset    ,
+		final int                 length
+	)
+	{
+		final int bound = offset + length;
+		for(int i = offset; i < bound; i++)
+		{
+			this.set_longToAddress(address + referenceBinaryLength(i), persister.apply(references[i]));
+		}
+	}
+	
+	public void storeReference(
+		final long                contentOffset,
+		final PersistenceFunction persister    ,
+		final Object              reference
+	)
+	{
+		this.set_longToAddress(this.address + contentOffset, persister.apply(reference));
+	}
+	
+	public void storeReferenceEager(
+		final long                            contentOffset,
+		final PersistenceStoreHandler<Binary> persister    ,
+		final Object                          reference
+	)
+	{
+		this.set_longToAddress(this.address + contentOffset, persister.applyEager(reference));
+	}
+
+	void storeRangeToAddress(final long address, final long sourceAddress, final long length)
+	{
+		XMemory.copyRange(sourceAddress, address, length);
+	}
+	
 
 	///////////////////////////////////////////////////////////////////////////
 	// Helper //

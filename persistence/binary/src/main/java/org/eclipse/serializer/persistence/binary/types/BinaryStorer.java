@@ -33,6 +33,7 @@ import org.eclipse.serializer.persistence.types.PersistenceStorer;
 import org.eclipse.serializer.persistence.types.PersistenceTarget;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
+import org.eclipse.serializer.persistence.types.Persister;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
@@ -92,6 +93,7 @@ public interface BinaryStorer extends PersistenceStorer
 		private final ObjectSwizzling                       objectRetriever;
 		private final PersistenceTypeHandlerManager<Binary> typeManager    ;
 		private final PersistenceTarget<Binary>             target         ;
+		private final Persister                             persister      ;
 		
 		// channel hashing fields
 		private final BufferSizeProviderIncremental bufferSizeProvider;
@@ -139,7 +141,8 @@ public interface BinaryStorer extends PersistenceStorer
 			final PersistenceTarget<Binary>             target            ,
 			final BufferSizeProviderIncremental         bufferSizeProvider,
 			final int                                   channelCount      ,
-			final boolean                               switchByteOrder
+			final boolean                               switchByteOrder   ,
+			final Persister                             persister
 		)
 		{
 			super();
@@ -150,6 +153,7 @@ public interface BinaryStorer extends PersistenceStorer
 			this.bufferSizeProvider = notNull(bufferSizeProvider);
 			this.chunksHashRange    =         channelCount - 1   ;
 			this.switchByteOrder    =         switchByteOrder    ;
+			this.persister          = notNull(persister)         ;
 			
 			this.defaultInitialize();
 		}
@@ -194,6 +198,12 @@ public interface BinaryStorer extends PersistenceStorer
 			{
 				return this.itemCount;
 			}
+		}
+		
+		@Override
+		public Persister getPersister()
+		{
+			return this.persister;
 		}
 
 		protected ChunksBuffer synchLookupChunk(final long objectId)
@@ -761,7 +771,8 @@ public interface BinaryStorer extends PersistenceStorer
 			final PersistenceTarget<Binary>             target            ,
 			final BufferSizeProviderIncremental         bufferSizeProvider,
 			final int                                   channelCount      ,
-			final boolean                               switchByteOrder
+			final boolean                               switchByteOrder   ,
+			final Persister                             persister
 		)
 		{
 			super(
@@ -771,7 +782,8 @@ public interface BinaryStorer extends PersistenceStorer
 				target            ,
 				bufferSizeProvider,
 				channelCount      ,
-				switchByteOrder
+				switchByteOrder   ,
+				persister
 			);
 		}
 		
@@ -853,7 +865,8 @@ public interface BinaryStorer extends PersistenceStorer
 			PersistenceObjectManager<Binary>      objectManager     ,
 			ObjectSwizzling                       objectRetriever   ,
 			PersistenceTarget<Binary>             target            ,
-			BufferSizeProviderIncremental         bufferSizeProvider
+			BufferSizeProviderIncremental         bufferSizeProvider,
+			Persister                             persister
 		);
 		
 		@Override
@@ -862,10 +875,11 @@ public interface BinaryStorer extends PersistenceStorer
 			final PersistenceObjectManager<Binary>      objectManager     ,
 			final ObjectSwizzling                       objectRetriever   ,
 			final PersistenceTarget<Binary>             target            ,
-			final BufferSizeProviderIncremental         bufferSizeProvider
+			final BufferSizeProviderIncremental         bufferSizeProvider,
+			final Persister                             persister
 		)
 		{
-			return this.createLazyStorer(typeManager, objectManager, objectRetriever, target, bufferSizeProvider);
+			return this.createLazyStorer(typeManager, objectManager, objectRetriever, target, bufferSizeProvider, persister);
 		}
 		
 		@Override
@@ -874,7 +888,8 @@ public interface BinaryStorer extends PersistenceStorer
 			PersistenceObjectManager<Binary>      objectManager     ,
 			ObjectSwizzling                       objectRetriever   ,
 			PersistenceTarget<Binary>             target            ,
-			BufferSizeProviderIncremental         bufferSizeProvider
+			BufferSizeProviderIncremental         bufferSizeProvider,
+			Persister                             persister
 		);
 		
 		
@@ -939,7 +954,8 @@ public interface BinaryStorer extends PersistenceStorer
 				final PersistenceObjectManager<Binary>      objectManager     ,
 				final ObjectSwizzling                       objectRetriever   ,
 				final PersistenceTarget<Binary>             target            ,
-				final BufferSizeProviderIncremental         bufferSizeProvider
+				final BufferSizeProviderIncremental         bufferSizeProvider,
+				final Persister                             persister
 			)
 			{
 				this.validateIsStoring(target);
@@ -951,7 +967,8 @@ public interface BinaryStorer extends PersistenceStorer
 					target                ,
 					bufferSizeProvider    ,
 					this.channelCount()   ,
-					this.switchByteOrder()
+					this.switchByteOrder(),
+					persister
 				);
 				objectManager.registerLocalRegistry(storer);
 				
@@ -963,7 +980,8 @@ public interface BinaryStorer extends PersistenceStorer
 				final PersistenceObjectManager<Binary>      objectManager     ,
 				final ObjectSwizzling                       objectRetriever   ,
 				final PersistenceTarget<Binary>             target            ,
-				final BufferSizeProviderIncremental         bufferSizeProvider
+				final BufferSizeProviderIncremental         bufferSizeProvider,
+				final Persister                             persister
 			)
 			{
 				this.validateIsStoring(target);
@@ -975,7 +993,8 @@ public interface BinaryStorer extends PersistenceStorer
 					target                ,
 					bufferSizeProvider    ,
 					this.channelCount()   ,
-					this.switchByteOrder()
+					this.switchByteOrder(),
+					persister
 				);
 				objectManager.registerLocalRegistry(storer);
 				

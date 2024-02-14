@@ -207,7 +207,7 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	}
 
 	@Override
-	public final void storeEntityHeader(
+	public final long storeEntityHeader(
 		final long entityContentLength,
 		final long entityTypeId       ,
 		final long entityObjectId
@@ -228,9 +228,9 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 		this.storeEntityHeaderToAddress(this.currentAddress, entityTotalLength, entityTypeId, entityObjectId);
 				
 		// currentAddress is advanced to next entity, but this entity's content address has to be returned
-		this.address = (this.currentAddress += entityTotalLength) - entityContentLength;
+		return this.address = (this.currentAddress += entityTotalLength) - entityContentLength;
 	}
-
+	
 	@Override
 	public final ByteBuffer[] buffers()
 	{
