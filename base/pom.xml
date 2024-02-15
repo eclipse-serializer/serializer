@@ -27,6 +27,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
+			<version>1.7.36</version>
 		</dependency>
 	</dependencies>
 
@@ -40,6 +41,7 @@
 						<id>default-compile</id>
 						<configuration>
 							<compilerArgument>-proc:none</compilerArgument>
+							<compilerArgument>--add-modules:org.slf4j</compilerArgument>
 						</configuration>
 					</execution>
 				</executions>
