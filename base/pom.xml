@@ -42,7 +42,6 @@
 						<id>default-compile</id>
 						<configuration>
 							<compilerArgument>-proc:none</compilerArgument>
-							<compilerArgument>--add-modules:org.slf4j</compilerArgument>
 						</configuration>
 					</execution>
 				</executions>
