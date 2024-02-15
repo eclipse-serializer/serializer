@@ -36,6 +36,7 @@ module org.eclipse.serializer.base
 	exports org.eclipse.serializer.memory.android;
 	exports org.eclipse.serializer.memory.sun;
 	exports org.eclipse.serializer.meta;
+	exports org.eclipse.serializer.monitoring;
 	exports org.eclipse.serializer.reference;
 	exports org.eclipse.serializer.reflect;
 	exports org.eclipse.serializer.time;
