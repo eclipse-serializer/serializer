@@ -250,7 +250,7 @@ extends BinaryTypeHandler.Abstract<T>
 
 	protected static Field getClassDeclaredField(final Class<?> declaringClass, final String fieldName)
 	{
-		return XReflect.getDeclaredField(declaringClass, fieldName);
+		return XReflect.getAnyField(declaringClass, fieldName);
 	}
 
 	protected static long getClassDeclaredFieldOffset(final Class<?> declaringClass, final String fieldName)
