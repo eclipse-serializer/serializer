@@ -29,12 +29,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
-import org.eclipse.serializer.reflect.XReflect;
-import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.memory.DirectBufferAddressGetter;
 import org.eclipse.serializer.memory.DirectBufferDeallocator;
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.memory.XMemory;
+import org.eclipse.serializer.reflect.XReflect;
+import org.eclipse.serializer.typing.XTypes;
+
 import sun.misc.Unsafe;
 
 public final class JdkInternals
@@ -366,33 +367,7 @@ public final class JdkInternals
 
 		XTypes.guaranteeDirectByteBuffer(directBuffer);
 
-		final Object cleaner = getObject(directBuffer, FIELD_OFFSET_DirectByteBuffer_cleaner);
-		final Object cleanerThunkDeallocatorRunnable = getObject(cleaner, FIELD_OFFSET_Cleaner_thunk);
-
-		if(!(cleanerThunkDeallocatorRunnable instanceof Runnable))
-		{
-			// better to not deallocate and hope the DBB will get cleaned up by the GC instead of an exception
-			return false;
-		}
-
-		// at least secure this call externally against race conditions if the geniuses can't do it internally
-		synchronized(cleanerThunkDeallocatorRunnable)
-		{
-			((Runnable)cleanerThunkDeallocatorRunnable).run();
-
-			/*
-			 * Must be set explicitly since the deallocator only sets his copy of the address to 0.
-			 * It might seem dangerous to zero out the address of a still reachable and potentially used
-			 * direct byte buffer, but this logic here is only executed if the DirectByteBuffer is explicitly
-			 * deallocated. If it is still used after that, it is simple a programming error, not different
-			 * from writing to a wrong memory address.
-			 * So zeroing out the address is the correct thing to do and keep the state consistent
-			 * and on the other hand prevent access to allegedly still allocated memory while in fact, it has
-			 * already been deallocated. It is much better to encounter a zero address in such a case than to
-			 * chaotically read or even write from/to memory that might already have been allocated for something else.
-			 */
-			set_long(directBuffer, FIELD_OFFSET_Buffer_address, 0);
-		}
+		VM.invokeCleaner(directBuffer);
 
 		return true;
 	}
