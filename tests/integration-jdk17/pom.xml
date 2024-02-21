@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.eclipse.serializer</groupId>
         <artifactId>serializer-tests</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>1.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -40,18 +40,18 @@
         <dependency>
             <groupId>org.eclipse.serializer</groupId>
             <artifactId>serializer</artifactId>
-            <version>1.2.0-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.serializer</groupId>
             <artifactId>persistence-binary-jdk8</artifactId>
-            <version>1.2.0-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.serializer</groupId>
             <artifactId>persistence-binary-jdk17</artifactId>
-            <version>1.2.0-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
