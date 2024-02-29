@@ -71,6 +71,10 @@ if(company.getName().equals("Acme Inc.")) {
 }
 ```
 
+## Applications
+
+Eclipse Serializer is used in [EclipseStore](https://github.com/eclipse-store/store).
+
 ## Contribute
 
 If you want to contribute to this project, please read our [guidelines](CONTRIBUTING.md).
