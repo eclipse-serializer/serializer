@@ -17,6 +17,7 @@ package org.eclipse.serializer.memory.sun;
 import static org.eclipse.serializer.util.X.coalesce;
 
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.lang.reflect.Field;
@@ -162,6 +163,30 @@ public final class JdkInternals
 	static final long FIELD_OFFSET_Buffer_address           = tryGetFieldOffset(Buffer.class, FIELD_NAME_address);
 	static final long FIELD_OFFSET_DirectByteBuffer_cleaner = tryGetFieldOffset(XTypes.directByteBufferClass(), FIELD_NAME_cleaner);
 	static final long FIELD_OFFSET_Cleaner_thunk            = tryGetFieldOffset(CLASS_Cleaner, FIELD_NAME_thunk);
+	
+	/*
+	 *  Method is available since Java 15 and will replace Unsafe.ensureClassInitialized
+	 *  which will be replaced in Java 22.
+	 *  See https://bugs.openjdk.org/browse/JDK-8316160
+	 */
+	static final Method METHOD_MethodHandler_Lookup_ensureInitialized = tryResolveMethod(
+		MethodHandles.Lookup.class, "ensureInitialized", Class.class
+	);
+	static final MethodHandles.Lookup METHOD_HANDLES_LOOKUP = MethodHandles.lookup();
+	
+	static final Method tryResolveMethod(final Class<?> clazz, final String name, final Class<?>... parameterTypes)
+	{
+		try
+		{
+			return XReflect.getDeclaredMethod(clazz, name, parameterTypes);
+		}
+		catch(final Exception e)
+		{
+			// swallow and return null
+			return null;
+		}
+		
+	}
 
 	static final Class<?> tryIterativeResolveType(final String... typeNames)
 	{
@@ -898,7 +923,14 @@ public final class JdkInternals
 
 	public static final void ensureClassInitialized(final Class<?> c)
 	{
-		VM.ensureClassInitialized(c);
+		if(METHOD_MethodHandler_Lookup_ensureInitialized != null)
+		{
+			XReflect.invoke(METHOD_MethodHandler_Lookup_ensureInitialized, METHOD_HANDLES_LOOKUP, c);
+		}
+		else
+		{
+			VM.ensureClassInitialized(c);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
