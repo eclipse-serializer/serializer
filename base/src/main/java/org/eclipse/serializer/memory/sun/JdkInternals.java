@@ -17,7 +17,6 @@ package org.eclipse.serializer.memory.sun;
 import static org.eclipse.serializer.util.X.coalesce;
 
 import java.io.PrintStream;
-import java.lang.invoke.MethodHandles;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.lang.reflect.Field;
@@ -164,30 +163,6 @@ public final class JdkInternals
 	static final long FIELD_OFFSET_DirectByteBuffer_cleaner = tryGetFieldOffset(XTypes.directByteBufferClass(), FIELD_NAME_cleaner);
 	static final long FIELD_OFFSET_Cleaner_thunk            = tryGetFieldOffset(CLASS_Cleaner, FIELD_NAME_thunk);
 	
-	/*
-	 *  Method is available since Java 15 and will replace Unsafe.ensureClassInitialized
-	 *  which will be replaced in Java 22.
-	 *  See https://bugs.openjdk.org/browse/JDK-8316160
-	 */
-	static final Method METHOD_MethodHandler_Lookup_ensureInitialized = tryResolveMethod(
-		MethodHandles.Lookup.class, "ensureInitialized", Class.class
-	);
-	static final MethodHandles.Lookup METHOD_HANDLES_LOOKUP = MethodHandles.lookup();
-	
-	static final Method tryResolveMethod(final Class<?> clazz, final String name, final Class<?>... parameterTypes)
-	{
-		try
-		{
-			return XReflect.getDeclaredMethod(clazz, name, parameterTypes);
-		}
-		catch(final Exception e)
-		{
-			// swallow and return null
-			return null;
-		}
-		
-	}
-
 	static final Class<?> tryIterativeResolveType(final String... typeNames)
 	{
 		// intentionally SystemClassLoader since all the types are system types.
@@ -923,13 +898,23 @@ public final class JdkInternals
 
 	public static final void ensureClassInitialized(final Class<?> c)
 	{
-		if(METHOD_MethodHandler_Lookup_ensureInitialized != null)
+		/*
+		 * We have to fall back to Class.forName
+		 * 
+		 * In Java 22 Unsafe#ensureClassInitialized was removed.
+		 * Since Java 15 there would be MethodHandles.Lookup#ensureInitialized,
+		 * but due to access restrictions we cannot call it for user classes.
+		 * So, the only way to ensure class initialization from Java 22 on is this one.
+		 * 
+		 * See https://bugs.openjdk.org/browse/JDK-8245871
+		 */
+		try
 		{
-			XReflect.invoke(METHOD_MethodHandler_Lookup_ensureInitialized, METHOD_HANDLES_LOOKUP, c);
+			Class.forName(c.getName(), true, c.getClassLoader());
 		}
-		else
+		catch(final ClassNotFoundException e)
 		{
-			VM.ensureClassInitialized(c);
+			throw new RuntimeException(e);
 		}
 	}
 
