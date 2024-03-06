@@ -990,11 +990,16 @@ public abstract class Binary implements Chunk
 		this.store_bytesToAddress(toBinaryListElementsOffset(this.address), array);
 	}
 
-	public final void store_booleans(
-		final long      typeId  ,
-		final long      objectId,
-		final boolean[] array
-	)
+	public final void store_bytes(final byte[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength(array.length);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_bytesToAddress(toBinaryListElementsOffset(offset + this.address), array);
+	}
+
+	public final void store_booleans(final long typeId, final long objectId, final boolean[] array)
 	{
 		final long totalByteLength = toBinaryListTotalByteLength(array.length);
 		this.storeEntityHeader(totalByteLength, typeId, objectId);
@@ -1002,6 +1007,15 @@ public abstract class Binary implements Chunk
 		this.store_long(LIST_OFFSET_BYTE_LENGTH, totalByteLength);
 		this.store_long(LIST_OFFSET_ELEMENT_COUNT, array.length);
 		this.store_booleansToAddress(toBinaryListElementsOffset(this.address), array);
+	}
+
+	public final void store_booleans(final boolean[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength(array.length);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_booleansToAddress(toBinaryListElementsOffset(offset + this.address), array);
 	}
 	
 	public final void store_shorts(final long typeId, final long objectId, final short[] array)
@@ -1012,6 +1026,15 @@ public abstract class Binary implements Chunk
 		this.store_long(LIST_OFFSET_BYTE_LENGTH, totalByteLength);
 		this.store_long(LIST_OFFSET_ELEMENT_COUNT, array.length);
 		this.store_shortsToAddress(toBinaryListElementsOffset(this.address), array);
+	}
+	
+	public final void store_shorts(final short[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Short.BYTES);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_shortsToAddress(toBinaryListElementsOffset(offset + this.address), array);
 	}
 
 	public final void store_chars(final long typeId, final long objectId, final char[] array)
@@ -1024,6 +1047,15 @@ public abstract class Binary implements Chunk
 		this.store_charsToAddress(toBinaryListElementsOffset(this.address), array);
 	}
 
+	public final void store_chars(final char[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Character.BYTES);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_charsToAddress(toBinaryListElementsOffset(offset + this.address), array);
+	}
+
 	public final void store_ints(final long typeId, final long objectId, final int[] array)
 	{
 		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Integer.BYTES);
@@ -1032,6 +1064,15 @@ public abstract class Binary implements Chunk
 		this.store_long(LIST_OFFSET_BYTE_LENGTH, totalByteLength);
 		this.store_long(LIST_OFFSET_ELEMENT_COUNT, array.length);
 		this.store_intsToAddress(toBinaryListElementsOffset(this.address), array);
+	}
+
+	public final void store_ints(final int[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Integer.BYTES);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_intsToAddress(toBinaryListElementsOffset(offset + this.address), array);
 	}
 
 	public final void store_floats(final long typeId, final long objectId, final float[] array)
@@ -1044,6 +1085,15 @@ public abstract class Binary implements Chunk
 		this.store_floatsToAddress(toBinaryListElementsOffset(this.address),array);
 	}
 
+	public final void store_floats(final float[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Float.BYTES);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_floatsToAddress(toBinaryListElementsOffset(offset + this.address),array);
+	}
+
 	public final void store_longs(final long typeId, final long objectId, final long[] array)
 	{
 		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Long.BYTES);
@@ -1054,6 +1104,15 @@ public abstract class Binary implements Chunk
 		this.store_longsToAddress(toBinaryListElementsOffset(this.address), array);
 	}
 
+	public final void store_longs(final long[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Long.BYTES);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_longsToAddress(toBinaryListElementsOffset(offset + this.address), array);
+	}
+
 	public final void store_doubles(final long typeId, final long objectId, final double[] array)
 	{
 		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Double.BYTES);
@@ -1062,6 +1121,15 @@ public abstract class Binary implements Chunk
 		this.store_long(LIST_OFFSET_BYTE_LENGTH, totalByteLength);
 		this.store_long(LIST_OFFSET_ELEMENT_COUNT, array.length);
 		this.store_doublesToAddress(toBinaryListElementsOffset(this.address), array);
+	}
+
+	public final void store_doubles(final double[] array, final long offset)
+	{
+		final long totalByteLength = toBinaryListTotalByteLength((long)array.length * Double.BYTES);
+
+		this.store_long(offset + LIST_OFFSET_BYTE_LENGTH, totalByteLength);
+		this.store_long(offset + LIST_OFFSET_ELEMENT_COUNT, array.length);
+		this.store_doublesToAddress(toBinaryListElementsOffset(offset + this.address), array);
 	}
 	
 	public final void storeByte(final long typeId, final long objectId, final byte value)
@@ -1603,20 +1671,26 @@ public abstract class Binary implements Chunk
 	}
 	
 
-	public final void collectElementsIntoArray(
+	public final long collectElementsIntoArray(
 		final long                   binaryOffset,
 		final PersistenceLoadHandler handler     ,
 		final Object[]               target
 	)
 	{
+		long nonNullCount = 0L;
+		
 		final long binaryElementsStartAddress = this.binaryListElementsAddress(binaryOffset);
 		for(int i = 0; i < target.length; i++)
 		{
+			final long oid = this.get_longFromAddress(binaryElementsStartAddress + referenceBinaryLength(i));
 			// bounds-check eliminated array setting has about equal performance as manual unsafe putting
-			target[i] = handler.lookupObject(
-				this.get_longFromAddress(binaryElementsStartAddress + referenceBinaryLength(i))
-			);
+			if((target[i] = handler.lookupObject(oid)) != null)
+			{
+				nonNullCount++;
+			}
 		}
+		
+		return nonNullCount;
 	}
 
 	public final int collectListObjectReferences(
