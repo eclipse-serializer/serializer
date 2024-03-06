@@ -497,6 +497,11 @@ public class Persistence
 		}
 		return id;
 	}
+	
+	public static final void iterateReferences(final PersistenceFunction iterator, final Object[] array)
+	{
+		iterateReferences(iterator, array, 0, array.length);
+	}
 
 	public static final void iterateReferences(
 		final PersistenceFunction iterator,
