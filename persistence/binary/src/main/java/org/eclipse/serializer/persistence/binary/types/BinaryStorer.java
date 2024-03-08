@@ -247,6 +247,7 @@ public interface BinaryStorer extends PersistenceStorer
 		{
 			synchronized(this.head)
 			{
+				this.itemCount = 0;
 				this.hashSlots = new Item[hashLength];
 				this.hashRange = hashLength - 1;
 				
