@@ -925,17 +925,6 @@ public final class XMemory
 		return buffer;
 	}
 
-    public static final void free(final long address)
-    {
-        MEMORY_ACCESSOR.freeMemory(address);
-    }
-
-	public static final void fillMemory(final long address, final long length, final byte value)
-	{
-		MEMORY_ACCESSOR.fillMemory(address, length, value);
-	}
-
-
     public static final ByteBuffer allocateDirectNativeDefault()
     {
         return allocateDirectNative(XMemory.defaultBufferSize());
@@ -947,6 +936,34 @@ public final class XMemory
     {
         return MEMORY_ACCESSOR.allocateMemory(bytes);
     }
+    
+    public static final long allocateCleared(final long bytes)
+	{
+		final long address = allocate(bytes);
+		clearMemory(address, bytes);
+		
+		return address;
+	}
+    
+    public static final long reallocate(final long address, final long bytes)
+	{
+		return MEMORY_ACCESSOR.reallocateMemory(address, bytes);
+	}
+
+	public static final void free(final long address)
+	{
+		MEMORY_ACCESSOR.freeMemory(address);
+	}
+
+	public static final void fillMemory(final long address, final long length, final byte value)
+	{
+		MEMORY_ACCESSOR.fillMemory(address, length, value);
+	}
+	
+	public static final void clearMemory(final long address, final long length)
+	{
+		fillMemory(address, length, (byte)0);
+	}
 
     /**
      * Parses a {@link String} instance to a {@link ByteOrder} instance according to {@code ByteOrder#toString()}
