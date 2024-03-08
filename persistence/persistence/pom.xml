@@ -15,6 +15,7 @@
 	
 	<name>Eclipse Serializer Persistence</name>
 	<description>Eclipse Serializer Persistence for Java Object Graphs</description>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 	
 	<dependencies>
 		<dependency>
