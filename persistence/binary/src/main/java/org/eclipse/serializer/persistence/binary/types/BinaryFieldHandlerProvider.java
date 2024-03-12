@@ -62,6 +62,7 @@ public interface BinaryFieldHandlerProvider
 	/**
 	 * Lookup the BinaryFieldSetter registered for the specified field.
 	 * @param field the field.
+	 * @param switchByteOrder true if inversed byte order.
 	 * @return the registered BinaryFieldSetter or null.
 	 */
 	public BinaryFieldSetter<?> lookupFieldSetter(Field field, boolean switchByteOrder);
