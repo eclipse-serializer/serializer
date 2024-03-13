@@ -1,5 +1,6 @@
 package org.eclipse.serializer;
 
+import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 
 import java.nio.ByteBuffer;
@@ -348,7 +349,7 @@ public interface Serializer<M> extends AutoCloseable
 				this.target             = notNull(target)            ;
 				this.bufferSizeProvider = notNull(bufferSizeProvider);
 				this.switchByteOrder    =         switchByteOrder    ;
-				this.persister          = notNull(persister)         ;
+				this.persister          = mayNull(persister)         ;
 				
 				this.defaultInitialize();
 			}

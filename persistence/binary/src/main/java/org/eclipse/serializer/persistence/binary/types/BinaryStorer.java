@@ -17,6 +17,7 @@ package org.eclipse.serializer.persistence.binary.types;
 import static java.lang.System.identityHashCode;
 import static org.eclipse.serializer.chars.XChars.systemString;
 import static org.eclipse.serializer.persistence.types.PersistenceLogging.STORER_CONTEXT;
+import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.util.logging.Logging.LazyArg;
 import static org.eclipse.serializer.util.logging.Logging.LazyArgInContext;
@@ -153,7 +154,7 @@ public interface BinaryStorer extends PersistenceStorer
 			this.bufferSizeProvider = notNull(bufferSizeProvider);
 			this.chunksHashRange    =         channelCount - 1   ;
 			this.switchByteOrder    =         switchByteOrder    ;
-			this.persister          = notNull(persister)         ;
+			this.persister          = mayNull(persister)         ;
 			
 			this.defaultInitialize();
 		}
