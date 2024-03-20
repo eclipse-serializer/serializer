@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.types;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.logging.Logging;
-
 import org.slf4j.Logger;
 
 /**
@@ -74,7 +73,8 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 		final PersistenceObjectManager<D>      objectManager     ,
 		final ObjectSwizzling                  objectRetriever   ,
 		final PersistenceTarget<D>             target            ,
-		final BufferSizeProviderIncremental    bufferSizeProvider
+		final BufferSizeProviderIncremental    bufferSizeProvider,
+		final Persister                        persister
 	)
 	{
 		logger.debug("Creating lazy storer");
@@ -86,7 +86,11 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 					objectManager,
 					objectRetriever,
 					target,
-					bufferSizeProvider)));
+					bufferSizeProvider,
+					persister
+				)
+			)
+		);
 	}
 
 	@Override
@@ -95,7 +99,8 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 		final PersistenceObjectManager<D>      objectManager     ,
 		final ObjectSwizzling                  objectRetriever   ,
 		final PersistenceTarget<D>             target            ,
-		final BufferSizeProviderIncremental    bufferSizeProvider
+		final BufferSizeProviderIncremental    bufferSizeProvider,
+		final Persister                        persister
 		)
 	{
 		logger.debug("Creating eager storer");
@@ -107,7 +112,11 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 					objectManager,
 					objectRetriever,
 					target,
-					bufferSizeProvider)));
+					bufferSizeProvider,
+					persister
+				)
+			)
+		);
 	}
 
 }

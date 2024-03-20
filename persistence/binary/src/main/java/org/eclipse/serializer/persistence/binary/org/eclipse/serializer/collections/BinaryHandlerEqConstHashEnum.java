@@ -16,7 +16,6 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
 
 import java.lang.reflect.Field;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.EqConstHashEnum;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.memory.XMemory;
@@ -27,6 +26,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerEqConstHashEnum
@@ -155,7 +155,7 @@ extends AbstractBinaryHandlerCustomCollection<EqConstHashEnum<?>>
 		XMemory.setObject(
 			instance,
 			XMemory.objectFieldOffset(FIELD_EQULATOR),
-			handler.lookupObject(data.read_long(BINARY_OFFSET_EQUALATOR))
+			data.readReference(BINARY_OFFSET_EQUALATOR, handler)
 		);
 
 		// collect elements AFTER hashEqualator has been set because it is used in it
@@ -188,7 +188,7 @@ extends AbstractBinaryHandlerCustomCollection<EqConstHashEnum<?>>
 	@Override
 	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_EQUALATOR));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_EQUALATOR));
 		data.iterateListElementReferences(BINARY_OFFSET_ELEMENTS, iterator);
 	}
 

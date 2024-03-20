@@ -597,6 +597,51 @@ public final class XUtilsArrayCollection
 		AbstractArrayStorage.rangedReverse(a.internalGetStorageArray(), XTypes.to_int(a.size()), offset, length);
 		return a;
 	}
+	
+	public static int binarySearchIndex(
+		final int   value        ,
+		final int[] orderedValues
+	)
+	{
+		int low = 0, high = orderedValues.length;
+		while(low < high - 16)
+		{
+			final int mid;
+			if(orderedValues[mid = low + high >>> 1] < value) // binary search: check value at mid point index.
+			{
+				low = mid + 1; // value of mid point index is too small, so try again above mid index.
+				continue;
+			}
+			if(orderedValues[mid] == value) // note: a second array read should be fast than writing a variable.
+			{
+				return mid; // value found, return corresponding index.
+			}
+			high = mid - 1; // value at mid point index is too big, so try again below mid index.
+		}
+		return linearSearchIndex(value, orderedValues, low, high);  // search range narrowed down to linear search domain
+	}
+
+	private static int linearSearchIndex(
+		final int   value        ,
+		final int[] orderedValues,
+		final int   start        ,
+		final int   bound
+	)
+	{
+		for(int i = start; i < bound; i++)
+		{
+			if(orderedValues[i] < value)
+			{
+				continue;
+			}
+			if(orderedValues[i] == value)
+			{
+				return i;
+			}
+			return i == 0 ? Integer.MIN_VALUE : -i;
+		}
+		return -bound;
+	}
 
 
 

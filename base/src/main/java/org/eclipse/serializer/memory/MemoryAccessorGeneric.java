@@ -1993,6 +1993,62 @@ public final class MemoryAccessorGeneric implements MemoryAccessor
 	}
 
 	
+	// volatile get //
+
+	@Override
+	public final long volatileGet_long(final Object subject, final long offset)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
+	}
+
+
+
+	// volatile set //
+
+	@Override
+	public final void volatileSet_long(final Object subject, final long offset, final long value)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
+	}
+
+
+
+	// compare and swap //
+
+	@Override
+	public final boolean compareAndSwap_int(
+		final Object subject    ,
+		final long   offset     ,
+		final int    expected   ,
+		final int    replacement
+	)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
+	}
+
+	@Override
+	public final boolean compareAndSwap_long(
+		final Object subject    ,
+		final long   offset     ,
+		final long   expected   ,
+		final long   replacement
+	)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
+	}
+
+	@Override
+	public final boolean compareAndSwapObject(
+		final Object subject    ,
+		final long   offset     ,
+		final Object expected   ,
+		final Object replacement
+	)
+	{
+		throw new org.eclipse.serializer.meta.NotImplementedYetError();
+	}
+		
+	
 	// memory statistics creation //
 	
 	@Override

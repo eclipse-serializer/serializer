@@ -15,6 +15,7 @@ package org.eclipse.serializer.util.cql;
  */
 
 import static org.eclipse.serializer.util.X.coalesce;
+import static org.eclipse.serializer.util.X.notNull;
 
 import java.util.Comparator;
 import java.util.function.BiConsumer;
@@ -293,7 +294,9 @@ public final class CQL
 		{
 			return prepareSourceIterator(skip, limit, projector, target);
 		}
-		isNotNull(projector);
+		
+		// projecting logic is mandatory to get from input type I to output type O which the target requires.
+		notNull(projector);
 
 		if(isSkip(skip))
 		{
@@ -315,7 +318,7 @@ public final class CQL
 		final Consumer<? super O>    target
 	)
 	{
-		isNotNull(projector);
+		notNull(projector);
 
 		if(isSkip(skip))
 		{

@@ -45,4 +45,6 @@ public interface PersistenceStoreHandler<D> extends PersistenceFunction
 	
 	public ObjectSwizzling getObjectRetriever();
 	
+	public Persister getPersister();
+	
 }

@@ -164,6 +164,11 @@ public final class XArrays
 		return array == null || array.length == 0;
 	}
 	
+	public static boolean hasContent(final Object[] array)
+	{
+		return !hasNoContent(array);
+	}
+	
 	public static final <T> T[] fill(
 		final T[]                   array   ,
 		final Supplier<? extends T> supplier

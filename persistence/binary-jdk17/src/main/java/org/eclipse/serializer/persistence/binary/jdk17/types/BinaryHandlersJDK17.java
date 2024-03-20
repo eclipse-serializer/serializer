@@ -14,24 +14,30 @@ package org.eclipse.serializer.persistence.binary.jdk17.types;
  * #L%
  */
 
-import org.eclipse.serializer.util.X;
+import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.persistence.binary.jdk17.java.util.BinaryHandlerImmutableCollectionsList12;
 import org.eclipse.serializer.persistence.binary.jdk17.java.util.BinaryHandlerImmutableCollectionsSet12;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerRegistration;
+import org.eclipse.serializer.util.X;
 
 public final class BinaryHandlersJDK17
 {
 	public static <F extends PersistenceTypeHandlerRegistration.Executor<Binary>> F registerJDK17TypeHandlers(final F executor)
 	{
-		executor.executeTypeHandlerRegistration((r, c) ->
-			r.registerTypeHandlers(X.List(
-					BinaryHandlerImmutableCollectionsSet12.New(),
-					BinaryHandlerImmutableCollectionsList12.New()
-			))
-		);
+		executor.executeTypeHandlerRegistration((r, c) -> r.registerTypeHandlers(jdk17TypeHandlers()));
 
 		return executor;
+	}
+
+	
+	public static XGettingCollection<AbstractBinaryHandlerCustom<? extends Object>> jdk17TypeHandlers()
+	{
+		return X.List(
+			BinaryHandlerImmutableCollectionsSet12.New(),
+			BinaryHandlerImmutableCollectionsList12.New()
+		);
 	}
 	
 	

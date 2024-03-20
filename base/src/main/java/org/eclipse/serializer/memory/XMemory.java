@@ -925,12 +925,6 @@ public final class XMemory
 		return buffer;
 	}
 
-    public static final void free(final long address)
-    {
-        XMemory.MEMORY_ACCESSOR.freeMemory(address);
-    }
-
-
     public static final ByteBuffer allocateDirectNativeDefault()
     {
         return allocateDirectNative(XMemory.defaultBufferSize());
@@ -940,8 +934,36 @@ public final class XMemory
 
     public static final long allocate(final long bytes)
     {
-        return XMemory.MEMORY_ACCESSOR.allocateMemory(bytes);
+        return MEMORY_ACCESSOR.allocateMemory(bytes);
     }
+    
+    public static final long allocateCleared(final long bytes)
+	{
+		final long address = allocate(bytes);
+		clearMemory(address, bytes);
+		
+		return address;
+	}
+    
+    public static final long reallocate(final long address, final long bytes)
+	{
+		return MEMORY_ACCESSOR.reallocateMemory(address, bytes);
+	}
+
+	public static final void free(final long address)
+	{
+		MEMORY_ACCESSOR.freeMemory(address);
+	}
+
+	public static final void fillMemory(final long address, final long length, final byte value)
+	{
+		MEMORY_ACCESSOR.fillMemory(address, length, value);
+	}
+	
+	public static final void clearMemory(final long address, final long length)
+	{
+		fillMemory(address, length, (byte)0);
+	}
 
     /**
      * Parses a {@link String} instance to a {@link ByteOrder} instance according to {@code ByteOrder#toString()}
@@ -980,6 +1002,54 @@ public final class XMemory
 
         return bytes;
     }
+
+	// get volatile //
+
+	public static final long volatileGet_long(final Object subject, final long offset)
+	{
+		return MEMORY_ACCESSOR.volatileGet_long(subject, offset);
+	}
+
+
+	// set volatile //
+
+	public static final void volatileSet_long(final Object subject, final long offset, final long value)
+	{
+		MEMORY_ACCESSOR.volatileSet_long(subject, offset, value);
+	}
+
+
+	// compare and swap //
+
+	public static final boolean compareAndSwap_int(
+		final Object subject    ,
+		final long   offset     ,
+		final int    expected   ,
+		final int    replacement
+	)
+	{
+		return MEMORY_ACCESSOR.compareAndSwap_int(subject, offset, expected, replacement);
+	}
+
+	public static final boolean compareAndSwap_long(
+		final Object subject    ,
+		final long   offset     ,
+		final long   expected   ,
+		final long   replacement
+	)
+	{
+		return MEMORY_ACCESSOR.compareAndSwap_long(subject, offset, expected, replacement);
+	}
+
+	public static final boolean compareAndSwapObject(
+		final Object subject    ,
+		final long   offset     ,
+		final Object expected   ,
+		final Object replacement
+	)
+	{
+		return MEMORY_ACCESSOR.compareAndSwapObject(subject, offset, expected, replacement);
+	}
     
 	
 	///////////////////////////////////////////////////////////////////////////

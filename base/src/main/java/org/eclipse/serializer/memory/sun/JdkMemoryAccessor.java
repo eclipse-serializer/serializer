@@ -18,10 +18,10 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
-import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.memory.MemoryAccessor;
 import org.eclipse.serializer.memory.MemorySizeProperties;
 import org.eclipse.serializer.memory.MemoryStatistics;
+import org.eclipse.serializer.typing.XTypes;
 
 public final class JdkMemoryAccessor implements MemoryAccessor, MemorySizeProperties
 {
@@ -659,6 +659,62 @@ public final class JdkMemoryAccessor implements MemoryAccessor, MemorySizeProper
 		return JdkInternals.byteSizeArrayObject(elementCount);
 	}
 
+	
+	// volatile get //
+
+	@Override
+	public final long volatileGet_long(final Object subject, final long offset)
+	{
+		return JdkInternals.volatileGet_long(subject, offset);
+	}
+
+
+
+	// volatile set //
+
+	@Override
+	public final void volatileSet_long(final Object subject, final long offset, final long value)
+	{
+		JdkInternals.volatileSet_long(subject, offset, value);
+	}
+
+
+
+	// compare and swap //
+
+	@Override
+	public final boolean compareAndSwap_int(
+		final Object subject    ,
+		final long   offset     ,
+		final int    expected   ,
+		final int    replacement
+	)
+	{
+		return JdkInternals.compareAndSwap_int(subject, offset, expected, replacement);
+	}
+
+	@Override
+	public final boolean compareAndSwap_long(
+		final Object subject    ,
+		final long   offset     ,
+		final long   expected   ,
+		final long   replacement
+	)
+	{
+		return JdkInternals.compareAndSwap_long(subject, offset, expected, replacement);
+	}
+
+	@Override
+	public final boolean compareAndSwapObject(
+		final Object subject    ,
+		final long   offset     ,
+		final Object expected   ,
+		final Object replacement
+	)
+	{
+		return JdkInternals.compareAndSwapObject(subject, offset, expected, replacement);
+	}
+		
 	
 	// memory statistics creation //
 		

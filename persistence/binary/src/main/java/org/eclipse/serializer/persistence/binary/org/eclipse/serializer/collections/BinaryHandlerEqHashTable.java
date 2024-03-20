@@ -1,5 +1,15 @@
 package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections;
 
+import org.eclipse.serializer.collections.EqHashTable;
+import org.eclipse.serializer.hashing.HashEqualator;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
+import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.types.Persistence;
+import org.eclipse.serializer.persistence.types.PersistenceFunction;
+import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
+import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
+import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+
 /*-
  * #%L
  * Eclipse Serializer Persistence Binary
@@ -15,15 +25,6 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
  */
 
 import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.collections.EqHashTable;
-import org.eclipse.serializer.hashing.HashEqualator;
-import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
-import org.eclipse.serializer.persistence.binary.types.Binary;
-import org.eclipse.serializer.persistence.types.Persistence;
-import org.eclipse.serializer.persistence.types.PersistenceFunction;
-import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
-import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
-import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
 
 public final class BinaryHandlerEqHashTable
@@ -152,15 +153,15 @@ extends AbstractBinaryHandlerCustomCollection<EqHashTable<?, ?>>
 		
 		XCollectionsInternals.setHashEqualator(
 			instance,
-			(HashEqualator<?>)handler.lookupObject(data.read_long(BINARY_OFFSET_EQUALATOR))
+			(HashEqualator<?>)data.readReference(BINARY_OFFSET_EQUALATOR, handler)
 		);
 		XCollectionsInternals.setKeys(
 			instance,
-			(EqHashTable<?, ?>.Keys)handler.lookupObject(data.read_long(BINARY_OFFSET_KEYS))
+			(EqHashTable<?, ?>.Keys)data.readReference(BINARY_OFFSET_KEYS, handler)
 		);
 		XCollectionsInternals.setValues(
 			instance,
-			(EqHashTable<?, ?>.Values)handler.lookupObject(data.read_long(BINARY_OFFSET_VALUES))
+			(EqHashTable<?, ?>.Values)data.readReference(BINARY_OFFSET_VALUES, handler)
 		);
 		XCollectionsInternals.setSize(instance, data.collectKeyValueReferences(
 			BINARY_OFFSET_ELEMENTS,
@@ -194,9 +195,9 @@ extends AbstractBinaryHandlerCustomCollection<EqHashTable<?, ?>>
 	@Override
 	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_EQUALATOR));
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_KEYS));
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_VALUES));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_EQUALATOR));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_KEYS));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_VALUES));
 		data.iterateKeyValueEntriesReferences(BINARY_OFFSET_ELEMENTS, iterator);
 	}
 

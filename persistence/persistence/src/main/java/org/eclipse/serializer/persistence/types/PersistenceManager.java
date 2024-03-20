@@ -20,8 +20,8 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.nio.ByteOrder;
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
+import org.eclipse.serializer.util.X;
 
 
 public interface PersistenceManager<D>
@@ -237,7 +237,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 		
@@ -249,7 +250,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 
@@ -261,7 +263,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 		
@@ -273,7 +276,8 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),
 				this.target,
-				this.bufferSizeProvider
+				this.bufferSizeProvider,
+				this.persister
 			));
 		}
 
@@ -291,12 +295,12 @@ ByteOrderTargeting<PersistenceManager<D>>
 		public final long store(final Object object)
 		{
 			final long objectId;
-			final PersistenceStorer persister = this.createStorer();
+			final PersistenceStorer storer = this.createStorer();
 			
 			synchronized(this.storeMutex)
 			{
-				objectId = persister.store(object);
-				persister.commit();
+				objectId = storer.store(object);
+				storer.commit();
 			}
 
 			return objectId;
@@ -306,12 +310,12 @@ ByteOrderTargeting<PersistenceManager<D>>
 		public final long[] storeAll(final Object... instances)
 		{
 			final long[] objectIds;
-			final PersistenceStorer persister = this.createStorer();
+			final PersistenceStorer storer = this.createStorer();
 			
 			synchronized(this.storeMutex)
 			{
-				objectIds = persister.storeAll(instances);
-				persister.commit();
+				objectIds = storer.storeAll(instances);
+				storer.commit();
 			}
 
 			return objectIds;
@@ -320,12 +324,12 @@ ByteOrderTargeting<PersistenceManager<D>>
 		@Override
 		public void storeAll(final Iterable<?> instances)
 		{
-			final PersistenceStorer persister = this.createStorer();
+			final PersistenceStorer storer = this.createStorer();
 			
 			synchronized(this.storeMutex)
 			{
-				persister.storeAll(instances);
-				persister.commit();
+				storer.storeAll(instances);
+				storer.commit();
 			}
 		}
 		

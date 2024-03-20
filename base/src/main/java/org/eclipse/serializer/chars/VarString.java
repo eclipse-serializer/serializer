@@ -850,7 +850,7 @@ public final class VarString implements CharSequence, Appendable, Serializable
 
 	public final VarString truncateTo(final int newLength)
 	{
-		this.validateIndex(newLength - 1);
+		this.validateIndex(newLength);
 		this.size = newLength;
 		return this;
 	}

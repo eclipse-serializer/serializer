@@ -24,7 +24,7 @@ import org.eclipse.serializer.memory.sun.JdkInternals;
 
 final class EntityInternals
 {
-	// CHECKSTYLE.OFF: ConstantName: type names are intentionally unchanged
+	// CHECKSTYLE.OFF: ConstantName: field names are intentionally unchanged
 	private static final long
 		OFFSET_EntityLayerVersioning_context  = getFieldOffset(EntityLayerVersioning.class, "context" ),
 		OFFSET_EntityLayerVersioning_versions = getFieldOffset(EntityLayerVersioning.class, "versions")

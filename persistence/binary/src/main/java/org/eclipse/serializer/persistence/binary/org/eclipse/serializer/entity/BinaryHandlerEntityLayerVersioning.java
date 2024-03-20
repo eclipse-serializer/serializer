@@ -94,7 +94,7 @@ public class BinaryHandlerEntityLayerVersioning
 	{
 		EntityInternals.setContext(
 			instance,
-			(EntityVersionContext<?>)handler.lookupObject(data.read_long(BINARY_OFFSET_CONTEXT))
+			(EntityVersionContext<?>)data.readReference(BINARY_OFFSET_CONTEXT, handler)
 		);
 		
 		final int elementCount = X.checkArrayRange(data.getListElementCountKeyValue(BINARY_OFFSET_VERSIONS));
@@ -139,7 +139,7 @@ public class BinaryHandlerEntityLayerVersioning
 		final PersistenceReferenceLoader iterator
 	)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_CONTEXT));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_CONTEXT));
 		data.iterateKeyValueEntriesReferences(BINARY_OFFSET_VERSIONS, iterator);
 	}
 	

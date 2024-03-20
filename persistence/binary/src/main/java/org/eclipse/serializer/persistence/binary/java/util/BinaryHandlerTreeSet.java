@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Comparator;
 import java.util.TreeSet;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.old.OldCollections;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -26,6 +25,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerTreeSet extends AbstractBinaryHandlerCustomCollection<TreeSet<?>>
@@ -55,7 +55,7 @@ public final class BinaryHandlerTreeSet extends AbstractBinaryHandlerCustomColle
 		final PersistenceLoadHandler handler
 	)
 	{
-		return (Comparator<? super E>)handler.lookupObject(data.read_long(BINARY_OFFSET_COMPARATOR));
+		return (Comparator<? super E>)data.readReference(BINARY_OFFSET_COMPARATOR, handler);
 	}
 
 	static final int getElementCount(final Binary data)
@@ -153,7 +153,7 @@ public final class BinaryHandlerTreeSet extends AbstractBinaryHandlerCustomColle
 	@Override
 	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_COMPARATOR));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_COMPARATOR));
 		data.iterateListElementReferences(BINARY_OFFSET_ELEMENTS, iterator);
 	}
 	
