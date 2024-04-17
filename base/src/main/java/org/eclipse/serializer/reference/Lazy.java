@@ -161,7 +161,6 @@ public interface Lazy<T> extends Referencing<T>
 	/**
 	 * Static convenience method to call {@link Lazy#clear()} with internal <code>null</code> check.
 	 * 
-	 * @param <T> the type of the lazily referenced element
 	 * @param reference the reference or <code>null</code>
 	 */
 	public static void clear(final Lazy<?> reference)
@@ -177,7 +176,6 @@ public interface Lazy<T> extends Referencing<T>
 	/**
 	 * Static convenience method to call {@link Lazy#isStored()} with internal <code>null</code> check.
 	 * 
-	 * @param <T> the type of the lazily referenced element
 	 * @param reference the reference or <code>null</code>
 	 * 
 	 * @return <code>false</code> if <code>reference</code> is <code>null</code>, <code>reference.isStored()</code> otherwise
@@ -195,7 +193,6 @@ public interface Lazy<T> extends Referencing<T>
 	/**
 	 * Static convenience method to call {@link Lazy#isLoaded()} with internal <code>null</code> check.
 	 * 
-	 * @param <T> the type of the lazily referenced element
 	 * @param reference the reference or <code>null</code>
 	 * 
 	 * @return <code>false</code> if <code>reference</code> is <code>null</code>, <code>reference.isLoaded()</code> otherwise
