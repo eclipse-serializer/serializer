@@ -1,15 +1,5 @@
 package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections;
 
-import org.eclipse.serializer.collections.EqHashTable;
-import org.eclipse.serializer.hashing.HashEqualator;
-import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
-import org.eclipse.serializer.persistence.binary.types.Binary;
-import org.eclipse.serializer.persistence.types.Persistence;
-import org.eclipse.serializer.persistence.types.PersistenceFunction;
-import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
-import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
-import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
-
 /*-
  * #%L
  * Eclipse Serializer Persistence Binary
@@ -24,6 +14,15 @@ import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
  * #L%
  */
 
+import org.eclipse.serializer.collections.EqHashTable;
+import org.eclipse.serializer.hashing.HashEqualator;
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
+import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.types.Persistence;
+import org.eclipse.serializer.persistence.types.PersistenceFunction;
+import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
+import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
+import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.util.X;
 
 
