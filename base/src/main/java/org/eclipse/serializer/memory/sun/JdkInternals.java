@@ -1129,6 +1129,56 @@ public final class JdkInternals
 		// According to tests and investigation, memory alignment is always 8 bytes, even for 32 bit JVMs.
 		return (address & MEMORY_ALIGNMENT_MASK) + MEMORY_ALIGNMENT_FACTOR;
 	}
+	
+	
+	// get volatile //
+
+	public static final long volatileGet_long(final Object subject, final long offset)
+	{
+		return VM.getLongVolatile(subject, offset);
+	}
+
+
+
+	// set volatile //
+
+	public static final void volatileSet_long(final Object subject, final long offset, final long value)
+	{
+		VM.putLongVolatile(subject, offset, value);
+	}
+
+
+	// compar and swap //
+
+	public static final boolean compareAndSwap_int(
+		final Object subject    ,
+		final long   offset     ,
+		final int    expected   ,
+		final int    replacement
+	)
+	{
+		return VM.compareAndSwapInt(subject, offset, expected, replacement);
+	}
+
+	public static final boolean compareAndSwap_long(
+		final Object subject    ,
+		final long   offset     ,
+		final long   expected   ,
+		final long   replacement
+	)
+	{
+		return VM.compareAndSwapLong(subject, offset, expected, replacement);
+	}
+
+	public static final boolean compareAndSwapObject(
+		final Object subject    ,
+		final long   offset     ,
+		final Object expected   ,
+		final Object replacement
+	)
+	{
+		return VM.compareAndSwapObject(subject, offset, expected, replacement);
+	}
 
 
 	// memory statistics creation //

@@ -16,7 +16,6 @@ package org.eclipse.serializer.persistence.binary.jdk8.java.util;
 
 import java.util.Properties;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
 import org.eclipse.serializer.collections.old.OldCollections;
 import org.eclipse.serializer.persistence.binary.jdk8.types.SunJdk8Internals;
@@ -27,6 +26,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerProperties extends AbstractBinaryHandlerCustomCollection<Properties>
@@ -148,7 +148,7 @@ public final class BinaryHandlerProperties extends AbstractBinaryHandlerCustomCo
 	@Override
 	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_DEFAULTS));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_DEFAULTS));
 		data.iterateKeyValueEntriesReferences(BINARY_OFFSET_ELEMENTS, iterator);
 	}
 	

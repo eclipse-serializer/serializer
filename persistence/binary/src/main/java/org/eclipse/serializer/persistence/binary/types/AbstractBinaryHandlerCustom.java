@@ -17,17 +17,18 @@ package org.eclipse.serializer.persistence.binary.types;
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.XArrays;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
 import org.eclipse.serializer.collections.types.XImmutableSequence;
 import org.eclipse.serializer.exceptions.NoSuchFieldRuntimeException;
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGenericComplex;
@@ -36,6 +37,7 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberF
 import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMember;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMemberFieldGeneric;
 import org.eclipse.serializer.reflect.XReflect;
+import org.eclipse.serializer.util.X;
 
 /**
  * 
@@ -180,7 +182,8 @@ extends BinaryTypeHandler.Abstract<T>
 	private XImmutableEnum<? extends PersistenceTypeDefinitionMember> members;
 	
 	private long binaryLengthMinimum, binaryLengthMaximum;
-
+	private boolean hasPersistedReferences;
+	private boolean hasVaryingPersistedLengthInstances;
 
 
 	///////////////////////////////////////////////////////////////////////////
@@ -207,8 +210,7 @@ extends BinaryTypeHandler.Abstract<T>
 	)
 	{
 		super(type, typeName);
-		this.members = validateAndImmure(members);
-		this.calculcateBinaryLengths();
+		this.initializeFields(members);
 	}
 	
 	
@@ -216,6 +218,45 @@ extends BinaryTypeHandler.Abstract<T>
 	///////////////////////////////////////////////////////////////////////////
 	// methods //
 	////////////
+	
+	protected void initializeFields(final XGettingSequence<? extends PersistenceTypeDefinitionMember> members)
+	{
+		if(members == null)
+		{
+			// null can happen with CustomHandler instances that initialize BinaryField instances per reflection.
+			return;
+		}
+
+		this.members = validateAndImmure(members);
+		this.hasPersistedReferences = PersistenceTypeDescriptionMember.determineHasReferences(members);
+		this.hasVaryingPersistedLengthInstances = PersistenceTypeDefinition.determineVariableLength(members);
+		this.calculcateBinaryLengths();
+	}
+	
+	protected static boolean determineHasPersistedReferences(
+		final XGettingSequence<? extends PersistenceTypeDefinitionMember> members
+	)
+	{
+		for(final PersistenceTypeDefinitionMember member : members)
+		{
+			if(member.hasReferences())
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	protected static Field getClassDeclaredField(final Class<?> declaringClass, final String fieldName)
+	{
+		return XReflect.getDeclaredField(declaringClass, fieldName);
+	}
+
+	protected static long getClassDeclaredFieldOffset(final Class<?> declaringClass, final String fieldName)
+	{
+		return XMemory.objectFieldOffset(getClassDeclaredField(declaringClass, fieldName));
+	}
 	
 	protected void calculcateBinaryLengths()
 	{
@@ -227,6 +268,18 @@ extends BinaryTypeHandler.Abstract<T>
 		
 		this.binaryLengthMinimum = PersistenceTypeDescriptionMember.calculatePersistentMinimumLength(0, this.members);
 		this.binaryLengthMaximum = PersistenceTypeDescriptionMember.calculatePersistentMaximumLength(0, this.members);
+	}
+	
+	@Override
+	public boolean hasPersistedReferences()
+	{
+		return this.hasPersistedReferences;
+	}
+
+	@Override
+	public boolean hasVaryingPersistedLengthInstances()
+	{
+		return this.hasVaryingPersistedLengthInstances;
 	}
 	
 	@Override
@@ -256,11 +309,10 @@ extends BinaryTypeHandler.Abstract<T>
 		{
 			return;
 		}
-		this.members = this.initializeInstanceMembers();
-		this.calculcateBinaryLengths();
+		this.initializeFields(this.initializeInstanceMembers());
 	}
 	
-	protected XImmutableEnum<? extends PersistenceTypeDefinitionMember> initializeInstanceMembers()
+	protected XGettingSequence<? extends PersistenceTypeDefinitionMember> initializeInstanceMembers()
 	{
 		throw new PersistenceException(
 			"type definition members may not be null for non-"

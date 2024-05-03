@@ -70,7 +70,7 @@ public class BinaryLoadItem extends Binary
 	}
 
 	@Override
-	final long loadItemEntityContentAddress()
+	public final long loadItemEntityContentAddress()
 	{
 		return this.address;
 	}
@@ -122,7 +122,7 @@ public class BinaryLoadItem extends Binary
 			
 				
 	@Override
-	public final void storeEntityHeader(
+	public final long storeEntityHeader(
 		final long entityContentLength,
 		final long entityTypeId       ,
 		final long entityObjectId
