@@ -52,23 +52,64 @@ public interface Lazy<T> extends Referencing<T>
 {
 	/**
 	 * Returns the referenced object, loading it if required.
+	 * 
 	 * @return the lazily loaded referenced object.
 	 */
 	@Override
 	public T get();
 
 	/**
-	 * Returns the local reference without loading the referenced object if it is not present.
+	 * Returns the local reference without loading the referenced object on demand.
 	 * The value returned by {@link #lastTouched()} will not be changed by calling this method.
 	 * 
-	 * @return the currently present reference.
+	 * @return the currently present reference withouth on-demand-loading.
 	 */
 	public T peek();
 	
+	/**
+	 * Clears the reference, leaving the option to reload it again intact, and returns the subject that was
+	 * referenced prior to clearing.
+	 * <p>
+	 * This method should only be used if this lazy reference was stored before, othewise an {@link IllegalStateException} is thrown.
+	 * To circumvent this check use {@link #forceClear()} instead.
+	 *
+	 * @return the subject referenced prior to clearing the reference.
+	 * 
+	 * @throws IllegalStateException if this lazy reference is unstored
+	 */
 	public T clear();
+	
+	/**
+	 * Clears the reference, leaving the option to reload it again intact if it was stored before, and returns the subject that was
+	 * referenced prior to clearing.
+	 *
+	 * @return the subject referenced prior to clearing the reference.
+	 * 
+	 * @see #clear()
+	 */
+	public T forceClear();
+	
+	/**
+	 * Clears the reference if the {@link ClearingEvaluator} decides so.
+	 * 
+	 * @param clearingEvaluator evaluator to decide if the clearing should take place
+	 * 
+	 * @return <code>true</code> if this lazy reference was cleared, <code>false</code> otherwise
+	 */
+	public boolean clear(Lazy.ClearingEvaluator clearingEvaluator);
 
+	/**
+	 * Returns if this lazy reference was stored before.
+	 * 
+	 * @return <code>true</code> if this lazy reference was stored before, <code>false</code> otherwise
+	 */
 	public boolean isStored();
 
+	/**
+	 * Returns if this lazy reference is currently loaded, and {@link #get()} doesn't trigger a load action.
+	 * 
+	 * @return <code>true</code> if this lazy reference is currently loaded, <code>false</code> otherwise
+	 */
 	public boolean isLoaded();
 	
 	/**
@@ -79,10 +120,16 @@ public interface Lazy<T> extends Referencing<T>
 	 */
 	public long lastTouched();
 	
-	public boolean clear(Lazy.ClearingEvaluator clearingEvaluator);
-	
 	
 
+	/**
+	 * Static convenience method to call {@link Lazy#get()} with internal <code>null</code> check.
+	 * 
+	 * @param <T> the type of the lazily referenced element
+	 * @param reference the reference or <code>null</code>
+	 * 
+	 * @return <code>null</code> if <code>reference</code> is <code>null</code>, <code>reference.get()</code> otherwise
+	 */
 	public static <T> T get(final Lazy<T> reference)
 	{
 		if(reference == null)
@@ -93,6 +140,14 @@ public interface Lazy<T> extends Referencing<T>
 		return reference.get();
 	}
 
+	/**
+	 * Static convenience method to call {@link Lazy#peek()} with internal <code>null</code> check.
+	 * 
+	 * @param <T> the type of the lazily referenced element
+	 * @param reference the reference or <code>null</code>
+	 * 
+	 * @return <code>null</code> if <code>reference</code> is <code>null</code>, <code>reference.peek()</code> otherwise
+	 */
 	public static <T> T peek(final Lazy<T> reference)
 	{
 		if(reference == null)
@@ -103,6 +158,11 @@ public interface Lazy<T> extends Referencing<T>
 		return reference.peek();
 	}
 
+	/**
+	 * Static convenience method to call {@link Lazy#clear()} with internal <code>null</code> check.
+	 * 
+	 * @param reference the reference or <code>null</code>
+	 */
 	public static void clear(final Lazy<?> reference)
 	{
 		if(reference == null)
@@ -113,6 +173,13 @@ public interface Lazy<T> extends Referencing<T>
 		reference.clear();
 	}
 	
+	/**
+	 * Static convenience method to call {@link Lazy#isStored()} with internal <code>null</code> check.
+	 * 
+	 * @param reference the reference or <code>null</code>
+	 * 
+	 * @return <code>false</code> if <code>reference</code> is <code>null</code>, <code>reference.isStored()</code> otherwise
+	 */
 	public static boolean isStored(final Lazy<?> reference)
 	{
 		if(reference == null)
@@ -123,6 +190,13 @@ public interface Lazy<T> extends Referencing<T>
 		return reference.isStored();
 	}
 	
+	/**
+	 * Static convenience method to call {@link Lazy#isLoaded()} with internal <code>null</code> check.
+	 * 
+	 * @param reference the reference or <code>null</code>
+	 * 
+	 * @return <code>false</code> if <code>reference</code> is <code>null</code>, <code>reference.isLoaded()</code> otherwise
+	 */
 	public static boolean isLoaded(final Lazy<?> reference)
 	{
 		if(reference == null)
@@ -134,6 +208,14 @@ public interface Lazy<T> extends Referencing<T>
 		return reference.isLoaded();
 	}
 
+	/**
+	 * Pseudo-constructor method to create a new lazy reference wrapping a <code>subject</code>.
+	 * 
+	 * @param <T> the type of the lazily referenced element
+	 * @param subject the subject to wrap in a new lazy reference
+	 * 
+	 * @return a newly created lazy reference wrapping <code>subject</code>
+	 */
 	public static <T> Lazy<T> Reference(final T subject)
 	{
 		return register(new Lazy.Default<>(subject));
@@ -289,28 +371,26 @@ public interface Lazy<T> extends Referencing<T>
 			return Swizzling.isNotProperId(this.objectId) || this.subject != null;
 		}
 
-		/**
-		 * Returns the wrapped reference without loading it on demand.
-		 *
-		 * @return the current reference withouth on-demand loading.
-		 */
 		@Override
 		public final synchronized T peek()
 		{
 			return this.subject;
 		}
 
-		/**
-		 * Clears the reference, leaving the option to re-load it again intact, and returns the subject that was
-		 * referenced prior to clearing.
-		 *
-		 * @return the subject referenced prior to clearing the reference.
-		 */
+		
 		@Override
 		public synchronized T clear()
 		{
 			final T subject = this.subject;
 			this.internalClear();
+			return subject;
+		}
+		
+		@Override
+		public synchronized T forceClear()
+		{
+			final T subject = this.subject;
+			this.internalClearUnchecked();
 			return subject;
 		}
 		
@@ -352,6 +432,11 @@ public interface Lazy<T> extends Referencing<T>
 				throw new IllegalStateException("Cannot clear an unstored lazy reference.");
 			}
 			
+			this.internalClearUnchecked();
+		}
+
+		void internalClearUnchecked()
+		{
 			this.subject = null;
 			this.touch();
 		}

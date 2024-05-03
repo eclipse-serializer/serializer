@@ -14,7 +14,6 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
  * #L%
  */
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -23,6 +22,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerHashTable
@@ -143,11 +143,11 @@ extends AbstractBinaryHandlerCustomCollection<HashTable<?, ?>>
 
 		XCollectionsInternals.setKeys(
 			instance,
-			(HashTable<?, ?>.Keys)handler.lookupObject(data.read_long(BINARY_OFFSET_KEYS))
+			(HashTable<?, ?>.Keys)data.readReference(BINARY_OFFSET_KEYS, handler)
 		);
 		XCollectionsInternals.setValues(
 			instance,
-			(HashTable<?, ?>.Values)handler.lookupObject(data.read_long(BINARY_OFFSET_VALUES))
+			(HashTable<?, ?>.Values)data.readReference(BINARY_OFFSET_VALUES, handler)
 		);
 		data.collectKeyValueReferences(
 			BINARY_OFFSET_ELEMENTS,
@@ -169,8 +169,8 @@ extends AbstractBinaryHandlerCustomCollection<HashTable<?, ?>>
 	@Override
 	public final void iterateLoadableReferences(final Binary data, final PersistenceReferenceLoader iterator)
 	{
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_KEYS));
-		iterator.acceptObjectId(data.read_long(BINARY_OFFSET_VALUES));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_KEYS));
+		iterator.acceptObjectId(data.readObjectId(BINARY_OFFSET_VALUES));
 		data.iterateKeyValueEntriesReferences(BINARY_OFFSET_ELEMENTS, iterator);
 	}
 

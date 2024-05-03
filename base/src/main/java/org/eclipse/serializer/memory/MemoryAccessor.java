@@ -300,6 +300,25 @@ public interface MemoryAccessor
 	}
 	
 	
+	// volatile get //
+
+	public long volatileGet_long(Object subject, long offset);
+
+
+	// volatile set //
+
+	public void volatileSet_long(Object subject, long offset, long value);
+
+
+
+	// compare and swap //
+
+	public boolean compareAndSwap_int(Object subject, long offset, int expected, int replacement);
+
+	public boolean compareAndSwap_long(Object subject, long offset, long expected, long replacement);
+
+	public boolean compareAndSwapObject(Object subject, long offset, Object expected, Object replacement);
+		
 
 	// special system methods //
 	

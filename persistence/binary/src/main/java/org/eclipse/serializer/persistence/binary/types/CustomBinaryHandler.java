@@ -31,7 +31,6 @@ import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XAddingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XGettingTable;
-import org.eclipse.serializer.collections.types.XImmutableEnum;
 import org.eclipse.serializer.collections.types.XTable;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
@@ -356,12 +355,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 	}
 		
 	@Override
-	protected XImmutableEnum<? extends PersistenceTypeDefinitionMember> initializeInstanceMembers()
+	protected XGettingSequence<? extends PersistenceTypeDefinitionMember> initializeInstanceMembers()
 	{
 		// super class's on-demand logic guarantees that this method is only called once for every instance.
 		final XGettingSequence<? extends BinaryField<? super T>> binaryFields = this.reflectiveInitializeBinaryFields();
 		
-		return validateAndImmure(binaryFields);
+		return binaryFields;
 	}
 	
 	private long calculcateContentLength(final T instance)
