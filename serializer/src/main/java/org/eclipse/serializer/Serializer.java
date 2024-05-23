@@ -6,6 +6,8 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
+import org.eclipse.serializer.collections.BulkList;
+
 /*-
  * #%L
  * Eclipse Serializer
@@ -30,6 +32,7 @@ import org.eclipse.serializer.persistence.binary.types.ChunksBuffer;
 import org.eclipse.serializer.persistence.binary.types.ChunksBufferByteReversing;
 import org.eclipse.serializer.persistence.binary.types.ChunksWrapper;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfer;
+import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceIdSet;
 import org.eclipse.serializer.persistence.types.PersistenceManager;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
@@ -331,6 +334,8 @@ public interface Serializer<M> extends AutoCloseable
 			final   Item                    head = new Item(null, 0L, null, null);
 			private Item                    tail;
 			private HashTable<Object, Item> hashSlots;
+			
+			private final BulkList<PersistenceCommitListener> commitListeners = BulkList.New(0);
 
 			public SerializerStorer(
 				final PersistenceObjectManager<Binary>      objectManager     ,
@@ -427,6 +432,9 @@ public interface Serializer<M> extends AutoCloseable
 					? ChunksBufferByteReversing.New(chunks, this.bufferSizeProvider)
 					: ChunksBuffer.New(chunks, this.bufferSizeProvider)
 				;
+				
+				// must be clear instead of just reset to avoid memory leaks
+				this.commitListeners.clear();
 			}
 
 			@Override
@@ -555,6 +563,17 @@ public interface Serializer<M> extends AutoCloseable
 			}
 			
 			@Override
+			public void registerCommitListener(final PersistenceCommitListener listener)
+			{
+				this.commitListeners.add(listener);
+			}
+
+			protected void notifyCommitListeners()
+			{
+				this.commitListeners.iterate(PersistenceCommitListener::onAfterCommit);
+			}
+			
+			@Override
 			public final Object commit()
 			{
 				// isEmpty locks internally
@@ -564,7 +583,7 @@ public interface Serializer<M> extends AutoCloseable
 					this.target.validateIsStoringEnabled();
 					this.target.write(this.chunks[0].complete());
 				}
-				
+				this.notifyCommitListeners();
 				this.clear();
 				
 				// not used (yet?)

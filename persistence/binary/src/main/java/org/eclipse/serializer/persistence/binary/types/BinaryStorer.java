@@ -22,9 +22,11 @@ import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.util.logging.Logging.LazyArg;
 import static org.eclipse.serializer.util.logging.Logging.LazyArgInContext;
 
+import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
+import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceLocalObjectIdRegistry;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
@@ -121,6 +123,8 @@ public interface BinaryStorer extends PersistenceStorer
 		private Item[] hashSlots;
 		private int    hashRange;
 		private long   itemCount;
+		
+		private final BulkList<PersistenceCommitListener> commitListeners = BulkList.New(0);
 
 		/*
 		 * item hashing structures get initialized lazily for the following reasons:
@@ -266,6 +270,9 @@ public interface BinaryStorer extends PersistenceStorer
 				(this.tail = this.head).next = null;
 				
 				this.synchCreateStoringChunksBuffers();
+				
+				// must be clear instead of just reset to avoid memory leaks
+				this.commitListeners.clear();
 			}
 		}
 		
@@ -500,6 +507,17 @@ public interface BinaryStorer extends PersistenceStorer
 				}
 			}
 		}
+		
+		@Override
+		public void registerCommitListener(final PersistenceCommitListener listener)
+		{
+			this.commitListeners.add(listener);
+		}
+
+		protected void notifyCommitListeners()
+		{
+			this.commitListeners.iterate(PersistenceCommitListener::onAfterCommit);
+		}
 
 		@Override
 		public final Object commit()
@@ -532,6 +550,7 @@ public interface BinaryStorer extends PersistenceStorer
 					this.objectManager.mergeEntries(this);
 				}
 			}
+			this.notifyCommitListeners();
 			this.clear();
 			
 			logger.debug("Commit finished successfully");
