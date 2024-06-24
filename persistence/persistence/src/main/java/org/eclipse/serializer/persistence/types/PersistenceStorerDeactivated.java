@@ -122,5 +122,11 @@ public class PersistenceStorerDeactivated implements PersistenceStorer
 	{
 		throw new PersistenceExceptionStorerDeactivated();
 	}
+	
+	@Override
+	public void registerCommitListener(final PersistenceCommitListener listener)
+	{
+		throw new PersistenceExceptionStorerDeactivated();
+	}
 
 }

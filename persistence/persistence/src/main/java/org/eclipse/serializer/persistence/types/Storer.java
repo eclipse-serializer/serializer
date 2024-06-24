@@ -199,4 +199,8 @@ public interface Storer extends PersistenceStoring
 	 */
 	public Storer ensureCapacity(long desiredCapacity);
 
+	
+
+	public void registerCommitListener(PersistenceCommitListener listener);
+
 }

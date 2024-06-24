@@ -181,6 +181,10 @@ public class PersistenceStorerDeactivatable implements PersistenceStorer {
 		return this.actual.maximumCapacity();
 	}
 
-	
+	@Override
+	public void registerCommitListener(final PersistenceCommitListener listener)
+	{
+		this.actual.registerCommitListener(listener);
+	}
 
 }

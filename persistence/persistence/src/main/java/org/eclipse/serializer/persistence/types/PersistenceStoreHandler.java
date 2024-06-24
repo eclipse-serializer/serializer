@@ -43,6 +43,8 @@ public interface PersistenceStoreHandler<D> extends PersistenceFunction
 	
 	public <T> long applyEager(T instance, PersistenceTypeHandler<D, T> localTypeHandler);
 	
+	public void registerCommitListener(PersistenceCommitListener listener);
+	
 	public ObjectSwizzling getObjectRetriever();
 	
 	public Persister getPersister();

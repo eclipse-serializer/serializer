@@ -4,7 +4,7 @@ package org.eclipse.serializer.concurrency;
  * #%L
  * Eclipse Serializer Base
  * %%
- * Copyright (C) 2023 MicroStream Software
+ * Copyright (C) 2023 - 2024 MicroStream Software
  * %%
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -14,8 +14,6 @@ package org.eclipse.serializer.concurrency;
  * #L%
  */
 
-
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
@@ -239,20 +237,7 @@ public final class XThreads
 	
 	public static StackTraceElement getStackTraceElement(final Integer index)
 	{
-		try
-		{
-			return (StackTraceElement)Throwable_getStackTraceElement.invoke(new Throwable(), index);
-		}
-		catch(final InvocationTargetException e)
-		{
-			// hacky due to misconceived checked exception concept
-			throw (RuntimeException)e.getCause();
-		}
-		catch(final Exception e)
-		{
-			// do it the slow way
-			return new Throwable().getStackTrace()[index]; // NPE intentional
-		}
+		return new Throwable().getStackTrace()[index];
 	}
 	
 	public static StackTraceElement getStackTraceElementForDeclaringClass(final Class<?> declaringClass)

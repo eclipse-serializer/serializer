@@ -526,27 +526,41 @@ public final class XSort
 
 	private static void insertionsort0(final int[] values, final int start, final int bound)
 	{
-		for(int i = start; i < bound; i++)
+		// not quite as fast as #insertionsort(int[]) due to start not being 0, but slightly faster than the #swap variant.
+		for(int j, i = start; i < bound - 1; i++)
 		{
-			for(int j = i; j > start && values[j - 1] > values[j]; j--)
+			final int next = values[(j = i) + 1];
+			while(next < values[j])
 			{
-				swap(values, j, j - 1);
+				values[j + 1] = values[j];
+				if(--j < 0)
+					break;
 			}
+			values[j + 1] = next;
 		}
 	}
 
 	private static void insertionsort0(final long[] values, final int start, final int bound)
 	{
-		for(int i = start; i < bound; i++)
+		for(int j, i = start; i < bound - 1; i++)
 		{
-			for(int j = i; j > start && values[j - 1] > values[j]; j--)
+			final long next = values[(j = i) + 1];
+			while(next < values[j])
 			{
-				swap(values, j, j - 1);
+				values[j + 1] = values[j];
+				if(--j < 0)
+					break;
 			}
+			values[j + 1] = next;
 		}
 	}
 
-	private static <E> void insertionsort0(final E[] values, final int start, final int bound, final Comparator<? super E> comparator)
+	private static <E> void insertionsort0(
+		final E[]                   values    ,
+		final int                   start     ,
+		final int                   bound     ,
+		final Comparator<? super E> comparator
+	)
 	{
 		for(int i = start; i < bound; i++)
 		{
@@ -557,7 +571,12 @@ public final class XSort
 		}
 	}
 
-	private static <E> boolean tryInsertionsort(final E[] values, final int start, final int bound, final Comparator<? super E> comparator)
+	private static <E> boolean tryInsertionsort(
+		final E[]                   values    ,
+		final int                   start     ,
+		final int                   bound     ,
+		final Comparator<? super E> comparator
+	)
 	{
 		int c = bound - start;
 		for(int i = start; i < bound; i++)
@@ -599,165 +618,158 @@ public final class XSort
 	// Insertion Sort //
 	///////////////////
 
-	public static void insertionsort(final boolean[] values)
+	public static final void insertionsort(final byte[] values)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final boolean ai = values[i + 1];
-			while(!ai && values[j])
+			final byte next = values[(j = i) + 1];
+			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static void insertionsort(final byte[] values)
+	
+	public static final void insertionsort(final short[] values)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final byte ai = values[i + 1];
-			while(ai < values[j])
+			final short next = values[(j = i) + 1];
+			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static void insertionsort(final short[] values)
+	
+	public static final void insertionsort(final int[] values)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		/*
+		 * "--j < 0" makes the whole algorithm faster than when using "j-- == 0" by a factor of 2.5(!!!).
+		 * No idea why. Pre-decrement should be a tiny bit faster, but not THAT much faster.
+		 * Must be a JIT special case.
+		 * But this only works when the rest of the code has a minimal form similar to the one here.
+		 * If additional complexity is added (e.g. naive additional logic), the performance gain is gone.
+		 * 
+		 * Other notes:
+		 * Checking for already fitting elements to avoid the unnecessary assignments is NOT faster! (= naive additional logic)
+		 * Using a final variable "last = values.length - 1" is NOT faster!
+		 */
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final short ai = values[i + 1];
-			while(ai < values[j])
+			final int next = values[(j = i) + 1];
+			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static void insertionsort(final int[] values)
+	
+	public static final void insertionsort(final long[] values)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final int ai = values[i + 1];
-			while(ai < values[j])
+			final long next = values[(j = i) + 1];
+			while(next < values[j])
 			{
+//				XDebug.println("Shifting");
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static void insertionsort(final long[] values)
+	
+	public static final void insertionsort(final float[] values)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final long ai = values[i + 1];
-			while(ai < values[j])
+			final float next = values[(j = i) + 1];
+			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static void insertionsort(final float[] values)
+	
+	public static final void insertionsort(final double[] values)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final float ai = values[i + 1];
-			while(ai < values[j])
+			final double next = values[(j = i) + 1];
+			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static void insertionsort(final double[] values)
+	
+	public static final <E> void insertionsort(final E[] values, final Comparator<? super E> comparator)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final double ai = values[i + 1];
-			while(ai < values[j])
+			final E next = values[(j = i) + 1];
+			while(comparator.compare(next, values[j]) < 0)
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static void insertionsort(final char[] values)
+	
+	public static final void insertionsort(final char[] values)
 	{
-		// for complete (long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final char ai = values[i + 1];
-			while(ai < values[j])
+			final char next = values[(j = i) + 1];
+			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
-
-	public static <E> void insertionsort(final E[] values, final Comparator<? super E> comparator)
+	
+	public static final void insertionsort(final boolean[] values)
 	{
-		// for complete long range) insertion sorting, this is faster than the trivial implementation
-		for(int i = 0, j = i, len = values.length - 1; i < len; j = ++i)
+		// copy of insertionsort(int[]). See comment there.
+		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final E ai = values[i + 1];
-			while(comparator.compare(ai, values[j]) < 0)
+			final boolean next = values[(j = i) + 1];
+			while(!next && values[j])
 			{
 				values[j + 1] = values[j];
-				if(j-- == 0)
-				{
+				if(--j < 0)
 					break;
-				}
 			}
-			values[j + 1] = ai;
+			values[j + 1] = next;
 		}
 	}
 
