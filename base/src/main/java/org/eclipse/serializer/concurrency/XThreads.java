@@ -238,22 +238,6 @@ public final class XThreads
 	public static StackTraceElement getStackTraceElement(final Integer index)
 	{
 		return new Throwable().getStackTrace()[index];
-
-		// does not work anymore somewhere after Java 1.8. So cloning the stacktrace elements on every call it is!
-//		try
-//		{
-//			return (StackTraceElement)Throwable_getStackTraceElement.invoke(new Throwable(), index);
-//		}
-//		catch(final InvocationTargetException e)
-//		{
-//			// hacky due to misconceived checked exception concept
-//			throw (RuntimeException)e.getCause();
-//		}
-//		catch(final Exception e)
-//		{
-//			// do it the slow way
-//			return new Throwable().getStackTrace()[index]; // NPE intentional
-//		}
 	}
 	
 	public static StackTraceElement getStackTraceElementForDeclaringClass(final Class<?> declaringClass)
