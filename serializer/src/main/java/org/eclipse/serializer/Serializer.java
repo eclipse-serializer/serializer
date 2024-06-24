@@ -1,13 +1,5 @@
 package org.eclipse.serializer;
 
-import static org.eclipse.serializer.util.X.mayNull;
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.nio.ByteBuffer;
-import java.util.function.Function;
-
-import org.eclipse.serializer.collections.BulkList;
-
 /*-
  * #%L
  * Eclipse Serializer
@@ -22,6 +14,13 @@ import org.eclipse.serializer.collections.BulkList;
  * #L%
  */
 
+import static org.eclipse.serializer.util.X.mayNull;
+import static org.eclipse.serializer.util.X.notNull;
+
+import java.nio.ByteBuffer;
+import java.util.function.Function;
+
+import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.hashing.XHashing;
