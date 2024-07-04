@@ -27,6 +27,7 @@ import org.eclipse.serializer.persistence.types.PersistenceObjectIdProvider;
 import org.eclipse.serializer.persistence.types.PersistenceRootsProvider;
 import org.eclipse.serializer.persistence.types.PersistenceStorer;
 import org.eclipse.serializer.persistence.types.PersistenceStorer.CreationObserver;
+import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryLoader;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryManager;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
 import org.eclipse.serializer.persistence.types.PersistenceTypeIdProvider;
@@ -50,6 +51,8 @@ public interface SerializerFoundation<F extends SerializerFoundation<?>> extends
 
 	public F setSerializerTypeInfoStrategyCreator(SerializerTypeInfoStrategyCreator serializerTypeInfoStrategyCreator);
 	
+	public F setInitialTypeDictionary(String typeDictionaryString);
+	
 	public XEnum<Class<?>> getEntityTypes();
 	
 	public F setEntityTypes(XEnum<Class<?>> entityTypes);
@@ -64,6 +67,14 @@ public interface SerializerFoundation<F extends SerializerFoundation<?>> extends
 	public static SerializerFoundation<?> New()
 	{
 		return new SerializerFoundation.Default<>();
+	}
+	
+	public static SerializerFoundation<?> New(String typeDictionaryString)
+	{
+		SerializerFoundation<?> foundation = new SerializerFoundation.Default<>();
+		foundation.setInitialTypeDictionary(typeDictionaryString);
+		
+		return foundation;
 	}
 	
 	
@@ -96,6 +107,15 @@ public interface SerializerFoundation<F extends SerializerFoundation<?>> extends
 			return this.$();
 		}
 	
+		@Override
+		public F setInitialTypeDictionary(String typeDictionaryString)
+		{
+			this.setTypeDictionaryLoader(()->typeDictionaryString);
+			this.ensureTypeDictionaryProvider();
+						
+			return this.$();
+		}
+		
 		@Override
 		public XEnum<Class<?>> getEntityTypes()
 		{
@@ -269,10 +289,15 @@ public interface SerializerFoundation<F extends SerializerFoundation<?>> extends
 		{
 			final PersistenceTypeDictionaryManager newTypeDictionaryManager =
 				PersistenceTypeDictionaryManager.Transient(
-					this.getTypeDictionaryCreator()
+					this.getTypeDictionaryProvider()
 				)
 			;
 			return newTypeDictionaryManager;
+		}
+		
+		@Override
+		protected PersistenceTypeDictionaryLoader ensureTypeDictionaryLoader() {
+			return () -> null;
 		}
 		
 	}

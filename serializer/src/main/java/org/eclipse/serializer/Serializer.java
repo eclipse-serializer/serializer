@@ -75,6 +75,13 @@ public interface Serializer<M> extends AutoCloseable
 	 * @return the deserialized object graph
 	 */
 	public <T> T deserialize(M medium);
+		
+	/**
+	 * Export the current type dictionary as String.
+	 * 
+	 * @return type dictionary as String.
+	 */
+	public String exportTypeDictionay();
 	
 	public static Serializer<byte[]> Bytes()
 	{
@@ -229,6 +236,13 @@ public interface Serializer<M> extends AutoCloseable
 				this.input              = null;
 				this.output             = null;
 			}
+		}
+		
+		@Override
+		public String exportTypeDictionay()
+		{
+			return this.foundation.getTypeDictionaryAssembler()
+				.assemble(this.persistenceManager.typeDictionary());
 		}
 		
 		private void lazyInit()

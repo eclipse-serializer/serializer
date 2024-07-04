@@ -16,8 +16,8 @@ package org.eclipse.serializer.persistence.types;
 
 import static org.eclipse.serializer.util.X.notNull;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
+import org.eclipse.serializer.util.X;
 
 public interface PersistenceTypeDictionaryManager extends PersistenceTypeDictionaryProvider
 {
@@ -326,11 +326,11 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 	
 	
 	public static PersistenceTypeDictionaryManager Transient(
-		final PersistenceTypeDictionaryCreator typeDictionaryCreator
+		final PersistenceTypeDictionaryProvider typeDictionaryProvider
 	)
 	{
 		return new PersistenceTypeDictionaryManager.Transient(
-			notNull(typeDictionaryCreator)
+			notNull(typeDictionaryProvider)
 		);
 	}
 
@@ -340,7 +340,7 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 		// instance fields //
 		////////////////////
 		
-		private final PersistenceTypeDictionaryCreator typeDictionaryCreator;
+		private final PersistenceTypeDictionaryProvider typeDictionaryProvider;
 				
 		
 		
@@ -348,10 +348,10 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 		// constructors //
 		/////////////////
 
-		Transient(final PersistenceTypeDictionaryCreator typeDictionaryCreator)
+		Transient(final PersistenceTypeDictionaryProvider typeDictionaryProvider)
 		{
 			super();
-			this.typeDictionaryCreator = typeDictionaryCreator;
+			this.typeDictionaryProvider = typeDictionaryProvider;
 		}
 
 		
@@ -363,7 +363,7 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 		@Override
 		protected PersistenceTypeDictionary internalProvideTypeDictionary()
 		{
-			return this.typeDictionaryCreator.createTypeDictionary();
+			return this.typeDictionaryProvider.provideTypeDictionary();
 		}
 		
 	}
