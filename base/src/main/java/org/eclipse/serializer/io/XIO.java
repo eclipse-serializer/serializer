@@ -1,5 +1,26 @@
 package org.eclipse.serializer.io;
 
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -23,19 +44,6 @@ import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.util.UtilStackTrace;
 import org.eclipse.serializer.util.X;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.*;
-import java.util.Arrays;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
 
 public final class XIO
 {
@@ -1333,7 +1341,29 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return targetChannel.transferFrom(sourceChannel, targetPosition, sourceChannel.size());
+		long position   = targetPosition;
+		long remaining  = sourceChannel.size();
+		long totalBytes = 0;
+		long transferedBytes = 0;
+								
+		//ensure position less the target size
+		if(targetChannel.size() < position)
+		{
+			return 0;
+		}
+		
+		while(remaining > 0)
+		{
+			transferedBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
+			if(transferedBytes > 0)
+			{
+				remaining  -= transferedBytes;
+				position   += transferedBytes;
+				totalBytes += transferedBytes;
+			}
+		}
+		
+		return totalBytes;
 	}
 	
 	public static long copyFile(
@@ -1346,6 +1376,17 @@ public final class XIO
 		return copyFile(sourceChannel, sourcePosition, sourceChannel.size() - sourcePosition, targetChannel);
 	}
 	
+	/**
+	 * Copy length bytes from source channel starting at sourcePosition
+	 * to the current position of the targetChannel.
+	 * 
+	 * @param sourceChannel  source channel
+	 * @param sourcePosition source read start position
+	 * @param length         number of bytes to copy
+	 * @param targetChannel  target channel
+	 * @return               number of bytes written
+	 * @throws IOException
+	 */
 	public static long copyFile(
 		final FileChannel sourceChannel ,
 		final long        sourcePosition,
@@ -1354,9 +1395,40 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return sourceChannel.transferTo(sourcePosition, length, targetChannel);
+		long position  = sourcePosition;
+		long remaining = length;
+		
+		//ensure that no more bytes are requested for transfer then available
+		if((sourceChannel.size() - position) < remaining)
+		{
+			remaining = sourceChannel.size() - position;
+		}
+			
+		long transferedBytes;
+		while(remaining > 0)
+		{
+			transferedBytes = sourceChannel.transferTo(position, remaining, targetChannel);
+			if(transferedBytes > 0)
+			{
+				remaining -= transferedBytes;
+				position  += transferedBytes;
+			}
+		}
+		
+		
+		return position - sourcePosition;
 	}
 	
+	/**
+	 * Copy length bytes from sourceChannel to targetChannel at targetPosition.
+	 * 
+	 * @param sourceChannel  source channel
+	 * @param targetChannel  target channel
+	 * @param targetPosition target write start position
+	 * @param length         number of bytes to copy
+	 * @return               number of bytes written
+	 * @throws IOException
+	 */
 	public static long copyFile(
 		final FileChannel sourceChannel ,
 		final FileChannel targetChannel ,
@@ -1365,7 +1437,33 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return targetChannel.transferFrom(sourceChannel, targetPosition, length);
+		long position  = targetPosition;
+		long remaining = length;
+		long transferedBytes = 0;
+						
+		//ensure that no more bytes are requested for transfer then available
+		if((sourceChannel.size() - position) < remaining)
+		{
+			remaining = sourceChannel.size() - position;
+		}
+		
+		//ensure position less the target size
+		if(targetChannel.size() < position)
+		{
+			return 0;
+		}
+		
+		while(remaining > 0)
+		{
+			transferedBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
+			if(transferedBytes > 0)
+			{
+				remaining -= transferedBytes;
+				position  += transferedBytes;
+			}
+		}
+		
+		return position - targetPosition;
 	}
 	
 	// breaks naming conventions intentionally to indicate a modification of called methods instead of a type
