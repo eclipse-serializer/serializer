@@ -1,26 +1,5 @@
 package org.eclipse.serializer.io;
 
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 /*-
  * #%L
  * Eclipse Serializer Base
@@ -44,6 +23,19 @@ import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.util.UtilStackTrace;
 import org.eclipse.serializer.util.X;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.file.*;
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
 
 public final class XIO
 {
@@ -1344,7 +1336,7 @@ public final class XIO
 		long position   = targetPosition;
 		long remaining  = sourceChannel.size();
 		long totalBytes = 0;
-		long transferedBytes = 0;
+		long transferredBytes = 0;
 								
 		//ensure position less the target size
 		if(targetChannel.size() < position)
@@ -1354,12 +1346,12 @@ public final class XIO
 		
 		while(remaining > 0)
 		{
-			transferedBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
-			if(transferedBytes > 0)
+			transferredBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
+			if(transferredBytes > 0)
 			{
-				remaining  -= transferedBytes;
-				position   += transferedBytes;
-				totalBytes += transferedBytes;
+				remaining  -= transferredBytes;
+				position   += transferredBytes;
+				totalBytes += transferredBytes;
 			}
 		}
 		
@@ -1404,14 +1396,14 @@ public final class XIO
 			remaining = sourceChannel.size() - position;
 		}
 			
-		long transferedBytes;
+		long transferredBytes;
 		while(remaining > 0)
 		{
-			transferedBytes = sourceChannel.transferTo(position, remaining, targetChannel);
-			if(transferedBytes > 0)
+			transferredBytes = sourceChannel.transferTo(position, remaining, targetChannel);
+			if(transferredBytes > 0)
 			{
-				remaining -= transferedBytes;
-				position  += transferedBytes;
+				remaining -= transferredBytes;
+				position  += transferredBytes;
 			}
 		}
 		
@@ -1439,7 +1431,7 @@ public final class XIO
 	{
 		long position  = targetPosition;
 		long remaining = length;
-		long transferedBytes = 0;
+		long transferredBytes = 0;
 						
 		//ensure that no more bytes are requested for transfer then available
 		if((sourceChannel.size() - position) < remaining)
@@ -1455,11 +1447,11 @@ public final class XIO
 		
 		while(remaining > 0)
 		{
-			transferedBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
-			if(transferedBytes > 0)
+			transferredBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
+			if(transferredBytes > 0)
 			{
-				remaining -= transferedBytes;
-				position  += transferedBytes;
+				remaining -= transferredBytes;
+				position  += transferredBytes;
 			}
 		}
 		
