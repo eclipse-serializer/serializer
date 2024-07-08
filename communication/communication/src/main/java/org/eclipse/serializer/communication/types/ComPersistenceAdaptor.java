@@ -43,7 +43,7 @@ public interface ComPersistenceAdaptor<C> extends PersistenceTypeDictionaryViewP
 		
 		initFoundation.setTypeDictionaryManager(
 			PersistenceTypeDictionaryManager.Transient(
-				initFoundation.getTypeDictionaryCreator()
+				initFoundation.getTypeDictionaryProvider()
 			)
 		);
 		
