@@ -125,6 +125,11 @@ public interface AFileSystem extends AResolving, WriteController
 		return this.buildPath((AItem)directory);
 	}
 	
+	public default String[] resolvePath(final String fullPath)
+	{
+		return fullPath.split("[/\\\\]");
+	}
+	
 	
 	public String getFileName(AFile file);
 	
