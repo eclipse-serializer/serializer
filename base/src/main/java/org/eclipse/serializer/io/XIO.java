@@ -1333,7 +1333,29 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return targetChannel.transferFrom(sourceChannel, targetPosition, sourceChannel.size());
+		long position   = targetPosition;
+		long remaining  = sourceChannel.size();
+		long totalBytes = 0;
+		long transferredBytes = 0;
+								
+		//Don't transfer data if the write position is greater than the target channel size.
+		if(position > targetChannel.size())
+		{
+			return 0;
+		}
+		
+		while(remaining > 0)
+		{
+			transferredBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
+			if(transferredBytes > 0)
+			{
+				remaining  -= transferredBytes;
+				position   += transferredBytes;
+				totalBytes += transferredBytes;
+			}
+		}
+		
+		return totalBytes;
 	}
 	
 	public static long copyFile(
@@ -1346,6 +1368,17 @@ public final class XIO
 		return copyFile(sourceChannel, sourcePosition, sourceChannel.size() - sourcePosition, targetChannel);
 	}
 	
+	/**
+	 * Copy length bytes from source channel starting at sourcePosition
+	 * to the current position of the targetChannel.
+	 * 
+	 * @param sourceChannel  source channel
+	 * @param sourcePosition source read start position
+	 * @param length         number of bytes to copy
+	 * @param targetChannel  target channel
+	 * @return               number of bytes written
+	 * @throws IOException
+	 */
 	public static long copyFile(
 		final FileChannel sourceChannel ,
 		final long        sourcePosition,
@@ -1354,9 +1387,40 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return sourceChannel.transferTo(sourcePosition, length, targetChannel);
+		long position  = sourcePosition;
+		long remaining = length;
+		
+		//ensure that no more bytes are requested for transfer then available
+		if((sourceChannel.size() - position) < remaining)
+		{
+			remaining = sourceChannel.size() - position;
+		}
+			
+		long transferredBytes;
+		while(remaining > 0)
+		{
+			transferredBytes = sourceChannel.transferTo(position, remaining, targetChannel);
+			if(transferredBytes > 0)
+			{
+				remaining -= transferredBytes;
+				position  += transferredBytes;
+			}
+		}
+		
+		
+		return position - sourcePosition;
 	}
 	
+	/**
+	 * Copy length bytes from sourceChannel to targetChannel at targetPosition.
+	 * 
+	 * @param sourceChannel  source channel
+	 * @param targetChannel  target channel
+	 * @param targetPosition target write start position
+	 * @param length         number of bytes to copy
+	 * @return               number of bytes written
+	 * @throws IOException
+	 */
 	public static long copyFile(
 		final FileChannel sourceChannel ,
 		final FileChannel targetChannel ,
@@ -1365,7 +1429,33 @@ public final class XIO
 	)
 		throws IOException
 	{
-		return targetChannel.transferFrom(sourceChannel, targetPosition, length);
+		long position  = targetPosition;
+		long remaining = length;
+		long transferredBytes = 0;
+						
+		//ensure that no more bytes are requested for transfer then available
+		if((sourceChannel.size() - position) < remaining)
+		{
+			remaining = sourceChannel.size() - position;
+		}
+		
+		//Don't transfer data if the write position is greater than the target channel size.
+		if(position > targetChannel.size())
+		{
+			return 0;
+		}
+		
+		while(remaining > 0)
+		{
+			transferredBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
+			if(transferredBytes > 0)
+			{
+				remaining -= transferredBytes;
+				position  += transferredBytes;
+			}
+		}
+		
+		return position - targetPosition;
 	}
 	
 	// breaks naming conventions intentionally to indicate a modification of called methods instead of a type
