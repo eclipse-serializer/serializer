@@ -1,7 +1,5 @@
 package org.eclipse.serializer.configuration.types;
 
-import static org.eclipse.serializer.chars.XChars.notEmpty;
-
 /*-
  * #%L
  * Eclipse Serializer Configuration
@@ -16,12 +14,14 @@ import static org.eclipse.serializer.chars.XChars.notEmpty;
  * #L%
  */
 
+import static org.eclipse.serializer.chars.XChars.notEmpty;
 import static org.eclipse.serializer.util.X.notNull;
 
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
 
 public interface ConfigurationBasedCreator<T>
 {
