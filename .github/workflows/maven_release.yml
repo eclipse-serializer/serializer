@@ -28,12 +28,14 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-passphrase: PASSPHRASE
+      - name: Maven change version
+        run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} --batch-mode
       - name: Make a release
         run: mvn -Pdeploy -Pproduction --no-transfer-progress --batch-mode clean deploy
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
+          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}chn
 
       #java 17 build
       - uses: actions/checkout@v3
@@ -47,6 +49,8 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-passphrase: PASSPHRASE
+      - name: Maven change version
+        run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} --batch-mode
       - name: Build with java 17
         run: |
           mvn -pl persistence/binary-jdk17 clean install -am -B
