@@ -1,5 +1,7 @@
 package org.eclipse.serializer.configuration.types;
 
+import static org.eclipse.serializer.chars.XChars.notEmpty;
+
 /*-
  * #%L
  * Eclipse Serializer Configuration
@@ -25,6 +27,8 @@ public interface ConfigurationBasedCreator<T>
 {
 	public Class<T> resultType();
 	
+	public String key();
+	
 	public T create(Configuration configuration);
 	
 	
@@ -46,19 +50,28 @@ public interface ConfigurationBasedCreator<T>
 	public static abstract class Abstract<T> implements ConfigurationBasedCreator<T>
 	{
 		private final Class<T> resultType;
+		private final String   key       ;
 
 		protected Abstract(
-			final Class<T> resultType
+			final Class<T> resultType,
+			final String   key
 		)
 		{
 			super();
-			this.resultType = notNull(resultType);
+			this.resultType = notNull (resultType);
+			this.key        = notEmpty(key       );
 		}
 		
 		@Override
 		public Class<T> resultType()
 		{
 			return this.resultType;
+		}
+		
+		@Override
+		public String key()
+		{
+			return this.key;
 		}
 				
 	}
