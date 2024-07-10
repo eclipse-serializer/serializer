@@ -351,6 +351,13 @@ public interface TypedSerializer<M> extends Serializer<M>
 			}
 		}
 		
+		@Override
+		public String exportTypeDictionay()
+		{
+			return this.foundation.getTypeDictionaryAssembler()
+				.assemble(this.persistenceManager.typeDictionary());
+		}
+		
 		private void initialize()
 		{
 			if(this.persistenceManager == null)

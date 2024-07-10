@@ -937,14 +937,14 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		@Override
 		public final synchronized PersistenceTypeHandlerManager<D> initialize()
 		{
-			logger.info("Initializing type handler manager");
-			
 			if(this.initialized)
 			{
-//				XDebug.debugln("already initialized");
+				logger.debug("type handler manager already initialized");
 				return this;
 			}
 
+			logger.info("Initializing type handler manager");
+			
 			synchronized(this.typeHandlerRegistry)
 			{
 				this.synchInternalInitialize();

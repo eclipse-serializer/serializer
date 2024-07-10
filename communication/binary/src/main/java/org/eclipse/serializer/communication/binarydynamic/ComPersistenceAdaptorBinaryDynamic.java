@@ -205,7 +205,7 @@ public class ComPersistenceAdaptorBinaryDynamic implements ComPersistenceAdaptor
 		hostFoundation.setTypeMismatchValidator(Persistence.typeMismatchValidatorFailing());
 				
 		final PersistenceTypeDictionaryManager typeDictionaryManager = PersistenceTypeDictionaryManager.Transient(
-			hostFoundation.getTypeDictionaryCreator());
+			hostFoundation.getTypeDictionaryProvider());
 		
 		final PersistenceTypeDictionaryView typeDictionaryView = this.provideTypeDictionary();
 		typeDictionaryView.allTypeDefinitions().forEach(d -> typeDictionaryManager.registerTypeDefinition(d.value()));
@@ -252,7 +252,7 @@ public class ComPersistenceAdaptorBinaryDynamic implements ComPersistenceAdaptor
 		clientFoundation.setTypeIdProvider  (protocol.idStrategy().createTypeIdProvider());
 				
 		final PersistenceTypeDictionaryManager typeDictionaryManager = PersistenceTypeDictionaryManager.Transient(
-			clientFoundation.getTypeDictionaryCreator());
+			clientFoundation.getTypeDictionaryProvider());
 		
 		final PersistenceTypeDictionaryView typeDictionaryView = protocol.typeDictionary();
 		typeDictionaryView.allTypeDefinitions().forEach(d -> typeDictionaryManager.registerTypeDefinition(d.value()));
@@ -376,7 +376,7 @@ public class ComPersistenceAdaptorBinaryDynamic implements ComPersistenceAdaptor
 		
 		initFoundation.setTypeDictionaryManager(
 			PersistenceTypeDictionaryManager.Transient(
-				initFoundation.getTypeDictionaryCreator()
+				initFoundation.getTypeDictionaryProvider()
 			)
 		);
 			
