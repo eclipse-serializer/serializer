@@ -35,7 +35,7 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}chn
+          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
 
       #java 17 build
       - uses: actions/checkout@v3
