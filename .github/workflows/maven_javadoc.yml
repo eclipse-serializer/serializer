@@ -6,7 +6,7 @@ name: Java JavaDoc check
 on:
   push:
     branches: 
-      - '*'
+      - '**'
   pull_request:
     branches: [ main ]
 
