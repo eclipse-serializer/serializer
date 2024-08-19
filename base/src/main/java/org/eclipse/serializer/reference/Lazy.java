@@ -809,8 +809,9 @@ public interface Lazy<T> extends Referencing<T>
 			private long sh10MemoryLimit;
 			private long sh10MemoryUsed;
 
-			
-			
+			private final Object DEBUG_cycleStateLazyArg = LazyArg(this::DEBUG_cycleState);
+
+
 			///////////////////////////////////////////////////////////////////////////
 			// constructors //
 			/////////////////
@@ -866,7 +867,7 @@ public interface Lazy<T> extends Referencing<T>
 				this.updateMemoryUsage();
 				this.cycleClearCount = 0;
 
-				logger.trace("Begin check cycle: {}", LazyArg(this::DEBUG_cycleState));
+				logger.trace("Begin check cycle: {}", DEBUG_cycleStateLazyArg);
 			}
 			
 			@Override
@@ -878,7 +879,7 @@ public interface Lazy<T> extends Referencing<T>
 				}
 				else
 				{
-					logger.trace("End check cycle: {}\ncleared references: {}", LazyArg(this::DEBUG_cycleState), this.cycleClearCount);
+					logger.trace("End check cycle: {}\ncleared references: {}", DEBUG_cycleStateLazyArg, this.cycleClearCount);
 				}
 			}
 			
