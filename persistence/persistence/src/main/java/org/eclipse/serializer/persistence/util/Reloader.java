@@ -20,10 +20,13 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.util.function.Consumer;
 
 import org.eclipse.serializer.persistence.types.Persistence;
+import org.eclipse.serializer.persistence.types.PersistenceFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceManager;
 import org.eclipse.serializer.reference.Swizzling;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.traversing.ObjectGraphTraverser;
+import org.eclipse.serializer.util.traversing.TraversalFieldSelector;
 
 
 /**
@@ -68,21 +71,43 @@ public interface Reloader
 	public static Reloader New(final PersistenceManager<?> persistenceManager)
 	{
 		return new Reloader.Default(
-			notNull(persistenceManager)
+			notNull(persistenceManager),
+			Persistence.defaultFieldEvaluatorPersistable()
+		);
+	}
+	
+	/**
+	 * Pseudo-constructor method to create a new {@link Reloader}.
+	 * 
+	 * @param persistenceManager the persistence manager to reload from
+	 * @param fieldEvaluatorPersistable the evaluator for fields to reload
+	 * @return a newly created {@link Reloader}
+	 */
+	public static Reloader New(
+		final PersistenceManager<?>     persistenceManager       ,
+		final PersistenceFieldEvaluator fieldEvaluatorPersistable
+	)
+	{
+		return new Reloader.Default(
+			notNull(persistenceManager),
+			notNull(fieldEvaluatorPersistable)
 		);
 	}
 
 
 	public static class Default implements Reloader
 	{
-		private final PersistenceManager<?> persistenceManager;
+		private final PersistenceManager<?>     persistenceManager       ;
+		private final PersistenceFieldEvaluator fieldEvaluatorPersistable;
 
 		Default(
-			final PersistenceManager<?> persistenceManager
+			final PersistenceManager<?>     persistenceManager       ,
+			final PersistenceFieldEvaluator fieldEvaluatorPersistable
 		)
 		{
 			super();
-			this.persistenceManager = persistenceManager;
+			this.persistenceManager        = persistenceManager;
+			this.fieldEvaluatorPersistable = fieldEvaluatorPersistable;
 		}
 
 		private Object reloadObject(
@@ -122,12 +147,16 @@ public interface Reloader
 				return null;
 			}
 
-			final PersistenceLoader loader = this.persistenceManager.createLoader();
-			final Consumer<Object>  logic  = object -> this.reloadObject(object, loader);
+			final PersistenceLoader      loader        = this.persistenceManager.createLoader();
+			final Consumer<Object>       logic         = object -> this.reloadObject(object, loader);
+			final TraversalFieldSelector fieldSelector = (clazz, field) ->
+				XReflect.isReference(field) && this.fieldEvaluatorPersistable.applies(clazz, field)
+			;
 
 			// reload references
 			ObjectGraphTraverser.Builder()
 				.modeFull()
+				.fieldSelector(fieldSelector)
 				.acceptorLogic(logic)
 				.buildObjectGraphTraverser()
 				.traverse(instance)
