@@ -82,6 +82,7 @@ import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptional
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptionalLong;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerPriorityQueue;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerProperties;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerSetFromMap;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerStack;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerTreeMap;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerTreeSet;
@@ -330,7 +331,8 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerArrayDeque.New()           ,
 				BinaryHandlerConcurrentSkipListMap.New(),
 				BinaryHandlerConcurrentSkipListSet.New(),
-
+				BinaryHandlerSetFromMap.New(),
+				
 				// JDK 1.7 collections
 				BinaryHandlerConcurrentLinkedDeque.New(),
 
