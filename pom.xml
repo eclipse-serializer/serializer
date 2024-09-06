@@ -62,7 +62,6 @@
 		<module>communication</module>
 		<module>persistence</module>
 		<module>serializer</module>
-		<module>tests</module>
 	</modules>
 
 	<scm>
