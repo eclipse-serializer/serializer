@@ -14,29 +14,40 @@ package org.eclipse.serializer.reflect;
  * #L%
  */
 
-import org.eclipse.serializer.branching.ThrowBreak;
-import org.eclipse.serializer.chars.XChars;
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.XArrays;
-import org.eclipse.serializer.collections.types.XMap;
-import org.eclipse.serializer.collections.types.XReference;
-import org.eclipse.serializer.exceptions.*;
-import org.eclipse.serializer.functional.Instantiator;
-import org.eclipse.serializer.functional.XFunc;
-import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.typing.XTypes;
-import org.eclipse.serializer.util.UtilStackTrace;
-import org.eclipse.serializer.util.X;
+import static org.eclipse.serializer.util.X.notEmpty;
+import static org.eclipse.serializer.util.X.notNull;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static org.eclipse.serializer.util.X.notEmpty;
-import static org.eclipse.serializer.util.X.notNull;
+import org.eclipse.serializer.branching.ThrowBreak;
+import org.eclipse.serializer.chars.XChars;
+import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.collections.XArrays;
+import org.eclipse.serializer.collections.types.XMap;
+import org.eclipse.serializer.collections.types.XReference;
+import org.eclipse.serializer.exceptions.IllegalAccessRuntimeException;
+import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
+import org.eclipse.serializer.exceptions.MemoryException;
+import org.eclipse.serializer.exceptions.NoSuchFieldRuntimeException;
+import org.eclipse.serializer.exceptions.NoSuchMethodRuntimeException;
+import org.eclipse.serializer.exceptions.NoSuchNestedClassRuntimeException;
+import org.eclipse.serializer.functional.Instantiator;
+import org.eclipse.serializer.functional.XFunc;
+import org.eclipse.serializer.memory.XMemory;
+import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.UtilStackTrace;
+import org.eclipse.serializer.util.X;
 
 
 /**
@@ -381,6 +392,28 @@ public final class XReflect
 		}
 		
 		return logic;
+	}
+	
+	/**
+	 * Search declared classes of class c for
+	 * a class that name is equals to the provided name.
+	 * 
+	 * @param c class to search in
+	 * @param name class name to search
+	 * @return the found class
+	 * @throws NoSuchNestedClassRuntimeException if no match found
+	 */
+	public static Class<?> getDeclaredNestedClass(final Class<?> c, final String name) throws NoSuchNestedClassRuntimeException
+	{
+		Class<?>[] declaredClasses = c.getDeclaredClasses();
+	
+		for(Class<?> clazz : declaredClasses) {
+			if(clazz.getName().equals(name)) {
+				return clazz;
+			}
+		}
+		
+		throw new NoSuchNestedClassRuntimeException(c, name);
 	}
 	
 	public static Field getDeclaredField(final Class<?> c, final String name) throws NoSuchFieldRuntimeException
