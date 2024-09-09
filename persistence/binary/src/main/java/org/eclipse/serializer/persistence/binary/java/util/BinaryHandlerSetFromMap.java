@@ -1,10 +1,10 @@
 package org.eclipse.serializer.persistence.binary.java.util;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
@@ -17,19 +17,16 @@ import org.eclipse.serializer.reflect.XReflect;
  */
 public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<T>
 {
-	private static Field map;
-	private static Field set;
+	private static long offsetMap;
+	private static long offsetSet;
 	
 	public static BinaryHandlerSetFromMap<?> New()
 	{
 		Class<?> clazz = XReflect.getDeclaredNestedClass(Collections.class, "java.util.Collections$SetFromMap");
-				
-		map = XReflect.getAnyField(clazz, "m");
-		set = XReflect.getAnyField(clazz, "s");
-				
-		XReflect.setAccessible(map);
-		XReflect.setAccessible(set);
-	
+		
+		offsetMap = XMemory.objectFieldOffset(XReflect.getAnyField(clazz, "m"));
+		offsetSet = XMemory.objectFieldOffset(XReflect.getAnyField(clazz, "s"));
+		
 		return new BinaryHandlerSetFromMap<>(clazz);
 	}
 	
@@ -60,8 +57,8 @@ public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<T>
 	{
 		final Map<?,?> hashmap = (Map<?, ?>) handler.lookupObject(data.read_long(0));
 		
-		XReflect.setFieldValue(map, instance, hashmap);
-		XReflect.setFieldValue(set, instance, hashmap.keySet());
+		XMemory.setObject(instance, offsetMap, hashmap);
+		XMemory.setObject(instance, offsetSet, hashmap.keySet());
 	}
 
 	@Override
@@ -69,9 +66,8 @@ public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<T>
 	{
 		data.storeEntityHeader(Binary.referenceBinaryLength(1), this.typeId(), objectId);
 		
-		Object mapInstance = XReflect.getFieldValue(map, instance);
+		Object mapInstance = XMemory.getObject(instance, offsetMap);
 		data.storeReference(0, handler, mapInstance);
-		
 	}
 
 	@SuppressWarnings("unchecked")
