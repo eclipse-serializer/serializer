@@ -1385,8 +1385,11 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 			this.fence = fence;
 			this.expectedModCount = expectedModCount;
 
-			this.segmentIndex = map.calculateIndexPosition(index).segmentIndex;
-			this.currentSegment = map.segments.get(this.segmentIndex);
+			if(this.map.size() > 0)
+			{
+				this.segmentIndex = map.calculateIndexPosition(index).segmentIndex;
+				this.currentSegment = map.segments.get(this.segmentIndex);
+			}
 		}
 
 		
@@ -1445,6 +1448,11 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 			if (action == null)
 			{
 				throw new NullPointerException();
+			}
+			
+			if(this.currentSegment == null)
+			{
+				return false;
 			}
 
 			final int hi = this.getFence();
@@ -1555,6 +1563,11 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 			if (action == null)
 			{
 				throw new NullPointerException();
+			}
+			
+			if(this.currentSegment == null)
+			{
+				return false;
 			}
 
 			final int hi = this.getFence();
@@ -1667,6 +1680,11 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 				throw new NullPointerException();
 			}
 
+			if(this.currentSegment == null)
+			{
+				return false;
+			}
+			
 			final int hi = this.getFence();
 
 			if (this.index < hi)
