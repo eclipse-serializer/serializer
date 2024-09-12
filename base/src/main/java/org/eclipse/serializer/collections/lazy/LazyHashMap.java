@@ -37,6 +37,12 @@ import org.eclipse.serializer.reference.ObjectSwizzling;
  * This map implementation internally uses {@link Lazy} references internally,
  * to enable automatic partial loading of it's content.
  * <br><br>
+ * <b>
+ * This Map implementation requires the key objects to implement the hashCode()
+ * in a manner that guarantees consistent, identical hash values from one execution of an
+ * application to another execution of the same application.
+ * </b>
+ * <br><br>
  * Internally the key value pairs are kept in segments that are controlled by
  * {@link Lazy} references. The maxSegmentSize define the maximal desired number of
  * key / value pairs to be kept in a single segment. When loading data all elements of a segment

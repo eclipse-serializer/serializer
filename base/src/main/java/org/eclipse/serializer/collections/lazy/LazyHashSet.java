@@ -22,6 +22,12 @@ import org.eclipse.serializer.collections.lazy.LazyHashMap.Entry;
 
 /**
  * Implementation of the {@code Set} interface, backed by a {@link LazyHashMap}
+ * <br><br>
+ * <b>
+ * This Set implementation requires the objects that are added to the set to implement the hashCode()
+ * in a manner that guarantees consistent, identical hash values from one execution of an
+ * application to another execution of the same application.
+ * </b>
  *
  * @param <T> Type of contained elements
  */
