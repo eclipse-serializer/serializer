@@ -48,7 +48,7 @@ import org.slf4j.Logger;
  *
  * @param <T> the type of the lazily referenced element
  */
-public interface Lazy<T> extends Referencing<T>
+public interface Lazy<T> extends UsageMarkable, Referencing<T>
 {
 	/**
 	 * Returns the referenced object, loading it if required.
@@ -111,6 +111,16 @@ public interface Lazy<T> extends Referencing<T>
 	 * @return <code>true</code> if this lazy reference is currently loaded, <code>false</code> otherwise
 	 */
 	public boolean isLoaded();
+
+	/**
+	 * Returns if this lazy reference is currently cleared.
+	 * 
+	 * @return <code>true</code> if this reference is cleared, <code>false</code> otherwise
+	 */
+	public default boolean isCleared()
+	{
+		return this.peek() == null;
+	}
 	
 	/**
 	 * Returns the timestamp (corresponding to {@link System#currentTimeMillis()}) when this instance has last been
@@ -254,7 +264,7 @@ public interface Lazy<T> extends Referencing<T>
 		return lazyReference;
 	}
 	
-	public class Default<T> implements Lazy<T>
+	public class Default<T> extends UsageMarkable.Default implements Lazy<T>
 	{
 		private final static Logger logger = Logging.getLogger(Lazy.class);
 		
@@ -867,7 +877,7 @@ public interface Lazy<T> extends Referencing<T>
 				this.updateMemoryUsage();
 				this.cycleClearCount = 0;
 
-				logger.trace("Begin check cycle: {}", DEBUG_cycleStateLazyArg);
+				logger.trace("Begin check cycle: {}", this.DEBUG_cycleStateLazyArg);
 			}
 			
 			@Override
@@ -879,7 +889,7 @@ public interface Lazy<T> extends Referencing<T>
 				}
 				else
 				{
-					logger.trace("End check cycle: {}\ncleared references: {}", DEBUG_cycleStateLazyArg, this.cycleClearCount);
+					logger.trace("End check cycle: {}\ncleared references: {}", this.DEBUG_cycleStateLazyArg, this.cycleClearCount);
 				}
 			}
 			

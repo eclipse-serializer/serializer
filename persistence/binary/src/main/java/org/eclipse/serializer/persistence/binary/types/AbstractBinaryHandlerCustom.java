@@ -22,6 +22,7 @@ import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
 import org.eclipse.serializer.collections.types.XImmutableSequence;
+import org.eclipse.serializer.collections.types.XList;
 import org.eclipse.serializer.exceptions.NoSuchFieldRuntimeException;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
@@ -105,6 +106,42 @@ extends BinaryTypeHandler.Abstract<T>
 	{
 		return X.ConstList(customFields);
 	}
+	
+	public static final XImmutableSequence<PersistenceTypeDefinitionMemberFieldGeneric>
+	CustomFields(
+		final PersistenceTypeDefinitionMemberFieldGeneric[] customFields          ,
+		final PersistenceTypeDefinitionMemberFieldGeneric[] additionalCustomFields
+	)
+	{
+		if(additionalCustomFields == null)
+		{
+			return CustomFields(customFields);
+		}
+		
+		return X.List(customFields).addAll(additionalCustomFields).immure();
+	}
+	
+
+	public static final XImmutableSequence<PersistenceTypeDefinitionMemberFieldGeneric>
+	CustomFields(
+		final PersistenceTypeDefinitionMemberFieldGeneric[]                   customFields          ,
+		final Iterable<? extends PersistenceTypeDefinitionMemberFieldGeneric> additionalCustomFields
+	)
+	{
+		if(additionalCustomFields == null)
+		{
+			return CustomFields(customFields);
+		}
+		
+		final XList<PersistenceTypeDefinitionMemberFieldGeneric> merged = X.List(customFields);
+		for(final PersistenceTypeDefinitionMemberFieldGeneric f : additionalCustomFields)
+		{
+			merged.add(f);
+		}
+		
+		return merged.immure();
+	}
+
 
 	public static final PersistenceTypeDefinitionMemberFieldGenericComplex
 	Complex(
