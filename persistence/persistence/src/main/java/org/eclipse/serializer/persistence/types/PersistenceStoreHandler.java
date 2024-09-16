@@ -16,7 +16,7 @@ package org.eclipse.serializer.persistence.types;
 
 import org.eclipse.serializer.reference.ObjectSwizzling;
 
-public interface PersistenceStoreHandler<D> extends PersistenceFunction
+public interface PersistenceStoreHandler<D> extends PersistenceFunction, SubStoring
 {
 	/**
 	 * The "natural" way of handling an instance as defined by the implementation.

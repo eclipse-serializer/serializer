@@ -24,7 +24,7 @@ package org.eclipse.serializer.persistence.types;
  *
  * 
  */
-public interface Storer extends PersistenceStoring
+public interface Storer extends SubStoring, PersistenceStoring
 {
 	/**
 	 * Ends the data collection process and causes all collected data to be persisted.

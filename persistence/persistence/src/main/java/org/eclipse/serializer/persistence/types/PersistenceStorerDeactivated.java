@@ -128,5 +128,11 @@ public class PersistenceStorerDeactivated implements PersistenceStorer
 	{
 		throw new PersistenceExceptionStorerDeactivated();
 	}
+	
+	@Override
+	public boolean registerSubStorer(final Storer subStorer)
+	{
+		throw new PersistenceExceptionStorerDeactivated();
+	}
 
 }
