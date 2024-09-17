@@ -23,7 +23,6 @@ import static org.eclipse.serializer.util.logging.Logging.LazyArg;
 import static org.eclipse.serializer.util.logging.Logging.LazyArgInContext;
 
 import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
@@ -38,7 +37,6 @@ import org.eclipse.serializer.persistence.types.PersistenceTarget;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
 import org.eclipse.serializer.persistence.types.Persister;
-import org.eclipse.serializer.persistence.types.Storer;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
@@ -127,7 +125,6 @@ public interface BinaryStorer extends PersistenceStorer
 		private long   itemCount;
 		
 		private final BulkList<PersistenceCommitListener>   commitListeners = BulkList.New(0);
-		private final HashEnum<Storer>                      subStorers      = HashEnum.New();
 		
 		/*
 		 * Calling store again while the loop in #storeGraph is already being executed (e.g. in a type handler's #store method)
@@ -546,15 +543,6 @@ public interface BinaryStorer extends PersistenceStorer
 		{
 			this.commitListeners.iterate(PersistenceCommitListener::onAfterCommit);
 		}
-		
-		@Override
-		public boolean registerSubStorer(final Storer subStorer)
-		{
-			synchronized(this.subStorers)
-			{
-				return this.subStorers.add(subStorer);
-			}
-		}
 
 		@Override
 		public final Object commit()
@@ -564,53 +552,35 @@ public interface BinaryStorer extends PersistenceStorer
 				LazyArg(this::size)   // use lazy here, #size() locks
 			);
 			
-			Object returnValue = null;
-			
-			synchronized(this.subStorers)
+			// isEmpty locks internally
+			if(!this.isEmpty())
 			{
-				// commit substorers first as defined by the #registerSubStorer contract. An exception in one of those will abort the rest.
-				for(final Storer subStorer : this.subStorers)
+				// must validate here, too, in case the WriteController disabled writing during the storer's existence.
+				this.target.validateIsStoringEnabled();
+				
+				final Binary writeData;
+				synchronized(this.head)
 				{
-					// default implementation ignores return values since it is always nulls, so far.
-					subStorer.commit();
+					this.typeManager.checkForPendingRootInstances();
+					this.typeManager.checkForPendingRootsStoring(this);
+					writeData = this.synchComplete();
 				}
 				
-				// isEmpty locks internally
-				if(!this.isEmpty())
+				// very costly IO-operation does not need to occupy the lock
+				this.target.write(writeData);
+				
+				synchronized(this.head)
 				{
-					returnValue = this.internalCommit();
+					this.typeManager.clearStorePendingRoots();
+					this.objectManager.mergeEntries(this);
 				}
-				this.notifyCommitListeners();
-				this.clear();
 			}
+			this.notifyCommitListeners();
+			this.clear();
 			
 			logger.debug("Commit finished successfully");
 			
-			return returnValue;
-		}
-		
-		private Object internalCommit()
-		{
-			// must validate here, too, in case the WriteController disabled writing during the storer's existence.
-			this.target.validateIsStoringEnabled();
-			
-			final Binary writeData;
-			synchronized(this.head)
-			{
-				this.typeManager.checkForPendingRootInstances();
-				this.typeManager.checkForPendingRootsStoring(this);
-				writeData = this.synchComplete();
-			}
-			
-			// very costly IO-operation does not need to occupy the lock
-			this.target.write(writeData);
-			
-			synchronized(this.head)
-			{
-				this.typeManager.clearStorePendingRoots();
-				this.objectManager.mergeEntries(this);
-			}
-			
+			// not used (yet?)
 			return null;
 		}
 		

@@ -21,7 +21,6 @@ import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.hashing.XHashing;
@@ -350,7 +349,6 @@ public interface Serializer<M> extends AutoCloseable
 			private HashTable<Object, Item> hashSlots;
 			
 			private final BulkList<PersistenceCommitListener>   commitListeners = BulkList.New(0);
-			private final HashEnum<Storer>                      subStorers      = HashEnum.New();
 
 			public SerializerStorer(
 				final PersistenceObjectManager<Binary>      objectManager     ,
@@ -589,39 +587,20 @@ public interface Serializer<M> extends AutoCloseable
 			}
 			
 			@Override
-			public boolean registerSubStorer(final Storer subStorer)
-			{
-				synchronized(this.subStorers)
-				{
-					return this.subStorers.add(subStorer);
-				}
-			}
-			
-			@Override
 			public final Object commit()
 			{
-				synchronized(this.subStorers)
+				// isEmpty locks internally
+				if(!this.isEmpty())
 				{
-					// commit substorers first as defined by the #registerSubStorer contract. An exception in one of those will abort the rest.
-					for(final Storer subStorer : this.subStorers)
-					{
-						// default implementation ignores return values since it is always nulls, so far.
-						subStorer.commit();
-					}
-					
-					// isEmpty locks internally
-					if(!this.isEmpty())
-					{
-						// must validate here, too, in case the WriteController disabled writing during the storer's existence.
-						this.target.validateIsStoringEnabled();
-						this.target.write(this.chunks[0].complete());
-					}
-					this.notifyCommitListeners();
-					this.clear();
-					
-					// not used (yet?)
-					return null;
+					// must validate here, too, in case the WriteController disabled writing during the storer's existence.
+					this.target.validateIsStoringEnabled();
+					this.target.write(this.chunks[0].complete());
 				}
+				this.notifyCommitListeners();
+				this.clear();
+				
+				// not used (yet?)
+				return null;
 			}
 			
 			public final long lookupOid(final Object object)

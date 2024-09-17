@@ -186,11 +186,5 @@ public class PersistenceStorerDeactivatable implements PersistenceStorer {
 	{
 		this.actual.registerCommitListener(listener);
 	}
-
-	@Override
-	public boolean registerSubStorer(final Storer subStorer)
-	{
-		return this.actual.registerSubStorer(subStorer);
-	}
 	
 }
