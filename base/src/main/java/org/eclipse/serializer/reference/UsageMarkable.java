@@ -63,7 +63,8 @@ public interface UsageMarkable
 
 	/**
 	 * Alias for {@code instance.markUsedFor(instance)} when no distinction between different usage instances is required.
-	 * @return
+	 * 
+	 * @return the resulting amount of instances registered as usage marks with the sign indicating the operation's effect.
 	 */
 	public default int markUsed()
 	{
