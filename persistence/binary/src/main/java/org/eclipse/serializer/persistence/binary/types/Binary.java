@@ -1797,14 +1797,17 @@ public abstract class Binary implements Chunk
 		}
 	}
 	
-	public final void copyToAddress(
-		final long entityContentAddressOffset,
-		final long targetAddress,
-		final long length
-	)
-	{
-		XMemory.copyRange(this.address + entityContentAddressOffset, targetAddress, length);
-	}
+	public abstract void copyToAddress(
+		long entityContentAddressOffset,
+		long targetAddress,
+		long length
+	);
+
+	public abstract void copyFromAddress(
+		long entityContentAddressOffset,
+		long sourceAddress,
+		long length
+	);
 
 	public final void storeListHeader(
 		final long offset              ,
@@ -2400,15 +2403,6 @@ public abstract class Binary implements Chunk
 			this.binaryListElementsAddress(offset),
 			array
 		);
-	}
-	
-	public final void copyFromAddress(
-		final long entityContentAddressOffset,
-		final long sourceAddress,
-		final long length
-	)
-	{
-		XMemory.copyRange(sourceAddress, this.address + entityContentAddressOffset, length);
 	}
 	
 	long calculateAddress(final ByteBuffer byteBuffer, final long offset)

@@ -186,5 +186,5 @@ public class PersistenceStorerDeactivatable implements PersistenceStorer {
 	{
 		this.actual.registerCommitListener(listener);
 	}
-
+	
 }

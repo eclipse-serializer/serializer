@@ -124,7 +124,15 @@ public interface BinaryStorer extends PersistenceStorer
 		private int    hashRange;
 		private long   itemCount;
 		
-		private final BulkList<PersistenceCommitListener> commitListeners = BulkList.New(0);
+		private final BulkList<PersistenceCommitListener>   commitListeners = BulkList.New(0);
+		
+		/*
+		 * Calling store again while the loop in #storeGraph is already being executed (e.g. in a type handler's #store method)
+		 * would result in the loop being executed again, causing instances to be persisted multiple times redundantly.
+		 * So the state of already being processed must be recognized.
+		 * The easiest way to do that is by using a trivial flag, since head-tail comparison logic gets tricky with #storeAll.
+		 */
+		private boolean isProcessingItems;
 
 		/*
 		 * item hashing structures get initialized lazily for the following reasons:
@@ -413,7 +421,7 @@ public interface BinaryStorer extends PersistenceStorer
 		 * @param root the root object of the graph
 		 * @return the root's object id
 		 */
-		protected final long storeGraph(final Object root)
+		protected final long internalStore(final Object root)
 		{
 			logger.debug(
 				"Store request: {}({})",
@@ -438,14 +446,31 @@ public interface BinaryStorer extends PersistenceStorer
 			// initial registration. After that, storing adds via recursion the graph and processing items iteratively.
 			rootOid = this.registerGuaranteed(notNull(root));
 
-			// process and collect required instances uniquely in item chain (graph recursion transformed to iteration)
-			for(Item item = this.tail; item != null; item = item.next)
+			// repeatedly calling #store to add an instance to the item chain is fine, but processing may only happen once.
+			if(!this.isProcessingItems)
 			{
-				// locks internally. May not lock the whole loop or other storers can't look up concurrently.
-				this.storeItem(item);
+				try
+				{
+					this.isProcessingItems = true;
+					this.processItems();
+				}
+				finally
+				{
+					this.isProcessingItems = false;
+				}
 			}
 
 			return rootOid;
+		}
+		
+		private void processItems()
+		{
+			// process and collect required instances in item chain (graph recursion transformed to iteration)
+			for(Item item = this.tail; item != null; item = item.next)
+			{
+				// locks internally. May not lock the whole loop or other storers can't lookup concurrently.
+				this.storeItem(item);
+			}
 		}
 		
 		protected final void storeItem(final Item item)
@@ -466,7 +491,7 @@ public interface BinaryStorer extends PersistenceStorer
 		@Override
 		public final long store(final Object root)
 		{
-			return this.storeGraph(root);
+			return this.internalStore(root);
 		}
 
 		@Override
@@ -475,7 +500,7 @@ public interface BinaryStorer extends PersistenceStorer
 			final long[] oids = new long[instances.length];
 			for(int i = 0; i < instances.length; i++)
 			{
-				oids[i] = this.storeGraph(instances[i]);
+				oids[i] = this.internalStore(instances[i]);
 			}
 			return oids;
 		}
@@ -485,7 +510,7 @@ public interface BinaryStorer extends PersistenceStorer
 		{
 			for(final Object instance : instances)
 			{
-				this.storeGraph(instance);
+				this.internalStore(instance);
 			}
 		}
 		

@@ -348,7 +348,7 @@ public interface Serializer<M> extends AutoCloseable
 			private Item                    tail;
 			private HashTable<Object, Item> hashSlots;
 			
-			private final BulkList<PersistenceCommitListener> commitListeners = BulkList.New(0);
+			private final BulkList<PersistenceCommitListener>   commitListeners = BulkList.New(0);
 
 			public SerializerStorer(
 				final PersistenceObjectManager<Binary>      objectManager     ,

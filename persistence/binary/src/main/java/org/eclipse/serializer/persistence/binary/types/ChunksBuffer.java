@@ -309,6 +309,27 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	{
 		return this.totalLength;
 	}
+	
+	@Override
+	public final void copyToAddress(
+		final long entityContentAddressOffset,
+		final long targetAddress,
+		final long length
+	)
+	{
+		// address and currentAddress point to different offsets depending on the progress of storing logic, so hard to pick the right one.
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public final void copyFromAddress(
+		final long entityContentAddressOffset,
+		final long sourceAddress,
+		final long length
+	)
+	{
+		XMemory.copyRange(sourceAddress, this.address + entityContentAddressOffset, length);
+	}
 
 	@Override
 	public final long loadItemEntityContentAddress()

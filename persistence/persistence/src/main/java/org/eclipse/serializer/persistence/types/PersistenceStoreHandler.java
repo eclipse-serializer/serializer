@@ -16,7 +16,7 @@ package org.eclipse.serializer.persistence.types;
 
 import org.eclipse.serializer.reference.ObjectSwizzling;
 
-public interface PersistenceStoreHandler<D> extends PersistenceFunction
+public interface PersistenceStoreHandler<D> extends PersistenceFunction, Storer
 {
 	/**
 	 * The "natural" way of handling an instance as defined by the implementation.
@@ -43,6 +43,7 @@ public interface PersistenceStoreHandler<D> extends PersistenceFunction
 	
 	public <T> long applyEager(T instance, PersistenceTypeHandler<D, T> localTypeHandler);
 	
+	@Override
 	public void registerCommitListener(PersistenceCommitListener listener);
 	
 	public ObjectSwizzling getObjectRetriever();

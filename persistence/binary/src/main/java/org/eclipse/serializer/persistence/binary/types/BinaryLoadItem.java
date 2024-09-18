@@ -17,6 +17,7 @@ package org.eclipse.serializer.persistence.binary.types;
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdAcceptor;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 
@@ -119,7 +120,26 @@ public class BinaryLoadItem extends Binary
 		;
 	}
 	
-			
+	@Override
+	public final void copyToAddress(
+		final long entityContentAddressOffset,
+		final long targetAddress,
+		final long length
+	)
+	{
+		XMemory.copyRange(this.address + entityContentAddressOffset, targetAddress, length);
+	}
+	
+	@Override
+	public final void copyFromAddress(
+		final long entityContentAddressOffset,
+		final long sourceAddress,
+		final long length
+	)
+	{
+		// optimization inheritance artifact: only storing chunk implementation can store
+		throw new UnsupportedOperationException();
+	}
 				
 	@Override
 	public final long storeEntityHeader(
