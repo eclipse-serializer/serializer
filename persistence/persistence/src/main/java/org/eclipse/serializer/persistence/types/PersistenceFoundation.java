@@ -602,7 +602,7 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 			final PersistenceTypeHandler<D, ?> customTypeHandler
 		)
 		{
-			//if already existing register handler directly
+			//if registry already existing register handler directly
 			if(this.customTypeHandlerRegistry != null) {
 				this.customTypeHandlerRegistry.registerTypeHandler(customTypeHandler);
 				//do not return, add to customTypeHandlers table for sake of completeness
