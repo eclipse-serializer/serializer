@@ -22,6 +22,8 @@ import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
+import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 public interface PersistenceCustomTypeHandlerRegistry<D> extends PersistenceTypeHandlerIterable<D>
 {
@@ -54,6 +56,14 @@ public interface PersistenceCustomTypeHandlerRegistry<D> extends PersistenceType
 
 	public final class Default<D> implements PersistenceCustomTypeHandlerRegistry<D>
 	{
+		///////////////////////////////////////////////////////////////////////////
+		// constants //
+		//////////////
+		
+		final static Logger logger = Logging.getLogger(PersistenceCustomTypeHandlerRegistry.class);
+
+		
+		
 		///////////////////////////////////////////////////////////////////////////
 		// instance fields //
 		////////////////////
@@ -120,7 +130,10 @@ public interface PersistenceCustomTypeHandlerRegistry<D> extends PersistenceType
 			final PersistenceTypeHandler<D, ? super T> typeHandlerInitializer
 		)
 		{
-			// put instead of add to allow custom-tailored replacments for native handlers (e.g. divergent TID or logic)
+			// put instead of add to allow custom-tailored replacements for native handlers (e.g. divergent TID or logic)
+			
+			logger.info("Registering type handler {} for type {}", typeHandlerInitializer.getClass(), type);
+			
 			return this.liveTypeHandlers.put(
 				notNull(type),
 				notNull(typeHandlerInitializer)
@@ -145,6 +158,8 @@ public interface PersistenceCustomTypeHandlerRegistry<D> extends PersistenceType
 			final PersistenceLegacyTypeHandler<D, T> legacyTypeHandler
 		)
 		{
+			logger.info("Registering legacy type handler {} for type {}", legacyTypeHandler.getClass(), legacyTypeHandler.typeName());
+			
 			return this.legacyTypeHandlers.add(legacyTypeHandler);
 		}
 		
