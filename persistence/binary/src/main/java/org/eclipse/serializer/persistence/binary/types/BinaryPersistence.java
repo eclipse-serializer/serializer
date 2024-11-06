@@ -396,14 +396,14 @@ public final class BinaryPersistence extends Persistence
 	{
 		VMInfo vmInfo = new VMInfo.Default();
 		
-		final BulkList<Object> platformDependentHandlers = BulkList.New();
+		final BulkList<PersistenceTypeHandler<Binary, ?>> platformDependentHandlers = BulkList.New();
 		
 		if(!vmInfo.isAnyAndroid())
 		{
 			platformDependentHandlers.add(BinaryHandlerSetFromMap.New());
 		}
 		
-		return (XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>>) platformDependentHandlers;
+		return platformDependentHandlers;
 	}
 	
 

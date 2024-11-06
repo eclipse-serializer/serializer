@@ -17,6 +17,7 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
@@ -29,26 +30,27 @@ import org.eclipse.serializer.reflect.XReflect;
 /**
  * Binary Handler for private class "java.util.Collections$SetFromMap"
  */
-public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<T>
+public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<Set<T>>
 {
 	private static long offsetMap;
 	private static long offsetSet;
-	
-	public static BinaryHandlerSetFromMap<?> New()
+			
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static BinaryHandlerSetFromMap New()
 	{
 		Class<?> clazz = XReflect.getDeclaredNestedClass(Collections.class, "java.util.Collections$SetFromMap");
 		
 		offsetMap = XMemory.objectFieldOffset(XReflect.getAnyField(clazz, "m"));
 		offsetSet = XMemory.objectFieldOffset(XReflect.getAnyField(clazz, "s"));
 		
-		return new BinaryHandlerSetFromMap<>(clazz);
+		return new BinaryHandlerSetFromMap(clazz);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
 	
-	protected BinaryHandlerSetFromMap(final Class<T> type)
+	protected BinaryHandlerSetFromMap(Class<Set<T>> type)
 	{
 		super(type,
 			CustomFields(
@@ -67,7 +69,7 @@ public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<T>
 	}
 
 	@Override
-	public void updateState(final Binary data, T instance, final PersistenceLoadHandler handler)
+	public void updateState(final Binary data, Set<T> instance, final PersistenceLoadHandler handler)
 	{
 		final Map<?,?> hashmap = (Map<?, ?>) handler.lookupObject(data.read_long(0));
 		
@@ -76,7 +78,7 @@ public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<T>
 	}
 
 	@Override
-	public void store(final Binary data, final T instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
+	public void store(final Binary data, final Set<T> instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
 		data.storeEntityHeader(Binary.referenceBinaryLength(1), this.typeId(), objectId);
 		
@@ -84,11 +86,10 @@ public class BinaryHandlerSetFromMap<T> extends AbstractBinaryHandlerCustom<T>
 		data.storeReference(0, handler, mapInstance);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public T create(final Binary data, final PersistenceLoadHandler handler)
+	public Set<T> create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		return (T) Collections.newSetFromMap(new HashMap<Object,Boolean>());
+		return Collections.newSetFromMap(new HashMap<T,Boolean>());
 	}
 
 }
