@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 import org.eclipse.serializer.afs.types.AFile;
+import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.ConstList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
@@ -128,6 +129,7 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeIdLookup;
 import org.eclipse.serializer.reference.Referencing;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.VMInfo;
 
 public final class BinaryPersistence extends Persistence
 {
@@ -169,6 +171,7 @@ public final class BinaryPersistence extends Persistence
 			.registerTypeHandlers(nativeHandlersReferencingTypes)
 			.registerTypeHandlers(defaultCustomHandlers(controller))
 			.registerTypeHandlers(lazyCollectionsHandlers())
+			.registerTypeHandlers(platformDependentHandlers())
 			.registerTypeHandlers(customHandlers)
 		;
 
@@ -331,8 +334,7 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerArrayDeque.New()           ,
 				BinaryHandlerConcurrentSkipListMap.New(),
 				BinaryHandlerConcurrentSkipListSet.New(),
-				BinaryHandlerSetFromMap.New(),
-				
+								
 				// JDK 1.7 collections
 				BinaryHandlerConcurrentLinkedDeque.New(),
 
@@ -388,6 +390,22 @@ public final class BinaryPersistence extends Persistence
 
 		return lazyCollectionsHandlers;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> platformDependentHandlers()
+	{
+		VMInfo vmInfo = new VMInfo.Default();
+		
+		final BulkList<Object> platformDependentHandlers = BulkList.New();
+		
+		if(!vmInfo.isAnyAndroid())
+		{
+			platformDependentHandlers.add(BinaryHandlerSetFromMap.New());
+		}
+		
+		return (XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>>) platformDependentHandlers;
+	}
+	
 
 	public static final long resolveFieldBinaryLength(final Class<?> fieldType)
 	{

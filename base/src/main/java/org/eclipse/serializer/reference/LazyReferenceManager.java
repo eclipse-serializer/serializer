@@ -152,7 +152,7 @@ public interface LazyReferenceManager
 			checker,
 			_longReference.New(milliTimeCheckInterval),
 			_longReference.New(nanoTimeBudget)        ,
-			MonitoringManager.New(null)
+			MonitoringManager.JMX(null)
 		);
 	}
 	

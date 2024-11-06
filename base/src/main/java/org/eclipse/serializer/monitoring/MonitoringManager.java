@@ -63,7 +63,7 @@ public interface MonitoringManager
 	 * 
 	 * @return a MonitoringManager.JMX instance
 	 */
-	public static MonitoringManager New()
+	public static MonitoringManager JMX()
 	{
 		return new JMX();
 	}
@@ -75,14 +75,28 @@ public interface MonitoringManager
 	 * 
 	 * @return a MonitoringManager.JMX instance
 	 */
-	public static MonitoringManager New(final String name)
+	public static MonitoringManager JMX(final String name)
 	{
 		return new JMX(name);
 	}
-	
+
+	/**
+	 * Provides a new instance of the disabled monitor manager implementation
+	 * 
+	 * @return a MonitoringManager.Disabled instance
+	 */
+	public static MonitoringManager Disabled()
+	{
+		return new MonitoringManager.Disabled();
+	}
+
 	/**
 	 * MonitoringManager implementation using the java management extension to provide
 	 * metrics and monitoring data.
+	 * 
+	 * Please be aware that not all Java implementations may provide JMX support
+	 * e.g. Android.
+	 * 
 	 */
 	public class JMX implements MonitoringManager
 	{
@@ -172,6 +186,27 @@ public interface MonitoringManager
 				+ metric.getName());
 		}
 
+	}
+
+	/**
+	 * Disabled Monitoring Manager implementation.
+	 * This implementation disables the monitoring by not registering
+	 * MetricMonitors.
+	 */
+	public class Disabled implements MonitoringManager
+	{
+		@Override
+		public void registerMonitor(MetricMonitor metrics)
+		{
+			//NoOp
+		}
+
+		@Override
+		public void shutdown()
+		{
+			//NoOp
+		}
+		
 	}
 
 }
