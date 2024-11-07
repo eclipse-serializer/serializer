@@ -21,6 +21,7 @@ import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.monitoring.LazyReferenceManagerMonitor;
 import org.eclipse.serializer.monitoring.MonitoringManager;
 import org.eclipse.serializer.time.XTime;
+import org.eclipse.serializer.util.VMInfo;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
@@ -152,7 +153,7 @@ public interface LazyReferenceManager
 			checker,
 			_longReference.New(milliTimeCheckInterval),
 			_longReference.New(nanoTimeBudget)        ,
-			MonitoringManager.JMX(null)
+			VMInfo.New().isAnyAndroid() ? MonitoringManager.Disabled() : MonitoringManager.JMX(null)
 		);
 	}
 	
