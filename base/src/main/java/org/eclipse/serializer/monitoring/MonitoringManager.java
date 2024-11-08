@@ -28,6 +28,7 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
+import org.eclipse.serializer.util.VMInfo;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
@@ -58,6 +59,32 @@ public interface MonitoringManager
 	 */
 	void shutdown();
 
+	
+	/**
+	 * Provide a platform dependent MonitoringManager.
+	 * This is either the "JMX" implementation or the "Disabled" implementation
+	 * on android systems.
+	 * 
+	 * @param name a user defined name used to distinguish different instances.
+	 * 		  if null the Manager chooses a name internaly.
+	 * 
+	 * @return a platform dependent MonitoringManage instance
+	 */
+	public static MonitoringManager PlatformDependent(final String name)
+	{
+		if(VMInfo.New().isAnyAndroid())
+		{
+			return Disabled();
+		}
+		
+		if(name != null)
+		{
+			return JMX(name);
+		}
+		
+		return JMX();
+	}
+		
 	/**
 	 * Provides a new instance of the default JMX MonitoringManager implementation.
 	 * 
