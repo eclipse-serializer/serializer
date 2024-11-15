@@ -28,6 +28,7 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
+import org.eclipse.serializer.util.VMInfo;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
@@ -58,12 +59,38 @@ public interface MonitoringManager
 	 */
 	void shutdown();
 
+	
+	/**
+	 * Provide a platform dependent MonitoringManager.
+	 * This is either the "JMX" implementation or the "Disabled" implementation
+	 * on android systems.
+	 * 
+	 * @param name a user defined name used to distinguish different instances.
+	 * 		  if null the Manager chooses a name internaly.
+	 * 
+	 * @return a platform dependent MonitoringManage instance
+	 */
+	public static MonitoringManager PlatformDependent(final String name)
+	{
+		if(VMInfo.New().isAnyAndroid())
+		{
+			return Disabled();
+		}
+		
+		if(name != null)
+		{
+			return JMX(name);
+		}
+		
+		return JMX();
+	}
+		
 	/**
 	 * Provides a new instance of the default JMX MonitoringManager implementation.
 	 * 
 	 * @return a MonitoringManager.JMX instance
 	 */
-	public static MonitoringManager New()
+	public static MonitoringManager JMX()
 	{
 		return new JMX();
 	}
@@ -75,14 +102,28 @@ public interface MonitoringManager
 	 * 
 	 * @return a MonitoringManager.JMX instance
 	 */
-	public static MonitoringManager New(final String name)
+	public static MonitoringManager JMX(final String name)
 	{
 		return new JMX(name);
 	}
-	
+
+	/**
+	 * Provides a new instance of the disabled monitor manager implementation
+	 * 
+	 * @return a MonitoringManager.Disabled instance
+	 */
+	public static MonitoringManager Disabled()
+	{
+		return new MonitoringManager.Disabled();
+	}
+
 	/**
 	 * MonitoringManager implementation using the java management extension to provide
 	 * metrics and monitoring data.
+	 * 
+	 * Please be aware that not all Java implementations may provide JMX support
+	 * e.g. Android.
+	 * 
 	 */
 	public class JMX implements MonitoringManager
 	{
@@ -172,6 +213,27 @@ public interface MonitoringManager
 				+ metric.getName());
 		}
 
+	}
+
+	/**
+	 * Disabled Monitoring Manager implementation.
+	 * This implementation disables the monitoring by not registering
+	 * MetricMonitors.
+	 */
+	public class Disabled implements MonitoringManager
+	{
+		@Override
+		public void registerMonitor(MetricMonitor metrics)
+		{
+			//NoOp
+		}
+
+		@Override
+		public void shutdown()
+		{
+			//NoOp
+		}
+		
 	}
 
 }
