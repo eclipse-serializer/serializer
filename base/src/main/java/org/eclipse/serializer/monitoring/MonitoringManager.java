@@ -84,6 +84,25 @@ public interface MonitoringManager
 		
 		return JMX();
 	}
+	
+	/**
+	 * Provide a platform dependent MonitoringManager.
+	 * This is either the "JMX" implementation or the "Disabled" implementation
+	 * on android systems.
+	 * 
+	 * This method does not create a storage specific name.
+	 * 
+	 * @return a platform dependent MonitoringManage instance
+	 */
+	public static MonitoringManager PlatformDependent()
+	{
+		if(VMInfo.New().isAnyAndroid())
+		{
+			return Disabled();
+		}
+						
+		return JMX(null);
+	}
 		
 	/**
 	 * Provides a new instance of the default JMX MonitoringManager implementation.
@@ -155,6 +174,8 @@ public interface MonitoringManager
 		{
 			super();
 			this.storageName = storageName;
+			
+			logger.debug("create MonitoringManager for storage: " + this.storageName);
 		}
 		
 		
