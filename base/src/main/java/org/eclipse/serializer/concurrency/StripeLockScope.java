@@ -33,7 +33,7 @@ public abstract class StripeLockScope
 	}
 	
 	/**
-	 * Gets the maxiimum number of stripes used for the {@link StripeLockedExecutor}.
+	 * Gets the maximum number of stripes used for the {@link StripeLockedExecutor}.
 	 * 
 	 * @return max number of stripes
 	 */
