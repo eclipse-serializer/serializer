@@ -81,7 +81,16 @@ public interface Serializer<M> extends AutoCloseable
 	 * 
 	 * @return type dictionary as String.
 	 */
-	public String exportTypeDictionay();
+	public String exportTypeDictionary();
+	
+	/**
+	 * @deprecated typo, replaced by {@link #exportTypeDictionary()}, will be removed in a future release
+	 */
+	@Deprecated(forRemoval = true)
+	public default String exportTypeDictionay()
+	{
+		return this.exportTypeDictionary();
+	}
 	
 	public static Serializer<byte[]> Bytes()
 	{
@@ -239,7 +248,7 @@ public interface Serializer<M> extends AutoCloseable
 		}
 		
 		@Override
-		public String exportTypeDictionay()
+		public String exportTypeDictionary()
 		{
 			return this.foundation.getTypeDictionaryAssembler()
 				.assemble(this.persistenceManager.typeDictionary());

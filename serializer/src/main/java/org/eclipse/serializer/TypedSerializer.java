@@ -352,7 +352,7 @@ public interface TypedSerializer<M> extends Serializer<M>
 		}
 		
 		@Override
-		public String exportTypeDictionay()
+		public String exportTypeDictionary()
 		{
 			return this.foundation.getTypeDictionaryAssembler()
 				.assemble(this.persistenceManager.typeDictionary());
