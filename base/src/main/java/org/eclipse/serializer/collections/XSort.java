@@ -533,7 +533,7 @@ public final class XSort
 			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(--j < 0)
+				if(--j < start)
 					break;
 			}
 			values[j + 1] = next;
@@ -548,7 +548,7 @@ public final class XSort
 			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(--j < 0)
+				if(--j < start)
 					break;
 			}
 			values[j + 1] = next;
@@ -665,7 +665,7 @@ public final class XSort
 		 */
 		for(int j, i = 0; i < values.length - 1; i++)
 		{
-			final int next = values[(j = i) + 1];
+			final int next = values[(j = i) + 1]; // must keep the next value separately since the position gets overwritten.
 			while(next < values[j])
 			{
 				values[j + 1] = values[j];
@@ -674,6 +674,12 @@ public final class XSort
 			}
 			values[j + 1] = next;
 		}
+	}
+	
+	public static void insertionsort(final int[] values, final int start, final int bound)
+	{
+		XArrays.validateArrayRange(values.length, start, bound - start);
+		insertionsort0(values, start, bound);
 	}
 	
 	public static final void insertionsort(final long[] values)
@@ -739,6 +745,17 @@ public final class XSort
 			}
 			values[j + 1] = next;
 		}
+	}
+	
+	public static final <E> void insertionsort(
+		final E[]                   values    ,
+		final Comparator<? super E> comparator,
+		final int                   start     ,
+		final int                   bound
+	)
+	{
+		XArrays.validateArrayRange(values.length, start, bound - start);
+		insertionsort0(values, start, bound, comparator);
 	}
 	
 	public static final void insertionsort(final char[] values)
