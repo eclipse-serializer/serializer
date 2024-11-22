@@ -533,7 +533,7 @@ public final class XSort
 			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(--j < 0)
+				if(--j < start)
 					break;
 			}
 			values[j + 1] = next;
@@ -548,7 +548,7 @@ public final class XSort
 			while(next < values[j])
 			{
 				values[j + 1] = values[j];
-				if(--j < 0)
+				if(--j < start)
 					break;
 			}
 			values[j + 1] = next;
