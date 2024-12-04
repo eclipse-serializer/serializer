@@ -202,5 +202,8 @@ public interface Storer extends PersistenceStoring
 	
 
 	public void registerCommitListener(PersistenceCommitListener listener);
+	
+	
+	public void registerObjectCollector(PersistenceObjectCollector collector);
 
 }
