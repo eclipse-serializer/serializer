@@ -25,7 +25,6 @@ import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.binary.types.BinaryStorer;
 import org.eclipse.serializer.persistence.binary.types.ChunksBuffer;
@@ -35,7 +34,6 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfe
 import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceIdSet;
 import org.eclipse.serializer.persistence.types.PersistenceManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectCollector;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
 import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
 import org.eclipse.serializer.persistence.types.PersistenceSource;
@@ -595,12 +593,6 @@ public interface Serializer<M> extends AutoCloseable
 			protected void notifyCommitListeners()
 			{
 				this.commitListeners.iterate(PersistenceCommitListener::onAfterCommit);
-			}
-			
-			@Override
-			public void registerObjectCollector(PersistenceObjectCollector collector)
-			{
-				throw new NotImplementedYetError();
 			}
 			
 			@Override

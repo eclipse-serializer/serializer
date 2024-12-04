@@ -29,7 +29,6 @@ import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
 import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceLocalObjectIdRegistry;
-import org.eclipse.serializer.persistence.types.PersistenceObjectCollector;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
 import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
@@ -125,9 +124,7 @@ public interface BinaryStorer extends PersistenceStorer
 		private int    hashRange;
 		private long   itemCount;
 		
-		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
-		
-		private final BulkList<PersistenceObjectCollector> persistenceObjectCollectors = BulkList.New(0);
+		private final BulkList<PersistenceCommitListener>   commitListeners = BulkList.New(0);
 		
 		/*
 		 * Calling store again while the loop in #storeGraph is already being executed (e.g. in a type handler's #store method)
@@ -284,7 +281,6 @@ public interface BinaryStorer extends PersistenceStorer
 				
 				// must be clear instead of just reset to avoid memory leaks
 				this.commitListeners.clear();
-				this.persistenceObjectCollectors.clear();
 			}
 		}
 		
@@ -543,12 +539,6 @@ public interface BinaryStorer extends PersistenceStorer
 			this.commitListeners.add(listener);
 		}
 
-		@Override
-		public void registerObjectCollector(PersistenceObjectCollector collector)
-		{
-			this.persistenceObjectCollectors.add(collector);
-		}
-		
 		protected void notifyCommitListeners()
 		{
 			this.commitListeners.iterate(PersistenceCommitListener::onAfterCommit);
@@ -659,8 +649,6 @@ public interface BinaryStorer extends PersistenceStorer
 				LazyArg(() -> systemString(instance)),
 				LazyArgInContext(STORER_CONTEXT, instance)
 			);
-			
-			this.persistenceObjectCollectors.forEach(c -> c.collect(objectId, instance));
 			
 			synchronized(this.head)
 			{
@@ -806,7 +794,7 @@ public interface BinaryStorer extends PersistenceStorer
 			this.hashSlots = newSlots;
 			this.hashRange = newRange;
 		}
-				
+		
 	}
 	
 	/**
