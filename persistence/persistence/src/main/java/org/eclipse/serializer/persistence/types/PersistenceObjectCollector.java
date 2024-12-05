@@ -2,9 +2,9 @@ package org.eclipse.serializer.persistence.types;
 
 /**
  * Define an interface to collect all objects and their IDs that get registered
- * to be peristed by an storer.
+ * to be persisted by a storer.
  * 
- * The inferace define only one method that accepts the object and its ID.
+ * The interface define only one method that accepts the object and its ID.
  * 
  * Any other logic like clearing between stores has to be done by the implementer.
  * 
