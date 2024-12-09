@@ -598,7 +598,7 @@ public interface Serializer<M> extends AutoCloseable
 			}
 			
 			@Override
-			public void registerObjectCollector(PersistenceObjectRegistrationListener collector)
+			public void registerRegistrationListener(PersistenceObjectRegistrationListener collector)
 			{
 				throw new NotImplementedYetError();
 			}
