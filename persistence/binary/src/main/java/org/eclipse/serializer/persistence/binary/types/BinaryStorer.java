@@ -29,7 +29,7 @@ import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
 import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceLocalObjectIdRegistry;
-import org.eclipse.serializer.persistence.types.PersistenceObjectCollector;
+import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
 import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
@@ -127,7 +127,7 @@ public interface BinaryStorer extends PersistenceStorer
 		
 		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
 		
-		private final BulkList<PersistenceObjectCollector> persistenceObjectCollectors = BulkList.New(0);
+		private final BulkList<PersistenceObjectRegistrationListener> persistenceObjectRegistrationListener = BulkList.New(0);
 		
 		/*
 		 * Calling store again while the loop in #storeGraph is already being executed (e.g. in a type handler's #store method)
@@ -284,7 +284,7 @@ public interface BinaryStorer extends PersistenceStorer
 				
 				// must be clear instead of just reset to avoid memory leaks
 				this.commitListeners.clear();
-				this.persistenceObjectCollectors.clear();
+				this.persistenceObjectRegistrationListener.clear();
 			}
 		}
 		
@@ -544,9 +544,9 @@ public interface BinaryStorer extends PersistenceStorer
 		}
 
 		@Override
-		public void registerObjectCollector(PersistenceObjectCollector collector)
+		public void registerRegistrationListener(PersistenceObjectRegistrationListener listener)
 		{
-			this.persistenceObjectCollectors.add(collector);
+			this.persistenceObjectRegistrationListener.add(listener);
 		}
 		
 		protected void notifyCommitListeners()
@@ -660,7 +660,7 @@ public interface BinaryStorer extends PersistenceStorer
 				LazyArgInContext(STORER_CONTEXT, instance)
 			);
 			
-			this.persistenceObjectCollectors.forEach(c -> c.collect(objectId, instance));
+			this.persistenceObjectRegistrationListener.forEach(c -> c.onObjectRegistration(objectId, instance));
 			
 			synchronized(this.head)
 			{

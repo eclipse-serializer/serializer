@@ -9,7 +9,7 @@ package org.eclipse.serializer.persistence.types;
  * Any other logic like clearing between stores has to be done by the implementer.
  * 
  */
-public interface PersistenceObjectCollector
+public interface PersistenceObjectRegistrationListener
 {
 	/**
 	 * Can be called by {@link Storer} implementations when an object
@@ -21,5 +21,5 @@ public interface PersistenceObjectCollector
 	 * @param objectID the object ID
 	 * @param object the object instance
 	 */
-	void collect(long objectID, Object object);
+	void onObjectRegistration(long objectID, Object object);
 }

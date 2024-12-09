@@ -35,7 +35,7 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfe
 import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceIdSet;
 import org.eclipse.serializer.persistence.types.PersistenceManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectCollector;
+import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
 import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
 import org.eclipse.serializer.persistence.types.PersistenceSource;
@@ -598,7 +598,7 @@ public interface Serializer<M> extends AutoCloseable
 			}
 			
 			@Override
-			public void registerObjectCollector(PersistenceObjectCollector collector)
+			public void registerRegistrationListener(PersistenceObjectRegistrationListener listener)
 			{
 				throw new NotImplementedYetError();
 			}

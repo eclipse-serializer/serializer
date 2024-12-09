@@ -189,9 +189,9 @@ public class PersistenceStorerDeactivatable implements PersistenceStorer {
 
 
 	@Override
-	public void registerObjectCollector(PersistenceObjectCollector collector)
+	public void registerRegistrationListener(PersistenceObjectRegistrationListener listener)
 	{
-		this.actual.registerObjectCollector(collector);
+		this.actual.registerRegistrationListener(listener);
 	}
 	
 }
