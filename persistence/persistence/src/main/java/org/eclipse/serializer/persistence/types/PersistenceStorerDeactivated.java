@@ -131,7 +131,7 @@ public class PersistenceStorerDeactivated implements PersistenceStorer
 
 
 	@Override
-	public void registerObjectCollector(PersistenceObjectCollector collector)
+	public void registerObjectCollector(PersistenceObjectRegistrationListener collector)
 	{
 		throw new PersistenceExceptionStorerDeactivated();
 	}
