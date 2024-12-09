@@ -544,9 +544,9 @@ public interface BinaryStorer extends PersistenceStorer
 		}
 
 		@Override
-		public void registerRegistrationListener(PersistenceObjectRegistrationListener collector)
+		public void registerRegistrationListener(PersistenceObjectRegistrationListener listener)
 		{
-			this.persistenceObjectRegistrationListener.add(collector);
+			this.persistenceObjectRegistrationListener.add(listener);
 		}
 		
 		protected void notifyCommitListeners()
