@@ -132,7 +132,7 @@ public interface PersistenceCustomTypeHandlerRegistry<D> extends PersistenceType
 		{
 			// put instead of add to allow custom-tailored replacements for native handlers (e.g. divergent TID or logic)
 			
-			logger.info("Registering type handler {} for type {}", typeHandlerInitializer.getClass(), type);
+			logger.debug("Registering type handler {} for type {}", typeHandlerInitializer.getClass(), type);
 			
 			return this.liveTypeHandlers.put(
 				notNull(type),
@@ -158,7 +158,7 @@ public interface PersistenceCustomTypeHandlerRegistry<D> extends PersistenceType
 			final PersistenceLegacyTypeHandler<D, T> legacyTypeHandler
 		)
 		{
-			logger.info("Registering legacy type handler {} for type {}", legacyTypeHandler.getClass(), legacyTypeHandler.typeName());
+			logger.debug("Registering legacy type handler {} for type {}", legacyTypeHandler.getClass(), legacyTypeHandler.typeName());
 			
 			return this.legacyTypeHandlers.add(legacyTypeHandler);
 		}
