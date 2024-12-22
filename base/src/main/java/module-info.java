@@ -39,6 +39,7 @@ module org.eclipse.serializer.base
 	exports org.eclipse.serializer.monitoring;
 	exports org.eclipse.serializer.reference;
 	exports org.eclipse.serializer.reflect;
+	exports org.eclipse.serializer.security;
 	exports org.eclipse.serializer.time;
 	exports org.eclipse.serializer.typing;
 	exports org.eclipse.serializer.util;
