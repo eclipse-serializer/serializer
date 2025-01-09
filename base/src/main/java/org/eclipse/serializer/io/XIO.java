@@ -1377,7 +1377,7 @@ public final class XIO
 	 * @param length         number of bytes to copy
 	 * @param targetChannel  target channel
 	 * @return               number of bytes written
-	 * @throws IOException
+	 * @throws IOException   if an I/O error occurs during the file copy operation
 	 */
 	public static long copyFile(
 		final FileChannel sourceChannel ,
