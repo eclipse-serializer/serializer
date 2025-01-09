@@ -115,6 +115,7 @@ public interface PersistenceStorer extends Storer
 		 * @param objectRetriever the provided object retriever
 		 * @param target the provided persistence target
 		 * @param bufferSizeProvider the provided buffer size provider
+		 * @param persister the provided persister
 		 * @return a new eager storer
 		 */
 		public PersistenceStorer createEagerStorer(
