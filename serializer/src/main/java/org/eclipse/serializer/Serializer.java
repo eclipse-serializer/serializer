@@ -87,6 +87,7 @@ public interface Serializer<M> extends AutoCloseable
 	
 	/**
 	 * @deprecated typo, replaced by {@link #exportTypeDictionary()}, will be removed in a future release
+	 * @return type dictionary as String.
 	 */
 	@Deprecated(forRemoval = true)
 	public default String exportTypeDictionay()
