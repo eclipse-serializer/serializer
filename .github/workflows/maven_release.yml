@@ -30,12 +30,15 @@ jobs:
           gpg-passphrase: PASSPHRASE
       - name: Maven change version
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} --batch-mode
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_API_TOKEN }}
       - name: Make a release
-        run: mvn -Pdeploy -Pproduction --no-transfer-progress --batch-mode clean deploy
+        run: mvn -Pdeploy -Pproduction --no-transfer-progress --batch-mode clean deploy -Dscan.value.profile="deploy,production"
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
           PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_API_TOKEN }}
 
       #java 17 build
       - uses: actions/checkout@v3
@@ -51,13 +54,18 @@ jobs:
           gpg-passphrase: PASSPHRASE
       - name: Maven change version
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} --batch-mode
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_API_TOKEN }}
       - name: Build with java 17
         run: |
-          mvn -pl persistence/binary-jdk17 clean install -am -B
+          mvn -pl persistence/binary-jdk17 clean install -am -B -Dscan.value.project="binary-jdk17"
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_API_TOKEN }}
       - name: Deploy module build with java 17
         run: |
-          mvn -Pdeploy -pl persistence/binary-jdk17 deploy
+          mvn -Pdeploy -pl persistence/binary-jdk17 deploy -Dscan.value.profile="deploy" -Dscan.value.project="binary-jdk17"
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
           PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_API_TOKEN }}
