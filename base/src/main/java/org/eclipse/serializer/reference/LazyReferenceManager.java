@@ -436,7 +436,8 @@ public interface LazyReferenceManager
 			for(Entry e = this.head; (e = e.nextLazyManagerEntry) != null;)
 			{
 				lazyReferences++;
-				if(e.get().isLoaded())
+				final Lazy<?> ref = e.get();
+				if(ref != null && ref.isLoaded())
 				{
 					loadedLazyReferences++;
 				}
