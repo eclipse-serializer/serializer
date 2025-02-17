@@ -91,3 +91,6 @@ profile
 
 # Vim
 *.swp
+
+# Develocity
+.mvn/.develocity/develocity-workspace-id
