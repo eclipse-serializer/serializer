@@ -25,11 +25,35 @@ import org.eclipse.serializer.functional.Producer;
  */
 public abstract class StripeLockScope
 {
-	private final transient StripeLockedExecutor executor = StripeLockedExecutor.New(this.stripeCount());
+	private transient volatile StripeLockedExecutor executor;
 	
 	protected StripeLockScope()
 	{
 		super();
+	}
+	
+	/**
+	 * Lazy initializes the executor.
+	 */
+	private StripeLockedExecutor executor()
+	{
+		/*
+		 * Double-checked locking to reduce the overhead of acquiring a lock
+		 * by testing the locking criterion.
+		 * The field (this.executor) has to be volatile.
+		 */
+		StripeLockedExecutor executor = this.executor;
+		if(executor == null)
+		{
+			synchronized(this)
+			{
+				if((executor = this.executor) == null)
+				{
+					executor = this.executor = StripeLockedExecutor.New(this.stripeCount());
+				}
+			}
+		}
+		return executor;
 	}
 	
 	/**
@@ -50,7 +74,7 @@ public abstract class StripeLockScope
 	 */
 	protected void read(final Object mutex, final Action action)
 	{
-		this.executor.read(mutex, action);
+		this.executor().read(mutex, action);
 	}
 	
 	/**
@@ -63,7 +87,7 @@ public abstract class StripeLockScope
 	 */
 	protected <R> R read(final Object mutex, final Producer<R> producer)
 	{
-		return this.executor.read(mutex, producer);
+		return this.executor().read(mutex, producer);
 	}
 	
 	/**
@@ -74,7 +98,7 @@ public abstract class StripeLockScope
 	 */
 	protected void write(final Object mutex, final Action action)
 	{
-		this.executor.write(mutex, action);
+		this.executor().write(mutex, action);
 	}
 	
 	/**
@@ -87,7 +111,7 @@ public abstract class StripeLockScope
 	 */
 	protected <R> R write(final Object mutex, final Producer<R> producer)
 	{
-		return this.executor.write(mutex, producer);
+		return this.executor().write(mutex, producer);
 	}
 	
 }

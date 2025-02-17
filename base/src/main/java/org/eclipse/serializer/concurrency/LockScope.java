@@ -24,11 +24,35 @@ import org.eclipse.serializer.functional.Producer;
  */
 public abstract class LockScope
 {
-	private final transient LockedExecutor executor = LockedExecutor.New();
+	private transient volatile LockedExecutor executor;
 	
 	protected LockScope()
 	{
 		super();
+	}
+	
+	/**
+	 * Lazy initializes the executor.
+	 */
+	private LockedExecutor executor()
+	{
+		/*
+		 * Double-checked locking to reduce the overhead of acquiring a lock
+		 * by testing the locking criterion.
+		 * The field (this.executor) has to be volatile.
+		 */
+		LockedExecutor executor = this.executor;
+		if(executor == null)
+		{
+			synchronized(this)
+			{
+				if((executor = this.executor) == null)
+				{
+					executor = this.executor = LockedExecutor.New();
+				}
+			}
+		}
+		return executor;
 	}
 	
 	/**
@@ -38,7 +62,7 @@ public abstract class LockScope
 	 */
 	protected void read(final Action action)
 	{
-		this.executor.read(action);
+		this.executor().read(action);
 	}
 	
 	/**
@@ -50,7 +74,7 @@ public abstract class LockScope
 	 */
 	protected <R> R read(final Producer<R> producer)
 	{
-		return this.executor.read(producer);
+		return this.executor().read(producer);
 	}
 	
 	/**
@@ -60,7 +84,7 @@ public abstract class LockScope
 	 */
 	protected void write(final Action action)
 	{
-		this.executor.write(action);
+		this.executor().write(action);
 	}
 	
 	/**
@@ -72,7 +96,7 @@ public abstract class LockScope
 	 */
 	protected <R> R write(final Producer<R> producer)
 	{
-		return this.executor.write(producer);
+		return this.executor().write(producer);
 	}
 	
 }
