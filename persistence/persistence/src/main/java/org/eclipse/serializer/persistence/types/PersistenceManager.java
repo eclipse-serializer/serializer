@@ -59,7 +59,9 @@ ByteOrderTargeting<PersistenceManager<D>>
 	public PersistenceObjectRegistry objectRegistry();
 	
 	public PersistenceTypeDictionary typeDictionary();
-
+	
+	public PersistenceRootsView viewRoots();
+	
 	@Override
 	public long currentObjectId();
 
@@ -463,6 +465,12 @@ ByteOrderTargeting<PersistenceManager<D>>
 		{
 			this.typeHandlerManager.update(typeDictionary, highestTypeId);
 			this.updateCurrentObjectId(highestObjectId);
+		}
+		
+		@Override
+		public PersistenceRootsView viewRoots()
+		{
+			return this.typeHandlerManager.viewRoots();
 		}
 
 	}

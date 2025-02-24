@@ -98,6 +98,8 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 	
 	public void clearStorePendingRoots();
 	
+	public PersistenceRootsView viewRoots();
+	
 	public default String deriveEnumRootIdentifier(final PersistenceTypeHandler<?, ?> typeHandler)
 	{
 		return Persistence.deriveEnumRootIdentifier(typeHandler);
@@ -1205,6 +1207,11 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 			this.typeHandlerRegistry.iteratePerIds(consumer);
 		}
 
+		@Override
+		public PersistenceRootsView viewRoots()
+		{
+			return this.rootsProvider.provideRoots();
+		}
 	}
 
 }
