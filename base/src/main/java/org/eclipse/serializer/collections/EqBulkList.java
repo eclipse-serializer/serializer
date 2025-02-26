@@ -584,9 +584,9 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 	}
 
 	@Override
-	public XImmutableList<E> immure()
+	public EqConstList<E> immure()
 	{
-		throw new NotImplementedYetError("Not yet implemented");
+		return new EqConstList<>(this.equalator, this);
 	}
 
 	@Override
