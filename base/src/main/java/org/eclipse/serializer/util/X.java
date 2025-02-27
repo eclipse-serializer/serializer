@@ -1182,27 +1182,6 @@ public final class X
 		return new SynchSet<>(set);
 	}
 
-	/**
-	 * Ensures that the returned {@link XCollection} instance based on the passed collection is thread safe to use.<br>
-	 * This normally means wrapping the passed collection in a {@link SynchCollection}, making it effectively synchronized.<br>
-	 * If the passed collection already is thread safe (indicated by the marker interface {@link ThreadSafe}), then the collection
-	 * itself is returned without further actions. This automatically ensures that a {@link SynchCollection} is not
-	 * redundantly wrapped again in another {@link SynchCollection}.
-	 *
-	 * @param <E> the element type.
-	 * @param collection the {@link XCollection} instance to be synchronized.
-	 * @return a thread safe {@link XCollection} using the passed collection.
-	 */
-	public static <E> XCollection<E> synchronize(final XCollection<E> collection)
-	{
-		// if type of passed collection is already thread safe, there's no need to wrap it in a SynchronizedXCollection
-		if(collection instanceof ThreadSafe)
-		{
-			return collection;
-		}
-		// wrap not thread safe set types in a SynchronizedXCollection
-		return new SynchCollection<>(collection);
-	}
 
 	/**
 	 * Converts an {@link Iterable} into an array.
