@@ -17,12 +17,9 @@ package org.eclipse.serializer.collections;
 
 import static org.eclipse.serializer.util.X.notNull;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -685,11 +682,6 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 	public final EqConstHashTable<K, V>.Keys keys()
 	{
 		return this.keys;
-	}
-
-	public final XImmutableTable.EntriesBridge<K, V> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable#old()
 	}
 
 
