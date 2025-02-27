@@ -1,6 +1,8 @@
+package org.eclipse.serializer.chars;
+
 /*-
  * #%L
- * Eclipse Serializer
+ * Eclipse Serializer Base
  * %%
  * Copyright (C) 2023 MicroStream Software
  * %%
@@ -12,9 +14,9 @@
  * #L%
  */
 
-module org.eclipse.serializer
-{
-    exports org.eclipse.serializer;
 
-    requires transitive org.eclipse.serializer.persistence.binary;
+public interface StringTableBuilder<D>
+{
+	StringTable build(D data);
+	
 }
