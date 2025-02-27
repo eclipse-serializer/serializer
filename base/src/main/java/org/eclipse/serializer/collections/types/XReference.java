@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.eclipse.serializer.collections.Constant;
-import org.eclipse.serializer.collections.old.OldList;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.reference.Reference;
 
@@ -256,9 +255,6 @@ public interface XReference<E> extends XReferencing<E>, XSettingList<E>, XSortab
 
 	@Override
 	public ListIterator<E> listIterator(long index);
-
-	@Override
-	public OldList<E> old();
 
 	@Override
 	public XReference<E> copy();

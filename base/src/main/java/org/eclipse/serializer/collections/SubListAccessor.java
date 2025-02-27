@@ -304,25 +304,5 @@ public class SubListAccessor<E> extends SubListView<E> implements XSettingList<E
 		return new SubListAccessor<>((XSettingList<E>)this.list, this.startIndex, this.getEndIndex());
 	}
 
-	@Override
-	public  OldSubListAccessor<E> old()
-	{
-		return new OldSubListAccessor<>(this);
-	}
-
-	static class OldSubListAccessor<E> extends OldSubListView<E>
-	{
-		OldSubListAccessor(final SubListAccessor<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public  SubListAccessor<E> parent()
-		{
-			return (SubListAccessor<E>)super.parent();
-		}
-
-	}
 
 }

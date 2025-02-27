@@ -30,8 +30,6 @@ import java.util.function.Predicate;
 
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.collections.old.OldCollection;
-import org.eclipse.serializer.collections.old.OldList;
 import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
@@ -689,17 +687,11 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		return this.keys;
 	}
 
-	@Override
 	public final XImmutableTable.EntriesBridge<K, V> old()
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable#old()
 	}
 
-	@Override
-	public XImmutableTable.Bridge<K, V> oldMap()
-	{
-		return new OldVarMap();
-	}
 
 	@Override
 	public final V searchValue(final Predicate<? super K> keyPredicate)
@@ -1656,12 +1648,6 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 		}
 
 		@Override
-		public final OldCollection<K> old()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Keys#old()
-		}
-
-		@Override
 		public final EqConstHashTable<K, V> parent()
 		{
 			return EqConstHashTable.this;
@@ -1872,11 +1858,6 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 			return EqConstHashTable.this.chain.valuesContains(null);
 		}
 
-		@Override
-		public final OldList<V> old()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.Values#old()
-		}
 
 		@Override
 		public final V seek(final V sample)
@@ -2085,131 +2066,5 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition
 
 	}
 
-
-
-	public final class OldVarMap implements XImmutableTable.Bridge<K, V>
-	{
-
-		@Override
-		public final void clear()
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final boolean containsKey(final Object key)
-		{
-			try
-			{
-				return EqConstHashTable.this.containsKey((K)key);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 */
-				return false;
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final boolean containsValue(final Object value)
-		{
-			try
-			{
-				return EqConstHashTable.this.chain.valuesContains((V)value);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 */
-				return false;
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final Set<java.util.Map.Entry<K, V>> entrySet()
-		{
-			/* (20.05.2011 TM)NOTE:
-			 * Okay this is nasty:
-			 * Entry implements KeyValue and java.util.Map.Entry
-			 * XCollection-architecture wise, the "old" collections cleanly use KeyValue instead of Entry.
-			 * But java.util.Set<KeyValue<K, V>> cannot be cast to Set<java.util.Map.Entry<K, V>>, generics-wise.
-			 * Nevertheless, the "stuff behind" the typing IS compatible.
-			 * So this typing is dirty but architectural clean workaround is used.
-			 */
-			return (Set<java.util.Map.Entry<K, V>>)(Set<?>)EqConstHashTable.this.old();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final V get(final Object key)
-		{
-			try
-			{
-				return EqConstHashTable.this.get((K)key);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 */
-				return null;
-			}
-		}
-
-		@Override
-		public final boolean isEmpty()
-		{
-			return EqConstHashTable.this.isEmpty();
-		}
-
-		@Override
-		public final Set<K> keySet()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqConstHashTable.OldVarMap#keySet()
-		}
-
-		@Override
-		public final V put(final K key, final V value)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final void putAll(final Map<? extends K, ? extends V> m)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final V remove(final Object key)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final int size()
-		{
-			return XTypes.to_int(EqConstHashTable.this.size());
-		}
-
-		@Override
-		public final Collection<V> values()
-		{
-			return EqConstHashTable.this.values.old(); // hehehe
-		}
-
-		@Override
-		public final EqConstHashTable<K, V> parent()
-		{
-			return EqConstHashTable.this;
-		}
-
-	}
 
 }

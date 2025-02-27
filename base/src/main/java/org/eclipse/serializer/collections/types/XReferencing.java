@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.eclipse.serializer.collections.Constant;
-import org.eclipse.serializer.collections.old.OldList;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.reference.Referencing;
 
@@ -179,9 +178,6 @@ public interface XReferencing<E> extends XGettingList<E>, XGettingEnum<E>, Refer
 
 	@Override
 	public ListIterator<E> listIterator(long index);
-
-	@Override
-	public OldList<E> old();
 
 	@Override
 	public XReferencing<E> copy();

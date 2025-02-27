@@ -22,7 +22,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.OldList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
@@ -144,18 +143,6 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 	public final EmptyTable<K, V> view()
 	{
 		return this;
-	}
-
-	@Override
-	public final XImmutableTable.EntriesBridge<K, V> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingMap<K, V>#old
-	}
-
-	@Override
-	public XImmutableTable.Bridge<K, V> oldMap()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EmptyTable#oldMap()
 	}
 
 	@Override
@@ -828,12 +815,6 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 		}
 
 		@Override
-		public final OldList<V> old()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<V>#old()
-		}
-
-		@Override
 		public final EmptyTable<K, V> parent()
 		{
 			return EmptyTable.this;
@@ -1188,12 +1169,6 @@ public final class EmptyTable<K, V> implements XImmutableTable<K, V>
 		public final <T extends Consumer<? super K>> T except(final XGettingCollection<? extends K> other, final Equalator<? super K> equalator, final T target)
 		{
 			return X.<K>empty().except(other, equalator, target);
-		}
-
-		@Override
-		public final OldList<K> old()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME XGettingCollection<K>#old()
 		}
 
 		@Override

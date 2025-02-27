@@ -484,20 +484,6 @@ public final class OldCollections
 		return lhm;
 	}
 
-	/**
-	 * Convenience method for {@code new ArrayList<E>(xCollection)}.
-	 * <p>
-	 *
-	 * @param <E> the collection element type.
-	 * @param xCollection the extended collection implementation whore content shall be copied a new
-	 *        {@link ArrayList} instance.
-	 * @return a new {@link ArrayList} instance containing all elements of the passed {@link XGettingCollection}.
-	 */
-	public static final <E> ArrayList<E> ArrayList(final XGettingCollection<? extends E> xCollection)
-	{
-		// ArrayList collection constructor already uses toArray() directly as elementData
-		return new ArrayList<>(xCollection.old());
-	}
 	
 	public static final void populateMapFromHelperArray(final Map<?, ?> instance, final Object elementsHelper)
 	{

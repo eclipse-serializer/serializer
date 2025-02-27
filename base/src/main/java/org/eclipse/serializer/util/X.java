@@ -19,8 +19,6 @@ import org.eclipse.serializer.branching.ThrowBreak;
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.*;
 import org.eclipse.serializer.collections.interfaces.Sized;
-import org.eclipse.serializer.collections.old.AbstractBridgeXList;
-import org.eclipse.serializer.collections.old.AbstractBridgeXSet;
 import org.eclipse.serializer.collections.types.*;
 import org.eclipse.serializer.concurrency.ThreadSafe;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
@@ -1022,34 +1020,13 @@ public final class X
 	
 	public static <E> XList<E> asX(final List<E> oldList)
 	{
-		if(oldList instanceof AbstractBridgeXList<?>)
-		{
-			return ((AbstractBridgeXList<E>)oldList).parent();
-		}
-		else if(oldList instanceof ArrayList<?>)
+		if(oldList instanceof ArrayList<?>)
 		{
 			throw new org.eclipse.serializer.meta.NotImplementedYetError();
 		}
 
 		throw new UnsupportedOperationException();
 		// (19.05.2011 TM)FIXME: generic old list wrapper
-	}
-
-	public static <E> XSet<E> asX(final Set<E> oldSet)
-	{
-		if(oldSet instanceof AbstractBridgeXSet<?>)
-		{
-			return ((AbstractBridgeXSet<E>)oldSet).parent();
-		}
-
-		throw new UnsupportedOperationException();
-		// (19.05.2011 TM)FIXME: old set wrapper
-	}
-
-	public static <K, V> XMap<K, V> asX(final Map<K, V> oldMap)
-	{
-		throw new UnsupportedOperationException();
-		// (19.05.2011 TM)FIXME: old map wrapper
 	}
 
 	

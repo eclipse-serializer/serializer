@@ -39,12 +39,6 @@ public interface XGettingTable<K, V> extends XGettingMap<K, V>, XGettingEnum<Key
 	public XImmutableTable<K, V> immure();
 
 	@Override
-	public EntriesBridge<K, V> old();
-
-	@Override
-	public Bridge<K, V> oldMap();
-
-	@Override
 	public XGettingTable<K, V> copy();
 
 

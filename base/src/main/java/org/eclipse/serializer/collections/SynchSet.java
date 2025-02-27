@@ -20,7 +20,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractBridgeXSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XImmutableSet;
 import org.eclipse.serializer.collections.types.XSet;
@@ -545,27 +544,6 @@ public final class SynchSet<E> implements XSet<E>, Synchronized
 	public synchronized SetView<E> view()
 	{
 		return new SetView<>(this);
-	}
-
-	@Override
-	public OldSynchSet<E> old()
-	{
-		return new OldSynchSet<>(this);
-	}
-
-	public static final class OldSynchSet<E> extends AbstractBridgeXSet<E>
-	{
-		OldSynchSet(final SynchSet<E> set)
-		{
-			super(set);
-		}
-
-		@Override
-		public SynchSet<E> parent()
-		{
-			return (SynchSet<E>)super.parent();
-		}
-
 	}
 
 }

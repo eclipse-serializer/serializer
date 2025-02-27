@@ -69,11 +69,6 @@ public interface XGettingMap<K, V> extends ExtendedMap<K, V>, XGettingSet<KeyVal
 	@Override
 	public XImmutableMap<K, V> immure();
 
-	@Override
-	public EntriesBridge<K, V> old();
-
-	public Bridge<K, V> oldMap();
-
 	// null handling characteristics information
 
 	public boolean nullKeyAllowed();

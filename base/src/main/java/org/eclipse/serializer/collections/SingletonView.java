@@ -21,7 +21,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.Singleton.OldSingleton;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XReferencing;
 import org.eclipse.serializer.equality.Equalator;
@@ -108,13 +107,6 @@ public class SingletonView<E> implements XReferencing<E>
 	public ListIterator<E> listIterator(final long index)
 	{
 		return this.subject.listIterator(index);
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public OldSingleton old()
-	{
-		return this.subject.old();
 	}
 
 	@Override

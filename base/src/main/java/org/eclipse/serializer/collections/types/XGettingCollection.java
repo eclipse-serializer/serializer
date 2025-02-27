@@ -90,7 +90,7 @@ Copyable
 		return this.iterate(new ToArrayAggregator<>(X.Array(type, X.checkArrayRange(this.size())))).yield();
 	}
 
-	public OldCollection<E> old();
+	//public OldCollection<E> old();
 
 	@Override
 	public boolean hasVolatileElements();

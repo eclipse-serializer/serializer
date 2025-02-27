@@ -766,28 +766,6 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 		return this;
 	}
 
-
-	@Override
-	public final OldSubList<E> old()
-	{
-		return new OldSubList<>(this);
-	}
-
-	static class OldSubList<E> extends OldSubListAccessor<E>
-	{
-		OldSubList(final SubList<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public final SubList<E> parent()
-		{
-			return (SubList<E>)super.parent();
-		}
-
-	}
-
 	@Override
 	public final SubList<E> reverse()
 	{

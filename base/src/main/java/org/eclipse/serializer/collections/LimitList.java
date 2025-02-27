@@ -27,7 +27,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractBridgeXList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XList;
@@ -1781,29 +1780,6 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	public final int hashCode()
 	{
 		return XArrays.arrayHashCode(this.data, this.size);
-	}
-
-
-
-	@Override
-	public final OldLimitList<E> old()
-	{
-		return new OldLimitList<>(this);
-	}
-
-	public static final class OldLimitList<E> extends AbstractBridgeXList<E>
-	{
-		OldLimitList(final LimitList<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public final LimitList<E> parent()
-		{
-			return (LimitList<E>)super.parent();
-		}
-
 	}
 
 

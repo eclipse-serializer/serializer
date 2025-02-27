@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractBridgeXList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XList;
@@ -2148,29 +2147,6 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 	public int hashCode()
 	{
 		return XArrays.arrayHashCode(this.data, this.size);
-	}
-
-
-
-	@Override
-	public OldBulkList<E> old()
-	{
-		return new OldBulkList<>(this);
-	}
-
-	public static final class OldBulkList<E> extends AbstractBridgeXList<E>
-	{
-		OldBulkList(final EqBulkList<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public EqBulkList<E> parent()
-		{
-			return (EqBulkList<E>)super.parent();
-		}
-
 	}
 
 

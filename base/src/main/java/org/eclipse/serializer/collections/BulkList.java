@@ -27,7 +27,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractBridgeXList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XIterable;
@@ -2302,30 +2301,6 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	{
 		return XArrays.arrayHashCode(this.data, this.size);
 	}
-
-
-
-	@Override
-	public final OldBulkList<E> old()
-	{
-		return new OldBulkList<>(this);
-	}
-
-	public static final class OldBulkList<E> extends AbstractBridgeXList<E>
-	{
-		OldBulkList(final BulkList<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public final BulkList<E> parent()
-		{
-			return (BulkList<E>)super.parent();
-		}
-
-	}
-
 
 
 	public static final class Creator<E> implements XList.Creator<E>

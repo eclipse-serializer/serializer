@@ -25,7 +25,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.eclipse.serializer.chars.VarString;
-import org.eclipse.serializer.collections.old.AbstractOldGettingList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.collections.types.XImmutableList;
@@ -470,26 +469,5 @@ public class ListView<E> implements XGettingList<E>
 		return XUtilsCollection.appendTo(this, VarString.New().add('['), ',').add(']').toString();
 	}
 
-
-	@Override
-	public OldListView<E> old()
-	{
-		return new OldListView<>(this);
-	}
-
-	public static final class OldListView<E> extends AbstractOldGettingList<E>
-	{
-		OldListView(final ListView<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public ListView<E> parent()
-		{
-			return (ListView<E>)super.parent();
-		}
-
-	}
 
 }

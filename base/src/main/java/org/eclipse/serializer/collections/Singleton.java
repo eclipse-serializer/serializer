@@ -16,25 +16,19 @@ package org.eclipse.serializer.collections;
 
 import static org.eclipse.serializer.util.X.mayNull;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
-import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.OldList;
-import org.eclipse.serializer.collections.old.OldSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XReference;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.TrivialIterator;
 
@@ -153,12 +147,6 @@ public class Singleton<E> implements XReference<E>
 			throw new IndexOutOfBoundsException();
 		}
 		return new TrivialIterator<>(this);
-	}
-
-	@Override
-	public final OldSingleton old()
-	{
-		return new OldSingleton();
 	}
 
 	@Override
@@ -728,184 +716,6 @@ public class Singleton<E> implements XReference<E>
 	public final Singleton<E> sort(final Comparator<? super E> comparator)
 	{
 		return this; // no-op, of couse
-	}
-
-
-
-
-
-	public final class OldSingleton implements OldList<E>, OldSet<E>
-	{
-		@Override
-		public final Singleton<E> parent()
-		{
-			return Singleton.this;
-		}
-
-		@Override
-		public final boolean add(final E e)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final void add(final int index, final E element)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final boolean addAll(final Collection<? extends E> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final boolean addAll(final int index, final Collection<? extends E> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final void clear()
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final boolean contains(final Object o)
-		{
-			return Singleton.this.contains((E)o); // safe because of referential comparison
-		}
-
-		@Override
-		public final boolean containsAll(final Collection<?> c)
-		{
-			for(final Object o : c)
-			{
-				if(o != Singleton.this.element)
-				{
-					return false;
-				}
-			}
-			return true;
-		}
-
-		@Override
-		public final E get(final int index)
-		{
-			return Singleton.this.at(index);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final int indexOf(final Object o)
-		{
-			return X.checkArrayRange( Singleton.this.indexOf((E)o)); // safe because of referencial comparison
-		}
-
-		@Override
-		public final boolean isEmpty()
-		{
-			return Singleton.this.isEmpty();
-		}
-
-		@Override
-		public Iterator<E> iterator()
-		{
-			return new TrivialIterator<>(Singleton.this);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final int lastIndexOf(final Object o)
-		{
-			return X.checkArrayRange(Singleton.this.lastIndexOf((E)o)); // safe because of referencial comparison
-		}
-
-		@Override
-		public ListIterator<E> listIterator()
-		{
-			return new TrivialIterator<>(Singleton.this);
-		}
-
-		@Override
-		public ListIterator<E> listIterator(final int index)
-		{
-			if(index != 0)
-			{
-				throw new IndexOutOfBoundsException();
-			}
-			return new TrivialIterator<>(Singleton.this);
-		}
-
-		@Override
-		public final boolean remove(final Object o)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final E remove(final int index)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final boolean removeAll(final Collection<?> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final boolean retainAll(final Collection<?> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final E set(final int index, final E element)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final int size()
-		{
-			return XTypes.to_int(Singleton.this.size());
-		}
-
-		@Override
-		public final List<E> subList(final int fromIndex, final int toIndex)
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
-		}
-
-		@Override
-		public Object[] toArray()
-		{
-			return Singleton.this.toArray();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T> T[] toArray(final T[] a)
-		{
-			a[0] = (T)Singleton.this.element;
-			if(a.length > 1)
-			{
-				a[1] = null;
-			}
-			return a;
-		}
-
-		@Override
-		public final Spliterator<E> spliterator()
-		{
-			return OldList.super.spliterator();
-		}
-
 	}
 
 }

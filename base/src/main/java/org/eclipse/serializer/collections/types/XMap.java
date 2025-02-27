@@ -44,12 +44,6 @@ public interface XMap<K, V> extends XProcessingMap<K, V>, XPutGetMap<K, V>, XSet
 	public Values<K, V> values();
 
 	@Override
-	public EntriesBridge<K, V> old();
-
-	@Override
-	public Bridge<K, V> oldMap();
-
-	@Override
 	public XMap<K, V> copy();
 
 	@Override

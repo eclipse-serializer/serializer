@@ -14,18 +14,13 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
-import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.OldList;
-import org.eclipse.serializer.collections.old.OldSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
 import org.eclipse.serializer.collections.types.XImmutableList;
@@ -113,12 +108,6 @@ public final class Empty<E> implements XImmutableList<E>, XImmutableEnum<E>, Sta
 		 * case. Thus throwing one here.
 		 */
 		throw new IndexOutOfBoundsException("collection is empty");
-	}
-
-	@Override
-	public OldEmpty old()
-	{
-		return new OldEmpty();
 	}
 
 	@Override
@@ -437,184 +426,6 @@ public final class Empty<E> implements XImmutableList<E>, XImmutableEnum<E>, Sta
 	public long maximumCapacity()
 	{
 		return 0;
-	}
-
-
-
-
-
-
-
-	public final class OldEmpty implements OldList<E>, OldSet<E>
-	{
-		@Override
-		public Empty<E> parent()
-		{
-			return Empty.this;
-		}
-
-		@Override
-		public boolean add(final E e)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void add(final int index, final E element)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean addAll(final Collection<? extends E> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean addAll(final int index, final Collection<? extends E> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void clear()
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean contains(final Object o)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean containsAll(final Collection<?> c)
-		{
-			return false;
-		}
-
-		@Override
-		public E get(final int index)
-		{
-			throw new IndexOutOfBoundsException();
-		}
-
-		@Override
-		public int indexOf(final Object o)
-		{
-			return -1;
-		}
-
-		@Override
-		public boolean isEmpty()
-		{
-			return true;
-		}
-
-		@Override
-		public Iterator<E> iterator()
-		{
-			return new EmptyListIterator<>();
-		}
-
-		@Override
-		public int lastIndexOf(final Object o)
-		{
-			return -1;
-		}
-
-		@Override
-		public ListIterator<E> listIterator()
-		{
-			return new EmptyListIterator<>();
-		}
-
-		@Override
-		public ListIterator<E> listIterator(final int index)
-		{
-			/* (20.11.2011)NOTE:
-			 * the definition of java.util.list#listIterator(int) has issues for collections can be empty
-			 * The exception definition says:
-			 * throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index > size()})
-			 * Then what should happen if the list is empty and the method is called with index 0 for the first element?
-			 * index is not < 0 and index is also not > size (which is 0). So no exception is to be thrown but
-			 * a valid iterator has to be returned, validly returning one element (that at index 0).
-			 * But which element should that be if the list is empty?
-			 *
-			 * The extended collection's backward-compatibility #listIterator(int) throws the correct exception in this
-			 * case. Thus throwing one here.
-
-			 */
-			throw new IndexOutOfBoundsException("collection is empty");
-		}
-
-		@Override
-		public boolean remove(final Object o)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public E remove(final int index)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean removeAll(final Collection<?> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean retainAll(final Collection<?> c)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public E set(final int index, final E element)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public int size()
-		{
-			return 0;
-		}
-
-		@Override
-		public List<E> subList(final int fromIndex, final int toIndex)
-		{
-			// no matter what gets passed, it must fail
-			throw new IndexOutOfBoundsException("Empty collection is always empty");
-		}
-
-		@Override
-		public Object[] toArray()
-		{
-			return new Object[0];
-		}
-
-		@Override
-		public <T> T[] toArray(final T[] a)
-		{
-			if(a.length > 0)
-			{
-				a[0] = null;
-			}
-			return a;
-		}
-
-		@Override
-		public final Spliterator<E> spliterator()
-		{
-			return OldList.super.spliterator();
-		}
-
 	}
 
 }

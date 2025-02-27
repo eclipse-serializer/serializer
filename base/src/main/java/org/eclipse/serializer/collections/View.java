@@ -311,10 +311,4 @@ public class View<E> implements XGettingCollection<E>
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
-	@Override
-	public OldCollection<E> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
-	}
-
 }

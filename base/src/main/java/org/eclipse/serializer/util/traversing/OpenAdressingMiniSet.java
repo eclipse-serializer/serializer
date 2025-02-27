@@ -326,12 +326,6 @@ public final class OpenAdressingMiniSet<E> implements XSet<E>
 	}
 
 	@Override
-	public OldCollection<E> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError();
-	}
-
-	@Override
 	public boolean hasVolatileElements()
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError();

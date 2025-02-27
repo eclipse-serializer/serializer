@@ -37,12 +37,6 @@ XAddingTable<K, V>
 	public Values<K, V> values();
 
 	@Override
-	public EntriesBridge<K, V> old();
-	
-	@Override
-	public Bridge<K, V> oldMap();
-	
-	@Override
 	public XBasicTable<K, V> copy();
 
 	public boolean hasVolatileValues();

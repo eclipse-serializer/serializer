@@ -22,7 +22,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractBridgeXList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XImmutableList;
@@ -1012,29 +1011,6 @@ public final class SynchList<E> implements XList<E>, Synchronized
 	public final synchronized SubListView<E> view(final long fromIndex, final long toIndex)
 	{
 		return new SubListView<>(this, fromIndex, toIndex);
-	}
-
-
-
-	@Override
-	public final OldSynchList<E> old()
-	{
-		return new OldSynchList<>(this);
-	}
-
-	public static final class OldSynchList<E> extends AbstractBridgeXList<E>
-	{
-		OldSynchList(final SynchList<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public final SynchList<E> parent()
-		{
-			return (SynchList<E>)super.parent();
-		}
-
 	}
 
 }
