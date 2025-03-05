@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Comparator;
 import java.util.TreeSet;
 
-import org.eclipse.serializer.collections.old.OldCollections;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
@@ -140,7 +139,7 @@ public final class BinaryHandlerTreeSet extends AbstractBinaryHandlerCustomColle
 	@Override
 	public final void complete(final Binary data, final TreeSet<?> instance, final PersistenceLoadHandler handler)
 	{
-		OldCollections.populateCollectionFromHelperArray(instance, data.getHelper(instance));
+		AbstractBinaryHandlerCollection.populateCollectionFromHelperArray(instance, data.getHelper(instance));
 	}
 
 	@Override

@@ -35,12 +35,6 @@ public interface XTable<K, V> extends XBasicTable<K, V>, XEnum<KeyValue<K, V>>
 	public Values<K, V> values();
 
 	@Override
-	public EntriesBridge<K, V> old();
-	
-	@Override
-	public Bridge<K, V> oldMap();
-	
-	@Override
 	public XTable<K, V> copy();
 
 	@Override
@@ -123,12 +117,6 @@ public interface XTable<K, V> extends XBasicTable<K, V>, XEnum<KeyValue<K, V>>
 		@Override
 		public XTable<K, V> parent();
 
-	}
-	
-	public interface EntriesBridge<K, V> extends XBasicTable.EntriesBridge<K, V>
-	{
-		@Override
-		public XTable<K, V> parent();
 	}
 
 }

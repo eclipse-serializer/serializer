@@ -37,12 +37,6 @@ XAddingTable<K, V>
 	public Values<K, V> values();
 
 	@Override
-	public EntriesBridge<K, V> old();
-	
-	@Override
-	public Bridge<K, V> oldMap();
-	
-	@Override
 	public XBasicTable<K, V> copy();
 
 	public boolean hasVolatileValues();
@@ -120,12 +114,6 @@ XAddingTable<K, V>
 	}
 
 	public interface Bridge<K, V> extends XMap.Bridge<K, V>, XGettingTable.Bridge<K, V>
-	{
-		@Override
-		public XBasicTable<K, V> parent();
-	}
-	
-	public interface EntriesBridge<K, V> extends XMap.EntriesBridge<K, V>, XGettingTable.EntriesBridge<K, V>
 	{
 		@Override
 		public XBasicTable<K, V> parent();

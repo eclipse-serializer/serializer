@@ -20,7 +20,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.OldCollection;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XImmutableCollection;
 import org.eclipse.serializer.equality.Equalator;
@@ -307,12 +306,6 @@ public class View<E> implements XGettingCollection<E>
 
 	@Override
 	public Iterator<E> iterator()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
-	}
-
-	@Override
-	public OldCollection<E> old()
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}

@@ -26,7 +26,6 @@ import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
 import org.eclipse.serializer.collections.interfaces.ChainStorage;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.collections.old.AbstractBridgeXSet;
 import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
@@ -496,11 +495,6 @@ implements XEnum<E>, HashCollection<E>, Composition, IdentityEqualityLogic
 		return false;
 	}
 
-	@Override
-	public final OldVarSet<E> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable#old()
-	}
 
 	@Override
 	public final long currentCapacity()
@@ -1536,21 +1530,5 @@ implements XEnum<E>, HashCollection<E>, Composition, IdentityEqualityLogic
 		};
 	}
 
-
-
-	public static final class OldVarSet<E> extends AbstractBridgeXSet<E>
-	{
-		OldVarSet(final HashEnum<E> set)
-		{
-			super(set);
-		}
-
-		@Override
-		public HashEnum<E> parent()
-		{
-			return (HashEnum<E>)super.parent();
-		}
-
-	}
 
 }

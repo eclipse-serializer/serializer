@@ -17,7 +17,7 @@ package org.eclipse.serializer.persistence.binary.java.util.concurrent;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.eclipse.serializer.collections.old.OldCollections;
+import org.eclipse.serializer.persistence.binary.java.util.AbstractBinaryHandlerCollection;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
@@ -152,7 +152,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListSet<?>>
 		final PersistenceLoadHandler   loadHandler
 	)
 	{
-		OldCollections.populateCollectionFromHelperArray(instance, data.getHelper(instance));
+		AbstractBinaryHandlerCollection.populateCollectionFromHelperArray(instance, data.getHelper(instance));
 	}
 
 	@Override

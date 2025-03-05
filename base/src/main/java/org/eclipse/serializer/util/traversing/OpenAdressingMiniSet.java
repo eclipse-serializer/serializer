@@ -22,7 +22,6 @@ import java.util.function.Predicate;
 import org.eclipse.serializer.collections.CapacityExceededException;
 import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
-import org.eclipse.serializer.collections.old.OldCollection;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XImmutableSet;
 import org.eclipse.serializer.collections.types.XSet;
@@ -321,12 +320,6 @@ public final class OpenAdressingMiniSet<E> implements XSet<E>
 
 	@Override
 	public E[] toArray(final Class<E> type)
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError();
-	}
-
-	@Override
-	public OldCollection<E> old()
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}

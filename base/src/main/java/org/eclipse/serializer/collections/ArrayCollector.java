@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractBridgeXList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XImmutableList;
@@ -1867,27 +1866,6 @@ public final class ArrayCollector<E> extends AbstractSimpleArrayCollection<E> im
 	public int hashCode()
 	{
 		return XArrays.arrayHashCode(this.data, this.size);
-	}
-
-	@Override
-	public OldArrayCollector<E> old()
-	{
-		return new OldArrayCollector<>(this);
-	}
-
-	public static final class OldArrayCollector<E> extends AbstractBridgeXList<E>
-	{
-		OldArrayCollector(final ArrayCollector<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public ArrayCollector<E> parent()
-		{
-			return (ArrayCollector<E>)super.parent();
-		}
-
 	}
 
 }

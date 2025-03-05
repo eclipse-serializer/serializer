@@ -23,7 +23,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractOldGettingSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
@@ -447,29 +446,6 @@ public class EnumView<E> implements XGettingEnum<E>
 	public String toString()
 	{
 		return this.subject.toString();
-	}
-
-
-
-	@Override
-	public OldEnumView<E> old()
-	{
-		return new OldEnumView<>(this);
-	}
-
-	public static final class OldEnumView<E> extends AbstractOldGettingSet<E>
-	{
-		OldEnumView(final EnumView<E> enuM)
-		{
-			super(enuM);
-		}
-
-		@Override
-		public EnumView<E> parent()
-		{
-			return (EnumView<E>)super.parent();
-		}
-
 	}
 
 }

@@ -106,25 +106,6 @@ public final class MiniMap<K, V> implements Composition
 	}
 
 	@SuppressWarnings("unchecked")
-	MiniMap(final int size, final ConstMiniMap.Entry<K, V>[] source)
-	{
-		super();
-		final Entry<K, V>[] slots;
-		final int modulo;
-		this.modulo = modulo = (this.slots = slots = new Entry[XMath.pow2BoundMaxed(this.size = size)]).length - 1;
-		for(int i = 0; i < source.length; i++)
-		{
-			// iterate through all entries and assign them to the new storage
-			for(ConstMiniMap.Entry<K, V> entry = source[i]; entry != null; entry = entry.link)
-			{
-				slots[identityHashCode(entry.key) & modulo] =
-					new Entry<>(entry.key, entry.value, slots[identityHashCode(entry.key) & modulo])
-				;
-			}
-		}
-	}
-
-	@SuppressWarnings("unchecked")
 	MiniMap(final int size, final Entry<K, V>[] source)
 	{
 		super();
@@ -157,11 +138,6 @@ public final class MiniMap<K, V> implements Composition
 	public MiniMap<K, V> copy()
 	{
 		return new MiniMap<>(this.size, this.slots);
-	}
-
-	public ConstMiniMap<K, V> toConstMap()
-	{
-		return new ConstMiniMap<>(this.size, this.slots);
 	}
 
 	public V get(final K key)

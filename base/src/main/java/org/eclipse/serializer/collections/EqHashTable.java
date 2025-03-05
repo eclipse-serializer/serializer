@@ -17,12 +17,9 @@ package org.eclipse.serializer.collections;
 
 import static org.eclipse.serializer.util.X.notNull;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -31,12 +28,9 @@ import java.util.function.Predicate;
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.collections.old.AbstractBridgeXSet;
-import org.eclipse.serializer.collections.old.AbstractOldSettingList;
 import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
-import org.eclipse.serializer.collections.types.XGettingMap;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XGettingTable;
 import org.eclipse.serializer.collections.types.XImmutableList;
@@ -1023,17 +1017,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		return this.keys;
 	}
 
-	@Override
-	public final XTable.EntriesBridge<K, V> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable#old()
-	}
-
-	@Override
-	public org.eclipse.serializer.collections.types.XTable.Bridge<K, V> oldMap()
-	{
-		return new OldVarMap();
-	}
 
 	@Override
 	public final V searchValue(final Predicate<? super K> keyPredicate)
@@ -3175,12 +3158,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		}
 
 		@Override
-		public final OldKeys old()
-		{
-			return new OldKeys();
-		}
-
-		@Override
 		public final EqHashTable<K, V> parent()
 		{
 			return EqHashTable.this;
@@ -3198,20 +3175,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 			return EqHashTable.this.hashDensity();
 		}
 
-		public final class OldKeys extends AbstractBridgeXSet<K>
-		{
-			protected OldKeys()
-			{
-				super(Keys.this);
-			}
-
-			@Override
-			public final Keys parent()
-			{
-				return (Keys)super.parent();
-			}
-
-		}
 
 		@Override
 		public final boolean input(final long index, final K element)
@@ -3578,12 +3541,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		public final boolean nullContained()
 		{
 			return EqHashTable.this.chain.valuesContains(null);
-		}
-
-		@Override
-		public final OldValues old()
-		{
-			return new OldValues();
 		}
 
 		@Override
@@ -4101,170 +4058,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		{
 			EqHashTable.this.chain.swap(indexA, indexB, length);
 			return this;
-		}
-
-		public final class OldValues extends AbstractOldSettingList<V>
-		{
-			protected OldValues()
-			{
-				super(Values.this);
-			}
-
-			@Override
-			public final Values parent()
-			{
-				return (Values)super.parent();
-			}
-
-		}
-
-	}
-
-
-
-	public final class OldVarMap implements XTable.Bridge<K, V>
-	{
-
-		@Override
-		public final void clear()
-		{
-			EqHashTable.this.clear();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final boolean containsKey(final Object key)
-		{
-			try
-			{
-				return EqHashTable.this.containsKey((K)key);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 */
-				return false;
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final boolean containsValue(final Object value)
-		{
-			try
-			{
-				return EqHashTable.this.chain.valuesContains((V)value);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 */
-				return false;
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final Set<java.util.Map.Entry<K, V>> entrySet()
-		{
-			/* (20.05.2011 TM)NOTE:
-			 * Okay this is nasty:
-			 * Entry implements KeyValue and java.util.Map.Entry
-			 * XCollection-architecture wise, the "old" collections cleanly use KeyValue instead of Entry.
-			 * But java.util.Set<KeyValue<K, V>> cannot be cast to Set<java.util.Map.Entry<K, V>>, generics-wise.
-			 * Nevertheless, the "stuff behind" the typing IS compatible.
-			 * So this dirty but architectural clean workaround is used.
-			 */
-			return (Set<java.util.Map.Entry<K, V>>)(Set<?>)EqHashTable.this.old();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final V get(final Object key)
-		{
-			try
-			{
-				return EqHashTable.this.get((K)key);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 */
-				return null;
-			}
-		}
-
-		@Override
-		public final boolean isEmpty()
-		{
-			return EqHashTable.this.isEmpty();
-		}
-
-		@Override
-		public final Set<K> keySet()
-		{
-			return EqHashTable.this.keys().old();
-		}
-
-		@Override
-		public final V put(final K key, final V value)
-		{
-			return EqHashTable.this.oldPutGet(key, value);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final void putAll(final Map<? extends K, ? extends V> m)
-		{
-			if(m instanceof XGettingMap.Bridge<?, ?>)
-			{
-				EqHashTable.this.addAll(((XGettingMap.Bridge<K, V>)m).parent());
-				return;
-			}
-
-			final EqHashTable<K, V> parent = EqHashTable.this;
-			for(final Map.Entry<? extends K, ? extends V> entry : m.entrySet())
-			{
-				parent.put(entry.getKey(), entry.getValue());
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final V remove(final Object key)
-		{
-			try
-			{
-				return EqHashTable.this.removeFor((K)key);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 */
-				return null;
-			}
-		}
-
-		@Override
-		public final int size()
-		{
-			return XTypes.to_int(EqHashTable.this.size());
-		}
-
-		@Override
-		public final Collection<V> values()
-		{
-			return EqHashTable.this.values.old(); // hehehe
-		}
-
-		@Override
-		public final EqHashTable<K, V> parent()
-		{
-			return EqHashTable.this;
 		}
 
 	}

@@ -22,7 +22,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractOldGettingList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.collections.types.XImmutableList;
@@ -667,27 +666,5 @@ public final class EqConstList<E> extends AbstractSimpleArrayCollection<E> imple
 		return XArrays.arrayHashCode(this.data, this.data.length);
 	}
 
-
-
-	@Override
-	public OldConstList<E> old()
-	{
-		return new OldConstList<>(this);
-	}
-
-	public static final class OldConstList<E> extends AbstractOldGettingList<E>
-	{
-		OldConstList(final EqConstList<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public EqConstList<E> parent()
-		{
-			return (EqConstList<E>)super.parent();
-		}
-
-	}
 
 }

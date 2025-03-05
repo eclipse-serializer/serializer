@@ -17,7 +17,7 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.entity;
 import static org.eclipse.serializer.util.X.notNull;
 
 import org.eclipse.serializer.collections.EqHashTable;
-import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
+import org.eclipse.serializer.collections.KeyValueFlatCollector;
 import org.eclipse.serializer.entity.EntityLayerVersioning;
 import org.eclipse.serializer.entity.EntityVersionContext;
 import org.eclipse.serializer.hashing.HashEqualator;

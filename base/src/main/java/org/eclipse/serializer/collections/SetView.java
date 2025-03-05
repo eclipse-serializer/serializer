@@ -23,7 +23,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractOldGettingSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSet;
 import org.eclipse.serializer.collections.types.XImmutableSet;
@@ -321,28 +320,6 @@ public final class SetView<E> implements XGettingSet<E>
 		return this.subject.immure();
 	}
 
-
-
-	@Override
-	public OldSetView<E> old()
-	{
-		return new OldSetView<>(this);
-	}
-
-	public static final class OldSetView<E> extends AbstractOldGettingSet<E>
-	{
-		OldSetView(final SetView<E> set)
-		{
-			super(set);
-		}
-
-		@Override
-		public SetView<E> parent()
-		{
-			return (SetView<E>)super.parent();
-		}
-
-	}
 
 	@Override
 	public Iterator<E> iterator()

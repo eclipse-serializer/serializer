@@ -369,8 +369,7 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerSubstituterDefault.New()
 			/* (29.10.2013 TM)TODO: more default custom handlers
 			 * - VarString
-			 * - VarByte
-			 * - _intList etc.
+			 * - VarByte etc.
 			 */
 		);
 

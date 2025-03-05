@@ -307,28 +307,6 @@ public class SubListProcessor<E> extends SubListView<E> implements XDecreasingLi
 		return new SubListView<>(this.list, this.startIndex + fromIndex * this.d, this.startIndex + toIndex * this.d);
 	}
 
-
-	@Override
-	public final OldSubListProcessor<E> old()
-	{
-		return new OldSubListProcessor<>(this);
-	}
-
-	static class OldSubListProcessor<E> extends OldSubListView<E>
-	{
-		OldSubListProcessor(final SubListProcessor<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public final SubListProcessor<E> parent()
-		{
-			return (SubListProcessor<E>)super.parent();
-		}
-
-	}
-
 	@Override
 	public final boolean replaceOne(final E element, final E replacement)
 	{

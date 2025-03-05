@@ -19,8 +19,6 @@ import org.eclipse.serializer.branching.ThrowBreak;
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.*;
 import org.eclipse.serializer.collections.interfaces.Sized;
-import org.eclipse.serializer.collections.old.AbstractBridgeXList;
-import org.eclipse.serializer.collections.old.AbstractBridgeXSet;
 import org.eclipse.serializer.collections.types.*;
 import org.eclipse.serializer.concurrency.ThreadSafe;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
@@ -51,7 +49,7 @@ import java.util.stream.StreamSupport;
  * rules: method names begin with a lower case letter EXCEPT for constructor methods. This extension does nothing
  * more than applying the same exception to constructor-like static methods. Resembling a constructor means:
  * 1.) Indicating by name that a new instance is created. 2.) Always returning a new instance, without exception.
- * No caching, no casting. For example: {@link #empty()} or {@link #asX(List)} are NOT constructor-like methods
+ * No caching, no casting. For example: {@link #empty()} is NOT constructor-like methods
  * because they do not (always) create new instances.
  *
  */
@@ -1020,39 +1018,6 @@ public final class X
 		return newArray;
 	}
 	
-	public static <E> XList<E> asX(final List<E> oldList)
-	{
-		if(oldList instanceof AbstractBridgeXList<?>)
-		{
-			return ((AbstractBridgeXList<E>)oldList).parent();
-		}
-		else if(oldList instanceof ArrayList<?>)
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError();
-		}
-
-		throw new UnsupportedOperationException();
-		// (19.05.2011 TM)FIXME: generic old list wrapper
-	}
-
-	public static <E> XSet<E> asX(final Set<E> oldSet)
-	{
-		if(oldSet instanceof AbstractBridgeXSet<?>)
-		{
-			return ((AbstractBridgeXSet<E>)oldSet).parent();
-		}
-
-		throw new UnsupportedOperationException();
-		// (19.05.2011 TM)FIXME: old set wrapper
-	}
-
-	public static <K, V> XMap<K, V> asX(final Map<K, V> oldMap)
-	{
-		throw new UnsupportedOperationException();
-		// (19.05.2011 TM)FIXME: old map wrapper
-	}
-
-	
 	
 	public static boolean hasNoContent(final XGettingCollection<?> collection)
 	{
@@ -1182,27 +1147,6 @@ public final class X
 		return new SynchSet<>(set);
 	}
 
-	/**
-	 * Ensures that the returned {@link XCollection} instance based on the passed collection is thread safe to use.<br>
-	 * This normally means wrapping the passed collection in a {@link SynchCollection}, making it effectively synchronized.<br>
-	 * If the passed collection already is thread safe (indicated by the marker interface {@link ThreadSafe}), then the collection
-	 * itself is returned without further actions. This automatically ensures that a {@link SynchCollection} is not
-	 * redundantly wrapped again in another {@link SynchCollection}.
-	 *
-	 * @param <E> the element type.
-	 * @param collection the {@link XCollection} instance to be synchronized.
-	 * @return a thread safe {@link XCollection} using the passed collection.
-	 */
-	public static <E> XCollection<E> synchronize(final XCollection<E> collection)
-	{
-		// if type of passed collection is already thread safe, there's no need to wrap it in a SynchronizedXCollection
-		if(collection instanceof ThreadSafe)
-		{
-			return collection;
-		}
-		// wrap not thread safe set types in a SynchronizedXCollection
-		return new SynchCollection<>(collection);
-	}
 
 	/**
 	 * Converts an {@link Iterable} into an array.

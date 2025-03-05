@@ -22,7 +22,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractOldGettingList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.collections.types.XImmutableList;
@@ -569,28 +568,6 @@ public class SubListView<E> implements XGettingList<E>
 	public boolean equalsContent(final XGettingCollection<? extends E> samples, final Equalator<? super E> equalator)
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
-	}
-
-
-	@Override
-	public OldSubListView<E> old()
-	{
-		return new OldSubListView<>(this);
-	}
-
-	static class OldSubListView<E> extends AbstractOldGettingList<E>
-	{
-		OldSubListView(final SubListView<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public SubListView<E> parent()
-		{
-			return (SubListView<E>)super.parent();
-		}
-
 	}
 
 }

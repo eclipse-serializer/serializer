@@ -25,7 +25,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.old.AbstractOldSettingList;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XList;
@@ -1020,29 +1019,6 @@ public final class FixedList<E> extends AbstractSimpleArrayCollection<E> impleme
 	public int hashCode()
 	{
 		return XArrays.arrayHashCode(this.data, this.data.length);
-	}
-
-
-
-	@Override
-	public OldFixedList<E> old()
-	{
-		return new OldFixedList<>(this);
-	}
-
-	public static final class OldFixedList<E> extends AbstractOldSettingList<E>
-	{
-		OldFixedList(final FixedList<E> list)
-		{
-			super(list);
-		}
-
-		@Override
-		public FixedList<E> parent()
-		{
-			return (FixedList<E>)super.parent();
-		}
-
 	}
 
 }

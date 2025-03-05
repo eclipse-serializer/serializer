@@ -17,7 +17,6 @@ package org.eclipse.serializer.collections.types;
 import java.util.ListIterator;
 
 import org.eclipse.serializer.collections.interfaces.ExtendedList;
-import org.eclipse.serializer.collections.old.OldList;
 
 public interface XGettingList<E> extends XGettingSequence<E>, XGettingBag<E>, ExtendedList<E>
 {
@@ -39,9 +38,6 @@ public interface XGettingList<E> extends XGettingSequence<E>, XGettingBag<E>, Ex
 	public ListIterator<E> listIterator();
 	
 	public ListIterator<E> listIterator(long index);
-
-	@Override
-	public OldList<E> old();
 
 	@Override
 	public XGettingList<E> copy();

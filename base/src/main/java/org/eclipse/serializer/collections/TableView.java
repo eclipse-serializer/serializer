@@ -432,17 +432,6 @@ public final class TableView<K, V> implements XGettingTable<K, V>
 		return this.subject.immure();
 	}
 
-	@Override
-	public final EntriesBridge<K, V> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME TableView#old
-	}
-
-	@Override
-	public Bridge<K, V> oldMap()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME TableView#oldMap()
-	}
 
 	@Override
 	public final boolean nullKeyAllowed()

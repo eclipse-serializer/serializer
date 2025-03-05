@@ -54,12 +54,6 @@ public interface XImmutableMap<K, V> extends XGettingMap<K, V>, XImmutableSet<Ke
 	@Override
 	public XImmutableTable<K, V> immure();
 
-	@Override
-	public EntriesBridge<K, V> old();
-
-	@Override
-	public Bridge<K, V> oldMap();
-
 	// null handling characteristics information
 
 	@Override
@@ -89,11 +83,6 @@ public interface XImmutableMap<K, V> extends XGettingMap<K, V>, XImmutableSet<Ke
 	}
 
 	public interface Bridge<K, V> extends XGettingMap.Bridge<K, V>
-	{
-		// empty so far
-	}
-
-	public interface EntriesBridge<K, V> extends XGettingMap.EntriesBridge<K, V>
 	{
 		// empty so far
 	}

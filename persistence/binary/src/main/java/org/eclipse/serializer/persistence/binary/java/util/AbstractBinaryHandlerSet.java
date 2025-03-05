@@ -16,11 +16,10 @@ package org.eclipse.serializer.persistence.binary.java.util;
 
 import java.util.Set;
 
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.collections.old.OldCollections;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterableSimpleListElements;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
+import org.eclipse.serializer.util.X;
 
 
 public abstract class AbstractBinaryHandlerSet<T extends Set<?>>
@@ -59,7 +58,7 @@ extends AbstractBinaryHandlerCustomIterableSimpleListElements<T>
 	@Override
 	public void complete(final Binary data, final T instance, final PersistenceLoadHandler handler)
 	{
-		OldCollections.populateCollectionFromHelperArray(instance, data.getHelper(instance));
+		AbstractBinaryHandlerCollection.populateCollectionFromHelperArray(instance, data.getHelper(instance));
 	}
 	
 }

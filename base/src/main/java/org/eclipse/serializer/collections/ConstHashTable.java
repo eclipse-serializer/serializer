@@ -15,12 +15,9 @@ package org.eclipse.serializer.collections;
  */
 
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -28,8 +25,6 @@ import java.util.function.Predicate;
 
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.collections.old.OldCollection;
-import org.eclipse.serializer.collections.old.OldList;
 import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
@@ -531,17 +526,6 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		return this.keys;
 	}
 
-	@Override
-	public final XImmutableTable.EntriesBridge<K, V> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable#old()
-	}
-
-	@Override
-	public org.eclipse.serializer.collections.types.XImmutableTable.Bridge<K, V> oldMap()
-	{
-		return new OldVarMap();
-	}
 
 	@Override
 	public final V searchValue(final Predicate<? super K> keyPredicate)
@@ -1537,12 +1521,6 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		}
 
 		@Override
-		public final OldCollection<K> old()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Keys#old()
-		}
-
-		@Override
 		public final ConstHashTable<K, V> parent()
 		{
 			return ConstHashTable.this;
@@ -1766,12 +1744,6 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		}
 
 		@Override
-		public final OldList<V> old()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.Values#old()
-		}
-
-		@Override
 		public final V seek(final V sample)
 		{
 			return ConstHashTable.this.chain.valuesSeek(sample);
@@ -1974,139 +1946,6 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		public final long scan(final Predicate<? super V> predicate)
 		{
 			return ConstHashTable.this.chain.valuesScan(predicate);
-		}
-
-	}
-
-
-
-	public final class OldVarMap implements XImmutableTable.Bridge<K, V>
-	{
-
-		@Override
-		public final void clear()
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final boolean containsKey(final Object key)
-		{
-			try
-			{
-				return ConstHashTable.this.containsKey((K)key);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 * God damn stupid dilettantish Object type in old Map -.-
-				 * As if they really found "reasonable code that affords Object" back then, nonsense.
-				 */
-				return false;
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final boolean containsValue(final Object value)
-		{
-			try
-			{
-				return ConstHashTable.this.chain.valuesContains((V)value);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 * God damn stupid dilettantish Object type in old Map -.-
-				 * As if they really found "reasonable code that affords Object" back then, nonsense.
-				 */
-				return false;
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final Set<java.util.Map.Entry<K, V>> entrySet()
-		{
-			/* (20.05.2011 TM)NOTE:
-			 * Okay this is nasty:
-			 * Entry implements KeyValue and java.util.Map.Entry
-			 * XCollection-architecture wise, the "old" collections cleanly use KeyValue instead of Entry.
-			 * But java.util.Set<KeyValue<K, V>> cannot be cast to Set<java.util.Map.Entry<K, V>>, generics-wise.
-			 * Nevertheless, the "stuff behind" the typing IS compatible.
-			 * So this typingly dirty but architectural clean workaround is used.
-			 */
-			return (Set<java.util.Map.Entry<K, V>>)(Set<?>)ConstHashTable.this.old();
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public final V get(final Object key)
-		{
-			try
-			{
-				return ConstHashTable.this.get((K)key);
-			}
-			catch(final Exception e)
-			{
-				/* how to safely detect an exception caused by an invalid type of passed object?
-				 * Can't be sure to always be a ClassCastException...
-				 * God damn stupid dilettantish Object type in old Map -.-
-				 * As if they really found "reasonable code that affords Object" back then, nonsense.
-				 */
-				return null;
-			}
-		}
-
-		@Override
-		public final boolean isEmpty()
-		{
-			return ConstHashTable.this.isEmpty();
-		}
-
-		@Override
-		public final Set<K> keySet()
-		{
-			throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME ConstHashTable.OldVarMap#keySet()
-		}
-
-		@Override
-		public final V put(final K key, final V value)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final void putAll(final Map<? extends K, ? extends V> m)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final V remove(final Object key)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public final int size()
-		{
-			return XTypes.to_int(ConstHashTable.this.size());
-		}
-
-		@Override
-		public final Collection<V> values()
-		{
-			return ConstHashTable.this.values.old(); // hehehe
-		}
-
-		@Override
-		public final ConstHashTable<K, V> parent()
-		{
-			return ConstHashTable.this;
 		}
 
 	}

@@ -24,7 +24,6 @@ import java.util.function.Predicate;
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.ChainStorage;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.collections.old.OldSet;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.collections.types.XImmutableEnum;
@@ -356,12 +355,6 @@ implements XImmutableEnum<E>, HashCollection<E>, Composition, IdentityEqualityLo
 	public final boolean hasVolatileElements()
 	{
 		return false;
-	}
-
-	@Override
-	public final OldSet<E> old()
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable#old()
 	}
 
 	@Override

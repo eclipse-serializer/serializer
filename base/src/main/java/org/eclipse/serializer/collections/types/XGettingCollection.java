@@ -23,7 +23,6 @@ import java.util.function.Predicate;
 
 import org.eclipse.serializer.collections.interfaces.CapacityCarrying;
 import org.eclipse.serializer.collections.interfaces.ExtendedCollection;
-import org.eclipse.serializer.collections.old.OldCollection;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.functional.ToArrayAggregator;
 import org.eclipse.serializer.typing.Copyable;
@@ -89,8 +88,6 @@ Copyable
 	{
 		return this.iterate(new ToArrayAggregator<>(X.Array(type, X.checkArrayRange(this.size())))).yield();
 	}
-
-	public OldCollection<E> old();
 
 	@Override
 	public boolean hasVolatileElements();
