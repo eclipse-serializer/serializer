@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.eclipse.serializer.collections.interfaces.ExtendedMap;
-import org.eclipse.serializer.collections.old.OldCollection;
 import org.eclipse.serializer.typing.ComponentType;
 import org.eclipse.serializer.typing.KeyValue;
 
@@ -100,11 +99,6 @@ public interface XGettingMap<K, V> extends ExtendedMap<K, V>, XGettingSet<KeyVal
 	}
 
 	public interface Bridge<K, V> extends Satellite<K, V>, Map<K, V>
-	{
-		// empty so far
-	}
-
-	public interface EntriesBridge<K, V> extends Satellite<K, V>, OldCollection<KeyValue<K, V>>
 	{
 		// empty so far
 	}

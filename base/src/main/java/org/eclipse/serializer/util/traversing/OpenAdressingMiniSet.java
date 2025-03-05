@@ -22,7 +22,6 @@ import java.util.function.Predicate;
 import org.eclipse.serializer.collections.CapacityExceededException;
 import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
-import org.eclipse.serializer.collections.old.OldCollection;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XImmutableSet;
 import org.eclipse.serializer.collections.types.XSet;

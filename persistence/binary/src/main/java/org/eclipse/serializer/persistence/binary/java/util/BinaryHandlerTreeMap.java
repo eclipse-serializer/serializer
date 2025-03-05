@@ -17,8 +17,7 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Comparator;
 import java.util.TreeMap;
 
-import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
-import org.eclipse.serializer.collections.old.OldCollections;
+import org.eclipse.serializer.collections.KeyValueFlatCollector;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
@@ -144,7 +143,7 @@ public final class BinaryHandlerTreeMap extends AbstractBinaryHandlerCustomColle
 	@Override
 	public final void complete(final Binary data, final TreeMap<?, ?> instance, final PersistenceLoadHandler handler)
 	{
-		OldCollections.populateMapFromHelperArray(instance, data.getHelper(instance));
+		AbstractBinaryHandlerMap.populateMapFromHelperArray(instance, data.getHelper(instance));
 	}
 
 	@Override

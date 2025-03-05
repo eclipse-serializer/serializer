@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import org.eclipse.serializer.collections.old.OldCollections;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterable;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
@@ -155,7 +154,7 @@ extends AbstractBinaryHandlerCustomIterable<PriorityQueue<?>>
 		final PersistenceLoadHandler handler
 	)
 	{
-		OldCollections.populateCollectionFromHelperArray(instance, data.getHelper(instance));
+		AbstractBinaryHandlerCollection.populateCollectionFromHelperArray(instance, data.getHelper(instance));
 	}
 
 	@Override

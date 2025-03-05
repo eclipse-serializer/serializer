@@ -118,12 +118,6 @@ XAddingTable<K, V>
 		@Override
 		public XBasicTable<K, V> parent();
 	}
-	
-	public interface EntriesBridge<K, V> extends XMap.EntriesBridge<K, V>, XGettingTable.EntriesBridge<K, V>
-	{
-		@Override
-		public XBasicTable<K, V> parent();
-	}
 
 }
 

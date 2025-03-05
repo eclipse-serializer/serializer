@@ -16,8 +16,7 @@ package org.eclipse.serializer.persistence.binary.jdk8.java.util;
 
 import java.util.LinkedHashSet;
 
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.collections.old.OldCollections;
+import org.eclipse.serializer.persistence.binary.java.util.AbstractBinaryHandlerCollection;
 import org.eclipse.serializer.persistence.binary.jdk8.types.SunJdk8Internals;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -26,6 +25,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerLinkedHashSet extends AbstractBinaryHandlerCustomCollection<LinkedHashSet<?>>
@@ -132,7 +132,7 @@ public final class BinaryHandlerLinkedHashSet extends AbstractBinaryHandlerCusto
 	@Override
 	public void complete(final Binary bytes, final LinkedHashSet<?> instance, final PersistenceLoadHandler idResolver)
 	{
-		OldCollections.populateCollectionFromHelperArray(instance, bytes.getHelper(instance));
+		AbstractBinaryHandlerCollection.populateCollectionFromHelperArray(instance, bytes.getHelper(instance));
 	}
 
 	@Override

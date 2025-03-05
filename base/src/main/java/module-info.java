@@ -19,7 +19,6 @@ module org.eclipse.serializer.base
 	exports org.eclipse.serializer.chars;
 	exports org.eclipse.serializer.collections;
 	exports org.eclipse.serializer.collections.interfaces;
-	exports org.eclipse.serializer.collections.old;
 	exports org.eclipse.serializer.collections.lazy;
 	exports org.eclipse.serializer.collections.sorting;
 	exports org.eclipse.serializer.collections.types;

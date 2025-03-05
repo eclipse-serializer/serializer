@@ -16,16 +16,61 @@ package org.eclipse.serializer.persistence.binary.java.util;
 
 import java.util.Collection;
 
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.collections.old.OldCollections;
+import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterableSimpleListElements;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
+import org.eclipse.serializer.util.X;
 
 
 public abstract class AbstractBinaryHandlerCollection<T extends Collection<?>>
 extends AbstractBinaryHandlerCustomIterableSimpleListElements<T>
 {
+	///////////////////////////////////////////////////////////////////////////
+	// static methods //
+	///////////////////
+
+	public static final void populateCollectionFromHelperArray(
+		final Collection<?> instance      ,
+		final Object        elementsHelper
+	)
+	{
+		if(elementsHelper == null)
+		{
+			// (22.04.2016 TM)EXCP: proper exception
+			throw new RuntimeException(
+				"Missing collection elements helper instance for " + XChars.systemString(instance)
+			);
+		}
+		
+		if(!(elementsHelper instanceof Object[]))
+		{
+			// (22.04.2016 TM)EXCP: proper exception
+			throw new RuntimeException(
+				"Invalid collection elements helper instance for " + XChars.systemString(instance)
+			);
+		}
+		
+		@SuppressWarnings("unchecked")
+		final Collection<Object> castedInstance = (Collection<Object>)instance;
+		populateCollection(castedInstance, (Object[])elementsHelper);
+	}
+	
+	public static final void populateCollection(final Collection<Object> instance, final Object[] elements)
+	{
+		for(int i = 0; i < elements.length; i++)
+		{
+			if(!instance.add(elements[i]))
+			{
+				// (22.04.2016 TM)EXCP: proper exception
+				throw new RuntimeException(
+					"Error in adding logic (e.g. element hashing inconsistency) in " + XChars.systemString(instance)
+				);
+			}
+		}
+	}
+	
+	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
@@ -61,7 +106,7 @@ extends AbstractBinaryHandlerCustomIterableSimpleListElements<T>
 	public void complete(final Binary data, final T instance, final PersistenceLoadHandler handler)
 	{
 		// generic-generic collection handler logic uses the set workaround logic to be safe in any case
-		OldCollections.populateCollectionFromHelperArray(instance, data.getHelper(instance));
+		populateCollectionFromHelperArray(instance, data.getHelper(instance));
 	}
 	
 }

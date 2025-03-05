@@ -99,11 +99,4 @@ public interface XImmutableTable<K, V> extends XImmutableMap<K, V>, XGettingTabl
 
 	}
 
-	public interface EntriesBridge<K, V>
-	extends XImmutableMap.EntriesBridge<K, V>, XGettingTable.EntriesBridge<K, V>, Satellite<K, V>
-	{
-		@Override
-		public XImmutableTable<K, V> parent();
-	}
-
 }

@@ -16,8 +16,8 @@ package org.eclipse.serializer.persistence.binary.jdk8.java.util;
 
 import java.util.Properties;
 
-import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
-import org.eclipse.serializer.collections.old.OldCollections;
+import org.eclipse.serializer.collections.KeyValueFlatCollector;
+import org.eclipse.serializer.persistence.binary.java.util.AbstractBinaryHandlerMap;
 import org.eclipse.serializer.persistence.binary.jdk8.types.SunJdk8Internals;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -135,7 +135,7 @@ public final class BinaryHandlerProperties extends AbstractBinaryHandlerCustomCo
 	@Override
 	public void complete(final Binary data, final Properties instance, final PersistenceLoadHandler handler)
 	{
-		OldCollections.populateMapFromHelperArray(instance, data.getHelper(instance));
+		AbstractBinaryHandlerMap.populateMapFromHelperArray(instance, data.getHelper(instance));
 	}
 
 	@Override

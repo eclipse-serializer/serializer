@@ -1,4 +1,4 @@
-package org.eclipse.serializer.collections.old;
+package org.eclipse.serializer.collections;
 
 /*-
  * #%L
