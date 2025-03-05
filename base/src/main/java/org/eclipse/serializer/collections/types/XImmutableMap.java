@@ -87,10 +87,5 @@ public interface XImmutableMap<K, V> extends XGettingMap<K, V>, XImmutableSet<Ke
 		// empty so far
 	}
 
-	public interface EntriesBridge<K, V> extends XGettingMap.EntriesBridge<K, V>
-	{
-		// empty so far
-	}
-
 }
 

@@ -76,10 +76,4 @@ public interface XGettingTable<K, V> extends XGettingMap<K, V>, XGettingEnum<Key
 
 	}
 
-	public interface EntriesBridge<K, V> extends XGettingMap.EntriesBridge<K, V>
-	{
-		@Override
-		public XGettingTable<K, V> parent();
-	}
-
 }

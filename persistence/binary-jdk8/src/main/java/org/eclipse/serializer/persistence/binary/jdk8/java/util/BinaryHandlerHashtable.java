@@ -16,9 +16,8 @@ package org.eclipse.serializer.persistence.binary.jdk8.java.util;
 
 import java.util.Hashtable;
 
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
-import org.eclipse.serializer.collections.old.OldCollections;
+import org.eclipse.serializer.collections.KeyValueFlatCollector;
+import org.eclipse.serializer.persistence.binary.java.util.AbstractBinaryHandlerMap;
 import org.eclipse.serializer.persistence.binary.jdk8.types.SunJdk8Internals;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -27,6 +26,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public final class BinaryHandlerHashtable extends AbstractBinaryHandlerCustomCollection<Hashtable<?, ?>>
@@ -134,7 +134,7 @@ public final class BinaryHandlerHashtable extends AbstractBinaryHandlerCustomCol
 	@Override
 	public void complete(final Binary bytes, final Hashtable<?, ?> instance, final PersistenceLoadHandler idResolver)
 	{
-		OldCollections.populateMapFromHelperArray(instance, bytes.getHelper(instance));
+		AbstractBinaryHandlerMap.populateMapFromHelperArray(instance, bytes.getHelper(instance));
 	}
 
 	@Override

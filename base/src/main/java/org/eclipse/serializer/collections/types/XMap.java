@@ -189,12 +189,6 @@ public interface XMap<K, V> extends XProcessingMap<K, V>, XPutGetMap<K, V>, XSet
 
 	}
 
-	public interface EntriesBridge<K, V> extends XGettingMap.EntriesBridge<K, V>
-	{
-		@Override
-		public XMap<K, V> parent();
-	}
-
 	public interface Values<K, V> extends XProcessingMap.Values<K, V>, Satellite<K, V>, XReplacingCollection<V>
 	{
 		@Override

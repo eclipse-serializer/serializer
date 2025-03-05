@@ -376,13 +376,6 @@ public final class XSort
 		values[r] = t;
 	}
 
-	private static void swap(final long[] values, final int l, final int r)
-	{
-		final long t = values[l];
-		values[l] = values[r];
-		values[r] = t;
-	}
-
 	private static void swap(final Object[] values, final int l, final int r)
 	{
 		final Object t = values[l];

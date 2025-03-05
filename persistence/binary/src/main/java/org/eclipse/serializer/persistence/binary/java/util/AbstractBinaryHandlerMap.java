@@ -16,9 +16,8 @@ package org.eclipse.serializer.persistence.binary.java.util;
 
 import java.util.Map;
 
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.collections.old.KeyValueFlatCollector;
-import org.eclipse.serializer.collections.old.OldCollections;
+import org.eclipse.serializer.chars.XChars;
+import org.eclipse.serializer.collections.KeyValueFlatCollector;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
@@ -26,6 +25,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.util.X;
 
 
 public abstract class AbstractBinaryHandlerMap<T extends Map<?, ?>>
@@ -46,6 +46,43 @@ extends AbstractBinaryHandlerCustomCollection<T>
 	public static final long getElementCount(final Binary data)
 	{
 		return data.getListElementCountKeyValue(BINARY_OFFSET_ELEMENTS);
+	}
+	
+	public static final void populateMapFromHelperArray(final Map<?, ?> instance, final Object elementsHelper)
+	{
+		if(elementsHelper == null)
+		{
+			// (22.04.2016 TM)EXCP: proper exception
+			throw new RuntimeException(
+				"Missing collection elements helper instance for " + XChars.systemString(instance)
+			);
+		}
+		
+		if(!(elementsHelper instanceof Object[]))
+		{
+			// (22.04.2016 TM)EXCP: proper exception
+			throw new RuntimeException(
+				"Invalid collection elements helper instance for " + XChars.systemString(instance)
+			);
+		}
+		
+		@SuppressWarnings("unchecked")
+		final Map<Object, Object> castedInstance = (Map<Object, Object>)instance;
+		populateMap(castedInstance, (Object[])elementsHelper);
+	}
+	
+	public static final void populateMap(final Map<Object, Object> instance, final Object[] elements)
+	{
+		for(int i = 0; i < elements.length; i += 2)
+		{
+			if(instance.putIfAbsent(elements[i], elements[i + 1]) != null)
+			{
+				// (22.04.2016 TM)EXCP: proper exception
+				throw new RuntimeException(
+					"Element hashing inconsistency in " + XChars.systemString(instance)
+				);
+			}
+		}
 	}
 	
 	
@@ -107,7 +144,7 @@ extends AbstractBinaryHandlerCustomCollection<T>
 		final PersistenceLoadHandler handler
 	)
 	{
-		OldCollections.populateMapFromHelperArray(instance, data.getHelper(instance));
+		populateMapFromHelperArray(instance, data.getHelper(instance));
 	}
 	
 	@Override
