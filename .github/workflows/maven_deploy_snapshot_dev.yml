@@ -29,7 +29,7 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-          gpg-passphrase: PASSPHRASE
+          gpg-passphrase: ${{ secrets.ORG_GPG_PASSPHRASE }}
       - name: Prepare suffix
         run: |
           function prepareSuffix() {
@@ -57,7 +57,6 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
 
         #java 17 build
       - uses: actions/checkout@v3
@@ -70,7 +69,7 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-          gpg-passphrase: PASSPHRASE
+          gpg-passphrase: ${{ secrets.ORG_GPG_PASSPHRASE }}
       - name: Prepare suffix
         run: |
           function prepareSuffix() {
@@ -102,4 +101,3 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.ORG_OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ORG_OSSRH_PASSWORD }}
-          PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
