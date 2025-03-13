@@ -24,6 +24,7 @@ jobs:
       - name: Prepare suffix
         run: |
           suffix=$(echo -n "${GITHUB_REF#refs/heads/}" | tr '/' '_' | cut -c1-10)-$(echo -n "${GITHUB_REF#refs/heads/}" | md5sum | cut -c1-10)
+          echo "Suffix: $suffix"
           echo "SUFFIX=$suffix" >> $GITHUB_ENV
       - name: Update project version
         run: |
@@ -55,6 +56,7 @@ jobs:
       - name: Prepare suffix
         run: |
           suffix=$(echo -n "${GITHUB_REF#refs/heads/}" | tr '/' '_' | cut -c1-10)-$(echo -n "${GITHUB_REF#refs/heads/}" | md5sum | cut -c1-10)
+          echo "Suffix: $suffix"
           echo "SUFFIX=$suffix" >> $GITHUB_ENV
       - name: Update project version
         run: |
