@@ -14,12 +14,12 @@ package org.eclipse.serializer.equality;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.notNull;
+import org.eclipse.serializer.hashing.XHashing;
 
 import java.util.Comparator;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.hashing.XHashing;
+import static org.eclipse.serializer.util.X.notNull;
 
 /**
  * An equalator function which checks if two given objects are equal or not.
@@ -39,7 +39,16 @@ public interface Equalator<T>
 	 * @return {@code true} if object1 equals object2, {@code false} if not.
 	 */
 	public boolean equal(T object1, T object2);
-
+	
+	/**
+	 * Returns {@code true} if the equality logic uses purely referential comparison, a.k.a. {@code ==} operator.
+	 *
+	 * @return {@code true} if the equality logic uses purely referential comparison.
+	 */
+	public default boolean isReferentialEquality()
+	{
+		return false;
+	}
 
 	/**
 	 * Creates a {@link java.util.function.Predicate} that checks

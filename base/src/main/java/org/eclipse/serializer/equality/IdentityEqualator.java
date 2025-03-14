@@ -22,4 +22,10 @@ package org.eclipse.serializer.equality;
 public interface IdentityEqualator<E> extends Equalator<E>
 {
 	// marker interface
+	
+	@Override
+	public default boolean isReferentialEquality()
+	{
+		return true;
+	}
 }
