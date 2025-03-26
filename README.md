@@ -49,7 +49,7 @@ Classes evolve over time. Therefore, Eclipse Serializer provides a legacy type m
 <dependency>
   <groupId>org.eclipse.serializer</groupId>
   <artifactId>serializer</artifactId>
-  <version>2.1.2</version>
+  <version>2.1.3</version>
 </dependency>
 ```
 
