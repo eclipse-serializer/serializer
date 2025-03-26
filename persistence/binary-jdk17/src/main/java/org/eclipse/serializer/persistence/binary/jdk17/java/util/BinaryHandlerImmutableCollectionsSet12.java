@@ -33,6 +33,11 @@ public class BinaryHandlerImmutableCollectionsSet12<T> extends AbstractBinaryHan
 	// static methods //
 	///////////////////
 
+	/**
+	 * Create a new instance of the handler.
+	 *
+	 * @return the new instance.
+	 */
 	public static BinaryHandlerImmutableCollectionsSet12<?> New()
 	{
 		return new BinaryHandlerImmutableCollectionsSet12<>(Set.of(new Object()).getClass());
@@ -43,6 +48,11 @@ public class BinaryHandlerImmutableCollectionsSet12<T> extends AbstractBinaryHan
 	// constructors //
 	/////////////////
 
+	/**
+	 * Constructor
+	 *
+	 * @param type the handled type.
+	 */
 	protected BinaryHandlerImmutableCollectionsSet12(final Class<T> type)
 	{
 		super(type);

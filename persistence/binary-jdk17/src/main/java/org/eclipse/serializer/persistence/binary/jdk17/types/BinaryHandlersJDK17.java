@@ -22,8 +22,18 @@ import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerRegistration;
 import org.eclipse.serializer.util.X;
 
+/**
+ * Utility class for registering all JDK 17 type handlers.
+ */
 public final class BinaryHandlersJDK17
 {
+
+	/**
+	 * Registers all JDK 17 type handlers.
+	 * @param executor the executor to register the type handlers with
+	 * @return the executor
+	 * @param <F> the type of the executor
+	 */
 	public static <F extends PersistenceTypeHandlerRegistration.Executor<Binary>> F registerJDK17TypeHandlers(final F executor)
 	{
 		executor.executeTypeHandlerRegistration((r, c) -> r.registerTypeHandlers(jdk17TypeHandlers()));
@@ -31,7 +41,11 @@ public final class BinaryHandlersJDK17
 		return executor;
 	}
 
-	
+	/**
+	 * Returns a collection of all JDK 17 type handlers.
+	 *
+	 * @return the collection of JDK 17 type handlers.
+	 */
 	public static XGettingCollection<AbstractBinaryHandlerCustom<? extends Object>> jdk17TypeHandlers()
 	{
 		return X.List(
