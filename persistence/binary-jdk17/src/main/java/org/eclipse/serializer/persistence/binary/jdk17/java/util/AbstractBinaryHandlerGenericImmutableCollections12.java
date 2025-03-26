@@ -40,6 +40,11 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	// abstract methods //
 	/////////////////////
 
+	/**
+	 * Create a new instance of the handled type.
+	 *
+	 * @return the new instance.
+	 */
 	protected abstract T createInstance();
 
 
@@ -64,6 +69,11 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	// constructors //
 	/////////////////
 
+	/**
+	 * Constructor
+	 *
+	 * @param type the handled type.
+	 */
 	protected AbstractBinaryHandlerGenericImmutableCollections12(final Class<T> type)
 	{
 		super(type,
