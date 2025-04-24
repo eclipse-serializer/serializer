@@ -1104,7 +1104,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	{
 		final boolean result = this.synchContainsObjectId(objectId);
 		
-		logger.debug("ObjectRegistry checking OID " + objectId + ": " + result);
+		logger.debug("ObjectRegistry checking OID {}: {}", objectId, result);
 
 		return result;
 	}
