@@ -206,7 +206,8 @@ public interface MonitoringManager
 				| MalformedObjectNameException e
 			)
 			{
-				logger.warn("Failed to register JMX Bean", e);
+				logger.warn("JMX bean not registered: {}.", metric.getClass());
+				logger.debug("Failed to register JMX bean:", e);
 			}
 		}
 		
