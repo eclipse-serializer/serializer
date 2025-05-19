@@ -566,6 +566,15 @@ public interface Serializer<M> extends AutoCloseable
 			{
 				return this.storeGraph(root);
 			}
+						
+			/**
+			 * Not implemented!
+			 */
+			@Override
+			public long store(Object instance, long objectId)
+			{
+				throw new NotImplementedYetError();
+			}
 
 			@Override
 			public final long[] storeAll(final Object... instances)

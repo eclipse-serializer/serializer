@@ -92,6 +92,12 @@ public class PersistenceStorerDeactivated implements PersistenceStorer
 	{
 		throw new PersistenceExceptionStorerDeactivated();
 	}
+	
+	@Override
+	public long store(Object instance, long objectId)
+	{
+		throw new PersistenceExceptionStorerDeactivated();
+	}
 
 	@Override
 	public long[] storeAll(final Object... instances)
