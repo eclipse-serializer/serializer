@@ -472,7 +472,7 @@ public interface BinaryStorer extends PersistenceStorer
 			// process and collect required instances in item chain (graph recursion transformed to iteration)
 			for(Item item = this.tail; item != null; item = item.next)
 			{
-				// locks internally. May not lock the whole loop or other storers can't lookup concurrently.
+				// locks internally. May not lock the whole loop or other storers can't look up concurrently.
 				this.storeItem(item);
 			}
 		}
@@ -818,9 +818,10 @@ public interface BinaryStorer extends PersistenceStorer
 		protected final long internalStore(final Object root, long objectId)
 		{
 			logger.debug(
-				"Store request: {}({})",
+				"Store request: {}({}) with ID {}",
 				LazyArg(() -> systemString(root)),
-				LazyArgInContext(STORER_CONTEXT, root)
+				LazyArgInContext(STORER_CONTEXT, root),
+				objectId
 			);
 			
 			/* (03.12.2019 TM)NOTE:
