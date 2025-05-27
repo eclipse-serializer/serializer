@@ -102,6 +102,12 @@ public class PersistenceStorerDeactivatable implements PersistenceStorer {
 	{
 		return this.actual.store(instance);
 	}
+	
+	@Override
+	public long store(Object instance, long objectId)
+	{
+		return this.actual.store(instance, objectId);
+	}
 
 	@Override
 	public PersistenceStorer reinitialize(final long initialCapacity)

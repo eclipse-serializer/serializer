@@ -29,9 +29,9 @@ import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
 import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
 import org.eclipse.serializer.persistence.types.PersistenceLocalObjectIdRegistry;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
 import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
+import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStorer;
 import org.eclipse.serializer.persistence.types.PersistenceTarget;
@@ -472,7 +472,7 @@ public interface BinaryStorer extends PersistenceStorer
 			// process and collect required instances in item chain (graph recursion transformed to iteration)
 			for(Item item = this.tail; item != null; item = item.next)
 			{
-				// locks internally. May not lock the whole loop or other storers can't lookup concurrently.
+				// locks internally. May not lock the whole loop or other storers can't look up concurrently.
 				this.storeItem(item);
 			}
 		}
@@ -806,6 +806,61 @@ public interface BinaryStorer extends PersistenceStorer
 			this.hashSlots = newSlots;
 			this.hashRange = newRange;
 		}
+
+
+
+		@Override
+		public long store(Object instance, long objectId)
+		{
+			return this.internalStore(instance, objectId);
+		}
+		
+		protected final long internalStore(final Object root, long objectId)
+		{
+			logger.debug(
+				"Store request: {}({}) with ID {}",
+				LazyArg(() -> systemString(root)),
+				LazyArgInContext(STORER_CONTEXT, root),
+				objectId
+			);
+			
+			/* (03.12.2019 TM)NOTE:
+			 * Special case logic to handle explicitly passed instances:
+			 * - if already handled by this storer, don't handle again.
+			 * Apart from that:
+			 * - register to be handled in any case, even if already registered in the object registry.
+			 * - handle all registered graph objects recursively (but transformed to an iteration).
+			 * Note that this is NOT the same as apply, which does NOT store if the instance is already registry-known.
+			 */
+			long rootOid;
+			if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
+			{
+				return rootOid;
+			}
+			
+			// initial registration. After that, storing adds via recursion the graph and processing items iteratively.
+			//rootOid = this.registerGuaranteed(notNull(root));
+			
+			this.registerGuaranteed(objectId, root, null);
+
+			// repeatedly calling #store to add an instance to the item chain is fine, but processing may only happen once.
+			if(!this.isProcessingItems)
+			{
+				try
+				{
+					this.isProcessingItems = true;
+					this.processItems();
+				}
+				finally
+				{
+					this.isProcessingItems = false;
+				}
+			}
+
+			return rootOid;
+		}
+		
+		
 				
 	}
 	
