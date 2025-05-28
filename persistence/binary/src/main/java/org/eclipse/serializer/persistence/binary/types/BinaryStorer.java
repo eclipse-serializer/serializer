@@ -544,7 +544,7 @@ public interface BinaryStorer extends PersistenceStorer
 		}
 
 		@Override
-		public void registerRegistrationListener(PersistenceObjectRegistrationListener listener)
+		public void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
 		{
 			this.persistenceObjectRegistrationListener.add(listener);
 		}
@@ -810,12 +810,12 @@ public interface BinaryStorer extends PersistenceStorer
 
 
 		@Override
-		public long store(Object instance, long objectId)
+		public long store(final Object instance, final long objectId)
 		{
 			return this.internalStore(instance, objectId);
 		}
 		
-		protected final long internalStore(final Object root, long objectId)
+		protected final long internalStore(final Object root, final long objectId)
 		{
 			logger.debug(
 				"Store request: {}({}) with ID {}",
@@ -857,7 +857,7 @@ public interface BinaryStorer extends PersistenceStorer
 				}
 			}
 
-			return rootOid;
+			return objectId;
 		}
 		
 		

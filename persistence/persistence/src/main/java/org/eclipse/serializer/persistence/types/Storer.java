@@ -180,7 +180,8 @@ public interface Storer extends PersistenceStoring
 	 * but stores the passed instance and referenced instances only if they are newly encountered (e.g. don't have an id associated with
 	 * them in the object registry, yet and are therefore required to be handled).
 	 * <br><br>
-	 * If the provided instance is allready persisted with an other id an {@link PersistenceExceptionConsistencyObject} exception is trown.
+	 * If the provided instance is allready persisted with an other id an {@link PersistenceExceptionConsistencyObject} exception
+	 * will be thrown on commit.
 	 * 
 	 * @param instance the root instance of the subgraph of required instances to be stored.
 	 * @param objectId the storage object id which shall be assigned to the passed instance.
