@@ -1,5 +1,7 @@
 package org.eclipse.serializer.persistence.types;
 
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
+
 /*-
  * #%L
  * Eclipse Serializer Persistence
@@ -142,37 +144,6 @@ public interface Storer extends PersistenceStoring
 	 */
 	public long maximumCapacity();
 
-//	/**
-//	 * Returns whether this {@link Storer} instance has been initialized.
-//	 * <p>
-//	 * What being initialized means exactely depends on the implementation. The general contract means to bring the
-//	 * instance's internal data into a state with which the instance can be used to perform its actual tasks.
-//	 *
-//	 * @return whether this {@link Storer} instance has been initialized.
-//	 */
-//	public boolean isInitialized();
-//
-//	/**
-//	 * Ensures the storer instance is initialized, i.e. ready to perform storing.
-//	 * This method is idempotent.
-//	 * For a forced (re)initialization, see {@link #reinitialize()}.
-//	 *
-//	 * @return this.
-//	 */
-//	public Storer initialize();
-//
-//	/**
-//	 * Ensures the storer instance is initialized, i.e. ready to perform storing.
-//	 * If the storer instance needs to be initialized as a consequence of this call, the passed {@code initialCapacity}
-//	 * is considered as an estimate for the number of unique instances to be handled until the next commit.
-//	 * This method is idempotent, meaning if this instance is already initialized, the passed value might not have
-//	 * any effect.
-//	 * For a forced (re)initialization, see {@link #reinitialize(long)}.
-//	 *
-//	 * @return this.
-//	 */
-//	public Storer initialize(long initialCapacity);
-
 	/**
 	 * Enforces the instance to be initialized, discarding any previous state (clearing it) if necessary.
 	 *
@@ -200,10 +171,22 @@ public interface Storer extends PersistenceStoring
 	public Storer ensureCapacity(long desiredCapacity);
 
 	
-
 	public void registerCommitListener(PersistenceCommitListener listener);
-	
-	
+		
 	public void registerRegistrationListener(PersistenceObjectRegistrationListener listener);
+	
+	/**
+	 * Stores the passed instance with the provided id and all referenced instances of persistable references recursively,
+	 * but stores the passed instance and referenced instances only if they are newly encountered (e.g. don't have an id associated with
+	 * them in the object registry, yet and are therefore required to be handled).
+	 * <br><br>
+	 * If the provided instance is allready persisted with an other id an {@link PersistenceExceptionConsistencyObject} exception
+	 * will be thrown on commit.
+	 * 
+	 * @param instance the root instance of the subgraph of required instances to be stored.
+	 * @param objectId the storage object id which shall be assigned to the passed instance.
+	 * @return the object id representing the passed instance.
+	 */
+	public long store(Object instance, long objectId);
 
 }
