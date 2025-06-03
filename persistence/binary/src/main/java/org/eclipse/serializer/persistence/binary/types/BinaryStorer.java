@@ -1,4 +1,4 @@
-lpackage org.eclipse.serializer.persistence.binary.types;
+package org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
