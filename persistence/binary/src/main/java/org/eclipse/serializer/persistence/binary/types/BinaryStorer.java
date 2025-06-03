@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.types;
+lpackage org.eclipse.serializer.persistence.binary.types;
 
 /*-
  * #%L
@@ -488,6 +488,10 @@ public interface BinaryStorer extends PersistenceStorer
 			
 			synchronized(this.head)
 			{
+				if (item.oid == 1000000000000100001L) {
+					logger.error("not persisting item with OID 1000000000000100001L, instance: {}", item.instance.getClass());
+					return;
+				}
 				item.typeHandler.store(this.synchLookupChunk(item.oid), item.instance, item.oid, this);
 			}
 		}
