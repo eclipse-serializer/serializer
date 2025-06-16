@@ -26,7 +26,17 @@ import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerSingleton;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistencyUnhandledTypeId;
-import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
+import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
+import org.eclipse.serializer.persistence.types.PersistenceLoader;
+import org.eclipse.serializer.persistence.types.PersistenceObjectRegistry;
+import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
+import org.eclipse.serializer.persistence.types.PersistenceRoots;
+import org.eclipse.serializer.persistence.types.PersistenceSource;
+import org.eclipse.serializer.persistence.types.PersistenceSourceSupplier;
+import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
+import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerLookup;
+import org.eclipse.serializer.persistence.types.Persister;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
@@ -910,6 +920,48 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			{
 				this.objectRegistry.iterateEntries(iterator);
 			}
+		}
+		
+		/**
+		 * Export the binary storage representation of an object.
+		 * This method does not resolve other referenced objects.
+		 * 
+		 * @param objectId the object id.
+		 * @return the binary object representation.
+		 */
+		public byte[] exportBinaryObjectData(long objectId)
+		{
+			synchronized(this.objectRegistry)
+			{
+				this.requireReference(objectId);
+				final PersistenceSource<Binary> source = this.sourceSupplier.source();
+				XGettingCollection<? extends Binary> chunks = source.readByObjectIds(this.loadItems.getObjectIdSets());
+				
+				ByteBuffer buffer;
+				try
+				{
+					buffer = chunks.get().buffers()[0];
+				}
+				catch (Exception e)
+				{
+					throw new  RuntimeException("Failed to retrive objects binary data buffer.", e);
+				}
+				
+				final long startAddress = XMemory.getDirectByteBufferAddress(buffer);
+				long length = Binary.getEntityLengthRawValue(startAddress);
+				
+				if(length > Integer.MAX_VALUE)
+				{
+					throw new  RuntimeException("Invalid buffer size " + length + " > max integer size.");
+				}
+				
+				byte[] data = new byte[(int)length];
+				buffer.get(data);
+				
+				this.loadItems.clear();
+				return data;
+			}
+			
 		}
 		
 	}
