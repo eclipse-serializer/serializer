@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 public class ReferenceSearch
 {
 	/**
-	 * Basic desription of the source of a reference.
+	 * Basic description of the source of a reference.
 	 */
 	public static class ObjectReferenceInfo
 	{
@@ -62,7 +62,7 @@ public class ReferenceSearch
 	
 		
 		/**
-		 * Get the referenced object's Id.
+		 * Get the referenced object's id.
 		 * 
 		 * @return the referenced object's id.
 		 */
@@ -74,7 +74,7 @@ public class ReferenceSearch
 		/**
 		 * Get the objectId of the object that holds the reference.
 		 * 
-		 * @return The refercing object's id.
+		 * @return The referencing object's id.
 		 */
 		public final long getObjectID()
 		{
@@ -84,7 +84,7 @@ public class ReferenceSearch
 		/**
 		 * Get the typeId of the object that holds the reference.
 		 * 
-		 * @return The refercing object's typeId.
+		 * @return The referencing object's typeId.
 		 */
 		public final long getObjectTypeID()
 		{
@@ -116,8 +116,8 @@ public class ReferenceSearch
 	}
 
 	/**
-	 * Desribes a reference from a the fixed references of a serialized object.
-	 * These are usualy fiels.
+	 * Describes a reference from the fixed references of a serialized object.
+	 * These are usually fields.
 	 */
 	public static class ObjectReferenceInfoMember extends ObjectReferenceInfo
 	{
@@ -155,7 +155,7 @@ public class ReferenceSearch
 	}
 
 	/*
-	 * Describes a reference from a the variable sized references of a serialized object.
+	 * Describes a reference from the variable sized references of a serialized object.
 	 * Most likely those are "collections".
 	 */
 	public static class ObjectReferenceInfoVariable extends ObjectReferenceInfo
