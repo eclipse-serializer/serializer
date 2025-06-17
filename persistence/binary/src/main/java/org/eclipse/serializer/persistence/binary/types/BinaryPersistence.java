@@ -63,6 +63,7 @@ import org.eclipse.serializer.persistence.binary.java.nio.file.BinaryHandlerPath
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlDate;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTime;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTimestamp;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerPeriod;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerZoneOffset;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayDeque;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayList;
@@ -239,6 +240,7 @@ public final class BinaryPersistence extends Persistence
 
 				BinaryHandlerFile.New()    ,
 				BinaryHandlerDate.New()    ,
+				BinaryHandlerPeriod.New()  ,
 				BinaryHandlerLocale.New()  ,
 				BinaryHandlerCurrency.New(),
 				BinaryHandlerPattern.New() ,
