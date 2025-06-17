@@ -135,6 +135,11 @@ public class ReferenceSearch
 			this.referenceType = referenceType;
 		}
 	
+		/**
+		 * Get the type of the referencing member.
+		 * 
+		 * @return type of the referencing member.
+		 */
 		public final Class<?> getReferenceTypeID()
 		{
 			return this.referenceType;
