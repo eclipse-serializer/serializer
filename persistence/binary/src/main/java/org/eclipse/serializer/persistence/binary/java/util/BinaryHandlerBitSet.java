@@ -15,13 +15,13 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	private static final long BINARY_OFFSET_SIZE_IS_STICKY = 0;
 	private static final long BINARY_OFFSET_WORDS          = BINARY_OFFSET_SIZE_IS_STICKY + Byte.BYTES;
 	
-	private static long offsetSizeIsSticky;
-	private static long offsetfieldWords;
+	private static long fieldOffset_sizeIsSticky;
+	private static long fieldOffset_words;
 
 	public static BinaryHandlerBitSet New()
 	{
-		offsetSizeIsSticky = XMemory.objectFieldOffset(XReflect.getAnyField(BitSet.class, "sizeIsSticky"));
-		offsetfieldWords   = XMemory.objectFieldOffset(XReflect.getAnyField(BitSet.class, "words"));
+		fieldOffset_sizeIsSticky = XMemory.objectFieldOffset(XReflect.getAnyField(BitSet.class, "sizeIsSticky"));
+		fieldOffset_words        = XMemory.objectFieldOffset(XReflect.getAnyField(BitSet.class, "words"));
 					
 		return new BinaryHandlerBitSet();
 	}
@@ -62,10 +62,10 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 		
 		data.store_boolean(
 			BINARY_OFFSET_SIZE_IS_STICKY,
-			XMemory.get_boolean(instance, offsetSizeIsSticky));
+			XMemory.get_boolean(instance, fieldOffset_sizeIsSticky));
 		
 		data.store_longs(
-			(long[]) XMemory.getObject(instance, offsetfieldWords),
+			(long[]) XMemory.getObject(instance, fieldOffset_words),
 			BINARY_OFFSET_WORDS);
 				
 	}
@@ -74,7 +74,7 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	public BitSet create(Binary data, PersistenceLoadHandler handler)
 	{
 		BitSet instance = BitSet.valueOf(data.build_longs(BINARY_OFFSET_WORDS));
-		XMemory.set_boolean(instance, offsetSizeIsSticky, data.read_boolean(BINARY_OFFSET_SIZE_IS_STICKY));
+		XMemory.set_boolean(instance, fieldOffset_sizeIsSticky, data.read_boolean(BINARY_OFFSET_SIZE_IS_STICKY));
 		
 		return instance;
 	}
