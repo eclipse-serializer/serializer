@@ -14,8 +14,6 @@ package org.eclipse.serializer.persistence.binary.android.types;
  * #L%
  */
 
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.persistence.binary.android.java.time.BinaryHandlerPeriod;
 import org.eclipse.serializer.persistence.binary.android.java.time.BinaryHandlerDuration;
 import org.eclipse.serializer.persistence.binary.android.java.time.BinaryHandlerInstant;
 import org.eclipse.serializer.persistence.binary.android.java.time.BinaryHandlerLocalDate;
@@ -29,6 +27,7 @@ import org.eclipse.serializer.persistence.binary.android.java.time.BinaryHandler
 import org.eclipse.serializer.persistence.binary.android.java.time.BinaryHandlerZonedDateTime;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerRegistration;
+import org.eclipse.serializer.util.X;
 
 /**
  * Registers special type handlers written for Android.
@@ -48,7 +47,6 @@ public final class BinaryHandlersAndroid
 					BinaryHandlerMonthDay.New(),
 					BinaryHandlerOffsetTime.New(),
 					BinaryHandlerOffsetDateTime.New(),
-					BinaryHandlerPeriod.New(),
 					BinaryHandlerYear.New(),
 					BinaryHandlerYearMonth.New(),
 					BinaryHandlerZonedDateTime.New()
