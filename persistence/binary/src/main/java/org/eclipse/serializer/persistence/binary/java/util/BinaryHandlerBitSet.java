@@ -1,6 +1,5 @@
 package org.eclipse.serializer.persistence.binary.java.util;
 
-import java.lang.reflect.Field;
 import java.util.BitSet;
 
 import org.eclipse.serializer.memory.XMemory;
@@ -12,18 +11,17 @@ import org.eclipse.serializer.reflect.XReflect;
 
 public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferential<BitSet>
 {
+	private static final int  BYTES_PER_WORD               = 8;
 	private static final long BINARY_OFFSET_SIZE_IS_STICKY = 0;
 	private static final long BINARY_OFFSET_WORDS          = BINARY_OFFSET_SIZE_IS_STICKY + Byte.BYTES;
 	
 	private static long offsetSizeIsSticky;
-	private static Field fieldWords;
+	private static long offsetfieldWords;
 
 	public static BinaryHandlerBitSet New()
 	{
-		fieldWords = XReflect.getAnyField(BitSet.class, "words");
-		XReflect.setAccessible(fieldWords);
-		
 		offsetSizeIsSticky = XMemory.objectFieldOffset(XReflect.getAnyField(BitSet.class, "sizeIsSticky"));
+		offsetfieldWords   = XMemory.objectFieldOffset(XReflect.getAnyField(BitSet.class, "words"));
 					
 		return new BinaryHandlerBitSet();
 	}
@@ -58,26 +56,25 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	@Override
 	public void store(Binary data, BitSet instance, long objectId, PersistenceStoreHandler<Binary> handler)
 	{
-		boolean isSticky   = XMemory.get_boolean(instance, offsetSizeIsSticky);
-		long[]  words      = (long[]) XReflect.getFieldValue(fieldWords, instance);
-						
-		long wordsSize = Binary.toBinaryListTotalByteLength((long)words.length * Long.BYTES);
-		long entityContentLenght = BINARY_OFFSET_WORDS + wordsSize;
+		long entityContentLenght = BINARY_OFFSET_WORDS + Binary.toBinaryListTotalByteLength(instance.size() / BYTES_PER_WORD);
 				
 		data.storeEntityHeader(entityContentLenght, this.typeId(), objectId);
-		data.store_boolean(BINARY_OFFSET_SIZE_IS_STICKY, isSticky);
-		data.store_longs(words, BINARY_OFFSET_WORDS);
 		
+		data.store_boolean(
+			BINARY_OFFSET_SIZE_IS_STICKY,
+			XMemory.get_boolean(instance, offsetSizeIsSticky));
+		
+		data.store_longs(
+			(long[]) XMemory.getObject(instance, offsetfieldWords),
+			BINARY_OFFSET_WORDS);
+				
 	}
 
 	@Override
 	public BitSet create(Binary data, PersistenceLoadHandler handler)
 	{
-		boolean isSticky   = data.read_boolean(BINARY_OFFSET_SIZE_IS_STICKY);
-		long[]  words      = data.build_longs(BINARY_OFFSET_WORDS);
-				
-		BitSet instance = BitSet.valueOf(words);
-		XMemory.set_boolean(instance, offsetSizeIsSticky, isSticky);
+		BitSet instance = BitSet.valueOf(data.build_longs(BINARY_OFFSET_WORDS));
+		XMemory.set_boolean(instance, offsetSizeIsSticky, data.read_boolean(BINARY_OFFSET_SIZE_IS_STICKY));
 		
 		return instance;
 	}
