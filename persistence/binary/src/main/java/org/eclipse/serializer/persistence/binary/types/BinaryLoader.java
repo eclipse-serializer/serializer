@@ -773,7 +773,7 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			 * - the application memory always has the most current version of an entity
 			 * - if an entity already exists in the registry, it will never be required to be loaded at all
 			 * - therefore, a concurrent write to the DB CANNOT create an inconsistent state.
-			 *   The situation "Thread A load part 1, Thread B write entity X, Thread A load part 2 includint entity X"
+			 *   The situation "Thread A load part 1, Thread B write entity X, Thread A load part 2 including entity X"
 			 *   can never occur.
 			 * Is that correct?
 			 */
@@ -944,7 +944,7 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 				}
 				catch (Exception e)
 				{
-					throw new  RuntimeException("Failed to retrive objects binary data buffer.", e);
+					throw new  RuntimeException("Failed to retrieve objects binary data buffer.", e);
 				}
 				
 				final long startAddress = XMemory.getDirectByteBufferAddress(buffer);
