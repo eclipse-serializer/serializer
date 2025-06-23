@@ -488,8 +488,9 @@ public interface BinaryStorer extends PersistenceStorer
 			
 			synchronized(this.head)
 			{
-				if (item.oid == 1000000000000100001L) {
-					logger.error("not persisting item with OID 1000000000000100001L, instance: {}", item.instance.getClass());
+				long exludedOid = 1000000000000000030L;
+				if (item.oid == exludedOid) {
+					logger.error("not persisting item with OID {}}, instance: {}", exludedOid, item.instance.getClass());
 					return;
 				}
 				item.typeHandler.store(this.synchLookupChunk(item.oid), item.instance, item.oid, this);
