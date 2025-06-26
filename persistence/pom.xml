@@ -25,7 +25,17 @@
         <module>binary</module>
         <module>binary-jdk8</module>
         <module>binary-android</module>
-        <module>binary-jdk17</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>from_java_17</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>binary-jdk17</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>
