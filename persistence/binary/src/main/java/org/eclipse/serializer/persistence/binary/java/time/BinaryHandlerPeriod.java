@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.android.java.time;
+package org.eclipse.serializer.persistence.binary.java.time;
 
 /*-
  * #%L
