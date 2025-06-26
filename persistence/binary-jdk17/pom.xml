@@ -18,7 +18,7 @@
 	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 	
 	<properties>
-		<maven.compiler.release>17</maven.compiler.release>
+		<java.release>17</java.release>
 	</properties>
 	
 	<dependencies>
