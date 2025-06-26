@@ -67,6 +67,7 @@ import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerPeriod;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerZoneOffset;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayDeque;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayList;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerBitSet;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerCopyOnWriteArrayList;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerCopyOnWriteArraySet;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerCurrency;
@@ -266,6 +267,8 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerOptionalInt.New(),
 				BinaryHandlerOptionalLong.New(),
 				BinaryHandlerOptionalDouble.New(),
+				
+				BinaryHandlerBitSet.New(),
 
 			/* (12.11.2019 TM)NOTE:
 			 * One might think that "empty" implementations of a collection interface would have no fields, anyway.
