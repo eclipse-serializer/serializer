@@ -80,10 +80,6 @@
 								<id>default-compile</id>
 								<configuration>
 									<compilerArgument>-warn:-serial,-unusedImport</compilerArgument>
-									<compilerArgs>
-										<arg>--release</arg>
-										<arg>11</arg>
-									</compilerArgs>
 								</configuration>
 							</execution>
 						</executions>
