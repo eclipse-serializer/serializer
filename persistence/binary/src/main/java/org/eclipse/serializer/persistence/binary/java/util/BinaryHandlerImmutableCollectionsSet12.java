@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.jdk17.java.util;
+package org.eclipse.serializer.persistence.binary.java.util;
 
 /*-
  * #%L
@@ -14,20 +14,20 @@ package org.eclipse.serializer.persistence.binary.jdk17.java.util;
  * #L%
  */
 
-import java.util.List;
+import java.util.Set;
 
 /**
- * Specialized handler for immutable List implementations in Java 15 and later
- * as found in java.util.ImmutableCollections.List12
+ * Specialized handler for immutable Set implementations in Java 15 and later
+ * as found in java.util.ImmutableCollections.Set12
  * <br><br>
- * the implementations are returned from List.of(), List.of(E e1) and  List.of(E e1, E e2)
+ * the implementations are returned from Set.of(), Set.of(E e1) and  Set.of(E e1, E e2)
  * <br><br>
  * The handler takes the internal constant java.util.ImmutableCollections.EMPTY
  * into account which must not be persisted.
  * 
  * @param <T> the handled type.
  */
-public class BinaryHandlerImmutableCollectionsList12<T> extends AbstractBinaryHandlerGenericImmutableCollections12<T>
+public class BinaryHandlerImmutableCollectionsSet12<T> extends AbstractBinaryHandlerGenericImmutableCollections12<T>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
@@ -38,9 +38,9 @@ public class BinaryHandlerImmutableCollectionsList12<T> extends AbstractBinaryHa
 	 *
 	 * @return the new instance.
 	 */
-	public static BinaryHandlerImmutableCollectionsList12<?> New()
+	public static BinaryHandlerImmutableCollectionsSet12<?> New()
 	{
-		return new BinaryHandlerImmutableCollectionsList12<>(List.of(new Object()).getClass());
+		return new BinaryHandlerImmutableCollectionsSet12<>(Set.of(new Object()).getClass());
 	}
 
 
@@ -53,7 +53,7 @@ public class BinaryHandlerImmutableCollectionsList12<T> extends AbstractBinaryHa
 	 *
 	 * @param type the handled type.
 	 */
-	protected BinaryHandlerImmutableCollectionsList12(final Class<T> type)
+	protected BinaryHandlerImmutableCollectionsSet12(final Class<T> type)
 	{
 		super(type);
 	}
@@ -67,7 +67,7 @@ public class BinaryHandlerImmutableCollectionsList12<T> extends AbstractBinaryHa
 	@Override
 	protected T createInstance()
 	{
-		return (T) List.of(new Object());
+		return (T) Set.of(new Object());
 	}
 
 }
