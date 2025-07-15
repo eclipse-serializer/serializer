@@ -1,4 +1,4 @@
-package org.eclipse.serializer.persistence.binary.jdk17.java.util;
+package org.eclipse.serializer.persistence.binary.java.util;
 
 /*-
  * #%L

@@ -76,6 +76,8 @@ import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerHashMap;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerHashSet;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerHashtable;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerIdentityHashMap;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerImmutableCollectionsList12;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerImmutableCollectionsSet12;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedHashMap;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedHashSet;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedList;
@@ -342,7 +344,11 @@ public final class BinaryPersistence extends Persistence
 								
 				// JDK 1.7 collections
 				BinaryHandlerConcurrentLinkedDeque.New(),
-
+				
+				// JDK 17
+				BinaryHandlerImmutableCollectionsList12.New(),
+				BinaryHandlerImmutableCollectionsSet12.New(),
+				
 				BinaryHandlerLazyDefault.New(),
 
 				// the way Optional is implemented, only a generically (low-level) working handler can handle it correctly
