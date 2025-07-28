@@ -220,6 +220,7 @@
 							<include>**/*.java</include>
 						</includes>
 						<ignoreNoFileToScan>true</ignoreNoFileToScan>
+						<failOnMissingHeader>true</failOnMissingHeader>
 					</configuration>
 					<executions>
 						<execution>
