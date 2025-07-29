@@ -15,8 +15,10 @@ package org.eclipse.serializer.persistence.binary.java.util.concurrent;
  */
 
 import java.util.Comparator;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.java.util.AbstractBinaryHandlerCollection;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -25,6 +27,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.X;
 
 
@@ -38,7 +41,8 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListSet<?>>
 	static final long BINARY_OFFSET_COMPARATOR =                                                      0;
 	static final long BINARY_OFFSET_ELEMENTS   = BINARY_OFFSET_COMPARATOR + Binary.objectIdByteLength();
 
-
+	static final long FIELD_OFFSET_MAP  = XMemory.objectFieldOffset(XReflect.getAnyField(ConcurrentSkipListSet.class, "m"));
+	static final long FIELD_OFFSET_COMPARATOR  = XMemory.objectFieldOffset(XReflect.getAnyField(ConcurrentSkipListMap.class, "comparator"));
 
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
@@ -122,9 +126,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListSet<?>>
 		final PersistenceLoadHandler handler
 	)
 	{
-		return new ConcurrentSkipListSet<>(
-			getComparator(data, handler)
-		);
+		return new ConcurrentSkipListSet<>();
 	}
 
 	@Override
@@ -134,6 +136,10 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListSet<?>>
 		final PersistenceLoadHandler   handler
 	)
 	{
+		var map = XMemory.getObject(instance, FIELD_OFFSET_MAP);
+		XMemory.setObject(map, FIELD_OFFSET_COMPARATOR, getComparator(data, handler));
+		
+
 		instance.clear();
 		
 		/*
