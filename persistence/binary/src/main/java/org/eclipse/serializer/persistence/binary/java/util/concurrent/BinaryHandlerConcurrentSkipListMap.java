@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.eclipse.serializer.collections.KeyValueFlatCollector;
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.java.util.AbstractBinaryHandlerMap;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -26,6 +27,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.X;
 
 
@@ -39,6 +41,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListMap<?, ?>>
 	static final long BINARY_OFFSET_COMPARATOR =                                                      0;
 	static final long BINARY_OFFSET_ELEMENTS   = BINARY_OFFSET_COMPARATOR + Binary.objectIdByteLength();
 	
+	static final long FIELD_OFFSET_COMPARATOR  = XMemory.objectFieldOffset(XReflect.getAnyField(ConcurrentSkipListMap.class, "comparator"));
 	
 
 	///////////////////////////////////////////////////////////////////////////
@@ -121,9 +124,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListMap<?, ?>>
 		final PersistenceLoadHandler handler
 	)
 	{
-		return new ConcurrentSkipListMap<>(
-			getComparator(data, handler)
-		);
+		return new ConcurrentSkipListMap<>();
 	}
 
 	@Override
@@ -133,8 +134,11 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListMap<?, ?>>
 		final PersistenceLoadHandler      handler
 	)
 	{
-		instance.clear();
+		Comparator<Object> comperator = getComparator(data, handler);
+		XMemory.setObject(instance, FIELD_OFFSET_COMPARATOR, comperator);
 		
+		instance.clear();
+						
 		/*
 		 * Tree collections don't use hashing, but their comparing logic still uses the elements' state,
 		 * which might not yet be available when this method is called. Hence, the detour to #complete.
