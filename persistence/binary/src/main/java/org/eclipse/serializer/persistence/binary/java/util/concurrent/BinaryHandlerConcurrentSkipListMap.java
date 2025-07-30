@@ -134,8 +134,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListMap<?, ?>>
 		final PersistenceLoadHandler      handler
 	)
 	{
-		Comparator<Object> comperator = getComparator(data, handler);
-		XMemory.setObject(instance, FIELD_OFFSET_COMPARATOR, comperator);
+		XMemory.setObject(instance, FIELD_OFFSET_COMPARATOR, getComparator(data, handler));
 		
 		instance.clear();
 						
