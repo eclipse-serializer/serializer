@@ -136,7 +136,7 @@ extends AbstractBinaryHandlerCustomCollection<ConcurrentSkipListSet<?>>
 		final PersistenceLoadHandler   handler
 	)
 	{
-		var map = XMemory.getObject(instance, FIELD_OFFSET_MAP);
+		Object map = XMemory.getObject(instance, FIELD_OFFSET_MAP);
 		XMemory.setObject(map, FIELD_OFFSET_COMPARATOR, getComparator(data, handler));
 		
 
