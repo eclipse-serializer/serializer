@@ -17,12 +17,14 @@ package org.eclipse.serializer.persistence.binary.java.util;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomIterable;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.X;
 
 
@@ -36,7 +38,7 @@ extends AbstractBinaryHandlerCustomIterable<PriorityQueue<?>>
 	static final long BINARY_OFFSET_COMPARATOR =                                                      0;
 	static final long BINARY_OFFSET_ELEMENTS   = BINARY_OFFSET_COMPARATOR + Binary.objectIdByteLength();
 
-
+	static final long FIELD_OFFSET_COMPARATOR  = XMemory.objectFieldOffset(XReflect.getAnyField(PriorityQueue.class, "comparator"));
 
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
@@ -124,8 +126,7 @@ extends AbstractBinaryHandlerCustomIterable<PriorityQueue<?>>
 			Math.max(
 				1, // initialCapacity cannot be smaller than 1
 				X.checkArrayRange(getElementCount(data))
-			),
-			getComparator(data, handler)
+			)
 		);
 	}
 
@@ -136,6 +137,8 @@ extends AbstractBinaryHandlerCustomIterable<PriorityQueue<?>>
 		final PersistenceLoadHandler handler
 	)
 	{
+		XMemory.setObject(instance, FIELD_OFFSET_COMPARATOR, getComparator(data, handler));
+		
 		instance.clear();
 		
 		/*
