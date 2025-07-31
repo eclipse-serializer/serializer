@@ -10,10 +10,12 @@ These versions of Eclipse Serializer are currently being supported with security
 updates.
 
 | Version | Released   | Supported          | 
-| ------- | ---------- | ------------------ | 
-| 1.0.0   | 2023-10-11 | :white_check_mark: | 
+|---------|------------|--------------------| 
+| 1.0.0   | 2023-10-18 | :white_check_mark: | 
 | ------- | ---------- | ------------------ | 
 | 2.0.0   | 2024-10-10 | :white_check_mark: | 
+| ------- | ---------- | ------------------ | 
+| 3.0.0   | 2025-07-28 | :white_check_mark: | 
 
 ## Reporting a Vulnerability
 
