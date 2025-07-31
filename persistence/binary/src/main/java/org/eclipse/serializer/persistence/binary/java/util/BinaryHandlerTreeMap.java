@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.TreeMap;
 
 import org.eclipse.serializer.collections.KeyValueFlatCollector;
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomCollection;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.Persistence;
@@ -25,6 +26,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.X;
 
 
@@ -37,7 +39,7 @@ public final class BinaryHandlerTreeMap extends AbstractBinaryHandlerCustomColle
 	static final long BINARY_OFFSET_COMPARATOR =                                                      0;
 	static final long BINARY_OFFSET_ELEMENTS   = BINARY_OFFSET_COMPARATOR + Binary.objectIdByteLength();
 	
-	
+	static final long FIELD_OFFSET_COMPARATOR  = XMemory.objectFieldOffset(XReflect.getAnyField(TreeMap.class, "comparator"));
 
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
@@ -116,9 +118,7 @@ public final class BinaryHandlerTreeMap extends AbstractBinaryHandlerCustomColle
 	@Override
 	public final TreeMap<?, ?> create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		return new TreeMap<>(
-			getComparator(data, handler)
-		);
+		return new TreeMap<>();
 	}
 
 	@Override
@@ -128,6 +128,8 @@ public final class BinaryHandlerTreeMap extends AbstractBinaryHandlerCustomColle
 		final PersistenceLoadHandler handler
 	)
 	{
+		XMemory.setObject(instance, FIELD_OFFSET_COMPARATOR, getComparator(data, handler));
+		
 		instance.clear();
 		
 		/*
