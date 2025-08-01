@@ -375,9 +375,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public long get_long(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getLong(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
@@ -515,9 +520,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public void set_long(final Object instance, final long offset, final long value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setLong(instance, value);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
