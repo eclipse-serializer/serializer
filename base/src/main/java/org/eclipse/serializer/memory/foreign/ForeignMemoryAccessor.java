@@ -254,6 +254,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final int id = getID(address);
 		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
 		memoryHandle.close();
+		logger.debug("closed memory handle with id {}", id);;
 	}
 
 	@Override
