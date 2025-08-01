@@ -953,7 +953,7 @@ public final class JdkInternals
 		}
 		else
 		{
-			VM.ensureClassInitialized(c);
+			//VM.ensureClassInitialized(c);
 		}
 	}
 

@@ -2076,4 +2076,16 @@ public final class MemoryAccessorGeneric implements MemoryAccessor
 		return this.reversing;
 	}
 
+	@Override
+	public ByteBuffer allocateDirectNative(final int capacity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ByteBuffer allocateDirectNative(final long capacity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

@@ -24,7 +24,7 @@ import java.util.function.Predicate;
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
 import org.eclipse.serializer.exceptions.UnhandledPlatformError;
 import org.eclipse.serializer.memory.android.AndroidAdapter;
-import org.eclipse.serializer.memory.sun.JdkMemoryAccessor;
+import org.eclipse.serializer.memory.foreign.ForeignMemoryAccessor;
 import org.eclipse.serializer.util.X;
 
 
@@ -141,7 +141,9 @@ public final class XMemory
 		 * as much compatibility as possible, including Unsafe.
 		 * So far, the only known Java VM to not fully support Unsafe is Android.
 		 */
-		setMemoryHandling(JdkMemoryAccessor.New());
+		//setMemoryHandling(JdkMemoryAccessor.New());
+		
+		setMemoryHandling(ForeignMemoryAccessor.New(), MemorySizeProperties.Unsupported());
 	}
 
 	private static VmCheck VmCheckEquality(
@@ -842,17 +844,12 @@ public final class XMemory
 	 */
 	public static final ByteBuffer allocateDirectNative(final int capacity) throws IllegalArgumentException
 	{
-		return ByteBuffer
-			.allocateDirect(capacity)
-			.order(ByteOrder.nativeOrder())
-		;
+		return MEMORY_ACCESSOR.allocateDirectNative(capacity);
 	}
 
 	public static final ByteBuffer allocateDirectNative(final long capacity) throws IllegalArgumentException
 	{
-		return allocateDirectNative(
-			X.checkArrayRange(capacity)
-		);
+		return MEMORY_ACCESSOR.allocateDirectNative(capacity);
 	}
 
 	public static final byte[] toArray(final ByteBuffer source)
@@ -927,7 +924,7 @@ public final class XMemory
 
     public static final ByteBuffer allocateDirectNativeDefault()
     {
-        return allocateDirectNative(XMemory.defaultBufferSize());
+    	return MEMORY_ACCESSOR.allocateDirectNative(XMemory.defaultBufferSize());
     }
 
     // memory allocation //

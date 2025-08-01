@@ -368,5 +368,12 @@ public interface MemoryAccessor
 	{
 		return new MemoryAccessorReversing(this);
 	}
+
+
+
+	/////////////////////
+	
+	ByteBuffer allocateDirectNative(int capacity);
+	ByteBuffer allocateDirectNative(long capacity);
 	
 }

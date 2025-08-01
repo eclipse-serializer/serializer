@@ -729,5 +729,17 @@ public final class JdkMemoryAccessor implements MemoryAccessor, MemorySizeProper
 	{
 		return JdkInternals.createNonHeapMemoryStatistics();
 	}
+
+	@Override
+	public ByteBuffer allocateDirectNative(final int capacity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ByteBuffer allocateDirectNative(final long capacity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }
