@@ -18,13 +18,11 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.nio.ByteBuffer;
 
-import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.com.ComException;
 import org.eclipse.serializer.communication.types.ComConnection;
 import org.eclipse.serializer.communication.types.ComPersistenceChannel;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.meta.XDebug;
 import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.binary.types.ChunksWrapper;
 import org.eclipse.serializer.persistence.binary.types.ChunksWrapperByteReversing;
@@ -262,26 +260,7 @@ public interface ComPersistenceChannelBinary<C> extends ComPersistenceChannel<C,
 		{
 			return this.writeController.isStoringEnabled();
 		}
-		
-		@Deprecated
-		static void DEBUG_printBufferBinaryValues(final ByteBuffer bb)
-		{
-			final byte[] bytes = new byte[bb.limit()];
-			XMemory.copyRangeToArray(XMemory.getDirectByteBufferAddress(bb), bytes);
-			final VarString vs = VarString.New().addHexDec(bytes);
-			XDebug.println(vs.toString(), 1);
-		}
-		
-		@Deprecated
-		void DEBUG_printTargetByteOrder()
-		{
-			XDebug.println(
-				"TargetByteOrder = " + this.byteOrderTargeting.getTargetByteOrder()
-				+ " (requires switching: " + (this.byteOrderTargeting.isByteOrderMismatch() ? "yes" : "no") + ")",
-				1
-			);
-		}
-		
+					
 	}
 	
 }

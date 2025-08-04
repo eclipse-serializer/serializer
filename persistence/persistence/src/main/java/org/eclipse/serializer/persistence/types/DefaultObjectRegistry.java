@@ -27,7 +27,6 @@ import org.eclipse.serializer.collections.types.XGettingTable;
 import org.eclipse.serializer.hashing.HashStatisticsBucketBased;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
-import org.eclipse.serializer.meta.XDebug;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObjectId;
@@ -1273,12 +1272,4 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		
 	}
 	
-	
-	
-	public static final void printEntryInstanceSizeInfo()
-	{
-		// -XX:-UseCompressedOops -XX:+PrintGC
-		XDebug.printInstanceSizeInfo(Entry.class);
-	}
-
 }
