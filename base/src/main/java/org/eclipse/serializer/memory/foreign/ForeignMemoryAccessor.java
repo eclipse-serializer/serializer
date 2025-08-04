@@ -287,9 +287,10 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public short get_short(final long address) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		final int id = getID(address);
+		final long offset = getOffset(address);
+		final MemorySegment segment = this.getMemorySegment(id);
+		return segment.get(ValueLayout.JAVA_SHORT_UNALIGNED, offset);
 	}
 
 	@Override
@@ -334,44 +335,74 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public byte get_byte(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getByte(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public boolean get_boolean(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return false;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getBoolean(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public short get_short(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getShort(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public char get_char(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getChar(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public int get_int(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getInt(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public float get_float(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getFloat(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
@@ -388,9 +419,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public double get_double(final Object instance, final long offset) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return 0;
+		try
+		{
+			return this.objectField(instance.getClass(), (int)offset).getDouble(instance);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
@@ -422,14 +458,15 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final long offset = getOffset(address);
 				
 		segment.set(ValueLayout.JAVA_BOOLEAN, offset, value);
-		
 	}
 
 	@Override
 	public void set_short(final long address, final short value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		final int id = getID(address);
+		final MemorySegment segment = this.getMemorySegment(id);
+		final long offset = getOffset(address);
+				
+		segment.set(ValueLayout.JAVA_SHORT_UNALIGNED, offset, value);
 	}
 
 	@Override
@@ -479,44 +516,74 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public void set_byte(final Object instance, final long offset, final byte value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setByte(instance, value);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public void set_boolean(final Object instance, final long offset, final boolean value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setBoolean(instance, value);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public void set_short(final Object instance, final long offset, final short value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setShort(instance, value);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public void set_char(final Object instance, final long offset, final char value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setChar(instance, value);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public void set_int(final Object instance, final long offset, final int value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setInt(instance, value);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
 	public void set_float(final Object instance, final long offset, final float value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setFloat(instance, offset);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
@@ -533,9 +600,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public void set_double(final Object instance, final long offset, final double value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		try
+		{
+			this.objectField(instance.getClass(), (int)offset).setDouble(instance, value);
+		}
+		catch(final Exception e)
+		{
+			throw new Error(e);
+		}
 	}
 
 	@Override
@@ -548,7 +620,6 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		{
 			throw new Error(e);
 		}
-		
 	}
 
 	@Override
