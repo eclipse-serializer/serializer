@@ -847,9 +847,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public long[] objectFieldOffsets(final Field... fields) {
-		// TODO Auto-generated method stub
-			EXIT();
-		return null;
+		final Class<?> mostSpecificDeclaringClass = determineMostSpecificDeclaringClass(fields);
+		return this.objectFieldOffsets(mostSpecificDeclaringClass, fields);
 	}
 
 	@Override
@@ -874,6 +873,27 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		}
 		
 		return offsets;
+	}
+	
+	public static final Class<?> determineMostSpecificDeclaringClass(final Field[] fields)
+	{
+		if(XArrays.hasNoContent(fields))
+		{
+			return null;
+		}
+		
+		Class<?> c = fields[0].getDeclaringClass();
+		for(int i = 1; i < fields.length; i++)
+		{
+			// if the current declaring class is not c, but c is a super class, then the current must be more specific.
+			if(fields[i].getDeclaringClass() != c && c.isAssignableFrom(fields[i].getDeclaringClass()))
+			{
+				c = fields[i].getDeclaringClass();
+			}
+		}
+		
+		// at this point, c point to the most specific ("most childish"? :D) class of all fields' declaring classes.
+		return c;
 	}
 	
 	private Field[] ensureRegisteredObjectFields(final Class<?> objectClass)
