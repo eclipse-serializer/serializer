@@ -35,6 +35,7 @@ import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.memory.sun.JdkInstantiatorBlank;
 import org.eclipse.serializer.reflect.XReflect;
+import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
@@ -192,16 +193,12 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public boolean isDirectByteBuffer(final ByteBuffer byteBuffer) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return false;
+		return XTypes.isDirectByteBuffer(byteBuffer);
 	}
 
 	@Override
 	public ByteBuffer guaranteeDirectByteBuffer(final ByteBuffer directBuffer) {
-		// TODO Auto-generated method stub
-				EXIT();
-		return null;
+		return XTypes.guaranteeDirectByteBuffer(directBuffer);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
