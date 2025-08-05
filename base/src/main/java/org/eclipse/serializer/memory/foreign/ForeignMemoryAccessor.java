@@ -681,7 +681,6 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public void copyRange(final long sourceAddress, final long targetAddress, final long length) {
-		
 		final int srcId = getID(sourceAddress);
 		final long srcOffset = getOffset(sourceAddress);
 		final MemorySegment srcSegment = this.getMemorySegment(srcId);
@@ -691,31 +690,32 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final MemorySegment dstSegment = this.getMemorySegment(dstId);
 		
 		MemorySegment.copy(srcSegment, srcOffset, dstSegment, dstOffset, length);
-		
 	}
 	@Override
 	public void copyRangeToArray(final long sourceAddress, final byte[] target) {
-		
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
 		
 		MemorySegment.copy(segment, ValueLayout.JAVA_BYTE, offset, target, 0, target.length);
-		
 	}
 
 	@Override
 	public void copyRangeToArray(final long sourceAddress, final boolean[] target) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(sourceAddress);
+		final long offset = getOffset(sourceAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(segment, ValueLayout.JAVA_BOOLEAN, offset, target, 0, target.length);
 	}
 
 	@Override
 	public void copyRangeToArray(final long sourceAddress, final short[] target) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(sourceAddress);
+		final long offset = getOffset(sourceAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(segment, ValueLayout.JAVA_SHORT_UNALIGNED, offset, target, 0, target.length);
 	}
 
 	@Override
@@ -725,21 +725,24 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final MemorySegment segment = this.getMemorySegment(id);
 		
 		MemorySegment.copy(segment, ValueLayout.JAVA_CHAR_UNALIGNED, offset, target, 0, target.length);
-		
 	}
 
 	@Override
 	public void copyRangeToArray(final long sourceAddress, final int[] target) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(sourceAddress);
+		final long offset = getOffset(sourceAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(segment, ValueLayout.JAVA_INT_UNALIGNED, offset, target, 0, target.length);
 	}
 
 	@Override
 	public void copyRangeToArray(final long sourceAddress, final float[] target) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(sourceAddress);
+		final long offset = getOffset(sourceAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(segment, ValueLayout.JAVA_FLOAT_UNALIGNED, offset, target, 0, target.length);
 	}
 
 	@Override
@@ -753,20 +756,20 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public void copyRangeToArray(final long sourceAddress, final double[] target) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(sourceAddress);
+		final long offset = getOffset(sourceAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(segment, ValueLayout.JAVA_DOUBLE_UNALIGNED, offset, target, 0, target.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final byte[] array, final long targetAddress) {
-		
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
 		
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_BYTE, offset, array.length);
-						
 	}
 
 	@Override
