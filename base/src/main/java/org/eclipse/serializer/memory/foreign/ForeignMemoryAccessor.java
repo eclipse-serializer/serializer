@@ -26,11 +26,13 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.eclipse.serializer.collections.HashTable;
+import org.eclipse.serializer.collections.XArrays;
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
 import org.eclipse.serializer.exceptions.MemoryException;
 import org.eclipse.serializer.functional.DefaultInstantiator;
 import org.eclipse.serializer.memory.MemoryAccessor;
 import org.eclipse.serializer.memory.MemoryStatistics;
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.memory.sun.JdkInstantiatorBlank;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.X;
@@ -622,60 +624,61 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		}
 	}
 
+	
+	// transformative byte array primitive value setters //
+	
 	@Override
-	public void set_byteInBytes(final byte[] bytes, final int index, final byte value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+	public final void set_byteInBytes(final byte[] bytes, final int index, final byte value)
+	{
+		XArrays.set_byteInBytes(bytes, index, value);
+	}
+	
+	@Override
+	public final void set_booleanInBytes(final byte[] bytes, final int index, final boolean value)
+	{
+		XArrays.set_booleanInBytes(bytes, index, value);
 	}
 
 	@Override
-	public void set_booleanInBytes(final byte[] bytes, final int index, final boolean value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+	public final void set_shortInBytes(final byte[] bytes, final int index, final short value)
+	{
+		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
+		XArrays.set_shortInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Short.reverseBytes(value) : value);
 	}
 
 	@Override
-	public void set_shortInBytes(final byte[] bytes, final int index, final short value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+	public final void set_charInBytes(final byte[] bytes, final int index, final char value)
+	{
+		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
+		XArrays.set_charInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Character.reverseBytes(value) : value);
 	}
 
 	@Override
-	public void set_charInBytes(final byte[] bytes, final int index, final char value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+	public final void set_intInBytes(final byte[] bytes, final int index, final int value)
+	{
+		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
+		XArrays.set_intInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Integer.reverseBytes(value) : value);
 	}
 
 	@Override
-	public void set_intInBytes(final byte[] bytes, final int index, final int value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+	public final void set_floatInBytes(final byte[] bytes, final int index, final float value)
+	{
+		// byte order check inside
+		this.set_intInBytes(bytes, index, Float.floatToRawIntBits(value));
 	}
 
 	@Override
-	public void set_floatInBytes(final byte[] bytes, final int index, final float value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+	public final void set_longInBytes(final byte[] bytes, final int index, final long value)
+	{
+		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
+		XArrays.set_longInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Long.reverseBytes(value) : value);
 	}
 
 	@Override
-	public void set_longInBytes(final byte[] bytes, final int index, final long value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
-	}
-
-	@Override
-	public void set_doubleInBytes(final byte[] bytes, final int index, final double value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+	public final void set_doubleInBytes(final byte[] bytes, final int index, final double value)
+	{
+		// byte order check inside
+		this.set_longInBytes(bytes, index, Double.doubleToRawLongBits(value));
 	}
 
 	@Override
