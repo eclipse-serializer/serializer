@@ -774,51 +774,65 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public void copyArrayToAddress(final boolean[] array, final long targetAddress) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(targetAddress);
+		final long offset = getOffset(targetAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_BOOLEAN, offset, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final short[] array, final long targetAddress) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(targetAddress);
+		final long offset = getOffset(targetAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_SHORT_UNALIGNED, offset, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final char[] array, final long targetAddress) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(targetAddress);
+		final long offset = getOffset(targetAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_CHAR_UNALIGNED, offset, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final int[] array, final long targetAddress) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(targetAddress);
+		final long offset = getOffset(targetAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_INT_UNALIGNED, offset, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final float[] array, final long targetAddress) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(targetAddress);
+		final long offset = getOffset(targetAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_FLOAT_UNALIGNED, offset, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final long[] array, final long targetAddress) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(targetAddress);
+		final long offset = getOffset(targetAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_LONG_UNALIGNED, offset, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final double[] array, final long targetAddress) {
-		// TODO Auto-generated method stub
-				EXIT();
+		final int id = getID(targetAddress);
+		final long offset = getOffset(targetAddress);
+		final MemorySegment segment = this.getMemorySegment(id);
 		
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_DOUBLE_UNALIGNED, offset, array.length);
 	}
 
 	
