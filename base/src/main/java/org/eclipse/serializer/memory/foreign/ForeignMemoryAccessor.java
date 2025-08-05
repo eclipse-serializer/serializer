@@ -261,9 +261,10 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public void fillMemory(final long targetAddress, final long length, final byte value) {
-		// TODO Auto-generated method stub
-				EXIT();
-		
+		final int id = getID(targetAddress);
+		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
+		memoryHandle.memorySegment.fill(value);
+		logger.debug("Segment {}, memory fill", id);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -272,7 +273,6 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	
 	@Override
 	public byte get_byte(final long address) {
-		
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
