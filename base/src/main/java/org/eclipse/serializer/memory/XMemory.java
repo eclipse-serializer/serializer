@@ -938,7 +938,7 @@ public final class XMemory
 	{
 		final long address = allocate(bytes);
 		clearMemory(address, bytes);
-		
+
 		return address;
 	}
     

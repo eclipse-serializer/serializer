@@ -246,8 +246,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public long reallocateMemory(final long address, final long bytes) {
-		// TODO Auto-generated method stub
-				EXIT();
+		this.freeMemory(address);
+		this.allocateMemory(bytes);
 		return 0;
 	}
 
@@ -256,6 +256,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final int id = getID(address);
 		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
 		memoryHandle.close();
+		this.memorySegments.remove(id);
 		logger.debug("closed memory handle with id {}", id);;
 	}
 
