@@ -280,33 +280,7 @@ public final class XThreads
 	{
 		return new Throwable().getStackTrace()[1].getMethodName();
 	}
-	
-	/**
-	 * A copy of the JDK's default behavior for handling ultimately uncaught exceptions, as implemented in
-	 * the last fallback case of {@link ThreadGroup#uncaughtException(Thread, Throwable)}.
-	 * <p>
-	 * Such a method is strongly required if a custom default {@link java.lang.Thread.UncaughtExceptionHandler}
-	 * only handles exceptions to some type and/or some threads and wants/needs to pass all others along to the
-	 * default logic.
-	 * <p>
-	 * As this is a copy of the JDK's logic, it suffers the typical problems of having to be updated manually
-	 * in case the JDK's logic should ever change (which is not very probable in this case).
-	 *
-	 * @param t the thread that caused the {@link Throwable} e.
-	 * @param e the {@link Throwable} to be handled.
-	 */
-	public static void defaultHandleUncaughtThrowable(final Thread t, final Throwable e)
-	{
-		// copied from java.lang.ThreadGroup#uncaughtException, JDK 1.8.0_20
-		if(e instanceof ThreadDeath)
-		{
-			return; // changed for debug-friendly control flow and less parenthesis
-		}
-		System.err.print("Exception in thread \"" + t.getName() + "\" ");
-		e.printStackTrace(System.err);
-	}
-	
-	
+		
 	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
