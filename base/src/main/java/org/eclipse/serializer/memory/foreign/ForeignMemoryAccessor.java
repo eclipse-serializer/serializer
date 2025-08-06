@@ -1024,7 +1024,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		
-		final VarHandle handle = ValueLayout.JAVA_LONG_UNALIGNED.varHandle();
+		final VarHandle handle = ValueLayout.JAVA_LONG.varHandle();
 		return (long) handle.getVolatile(segment, offset);
 	}
 
@@ -1034,7 +1034,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		
-		final VarHandle handle = ValueLayout.JAVA_LONG_UNALIGNED.varHandle();
+		final VarHandle handle = ValueLayout.JAVA_LONG.varHandle();
 		handle.setVolatile(segment, offset, value);
 	}
 
@@ -1051,7 +1051,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		
-		final VarHandle handle = ValueLayout.JAVA_LONG_UNALIGNED.varHandle();
+		final VarHandle handle = ValueLayout.JAVA_LONG.varHandle();
 		return handle.compareAndSet(segment, offset, expected, replacement);
 		
 	}
