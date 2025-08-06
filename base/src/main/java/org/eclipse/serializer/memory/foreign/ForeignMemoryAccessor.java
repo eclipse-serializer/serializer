@@ -17,6 +17,7 @@ package org.eclipse.serializer.memory.foreign;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
@@ -1017,16 +1018,24 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public long volatileGet_long(final Object subject, final long offset) {
-		// TODO Auto-generated method stub
-		EXIT();
-		return 0;
+	public long volatileGet_long(final Object subject, final long address) {
+		
+		final int id = getID(address);
+		final long offset = getOffset(address);
+		final MemorySegment segment = this.getMemorySegment(id);
+		
+		final VarHandle handle = ValueLayout.JAVA_LONG_UNALIGNED.varHandle();
+		return (long) handle.getVolatile(segment, offset);
 	}
 
 	@Override
-	public void volatileSet_long(final Object subject, final long offset, final long value) {
-		// TODO Auto-generated method stub
-		EXIT();
+	public void volatileSet_long(final Object subject, final long address, final long value) {
+		final int id = getID(address);
+		final long offset = getOffset(address);
+		final MemorySegment segment = this.getMemorySegment(id);
+		
+		final VarHandle handle = ValueLayout.JAVA_LONG_UNALIGNED.varHandle();
+		handle.setVolatile(segment, offset, value);
 	}
 
 	@Override
@@ -1037,10 +1046,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public boolean compareAndSwap_long(final Object subject, final long offset, final long expected, final long replacement) {
-		// TODO Auto-generated method stub
-		EXIT();
-		return false;
+	public boolean compareAndSwap_long(final Object subject, final long address, final long expected, final long replacement) {
+		final int id = getID(address);
+		final long offset = getOffset(address);
+		final MemorySegment segment = this.getMemorySegment(id);
+		
+		final VarHandle handle = ValueLayout.JAVA_LONG_UNALIGNED.varHandle();
+		return handle.compareAndSet(segment, offset, expected, replacement);
+		
 	}
 
 	@Override
