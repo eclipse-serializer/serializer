@@ -102,7 +102,8 @@ final class XCollectionsInternals
 				{
 					if(field.getName().equals(declaredFieldName))
 					{
-						return JdkInternals.VM().objectFieldOffset(field);
+						return XMemory.objectFieldOffset(field);
+						//return JdkInternals.VM().objectFieldOffset(field);
 					}
 				}
 			}

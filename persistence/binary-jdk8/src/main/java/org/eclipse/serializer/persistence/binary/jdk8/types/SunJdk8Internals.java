@@ -27,6 +27,7 @@ import java.util.PriorityQueue;
 import java.util.Properties;
 import java.util.Vector;
 
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.memory.sun.JdkInternals;
 
 public final class SunJdk8Internals
@@ -60,7 +61,8 @@ public final class SunJdk8Internals
 				{
 					if(field.getName().equals(declaredFieldName))
 					{
-						return JdkInternals.VM().objectFieldOffset(field);
+						return XMemory.objectFieldOffset(field);
+						//return JdkInternals.VM().objectFieldOffset(field);
 					}
 				}
 			}
