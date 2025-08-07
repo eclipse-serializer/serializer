@@ -22,7 +22,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
@@ -586,7 +585,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	public synchronized void set_float(final Object instance, final long offset, final float value) {
 		try
 		{
-			this.objectField(instance.getClass(), (int)offset).setFloat(instance, offset);
+			this.objectField(instance.getClass(), (int)offset).setFloat(instance, value);
 		}
 		catch(final Exception e)
 		{
@@ -729,7 +728,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 				
 		for(int i = 0; i < target.length; i++)
 		{
-			target[i] = segment.get(ValueLayout.JAVA_BOOLEAN, sourceAddress + i);
+			target[i] = segment.get(ValueLayout.JAVA_BOOLEAN, i);
 		}
 				
 	}
