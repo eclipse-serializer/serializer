@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
@@ -255,7 +256,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public synchronized void freeMemory(final long address) {		
+	public synchronized void freeMemory(final long address) {
 		final int id = getID(address);
 		logger.trace("closing memory handle with id {}", id);
 		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
@@ -707,13 +708,30 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		MemorySegment.copy(segment, ValueLayout.JAVA_BYTE, offset, target, 0, target.length);
 	}
 
+//	/**
+//	 * Does not support boolean[], see
+//	 * https://bugs.openjdk.org/browse/JDK-8345976
+//	 */
+//	@Override
+//	public synchronized void copyRangeToArray(final long sourceAddress, final boolean[] target) {
+//		final int id = getID(sourceAddress);
+//		final long offset = getOffset(sourceAddress);
+//		final MemorySegment segment = this.getMemorySegment(id);
+//
+//		MemorySegment.copy(segment, ValueLayout.JAVA_BOOLEAN, offset, target, 0, target.length);
+//	}
+	
 	@Override
 	public synchronized void copyRangeToArray(final long sourceAddress, final boolean[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
-		
-		MemorySegment.copy(segment, ValueLayout.JAVA_BOOLEAN, offset, target, 0, target.length);
+				
+		for(int i = 0; i < target.length; i++)
+		{
+			target[i] = segment.get(ValueLayout.JAVA_BOOLEAN, sourceAddress + i);
+		}
+				
 	}
 
 	@Override
@@ -779,13 +797,29 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_BYTE, offset, array.length);
 	}
 
+//	/**
+//	 * Does not support boolean[], see
+//	 * https://bugs.openjdk.org/browse/JDK-8345976
+//	 */
+//	@Override
+//	public synchronized void copyArrayToAddress(final boolean[] array, final long targetAddress) {
+//		final int id = getID(targetAddress);
+//		final long offset = getOffset(targetAddress);
+//		final MemorySegment segment = this.getMemorySegment(id);
+//
+//		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_BOOLEAN, offset, array.length);
+//	}
+	
 	@Override
 	public synchronized void copyArrayToAddress(final boolean[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
 		
-		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_BOOLEAN, offset, array.length);
+		
+		for (int i = 0; i < array.length; i++) {
+			segment.set(ValueLayout.JAVA_BOOLEAN, offset+i, array[i]);
+		}
 	}
 
 	@Override
