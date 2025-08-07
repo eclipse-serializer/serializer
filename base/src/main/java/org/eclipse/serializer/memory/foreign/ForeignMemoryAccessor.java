@@ -134,7 +134,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		return ((long)id) << 40;
 	}
 	
-	public int findNextFreeID() {
+	public synchronized int findNextFreeID() {
 		
 		for(int i = 0; i < Integer.MAX_VALUE; i++) {
 			if(!this.memorySegments.containsKey(i)) return i;
@@ -158,10 +158,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		// TODO Auto-generated method stub
 	}
 	
-	public MemorySegment getMemorySegment(final int id) {
+	public synchronized MemorySegment getMemorySegment(final int id) {
 						
-		 final DirectMemoryHandle handle = this.memorySegments.get(id);
-		 return handle.getMemorySegment();
+		logger.trace("Try getting  memory handle with id {}", id);
+		final DirectMemoryHandle handle = this.memorySegments.get(id);
+		if(handle == null) {
+			return null;
+		}
+		return handle.getMemorySegment();
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -169,21 +173,21 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	///////////////
 	
 	@Override
-	public long getDirectByteBufferAddress(final ByteBuffer directBuffer) {
+	public synchronized long getDirectByteBufferAddress(final ByteBuffer directBuffer) {
 		
 		final int id = this.bufferRegistry.get(System.identityHashCode(directBuffer));
 		return this.encodeAddress(id);
 	}
 
 	@Override
-	public boolean deallocateDirectByteBuffer(final ByteBuffer directBuffer) {
+	public synchronized boolean deallocateDirectByteBuffer(final ByteBuffer directBuffer) {
 						
 		final Integer id = this.bufferRegistry.remove(System.identityHashCode(directBuffer));
 		
-		logger.debug("deallocating native segment (id: {}) and buffer {}", id, directBuffer);
+		logger.trace("deallocating native segment (id: {}) and buffer {}", id, directBuffer);
 		
 		if(id == null) {
-			logger.debug("buffer not registered {}", directBuffer);
+			logger.trace("buffer not registered {}", directBuffer);
 			return false;
 		}
 		
@@ -208,7 +212,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	/////////////////////
 	
 	@Override
-	public ByteBuffer allocateDirectNative(final int capacity)
+	public synchronized ByteBuffer allocateDirectNative(final int capacity)
 	{
 		final Arena arena = Arena.ofShared();
 		final MemorySegment segment = arena.allocate(capacity);
@@ -220,51 +224,52 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		
 		this.bufferRegistry.put(System.identityHashCode(byteBuffer), id);
 	
-		logger.debug("Registered native segment and buffer {} with id {}", byteBuffer, id);
+		logger.trace("Registered native segment and buffer {} with id {}", byteBuffer, id);
 		
 		return byteBuffer;
 	}
 	
 	@Override
-	public ByteBuffer allocateDirectNative(final long capacity) {
+	public synchronized ByteBuffer allocateDirectNative(final long capacity) {
 		return this.allocateDirectNative(
 				X.checkArrayRange(capacity));
 	}
 
 	@Override
-	public long allocateMemory(final long bytes) {
+	public synchronized long allocateMemory(final long bytes) {
 		final Arena arena = Arena.ofShared();
 		final MemorySegment segment = arena.allocate(bytes);
 				
 		final int id = this.findNextFreeID();
 		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment));
-		logger.debug("Registered native segment with id {}, {} bytes", id, bytes);
+		logger.trace("Registered native segment with id {}, {} bytes", id, bytes);
 		
 		return this.encodeAddress(id);
 	}
 
 	@Override
-	public long reallocateMemory(final long address, final long bytes) {
+	public synchronized long reallocateMemory(final long address, final long bytes) {
 		this.freeMemory(address);
 		this.allocateMemory(bytes);
 		return 0;
 	}
 
 	@Override
-	public void freeMemory(final long address) {
+	public synchronized void freeMemory(final long address) {		
 		final int id = getID(address);
+		logger.trace("closing memory handle with id {}", id);
 		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
 		memoryHandle.close();
 		this.memorySegments.remove(id);
-		logger.debug("closed memory handle with id {}", id);;
+		logger.trace("closed memory handle with id {}", id);;
 	}
 
 	@Override
-	public void fillMemory(final long targetAddress, final long length, final byte value) {
+	public synchronized void fillMemory(final long targetAddress, final long length, final byte value) {
 		final int id = getID(targetAddress);
 		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
 		memoryHandle.memorySegment.fill(value);
-		logger.debug("Segment {}, memory fill", id);
+		logger.trace("Segment {}, memory fill", id);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -272,7 +277,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	///////////////////
 	
 	@Override
-	public byte get_byte(final long address) {
+	public synchronized byte get_byte(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -280,7 +285,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public boolean get_boolean(final long address) {
+	public synchronized  boolean get_boolean(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -288,7 +293,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public short get_short(final long address) {
+	public synchronized short get_short(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -296,7 +301,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public char get_char(final long address) {
+	public synchronized char get_char(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -304,7 +309,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public int get_int(final long address) {
+	public synchronized int get_int(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -312,7 +317,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public float get_float(final long address) {
+	public synchronized float get_float(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -320,7 +325,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public long get_long(final long address) {
+	public synchronized long get_long(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -328,7 +333,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public double get_double(final long address) {
+	public synchronized double get_double(final long address) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -336,7 +341,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public byte get_byte(final Object instance, final long offset) {
+	public synchronized byte get_byte(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getByte(instance);
@@ -348,7 +353,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public boolean get_boolean(final Object instance, final long offset) {
+	public synchronized boolean get_boolean(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getBoolean(instance);
@@ -360,7 +365,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public short get_short(final Object instance, final long offset) {
+	public synchronized short get_short(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getShort(instance);
@@ -372,7 +377,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public char get_char(final Object instance, final long offset) {
+	public synchronized char get_char(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getChar(instance);
@@ -384,7 +389,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public int get_int(final Object instance, final long offset) {
+	public synchronized int get_int(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getInt(instance);
@@ -396,7 +401,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public float get_float(final Object instance, final long offset) {
+	public synchronized float get_float(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getFloat(instance);
@@ -408,7 +413,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public long get_long(final Object instance, final long offset) {
+	public synchronized long get_long(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getLong(instance);
@@ -420,7 +425,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public double get_double(final Object instance, final long offset) {
+	public synchronized double get_double(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).getDouble(instance);
@@ -432,7 +437,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public Object getObject(final Object instance, final long offset) {
+	public synchronized Object getObject(final Object instance, final long offset) {
 		try
 		{
 			return this.objectField(instance.getClass(), (int)offset).get(instance);
@@ -444,7 +449,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_byte(final long address, final byte value) {
+	public synchronized void set_byte(final long address, final byte value) {
 		
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -454,7 +459,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_boolean(final long address, final boolean value) {
+	public synchronized void set_boolean(final long address, final boolean value) {
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		final long offset = getOffset(address);
@@ -463,7 +468,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_short(final long address, final short value) {
+	public synchronized void set_short(final long address, final short value) {
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		final long offset = getOffset(address);
@@ -472,7 +477,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_char(final long address, final char value) {
+	public synchronized void set_char(final long address, final char value) {
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		final long offset = getOffset(address);
@@ -481,7 +486,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_int(final long address, final int value) {
+	public synchronized void set_int(final long address, final int value) {
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		final long offset = getOffset(address);
@@ -490,7 +495,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_float(final long address, final float value) {
+	public synchronized void set_float(final long address, final float value) {
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		final long offset = getOffset(address);
@@ -499,7 +504,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_long(final long address, final long value) {
+	public synchronized void set_long(final long address, final long value) {
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		final long offset = getOffset(address);
@@ -508,7 +513,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_double(final long address, final double value) {
+	public synchronized void set_double(final long address, final double value) {
 		final int id = getID(address);
 		final MemorySegment segment = this.getMemorySegment(id);
 		final long offset = getOffset(address);
@@ -517,7 +522,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_byte(final Object instance, final long offset, final byte value) {
+	public synchronized void set_byte(final Object instance, final long offset, final byte value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setByte(instance, value);
@@ -529,7 +534,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_boolean(final Object instance, final long offset, final boolean value) {
+	public synchronized void set_boolean(final Object instance, final long offset, final boolean value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setBoolean(instance, value);
@@ -541,7 +546,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_short(final Object instance, final long offset, final short value) {
+	public synchronized void set_short(final Object instance, final long offset, final short value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setShort(instance, value);
@@ -553,7 +558,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_char(final Object instance, final long offset, final char value) {
+	public synchronized void set_char(final Object instance, final long offset, final char value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setChar(instance, value);
@@ -565,7 +570,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_int(final Object instance, final long offset, final int value) {
+	public synchronized void set_int(final Object instance, final long offset, final int value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setInt(instance, value);
@@ -577,7 +582,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_float(final Object instance, final long offset, final float value) {
+	public synchronized void set_float(final Object instance, final long offset, final float value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setFloat(instance, offset);
@@ -589,7 +594,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_long(final Object instance, final long offset, final long value) {
+	public synchronized void set_long(final Object instance, final long offset, final long value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setLong(instance, value);
@@ -601,7 +606,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void set_double(final Object instance, final long offset, final double value) {
+	public synchronized void set_double(final Object instance, final long offset, final double value) {
 		try
 		{
 			this.objectField(instance.getClass(), (int)offset).setDouble(instance, value);
@@ -628,61 +633,61 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	// transformative byte array primitive value setters //
 	
 	@Override
-	public final void set_byteInBytes(final byte[] bytes, final int index, final byte value)
+	public final synchronized void set_byteInBytes(final byte[] bytes, final int index, final byte value)
 	{
 		XArrays.set_byteInBytes(bytes, index, value);
 	}
 	
 	@Override
-	public final void set_booleanInBytes(final byte[] bytes, final int index, final boolean value)
+	public final synchronized void set_booleanInBytes(final byte[] bytes, final int index, final boolean value)
 	{
 		XArrays.set_booleanInBytes(bytes, index, value);
 	}
 
 	@Override
-	public final void set_shortInBytes(final byte[] bytes, final int index, final short value)
+	public final synchronized void set_shortInBytes(final byte[] bytes, final int index, final short value)
 	{
 		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
 		XArrays.set_shortInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Short.reverseBytes(value) : value);
 	}
 
 	@Override
-	public final void set_charInBytes(final byte[] bytes, final int index, final char value)
+	public final synchronized void set_charInBytes(final byte[] bytes, final int index, final char value)
 	{
 		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
 		XArrays.set_charInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Character.reverseBytes(value) : value);
 	}
 
 	@Override
-	public final void set_intInBytes(final byte[] bytes, final int index, final int value)
+	public final synchronized void set_intInBytes(final byte[] bytes, final int index, final int value)
 	{
 		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
 		XArrays.set_intInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Integer.reverseBytes(value) : value);
 	}
 
 	@Override
-	public final void set_floatInBytes(final byte[] bytes, final int index, final float value)
+	public final synchronized void set_floatInBytes(final byte[] bytes, final int index, final float value)
 	{
 		// byte order check inside
 		this.set_intInBytes(bytes, index, Float.floatToRawIntBits(value));
 	}
 
 	@Override
-	public final void set_longInBytes(final byte[] bytes, final int index, final long value)
+	public final synchronized void set_longInBytes(final byte[] bytes, final int index, final long value)
 	{
 		// since XArrays inherently works only with sane byte order, the insane case has to be checked and handled here.
 		XArrays.set_longInBytes(bytes, index, XMemory.isBigEndianNativeOrder() ? Long.reverseBytes(value) : value);
 	}
 
 	@Override
-	public final void set_doubleInBytes(final byte[] bytes, final int index, final double value)
+	public final synchronized void set_doubleInBytes(final byte[] bytes, final int index, final double value)
 	{
 		// byte order check inside
 		this.set_longInBytes(bytes, index, Double.doubleToRawLongBits(value));
 	}
 
 	@Override
-	public void copyRange(final long sourceAddress, final long targetAddress, final long length) {
+	public synchronized void copyRange(final long sourceAddress, final long targetAddress, final long length) {
 		final int srcId = getID(sourceAddress);
 		final long srcOffset = getOffset(sourceAddress);
 		final MemorySegment srcSegment = this.getMemorySegment(srcId);
@@ -694,7 +699,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		MemorySegment.copy(srcSegment, srcOffset, dstSegment, dstOffset, length);
 	}
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final byte[] target) {
+	public synchronized void copyRangeToArray(final long sourceAddress, final byte[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -703,7 +708,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final boolean[] target) {
+	public synchronized void copyRangeToArray(final long sourceAddress, final boolean[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -712,7 +717,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final short[] target) {
+	public synchronized void copyRangeToArray(final long sourceAddress, final short[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -721,7 +726,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final char[] target) {
+	public synchronized void copyRangeToArray(final long sourceAddress, final char[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -730,7 +735,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final int[] target) {
+	public synchronized void copyRangeToArray(final long sourceAddress, final int[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -739,7 +744,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final float[] target) {
+	public synchronized void copyRangeToArray(final long sourceAddress, final float[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -748,7 +753,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final long[] target) {
+	public synchronized void copyRangeToArray(final long sourceAddress, final long[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -757,7 +762,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final double[] target) {
+	public synchronized  void copyRangeToArray(final long sourceAddress, final double[] target) {
 		final int id = getID(sourceAddress);
 		final long offset = getOffset(sourceAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -766,7 +771,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final byte[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final byte[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -775,7 +780,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final boolean[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final boolean[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -784,7 +789,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final short[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final short[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -793,7 +798,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final char[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final char[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -802,7 +807,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final int[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final int[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -811,7 +816,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final float[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final float[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -820,7 +825,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final long[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final long[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -829,7 +834,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyArrayToAddress(final double[] array, final long targetAddress) {
+	public synchronized void copyArrayToAddress(final double[] array, final long targetAddress) {
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -843,25 +848,25 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	//////////////
 	///
 	@Override
-	public long objectFieldOffset(final Field field) {
+	public synchronized long objectFieldOffset(final Field field) {
 		return this.objectFieldOffset(field.getDeclaringClass(), field);
 	}
 
 	@Override
-	public long[] objectFieldOffsets(final Field... fields) {
+	public synchronized long[] objectFieldOffsets(final Field... fields) {
 		final Class<?> mostSpecificDeclaringClass = determineMostSpecificDeclaringClass(fields);
 		return this.objectFieldOffsets(mostSpecificDeclaringClass, fields);
 	}
 
 	@Override
-	public long objectFieldOffset(final Class<?> objectClass, final Field field) {
+	public synchronized long objectFieldOffset(final Class<?> objectClass, final Field field) {
 		final Field[] objectFields = this.ensureRegisteredObjectFields(objectClass);
 
 		return ForeignMemoryAccessor.objectFieldOffset(objectFields, field);
 	}
 
 	@Override
-	public long[] objectFieldOffsets(final Class<?> objectClass, final Field... fields) {
+	public synchronized long[] objectFieldOffsets(final Class<?> objectClass, final Field... fields) {
 		final Field[] objectFields = this.ensureRegisteredObjectFields(objectClass);
 
 		final long[] offsets = new long[fields.length];
@@ -1015,7 +1020,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public long volatileGet_long(final Object subject, final long address) {
+	public synchronized long volatileGet_long(final Object subject, final long address) {
 		
 		final int id = getID(address);
 		final long offset = getOffset(address);
@@ -1026,7 +1031,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void volatileSet_long(final Object subject, final long address, final long value) {
+	public synchronized  void volatileSet_long(final Object subject, final long address, final long value) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -1036,14 +1041,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public boolean compareAndSwap_int(final Object subject, final long offset, final int expected, final int replacement) {
+	public synchronized boolean compareAndSwap_int(final Object subject, final long offset, final int expected, final int replacement) {
 		// TODO Auto-generated method stub
 		EXIT();
 		return false;
 	}
 
 	@Override
-	public boolean compareAndSwap_long(final Object subject, final long address, final long expected, final long replacement) {
+	public synchronized boolean compareAndSwap_long(final Object subject, final long address, final long expected, final long replacement) {
 		final int id = getID(address);
 		final long offset = getOffset(address);
 		final MemorySegment segment = this.getMemorySegment(id);
@@ -1054,7 +1059,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public boolean compareAndSwapObject(final Object subject, final long offset, final Object expected, final Object replacement) {
+	public synchronized boolean compareAndSwapObject(final Object subject, final long offset, final Object expected, final Object replacement) {
 		// TODO Auto-generated method stub
 		EXIT();
 		return false;
