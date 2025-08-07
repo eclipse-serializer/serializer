@@ -35,6 +35,7 @@ import org.eclipse.serializer.memory.MemoryAccessor;
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.memory.sun.JdkInstantiatorBlank;
+import org.eclipse.serializer.memory.sun.JdkInternals;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
@@ -1005,16 +1006,12 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public MemoryStatistics createHeapMemoryStatistics() {
-		// TODO Auto-generated method stub
-		EXIT();
-		return null;
+		return JdkInternals.createHeapMemoryStatistics();
 	}
 
 	@Override
 	public MemoryStatistics createNonHeapMemoryStatistics() {
-		// TODO Auto-generated method stub
-		EXIT();
-		return null;
+		return JdkInternals.createNonHeapMemoryStatistics();
 	}
 
 	@Override
