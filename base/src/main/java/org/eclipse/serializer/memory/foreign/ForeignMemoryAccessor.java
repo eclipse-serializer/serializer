@@ -148,9 +148,9 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	// methods //
 	////////////
 
-	public static void EXIT() {
-		logger.error("not yet implemented");
-		throw new RuntimeException("TO BE IMPLEMENTED!");
+	public static void notImplemented() {
+		logger.error("not implemented!");
+		throw new RuntimeException("NOT IMPLEMENTED!");
 	}
 	
 	@Override
@@ -1074,10 +1074,13 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public synchronized boolean compareAndSwap_int(final Object subject, final long offset, final int expected, final int replacement) {
-		// TODO Auto-generated method stub
-		EXIT();
-		return false;
+	public synchronized boolean compareAndSwap_int(final Object subject, final long address, final int expected, final int replacement) {
+		final int id = getID(address);
+		final long offset = getOffset(address);
+		final MemorySegment segment = this.getMemorySegment(id);
+		
+		final VarHandle handle = ValueLayout.JAVA_INT.varHandle();
+		return handle.compareAndSet(segment, offset, expected, replacement);
 	}
 
 	@Override
@@ -1093,8 +1096,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public synchronized boolean compareAndSwapObject(final Object subject, final long offset, final Object expected, final Object replacement) {
-		// TODO Auto-generated method stub
-		EXIT();
+		notImplemented();
 		return false;
 	}
 
