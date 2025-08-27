@@ -155,7 +155,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	
 	@Override
 	public void guaranteeUsability() {
-		// TODO Auto-generated method stub
+		notImplemented();
 	}
 	
 	public synchronized MemorySegment getMemorySegment(final int id) {
