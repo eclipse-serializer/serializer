@@ -149,8 +149,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	////////////
 
 	public static void notImplemented() {
-		logger.error("not implemented!");
-		throw new RuntimeException("NOT IMPLEMENTED!");
+		//noOp
 	}
 	
 	@Override
