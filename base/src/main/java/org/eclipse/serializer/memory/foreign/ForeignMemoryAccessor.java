@@ -728,9 +728,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 				
 		for(int i = 0; i < target.length; i++)
 		{
-			target[i] = segment.get(ValueLayout.JAVA_BOOLEAN, i);
+			target[i] = segment.get(ValueLayout.JAVA_BOOLEAN, i + offset);
 		}
-				
 	}
 
 	@Override
@@ -814,8 +813,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final int id = getID(targetAddress);
 		final long offset = getOffset(targetAddress);
 		final MemorySegment segment = this.getMemorySegment(id);
-		
-		
+			
 		for (int i = 0; i < array.length; i++) {
 			segment.set(ValueLayout.JAVA_BOOLEAN, offset+i, array[i]);
 		}
