@@ -42,6 +42,14 @@ import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+
+/**
+ * Performance:
+ * 
+ * nextFreeID() is very slow if iterated from 0 to Integer.Max
+ * freeMemory is also slow ..
+ * 
+ */
 public class ForeignMemoryAccessor implements MemoryAccessor
 {
 	private static class DirectMemoryHandle {
@@ -104,6 +112,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	
 	
 	private final DefaultInstantiator classInstantiator = JdkInstantiatorBlank.New();
+
+	private int nextFreeID;
 	
 	///////////////////////////////////////////////////////////////////////////
 	// buffer id <--> address coding //
@@ -133,11 +143,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	public long encodeAddress(final int id) {
 		return ((long)id) << 40;
 	}
-	
-	public synchronized int findNextFreeID() {
 		
-		for(int i = 0; i < Integer.MAX_VALUE; i++) {
-			if(!this.memorySegments.containsKey(i)) return i;
+	public synchronized int findNextFreeID() {	
+		if(nextFreeID == Integer.MAX_VALUE) nextFreeID = 0;
+		
+		for(int i = nextFreeID; i < Integer.MAX_VALUE; i++) {
+			if(!this.memorySegments.containsKey(i)) {
+				this.nextFreeID = i+1;
+				return i;}
 		}
 		
 		return -1;
