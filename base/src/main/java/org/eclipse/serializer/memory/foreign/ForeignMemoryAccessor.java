@@ -25,6 +25,10 @@ import java.nio.ByteOrder;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.XArrays;
@@ -86,6 +90,24 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	public ForeignMemoryAccessor() {
 		super();
+		
+		this.exec = Executors.newFixedThreadPool(1);
+		this.closingQueue = new LinkedBlockingDeque<DirectMemoryHandle>(1000);
+		
+		this.exec.submit(()->{
+			try {
+				this.closingQueue.takeFirst().close();
+				
+				if(this.closingQueue.size() != 0) {
+					System.out.println("MemorySegments be closed: " + this.closingQueue.size());
+				}
+				
+			} catch (final InterruptedException e) {
+				//Suppress exception
+				System.out.println("INTERRUPTETD CLOSE");
+				return;
+			}
+		});
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -102,7 +124,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 			//Collections.reverseOrder()
 		);
 	
-	//dont use buffers as key, their hashCode is contentend dependend!
+	//Don't use buffers as key, their hashCode is contented dependent!
 	private final Map<Integer, Integer> bufferRegistry = new Hashtable<Integer, Integer>(
 			//Collections.reverseOrder()
 		);
@@ -115,14 +137,17 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	private int nextFreeID;
 	
+	ExecutorService exec;
+	BlockingDeque<DirectMemoryHandle> closingQueue;
+		
 	///////////////////////////////////////////////////////////////////////////
 	// buffer id <--> address coding //
 	//////////////////////////////////
 	
 	//instead of working with a absolute memory address
 	//the "address" is coded as an id of the segement and the relative position
-	//(offset) in that segement.
-	//lower bytes are offest
+	//(offset) in that segment.
+	//lower bytes are offset
 	//upper bytes are id
 	
 	// 23Bit for id == 8.388.607 ids
@@ -144,10 +169,12 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		return ((long)id) << 40;
 	}
 		
-	public synchronized int findNextFreeID() {	
-		if(nextFreeID == Integer.MAX_VALUE) nextFreeID = 0;
+	public synchronized int findNextFreeID() {
+		if(this.nextFreeID == Integer.MAX_VALUE) {
+			this.nextFreeID = 0;
+		}
 		
-		for(int i = nextFreeID; i < Integer.MAX_VALUE; i++) {
+		for(int i = this.nextFreeID; i < Integer.MAX_VALUE; i++) {
 			if(!this.memorySegments.containsKey(i)) {
 				this.nextFreeID = i+1;
 				return i;}
@@ -204,8 +231,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		}
 		
 		final DirectMemoryHandle handle = this.memorySegments.remove(id);
-		handle.close();
-		
+		this.closingQueue.offer(handle);
+			
 		return true;
 	}
 
@@ -251,7 +278,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	public synchronized long allocateMemory(final long bytes) {
 		final Arena arena = Arena.ofShared();
 		final MemorySegment segment = arena.allocate(bytes);
-				
+						
 		final int id = this.findNextFreeID();
 		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment));
 		logger.trace("Registered native segment with id {}, {} bytes", id, bytes);
@@ -271,8 +298,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final int id = getID(address);
 		logger.trace("closing memory handle with id {}", id);
 		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
-		memoryHandle.close();
 		this.memorySegments.remove(id);
+		this.closingQueue.offer(memoryHandle);
 		logger.trace("closed memory handle with id {}", id);;
 	}
 
