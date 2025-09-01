@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.time.Duration;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,6 +30,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.XArrays;
@@ -88,26 +90,38 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		return new ForeignMemoryAccessor();
 	}
 
+
 	public ForeignMemoryAccessor() {
 		super();
 		
 		this.exec = Executors.newFixedThreadPool(1);
-		this.closingQueue = new LinkedBlockingDeque<DirectMemoryHandle>(1000);
+		this.closingQueue = new LinkedBlockingDeque<DirectMemoryHandle>();
 		
 		this.exec.submit(()->{
-			try {
-				this.closingQueue.takeFirst().close();
-				
-				if(this.closingQueue.size() != 0) {
-					System.out.println("MemorySegments be closed: " + this.closingQueue.size());
+			while(true)
+			{
+				try {
+					this.closingQueue.takeFirst().close();
+					this.closedSegments++;
+
+					if(1 == this.closingQueue.size() % 1000) {
+						logger.info("MemorySegments to be closed: {}", this.closingQueue.size());
+					}
+
+				} catch (final InterruptedException e) {
+					//Suppress exception
+					logger.trace("INTERRUPTETD CLOSE");
+					return;
 				}
-				
-			} catch (final InterruptedException e) {
-				//Suppress exception
-				System.out.println("INTERRUPTETD CLOSE");
-				return;
 			}
 		});
+	
+		this.bufferCreations = new AtomicLong();
+		this.nativeCreations = new AtomicLong();
+		this.bufferDeletions = new AtomicLong();
+		this.nativeDeletions = new AtomicLong();
+		this.allocatedBufferMemory = new AtomicLong();
+		this.allocatedNativeMemory = new AtomicLong();
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -139,7 +153,16 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	
 	ExecutorService exec;
 	BlockingDeque<DirectMemoryHandle> closingQueue;
-		
+
+	long closedSegments;
+	
+	AtomicLong bufferCreations;
+	AtomicLong nativeCreations;
+	AtomicLong nativeDeletions;
+	AtomicLong bufferDeletions;
+	AtomicLong allocatedNativeMemory;
+	AtomicLong allocatedBufferMemory;
+	
 	///////////////////////////////////////////////////////////////////////////
 	// buffer id <--> address coding //
 	//////////////////////////////////
@@ -153,30 +176,31 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	// 23Bit for id == 8.388.607 ids
 	// 40Bit for offset ==
 	
-	private static final long ADDRESS_MASK = 0xFF_FFFF_FFFFl;
+	private static final long ADDRESS_MASK = 0xFFFF_FFFFl;
 	private static final int  ADDRESS_BITS = 40;
-	private static final long ID_MASK      = 0x7FFF_FF00_0000_0000l;
+	private static final long ID_MASK      = 0x7FFF_FFFF_0000_0000l;
 		
 	public static long getOffset(final long address) {
 		return address & ADDRESS_MASK;
 	}
 	
 	public static int getID(final long address) {
-		return (int) (address >>> 40);
+		return (int) (address >>> 32);
 	}
 	
 	public long encodeAddress(final int id) {
-		return ((long)id) << 40;
+		return ((long)id) << 32;
 	}
 		
 	public synchronized int findNextFreeID() {
 		if(this.nextFreeID == Integer.MAX_VALUE) {
 			this.nextFreeID = 0;
+			logger.info("Free ID overflow");
 		}
 		
 		for(int i = this.nextFreeID; i < Integer.MAX_VALUE; i++) {
 			if(!this.memorySegments.containsKey(i)) {
-				this.nextFreeID = i+1;
+				this.nextFreeID = i;
 				return i;}
 		}
 		
@@ -198,8 +222,9 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 	
 	public synchronized MemorySegment getMemorySegment(final int id) {
-						
-		logger.trace("Try getting  memory handle with id {}", id);
+				
+		if(id != 18)
+			logger.trace("Try getting  memory handle with id {}", id);
 		final DirectMemoryHandle handle = this.memorySegments.get(id);
 		if(handle == null) {
 			return null;
@@ -229,10 +254,14 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 			logger.trace("buffer not registered {}", directBuffer);
 			return false;
 		}
-		
+				
 		final DirectMemoryHandle handle = this.memorySegments.remove(id);
+		this.bufferDeletions.incrementAndGet();
+		this.allocatedBufferMemory.addAndGet(-handle.memorySegment.byteSize());
 		this.closingQueue.offer(handle);
-			
+		
+		
+		
 		return true;
 	}
 
@@ -255,7 +284,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	{
 		final Arena arena = Arena.ofShared();
 		final MemorySegment segment = arena.allocate(capacity);
-				
+						
 		final int id = this.findNextFreeID();
 		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment));
 		
@@ -263,7 +292,11 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		
 		this.bufferRegistry.put(System.identityHashCode(byteBuffer), id);
 	
-		logger.trace("Registered native segment and buffer {} with id {}", byteBuffer, id);
+		logger.debug("Registered native segment and buffer {} with id {} and size {}", byteBuffer, id, capacity);
+		
+		this.bufferCreations.incrementAndGet();
+		
+		this.allocatedBufferMemory.addAndGet(capacity);
 		
 		return byteBuffer;
 	}
@@ -276,12 +309,16 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 
 	@Override
 	public synchronized long allocateMemory(final long bytes) {
-		final Arena arena = Arena.ofShared();
+		final Arena arena = Arena.ofAuto();
 		final MemorySegment segment = arena.allocate(bytes);
 						
 		final int id = this.findNextFreeID();
 		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment));
 		logger.trace("Registered native segment with id {}, {} bytes", id, bytes);
+		
+		this.nativeCreations.incrementAndGet();
+		
+		this.allocatedNativeMemory.addAndGet(bytes);
 		
 		return this.encodeAddress(id);
 	}
@@ -298,8 +335,10 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final int id = getID(address);
 		logger.trace("closing memory handle with id {}", id);
 		final DirectMemoryHandle memoryHandle = this.memorySegments.get(id);
+		this.nativeDeletions.incrementAndGet();
+		this.allocatedNativeMemory.addAndGet(-memoryHandle.memorySegment.byteSize());
 		this.memorySegments.remove(id);
-		this.closingQueue.offer(memoryHandle);
+		//this.closingQueue.offer(memoryHandle);
 		logger.trace("closed memory handle with id {}", id);;
 	}
 
@@ -1135,6 +1174,43 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	public synchronized boolean compareAndSwapObject(final Object subject, final long offset, final Object expected, final Object replacement) {
 		notImplemented();
 		return false;
+	}
+
+	public void info() {
+		final int bufferCount = this.bufferRegistry.size();
+		final int segmentsCount = this.memorySegments.size();
+		
+		logger.info(""
+				+ "\n\tcurrent Buffers: {}, segments: {}"
+				+ "\n\tbufferCreations {}, bufferDeletions {}"
+				+ "\n\tnativeCreations {}, nativeDeletions {}"
+				+ "\n\tallocatedBufferMemory: {}, allocatedNativeMemory: {}"
+				+ "\n\tdeletedSegments: {}",
+				bufferCount, segmentsCount,
+				this.bufferCreations, this.bufferDeletions,
+				this.nativeCreations, this.nativeDeletions,
+				this.allocatedBufferMemory, this.allocatedNativeMemory,
+				this.closedSegments
+			);
+		
+		final TreeMap<Long, Integer> segmentSizes = new TreeMap<Long, Integer>();
+		this.memorySegments.forEach( (k,v) ->
+				segmentSizes.merge(v.memorySegment.byteSize(), 1, (k1, v1) -> k1+v1	));
+		
+		logger.debug("SegmentSizes: {}", segmentSizes);
+				
+	}
+
+	public void waitForCleanup() {
+		while(!this.closingQueue.isEmpty()) {
+			try {
+				Thread.sleep(Duration.ofMillis(50));
+			} catch(final InterruptedException e) {
+				logger.debug("Thread sleep interrupted!");
+			}
+		}
+		logger.debug("closingQueue size {}", this.closingQueue.size());
+		
 	}
 
 }
