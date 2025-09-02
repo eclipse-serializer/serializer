@@ -62,11 +62,19 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		
 		private final Arena arena;
 		private final MemorySegment memorySegment;
+		private StackTraceElement[] stackTrace;
 		
 		public DirectMemoryHandle(final Arena arena, final MemorySegment memorySegment) {
 			super();
 			this.arena = arena;
 			this.memorySegment = memorySegment;
+		}
+
+		public DirectMemoryHandle(final Arena arena, final MemorySegment segment, final StackTraceElement[] stackTrace) {
+			super();
+			this.arena = arena;
+			this.memorySegment = segment;
+			this.stackTrace = stackTrace;
 		}
 
 		public final Arena getArena() {
@@ -104,9 +112,9 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 					this.closingQueue.takeFirst().close();
 					this.closedSegments++;
 
-					if(1 == this.closingQueue.size() % 1000) {
+					//if(1 == this.closingQueue.size() % 1000) {
 						logger.info("MemorySegments to be closed: {}", this.closingQueue.size());
-					}
+					//}
 
 				} catch (final InterruptedException e) {
 					//Suppress exception
@@ -286,7 +294,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final MemorySegment segment = arena.allocate(capacity);
 						
 		final int id = this.findNextFreeID();
-		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment));
+		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment, new Exception("StackTrace").getStackTrace()));
 		
 		final ByteBuffer byteBuffer = segment.asByteBuffer().order(ByteOrder.nativeOrder());
 		
@@ -1202,6 +1210,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	}
 
 	public void waitForCleanup() {
+				
 		while(!this.closingQueue.isEmpty()) {
 			try {
 				Thread.sleep(Duration.ofMillis(50));
