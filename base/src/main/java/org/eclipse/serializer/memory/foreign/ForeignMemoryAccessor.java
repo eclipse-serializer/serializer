@@ -104,25 +104,25 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		
 		this.exec = Executors.newFixedThreadPool(1);
 		this.closingQueue = new LinkedBlockingDeque<DirectMemoryHandle>();
-		
-		this.exec.submit(()->{
-			while(true)
-			{
-				try {
-					this.closingQueue.takeFirst().close();
-					this.closedSegments++;
 
-					//if(1 == this.closingQueue.size() % 1000) {
-						logger.info("MemorySegments to be closed: {}", this.closingQueue.size());
-					//}
-
-				} catch (final InterruptedException e) {
-					//Suppress exception
-					logger.trace("INTERRUPTETD CLOSE");
-					return;
-				}
-			}
-		});
+//		this.exec.submit(()->{
+//			while(true)
+//			{
+//				try {
+//					this.closingQueue.takeFirst().close();
+//					this.closedSegments++;
+//
+//					//if(1 == this.closingQueue.size() % 1000) {
+//						//logger.info("MemorySegments to be closed: {}", this.closingQueue.size());
+//					//}
+//
+//				} catch (final InterruptedException e) {
+//					//Suppress exception
+//					logger.trace("INTERRUPTETD CLOSE");
+//					return;
+//				}
+//			}
+//		});
 	
 		this.bufferCreations = new AtomicLong();
 		this.nativeCreations = new AtomicLong();
@@ -266,7 +266,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final DirectMemoryHandle handle = this.memorySegments.remove(id);
 		this.bufferDeletions.incrementAndGet();
 		this.allocatedBufferMemory.addAndGet(-handle.memorySegment.byteSize());
-		this.closingQueue.offer(handle);
+		//this.closingQueue.offer(handle);
+		handle.arena.close();
 		
 		
 		
@@ -294,7 +295,8 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 		final MemorySegment segment = arena.allocate(capacity);
 						
 		final int id = this.findNextFreeID();
-		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment, new Exception("StackTrace").getStackTrace()));
+		//this.memorySegments.put(id, new DirectMemoryHandle(arena, segment, new Exception("StackTrace").getStackTrace()));
+		this.memorySegments.put(id, new DirectMemoryHandle(arena, segment, null));
 		
 		final ByteBuffer byteBuffer = segment.asByteBuffer().order(ByteOrder.nativeOrder());
 		
