@@ -185,7 +185,7 @@ public class ForeignMemoryAccessor implements MemoryAccessor
 	// 40Bit for offset ==
 	
 	private static final long ADDRESS_MASK = 0xFFFF_FFFFl;
-	private static final int  ADDRESS_BITS = 40;
+	private static final int  ADDRESS_BITS = 32;
 	private static final long ID_MASK      = 0x7FFF_FFFF_0000_0000l;
 		
 	public static long getOffset(final long address) {
