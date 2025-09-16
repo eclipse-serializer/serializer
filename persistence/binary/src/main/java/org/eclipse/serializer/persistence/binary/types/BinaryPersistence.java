@@ -269,8 +269,6 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerOptionalInt.New(),
 				BinaryHandlerOptionalLong.New(),
 				BinaryHandlerOptionalDouble.New(),
-				
-				BinaryHandlerBitSet.New(),
 
 			/* (12.11.2019 TM)NOTE:
 			 * One might think that "empty" implementations of a collection interface would have no fields, anyway.
@@ -411,6 +409,7 @@ public final class BinaryPersistence extends Persistence
 		if(!vmInfo.isAnyAndroid())
 		{
 			platformDependentHandlers.add(BinaryHandlerSetFromMap.New());
+			platformDependentHandlers.add(BinaryHandlerBitSet.New());
 		}
 		
 		return platformDependentHandlers;
