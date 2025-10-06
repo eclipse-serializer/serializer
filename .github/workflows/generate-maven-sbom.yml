@@ -45,6 +45,9 @@ jobs:
 
       - name: Generate
         run: |
+          if git show-ref --tags --quiet --verify "refs/tags/${PROJECT_VERSION}"; then
+            mvn versions:set -DnewVersion=${PROJECT_VERSION} --batch-mode
+          fi
           # Generate SBOMs. 'skipNotDeployed' is needed
           # to generate an SBOM outside of the deployment phase.
 
