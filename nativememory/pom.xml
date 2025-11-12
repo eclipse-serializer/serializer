@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.eclipse.serializer</groupId>
+    <artifactId>serializer-parent</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>nativememory</artifactId>
+  
+  <name>Eclipse Serializer NativeMemory</name>
+	<description>Native Memory access module of the Eclipse Serializer Framework</description>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
+  
+  <properties>
+  		<maven.compiler.release>22</maven.compiler.release>
+  		<maven.java.version.minimum>22</maven.java.version.minimum>
+  </properties>
+  
+  <dependencies>
+		<dependency>
+			<groupId>org.eclipse.serializer</groupId>
+			<artifactId>base</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+	</dependencies>
+  
+</project>

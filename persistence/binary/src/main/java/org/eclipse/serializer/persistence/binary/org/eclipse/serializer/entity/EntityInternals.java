@@ -20,7 +20,6 @@ import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.entity.EntityLayerVersioning;
 import org.eclipse.serializer.entity.EntityVersionContext;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.memory.sun.JdkInternals;
 
 final class EntityInternals
 {
@@ -42,7 +41,7 @@ final class EntityInternals
 				{
 					if(field.getName().equals(declaredFieldName))
 					{
-						return JdkInternals.VM().objectFieldOffset(field);
+						return XMemory.objectFieldOffset(field);
 					}
 				}
 			}

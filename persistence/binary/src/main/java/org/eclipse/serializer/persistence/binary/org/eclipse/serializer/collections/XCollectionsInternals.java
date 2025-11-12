@@ -33,7 +33,6 @@ import org.eclipse.serializer.collections.LimitList;
 import org.eclipse.serializer.collections.Singleton;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.memory.sun.JdkInternals;
 import org.eclipse.serializer.reflect.XReflect;
 
 final class XCollectionsInternals
@@ -102,7 +101,7 @@ final class XCollectionsInternals
 				{
 					if(field.getName().equals(declaredFieldName))
 					{
-						return JdkInternals.VM().objectFieldOffset(field);
+						return XMemory.objectFieldOffset(field);
 					}
 				}
 			}

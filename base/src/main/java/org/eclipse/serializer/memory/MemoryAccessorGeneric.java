@@ -19,6 +19,7 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import org.eclipse.serializer.collections.BulkList;
@@ -671,6 +672,20 @@ public final class MemoryAccessorGeneric implements MemoryAccessor
 	
 	
 	// direct byte buffer handling //
+	
+	@Override
+	public ByteBuffer allocateDirectNative(final int capacity) {
+		return ByteBuffer
+				.allocateDirect(capacity)
+				.order(ByteOrder.nativeOrder())	;
+	}
+
+	@Override
+	public ByteBuffer allocateDirectNative(final long capacity) {
+		return this.allocateDirectNative(
+				X.checkArrayRange(capacity)
+			);
+	}
 	
 	@Override
 	public final synchronized long getDirectByteBufferAddress(final ByteBuffer directBuffer)
