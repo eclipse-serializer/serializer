@@ -1,11 +1,8 @@
 package org.eclipse.serializer.nativememory;
 
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
-
 /*-
  * #%L
- * Eclipse Serializer Base
+ * Eclipse Serializer NativeMemory
  * %%
  * Copyright (C) 2023 - 2025 MicroStream Software
  * %%
@@ -17,6 +14,8 @@ import java.lang.foreign.ValueLayout;
  * #L%
  */
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
