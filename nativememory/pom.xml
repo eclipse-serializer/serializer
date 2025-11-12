@@ -51,6 +51,58 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>io.github.cmake-maven-plugin</groupId>
+				<artifactId>cmake-maven-plugin</artifactId>
+				<version>4.0.3-b1</version>
+				<executions>
+					<execution>
+						<id>cmake-generate</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<sourcePath>
+								${project.basedir}
+							</sourcePath>
+							<projectDirectory>${project.build.directory}/cmake</projectDirectory>
+							<generator>
+							</generator>
+							<environmentVariables>
+								<key>value</key>
+							</environmentVariables>
+							<options>
+								<option>-DBUILD_THIRDPARTY:bool=on</option>
+							</options>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>io.github.cmake-maven-plugin</groupId>
+				<artifactId>cmake-maven-plugin</artifactId>
+				<version>4.0.3-b1</version>
+				<executions>
+					<execution>
+						<id>cmake-compile</id>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<config>
+								<!-- Optional: the build configuration (e.g.
+								"x64|Release") -->
+							</config>
+							<projectDirectory>
+								${project.build.directory}/cmake
+							</projectDirectory>
+							<environmentVariables>
+								<key>value</key>
+							</environmentVariables>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>

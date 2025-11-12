@@ -13,8 +13,6 @@
  */
 module org.eclipse.serializer.nativememory
 {
-	/* All packages are exported */
-	
 	exports org.eclipse.serializer.nativememory;
 	requires transitive org.eclipse.serializer.base;
 }
