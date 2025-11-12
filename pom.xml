@@ -116,6 +116,10 @@
 				<groupId>org.sonatype.central</groupId>
 				<artifactId>central-publishing-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>io.github.cmake-maven-plugin</groupId>
+				<artifactId>cmake-maven-plugin</artifactId>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -128,6 +132,11 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-dependency-plugin</artifactId>
 					<version>3.8.0</version>
+				</plugin>
+				<plugin>
+					<groupId>io.github.cmake-maven-plugin</groupId>
+					<artifactId>cmake-maven-plugin</artifactId>
+					<version>4.0.3-b1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.felix</groupId>

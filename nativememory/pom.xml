@@ -54,7 +54,6 @@
 			<plugin>
 				<groupId>io.github.cmake-maven-plugin</groupId>
 				<artifactId>cmake-maven-plugin</artifactId>
-				<version>4.0.3-b1</version>
 				<executions>
 					<execution>
 						<id>cmake-generate</id>
@@ -81,7 +80,6 @@
 			<plugin>
 				<groupId>io.github.cmake-maven-plugin</groupId>
 				<artifactId>cmake-maven-plugin</artifactId>
-				<version>4.0.3-b1</version>
 				<executions>
 					<execution>
 						<id>cmake-compile</id>
