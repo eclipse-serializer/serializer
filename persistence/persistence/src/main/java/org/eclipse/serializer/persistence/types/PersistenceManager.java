@@ -20,6 +20,7 @@ import static org.eclipse.serializer.util.X.notNull;
 import java.nio.ByteOrder;
 import java.util.function.Consumer;
 
+import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
 
@@ -406,7 +407,13 @@ ByteOrderTargeting<PersistenceManager<D>>
 			return this.createLoader().collect(collector, objectIds);
 		}
 
-		@Override
+        @Override
+        public final <C extends Consumer<Object>> C collect(final C collector, final Set_long objectIds)
+        {
+            return this.createLoader().collect(collector, objectIds);
+        }
+
+        @Override
 		public final Object getObject(final long objectId)
 		{
 			final Object cachedInstance;
