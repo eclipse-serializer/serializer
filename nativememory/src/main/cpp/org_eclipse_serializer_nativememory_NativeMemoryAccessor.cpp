@@ -13,7 +13,11 @@
  */
 
 #include "org_eclipse_serializer_nativememory_NativeMemoryAccessor.h"
-#include <malloc.h>
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+  #include <stdlib.h>   // malloc, realloc, free
+#else
+  #include <malloc.h>
+#endif
 #include <string.h>
 						
 JNIEXPORT jlong JNICALL Java_org_eclipse_serializer_nativememory_NativeMemoryAccessor_getDirectByteBufferAddress(JNIEnv* env, jobject object, jobject directByteBuffer)
