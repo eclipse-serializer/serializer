@@ -44,7 +44,7 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Build with java 17
-        run: mvn -pl nativememory clean source:jar install -am
+        run: mvn -pl nativememory clean install -am
       - name: Make a snapshot
         run: mvn -Pdeploy -Pproduction -pl nativememory clean deploy
         env:
