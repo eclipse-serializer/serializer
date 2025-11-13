@@ -38,3 +38,24 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
           MAVEN_GPG_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
+
+        #java 25 build
+      - uses: actions/checkout@v4
+      - name: Set up Java for publishing to Maven Central Snapshot Repository
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+      - name: Build with java 17
+        run: mvn -pl nativememory clean source:jar install -am
+      - name: Make a snapshot
+        run: mvn -Pdeploy -Pproduction -pl nativememory clean deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
+          MAVEN_GPG_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
