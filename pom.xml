@@ -59,7 +59,6 @@
 		<module>communication</module>
 		<module>persistence</module>
 		<module>serializer</module>
-		<module>nativememory</module>
 	</modules>
 
 	<scm>
@@ -395,6 +394,17 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>java24-plus-nativememory</id>
+			<activation>
+				<!-- activate for JDK 24 and newer -->
+				<jdk>[24,)</jdk>
+			</activation>
+			<modules>
+				<module>nativememory</module>
+			</modules>
+		</profile>
+
 	</profiles>
 
 </project>
