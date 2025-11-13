@@ -360,37 +360,37 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	@Override
 	public void copyArrayToAddress(final short[] array, final long targetAddress) {
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Short.BYTES);
-		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_SHORT, 0, array.length);
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_SHORT_UNALIGNED, 0, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final char[] array, final long targetAddress) {
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Character.BYTES);
-		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_CHAR, 0, array.length);
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_CHAR_UNALIGNED, 0, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final int[] array, final long targetAddress) {
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Integer.BYTES);
-		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_INT, 0, array.length);
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_INT_UNALIGNED, 0, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final float[] array, final long targetAddress) {
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Float.BYTES);
-		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_FLOAT, 0, array.length);
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_FLOAT_UNALIGNED, 0, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final long[] array, final long targetAddress) {
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Long.BYTES);
-		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_LONG, 0, array.length);
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_LONG_UNALIGNED, 0, array.length);
 	}
 
 	@Override
 	public void copyArrayToAddress(final double[] array, final long targetAddress) {
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Double.BYTES);
-		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_DOUBLE, 0, array.length);
+		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_DOUBLE_UNALIGNED, 0, array.length);
 	}
 
 	///////////////////////////////////////////////////////////////////////////
