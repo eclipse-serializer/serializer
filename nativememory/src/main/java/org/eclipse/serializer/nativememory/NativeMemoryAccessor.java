@@ -230,56 +230,56 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	public final synchronized void set_byteInBytes(final byte[] bytes, final int index, final byte value)
 	{
 		final var segment = MemorySegment.ofArray(bytes);
-		segment.setAtIndex(ValueLayout.JAVA_BYTE, index, value);
+		segment.set(ValueLayout.JAVA_BYTE, index, value);
 	}
 	
 	@Override
 	public final synchronized void set_booleanInBytes(final byte[] bytes, final int index, final boolean value)
 	{
 		final var segment = MemorySegment.ofArray(bytes);
-		segment.setAtIndex(ValueLayout.JAVA_BOOLEAN, index, value);
+		segment.set(ValueLayout.JAVA_BOOLEAN, index, value);
 	}
 
 	@Override
 	public final synchronized void set_shortInBytes(final byte[] bytes, final int index, final short value)
 	{
 		final var segment = MemorySegment.ofArray(bytes);
-		segment.setAtIndex(ValueLayout.JAVA_SHORT_UNALIGNED, index, value);
+		segment.set(ValueLayout.JAVA_SHORT_UNALIGNED, index, value);
 	}
 
 	@Override
 	public final synchronized void set_charInBytes(final byte[] bytes, final int index, final char value)
 	{
 		final var segment = MemorySegment.ofArray(bytes);
-		segment.setAtIndex(ValueLayout.JAVA_CHAR_UNALIGNED, index, value);
+		segment.set(ValueLayout.JAVA_CHAR_UNALIGNED, index, value);
 	}
 
 	@Override
 	public final synchronized void set_intInBytes(final byte[] bytes, final int index, final int value)
 	{
 		final var segment = MemorySegment.ofArray(bytes);
-		segment.setAtIndex(ValueLayout.JAVA_INT_UNALIGNED, index, value);
+		segment.set(ValueLayout.JAVA_INT_UNALIGNED, index, value);
 	}
 
 	@Override
 	public final synchronized void set_floatInBytes(final byte[] bytes, final int index, final float value)
 	{
 		final var segment = MemorySegment.ofArray(bytes);
-		segment.setAtIndex(ValueLayout.JAVA_FLOAT_UNALIGNED, index, value);
+		segment.set(ValueLayout.JAVA_FLOAT_UNALIGNED, index, value);
 	}
 
 	@Override
 	public final synchronized void set_longInBytes(final byte[] bytes, final int index, final long value)
 	{
 		final var segment = MemorySegment.ofArray(bytes);
-		segment.setAtIndex(ValueLayout.JAVA_LONG_UNALIGNED, index, value);
+		segment.set(ValueLayout.JAVA_LONG_UNALIGNED, index, value);
 	}
 
 	@Override
 	public final synchronized void set_doubleInBytes(final byte[] bytes, final int index, final double value)
 	{
-		// byte order check inside
-		this.set_longInBytes(bytes, index, Double.doubleToRawLongBits(value));
+		final var segment = MemorySegment.ofArray(bytes);
+		segment.set(ValueLayout.JAVA_DOUBLE_UNALIGNED, index, value);
 	}
 		
 	@Override
