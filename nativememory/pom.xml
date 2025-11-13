@@ -75,12 +75,6 @@
 							</options>
 						</configuration>
 					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>io.github.cmake-maven-plugin</groupId>
-				<artifactId>cmake-maven-plugin</artifactId>
-				<executions>
 					<execution>
 						<id>cmake-compile</id>
 						<goals>
