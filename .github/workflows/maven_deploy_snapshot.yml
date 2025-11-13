@@ -43,9 +43,9 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-      - name: Build with java 17
+      - name: Build with java 25
         run: mvn -pl nativememory clean install -am
-      - name: Make a snapshot
+      - name: Make a snapshot with java 25
         run: mvn -Pdeploy -Pproduction -pl nativememory clean deploy
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
