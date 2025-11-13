@@ -13,7 +13,7 @@
  */
 
 #include "org_eclipse_serializer_nativememory_NativeMemoryAccessor.h"
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 						
 JNIEXPORT jlong JNICALL Java_org_eclipse_serializer_nativememory_NativeMemoryAccessor_getDirectByteBufferAddress(JNIEnv* env, jobject object, jobject directByteBuffer)
