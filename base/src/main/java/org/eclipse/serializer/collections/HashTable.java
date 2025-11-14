@@ -2599,8 +2599,6 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		 * <p>
 		 * To clear the set in a heap-clean way and reduce internal storage size to default, use both {@link #clear()}
 		 * and {@link #truncate()}.
-		 *
-		 * @see XProcessingCollection#truncate()
 		 */
 		@Override
 		public final void truncate()
@@ -2919,8 +2917,6 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		 * collection of discarded entry instances belonging to different generations.
 		 * <p>
 		 * To simply reallocate a new internal storage with default size, see {@link #truncate()}
-		 *
-		 * @see XProcessingCollection#clear()
 		 */
 		@Override
 		public final void clear()
