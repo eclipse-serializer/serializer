@@ -32,19 +32,12 @@ import org.eclipse.serializer.functional.Aggregator;
  * 
  *
  */
-public interface XList<E> extends XBasicList<E>, XIncreasingList<E>, XDecreasingList<E>, XSequence<E>
+public interface XList<E> extends XGettingList<E>, XSequence<E>, XBag<E>
 {
-	public interface Creator<E> extends XBasicList.Creator<E>, XIncreasingList.Creator<E>, XDecreasingList.Creator<E>
-	{
-		@Override
-		public XList<E> newInstance();
-	}
-
-
 	@Override
 	public default Aggregator<E, ? extends XList<E>> collector()
 	{
-		return new Aggregator<E, XList<E>>()
+		return new Aggregator<>()
 		{
 			@Override
 			public void accept(final E element)
@@ -103,7 +96,7 @@ public interface XList<E> extends XBasicList<E>, XIncreasingList<E>, XDecreasing
 	public XList<E> preputAll(XGettingCollection<? extends E> elements);
 
 	@Override
-	public XList<E> setAll(long index, @SuppressWarnings("unchecked") E... elements);
+	public XList<E> setAll(long index, E... elements);
 
 	@Override
 	public XList<E> set(long index, E[] elements, int offset, int length);
@@ -132,7 +125,15 @@ public interface XList<E> extends XBasicList<E>, XIncreasingList<E>, XDecreasing
 	@Override
 	public XList<E> range(long fromIndex, long toIndex);
 
-	@Override
+    /**
+     * Fills all slots from the offset to the offset+length with the given element,
+     * regardless of whether or not a slot is {@code null}.
+     *
+     * @param offset from the start of the collection (start index)
+     * @param length of how many slots should be filled
+     * @param element to use for filling of slots
+     * @return this
+     */
 	public XList<E> fill(long offset, long length, E element);
 
 	@Override

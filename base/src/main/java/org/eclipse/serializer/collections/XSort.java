@@ -14,13 +14,12 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import java.util.Comparator;
-
-import org.eclipse.serializer.collections.sorting.Sortable;
-import org.eclipse.serializer.collections.types.XSortableSequence;
+import org.eclipse.serializer.collections.types.XSequence;
 import org.eclipse.serializer.functional.ComparatorReversed;
 import org.eclipse.serializer.functional.ComparatorSequence;
 import org.eclipse.serializer.math.FastRandom;
+
+import java.util.Comparator;
 
 
 /**
@@ -59,7 +58,7 @@ public final class XSort
 		return o2.booleanValue() ? -1 : 0;
 	}
 
-	public static final int compare(final Byte o1, final Byte o2)
+	public static int compare(final Byte o1, final Byte o2)
 	{
 		if(o1 == null)
 		{
@@ -75,7 +74,7 @@ public final class XSort
 		}
 	}
 
-	public static final int compare(final Short o1, final Short o2)
+	public static int compare(final Short o1, final Short o2)
 	{
 		if(o1 == null)
 		{
@@ -91,7 +90,7 @@ public final class XSort
 		}
 	}
 
-	public static final int compare(final Integer o1, final Integer o2)
+	public static int compare(final Integer o1, final Integer o2)
 	{
 		if(o1 == null)
 		{
@@ -107,7 +106,7 @@ public final class XSort
 		}
 	}
 
-	public static final int compare(final Float o1, final Float o2)
+	public static int compare(final Float o1, final Float o2)
 	{
 		if(o1 == null)
 		{
@@ -123,7 +122,7 @@ public final class XSort
 		}
 	}
 
-	public static final int compare(final Long o1, final Long o2)
+	public static int compare(final Long o1, final Long o2)
 	{
 		if(o1 == null)
 		{
@@ -139,7 +138,7 @@ public final class XSort
 		}
 	}
 
-	public static final int compare(final Double o1, final Double o2)
+	public static int compare(final Double o1, final Double o2)
 	{
 		if(o1 == null)
 		{
@@ -155,7 +154,7 @@ public final class XSort
 		}
 	}
 	
-	public static final int compare(final String o1, final String o2)
+	public static int compare(final String o1, final String o2)
 	{
 		if(o1 == null)
 		{
@@ -171,7 +170,7 @@ public final class XSort
 		}
 	}
 
-	public static final int compareLength(final String o1, final String o2)
+	public static int compareLength(final String o1, final String o2)
 	{
 		if(o1 == null)
 		{
@@ -188,7 +187,7 @@ public final class XSort
 	}
 
 
-	public static final int compareIdentityHash(final Object o1, final Object o2)
+	public static int compareIdentityHash(final Object o1, final Object o2)
 	{
 		if(o1 == null)
 		{
@@ -208,13 +207,13 @@ public final class XSort
 	}
 
 
-	public static final <E> Comparator<E> reverse(final Comparator<E> comparator)
+	public static <E> Comparator<E> reverse(final Comparator<E> comparator)
 	{
 		return new ComparatorReversed<>(comparator);
 	}
 
 	@SafeVarargs
-	public static final <E> Comparator<? super E> chain(final Comparator<? super E>... comparators)
+	public static <E> Comparator<? super E> chain(final Comparator<? super E>... comparators)
 	{
 		return new ComparatorSequence<>(comparators);
 	}
@@ -593,7 +592,7 @@ public final class XSort
 	////////////////
 
 	@SafeVarargs
-	public static final <T> void sortAll(final Comparator<? super T> sortation, final Sortable<T>... sortables)
+	public static <T> void sortAll(final Comparator<? super T> sortation, final XSequence<T>... sortables)
 	{
 		for(int i = 0; i < sortables.length; i++)
 		{
@@ -611,7 +610,7 @@ public final class XSort
 	// Insertion Sort //
 	///////////////////
 
-	public static final void insertionsort(final byte[] values)
+	public static void insertionsort(final byte[] values)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -627,7 +626,7 @@ public final class XSort
 		}
 	}
 	
-	public static final void insertionsort(final short[] values)
+	public static void insertionsort(final short[] values)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -643,7 +642,7 @@ public final class XSort
 		}
 	}
 	
-	public static final void insertionsort(final int[] values)
+	public static void insertionsort(final int[] values)
 	{
 		/*
 		 * "--j < 0" makes the whole algorithm faster than when using "j-- == 0" by a factor of 2.5(!!!).
@@ -675,7 +674,7 @@ public final class XSort
 		insertionsort0(values, start, bound);
 	}
 	
-	public static final void insertionsort(final long[] values)
+	public static void insertionsort(final long[] values)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -692,7 +691,7 @@ public final class XSort
 		}
 	}
 	
-	public static final void insertionsort(final float[] values)
+	public static void insertionsort(final float[] values)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -708,7 +707,7 @@ public final class XSort
 		}
 	}
 	
-	public static final void insertionsort(final double[] values)
+	public static void insertionsort(final double[] values)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -724,7 +723,7 @@ public final class XSort
 		}
 	}
 	
-	public static final <E> void insertionsort(final E[] values, final Comparator<? super E> comparator)
+	public static <E> void insertionsort(final E[] values, final Comparator<? super E> comparator)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -740,7 +739,7 @@ public final class XSort
 		}
 	}
 	
-	public static final <E> void insertionsort(
+	public static <E> void insertionsort(
 		final E[]                   values    ,
 		final Comparator<? super E> comparator,
 		final int                   start     ,
@@ -751,7 +750,7 @@ public final class XSort
 		insertionsort0(values, start, bound, comparator);
 	}
 	
-	public static final void insertionsort(final char[] values)
+	public static void insertionsort(final char[] values)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -767,7 +766,7 @@ public final class XSort
 		}
 	}
 	
-	public static final void insertionsort(final boolean[] values)
+	public static void insertionsort(final boolean[] values)
 	{
 		// copy of insertionsort(int[]). See comment there.
 		for(int j, i = 0; i < values.length - 1; i++)
@@ -843,7 +842,7 @@ public final class XSort
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <V> void valueSort(final XSortableSequence<V> values, final Comparator<? super V> comparator)
+	public static <V> void valueSort(final XSequence<V> values, final Comparator<? super V> comparator)
 	{
 		if(values instanceof AbstractSimpleArrayCollection)
 		{
@@ -1183,12 +1182,12 @@ public final class XSort
 	 *
 	 * @param values the values to be sorted.
 	 */
-	public static final void sort(final int[] values) throws NullPointerException
+	public static void sort(final int[] values) throws NullPointerException
 	{
 		dualPivotQuicksort(values, 0, values.length - 1);
 	}
 
-	public static final void sort(final long[] values) throws NullPointerException
+	public static void sort(final long[] values) throws NullPointerException
 	{
 		dualPivotQuicksort(values, 0, values.length - 1);
 	}
@@ -1205,7 +1204,7 @@ public final class XSort
 	 * @param start the starting index (inclusive) of the subrange to be sorted.
 	 * @param bound the bounding index (exclusive) of the subrange to be sorted.
 	 */
-	public static final void sort(final int[] values, final int start, final int bound)
+	public static void sort(final int[] values, final int start, final int bound)
 		throws NullPointerException, ArrayIndexOutOfBoundsException
 	{
 		checkRange(values, start, bound);
@@ -1217,13 +1216,13 @@ public final class XSort
 	// Quicksort //
 	//////////////
 
-	public static final <E> void quicksort(final E[] values, final Comparator<? super E> comparator)
+	public static <E> void quicksort(final E[] values, final Comparator<? super E> comparator)
 		throws NullPointerException
 	{
 		dualPivotQuicksort(values, 0, values.length - 1, comparator);
 	}
 
-	public static final <E> void quicksort(
+	public static <E> void quicksort(
 		final E[] values,
 		final int start,
 		final int bound,
@@ -1347,7 +1346,7 @@ public final class XSort
 		return buffer;
 	}
 
-	private static final <E> void mergesort0(
+	private static <E> void mergesort0(
 		final E[]                   buffer,
 		final E[]                   values,
 		final int                   start ,

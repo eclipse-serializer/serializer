@@ -14,16 +14,15 @@ package org.eclipse.serializer.collections.types;
  * #L%
  */
 
+import org.eclipse.serializer.branching.ThrowBreak;
+import org.eclipse.serializer.exceptions.IndexBoundsException;
+
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.branching.ThrowBreak;
-import org.eclipse.serializer.collections.interfaces.ExtendedSequence;
-import org.eclipse.serializer.exceptions.IndexBoundsException;
-
-public interface XGettingSequence<E> extends XGettingCollection<E>, ExtendedSequence<E>, XIndexIterable<E>
+public interface XGettingSequence<E> extends XGettingCollection<E>, XIndexIterable<E>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// override methods //
@@ -198,13 +197,5 @@ public interface XGettingSequence<E> extends XGettingCollection<E>, ExtendedSequ
 	public XGettingSequence<E> view(long lowIndex, long highIndex);
 
 	public XGettingSequence<E> range(long lowIndex, long highIndex);
-
-
-
-	public interface Factory<E> extends XGettingCollection.Creator<E>
-	{
-		@Override
-		public XGettingSequence<E> newInstance();
-	}
 
 }

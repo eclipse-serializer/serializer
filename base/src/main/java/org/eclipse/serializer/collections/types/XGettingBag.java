@@ -14,26 +14,16 @@ package org.eclipse.serializer.collections.types;
  * #L%
  */
 
-import org.eclipse.serializer.collections.interfaces.ExtendedBag;
-
-
-public interface XGettingBag<E> extends XGettingCollection<E>, ExtendedBag<E>
+public interface XGettingBag<E> extends XGettingCollection<E>
 {
-	public interface Factory<E> extends XGettingCollection.Creator<E>
-	{
-		@Override
-		public XGettingBag<E> newInstance();
-	}
 
-	
-	
-	@Override
-	public XGettingBag<E> copy();
+    @Override
+    public XGettingBag<E> copy();
 
-	@Override
-	public XGettingBag<E> view();
+    @Override
+    public XGettingBag<E> view();
 
-	@Override
-	public XImmutableBag<E> immure();
+    @Override
+    public XImmutableBag<E> immure();
 
 }

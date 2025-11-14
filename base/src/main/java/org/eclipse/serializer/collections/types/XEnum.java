@@ -16,16 +16,8 @@ package org.eclipse.serializer.collections.types;
 
 import java.util.Comparator;
 
-public interface XEnum<E> extends XBasicEnum<E>, XSequence<E>, XIncreasingEnum<E>, XDecreasingEnum<E>
+public interface XEnum<E> extends XGettingEnum<E>, XSet<E>, XSequence<E>
 {
-	public interface Creator<E> extends XBasicEnum.Creator<E>, XSequence.Creator<E>
-	{
-		@Override
-		public XEnum<E> newInstance();
-	}
-
-
-
 	///////////////////////////////////////////////////////////////////////////
 	// override methods //
 	/////////////////////
@@ -65,7 +57,6 @@ public interface XEnum<E> extends XBasicEnum<E>, XSequence<E>, XIncreasingEnum<E
 	@Override
 	public XEnum<E> putAll(XGettingCollection<? extends E> elements);
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public XEnum<E> prependAll(E... elements);
 
