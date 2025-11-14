@@ -20,9 +20,6 @@ public abstract class AbstractChainKeyValueCollection<K, V, EN extends AbstractC
 extends AbstractChainCollection<KeyValue<K, V>, K, V, EN>
 {
 	@Override
-	protected abstract long size();
-
-	@Override
 	protected abstract void internalRemoveEntry(EN chainEntry);
 
 	@Override

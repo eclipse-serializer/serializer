@@ -14,16 +14,16 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.notNull;
-
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.EqHashEnum;
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.XSort;
-import org.eclipse.serializer.collections.types.XAddingSequence;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XGettingTable;
+import org.eclipse.serializer.collections.types.XSequence;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
+
+import static org.eclipse.serializer.util.X.notNull;
 
 
 @FunctionalInterface
@@ -125,10 +125,10 @@ public interface PersistenceTypeDictionaryBuilder
 	}
 	
 	public static void buildDefinitionMembers(
-		final PersistenceTypeDefinitionMemberCreator                   memberCreator  ,
-		final PersistenceTypeDescription                               typeDescription,
-		final XAddingSequence<? super PersistenceTypeDefinitionMember> allMembers     ,
-		final XAddingSequence<? super PersistenceTypeDefinitionMember> instanceMembers
+		final PersistenceTypeDefinitionMemberCreator             memberCreator  ,
+		final PersistenceTypeDescription                         typeDescription,
+		final XSequence<? super PersistenceTypeDefinitionMember> allMembers     ,
+		final XSequence<? super PersistenceTypeDefinitionMember> instanceMembers
 	)
 	{
 		for(final PersistenceTypeDescriptionMember member : typeDescription.allMembers())

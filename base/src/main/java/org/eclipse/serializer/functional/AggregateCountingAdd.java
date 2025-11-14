@@ -14,7 +14,7 @@ package org.eclipse.serializer.functional;
  * #L%
  */
 
-import org.eclipse.serializer.collections.types.XAddingCollection;
+import org.eclipse.serializer.collections.types.XCollection;
 
 public class AggregateCountingAdd<E> implements Aggregator<E, Integer>
 {
@@ -22,7 +22,7 @@ public class AggregateCountingAdd<E> implements Aggregator<E, Integer>
 	// instance fields //
 	////////////////////
 
-	private final XAddingCollection<? super E> target;
+	private final XCollection<? super E> target;
 	private int addCount;
 
 
@@ -31,7 +31,7 @@ public class AggregateCountingAdd<E> implements Aggregator<E, Integer>
 	// constructors //
 	/////////////////
 
-	public AggregateCountingAdd(final XAddingCollection<? super E> target)
+	public AggregateCountingAdd(final XCollection<? super E> target)
 	{
 		super();
 		this.target = target;

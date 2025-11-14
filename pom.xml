@@ -40,7 +40,6 @@
 		<maven.compiler.compilerId>javac</maven.compiler.compilerId>
 		<maven.version.minimum>3.8.1</maven.version.minimum>
 		<maven.java.version.minimum>17</maven.java.version.minimum>
-		<org.eclipse.jdt.ecj.version>3.33.0</org.eclipse.jdt.ecj.version>
 		<license.inceptionYear>2023</license.inceptionYear>
 		<license.licenseName>epl_only_v2</license.licenseName>
 		<license.licenceFile>${basedir}/LICENSE</license.licenceFile>

@@ -98,7 +98,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 */
 	public static <E> Function<BulkList<E>, ConstList<E>> Immurer()
 	{
-		return b -> b.immure();
+		return BulkList::immure;
 	}
 
 	/**
@@ -146,7 +146,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 * @param <E> type of contained elements
 	 * @return a new {@link BulkList} instance.
 	 */
-	public static final <E> BulkList<E> New()
+	public static <E> BulkList<E> New()
 	{
 		return new BulkList<>();
 	}
@@ -158,7 +158,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 * @param initialCapacity the desired custom initial capacity.
 	 * @return a new {@link BulkList} instance.
 	 */
-	public static final <E> BulkList<E> New(final long initialCapacity)
+	public static <E> BulkList<E> New(final long initialCapacity)
 	{
 		return new BulkList<>(X.checkArrayRange(initialCapacity));
 	}
@@ -172,7 +172,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 * @return a new {@link BulkList} instance.
 	 */
 	// just New(E) confuses the compiler with New(int) when using ::New and causes ambiguity with New(E...)
-	public static final <E> BulkList<E> NewFromSingle(final E initialElement)
+	public static <E> BulkList<E> NewFromSingle(final E initialElement)
 	{
 		return new BulkList<>(initialElement);
 	}
@@ -187,7 +187,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 * @throws NullPointerException if an explicit {@code null} array reference was passed.
 	 */
 	@SafeVarargs
-	public static final <E> BulkList<E> New(final E... initialElements)
+	public static <E> BulkList<E> New(final E... initialElements)
 	{
 		return new BulkList<>(initialElements);
 	}
@@ -199,7 +199,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 * @param initialElements to add to the created instance
 	 * @return a new {@link BulkList} instance.
 	 */
-	public static final <E> BulkList<E> New(final XIterable<? extends E> initialElements)
+	public static <E> BulkList<E> New(final XIterable<? extends E> initialElements)
 	{
 		final BulkList<E> newInstance = new BulkList<>();
 		initialElements.iterate(newInstance::add);
@@ -213,7 +213,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 * @param initialElements to add to the created instance
 	 * @return a new {@link BulkList} instance.
 	 */
-	public static final <E> BulkList<E> New(final Iterable<? extends E> initialElements)
+	public static <E> BulkList<E> New(final Iterable<? extends E> initialElements)
 	{
 		final BulkList<E> newInstance = new BulkList<>();
 		initialElements.forEach(newInstance::add);
@@ -228,7 +228,7 @@ implements XList<E>, Composition, IdentityEqualityLogic
 	 * @param initialElements to add to the created instance
 	 * @return a new {@link BulkList} instance.
 	 */
-	public static final <E> BulkList<E> New(final XGettingCollection<? extends E> initialElements)
+	public static <E> BulkList<E> New(final XGettingCollection<? extends E> initialElements)
 	{
 		return new BulkList<E>(XTypes.to_int(initialElements.size())).addAll(initialElements);
 	}
@@ -2302,29 +2302,6 @@ implements XList<E>, Composition, IdentityEqualityLogic
 		return XArrays.arrayHashCode(this.data, this.size);
 	}
 
-
-	public static final class Creator<E> implements XList.Creator<E>
-	{
-		private final int initialCapacity;
-
-		public Creator(final int initialCapacity)
-		{
-			super();
-			this.initialCapacity = XMath.pow2BoundMaxed(initialCapacity);
-		}
-
-		public final int getInitialCapacity()
-		{
-			return this.initialCapacity;
-		}
-
-		@Override
-		public final BulkList<E> newInstance()
-		{
-			return new BulkList<>(this.initialCapacity);
-		}
-
-	}
 
 	public static final class Supplier<K, E> implements Function<K, BulkList<E>>
 	{

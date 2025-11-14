@@ -20,13 +20,6 @@ import org.eclipse.serializer.typing.Immutable;
 
 public interface XImmutableCollection<E> extends XGettingCollection<E>, Immutable
 {
-	public interface Factory<E> extends XGettingCollection.Creator<E>
-	{
-		@Override
-		public XImmutableCollection<E> newInstance();
-	}
-
-
 	public static <E> Aggregator<E, XImmutableCollection<E>> Builder()
 	{
 		return Builder(1);

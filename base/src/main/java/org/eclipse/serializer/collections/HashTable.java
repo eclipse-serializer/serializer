@@ -14,27 +14,10 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.collections.types.XEnum;
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.collections.types.XGettingEnum;
-import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.collections.types.XGettingTable;
-import org.eclipse.serializer.collections.types.XImmutableList;
-import org.eclipse.serializer.collections.types.XIterable;
-import org.eclipse.serializer.collections.types.XList;
-import org.eclipse.serializer.collections.types.XProcessingCollection;
-import org.eclipse.serializer.collections.types.XTable;
+import org.eclipse.serializer.collections.types.*;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.equality.IdentityEqualator;
 import org.eclipse.serializer.equality.IdentityEqualityLogic;
@@ -48,6 +31,14 @@ import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Collection of key-value-pairs that is ordered and does not allow duplicate keys.
@@ -83,7 +74,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 	// static methods //
 	///////////////////
 
-	public static final <K, V> HashTable<K, V> New()
+	public static <K, V> HashTable<K, V> New()
 	{
 		return new HashTable<>(
 			DEFAULT_HASH_LENGTH,
@@ -91,7 +82,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		);
 	}
 
-	public static final <K, V> HashTable<K, V> NewCustom(
+	public static <K, V> HashTable<K, V> NewCustom(
 		final int              initialHashLength
 	)
 	{
@@ -101,7 +92,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		);
 	}
 
-	public static final <K, V> HashTable<K, V> NewCustom(
+	public static <K, V> HashTable<K, V> NewCustom(
 		final float            hashDensity
 	)
 	{
@@ -111,7 +102,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		);
 	}
 
-	public static final <K, V> HashTable<K, V> NewCustom(
+	public static <K, V> HashTable<K, V> NewCustom(
 		final int              initialHashLength,
 		final float            hashDensity
 	)
@@ -121,7 +112,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 			XHashing.validateHashDensity(hashDensity)
 		);
 	}
-	public static final <K, V> HashTable<K, V> New(
+	public static <K, V> HashTable<K, V> New(
 		final XGettingCollection<? extends KeyValue<? extends K, ? extends V>> entries
 	)
 	{
@@ -130,7 +121,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		;
 	}
 
-	public static final <K, V> HashTable<K, V> NewCustom(
+	public static <K, V> HashTable<K, V> NewCustom(
 		final int              initialHashLength,
 		final float            hashDensity      ,
 		final XGettingCollection<? extends KeyValue<? extends K, ? extends V>> entries
@@ -142,7 +133,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		).internalAddEntries(entries);
 	}
 
-	public static final <K, V> HashTable<K, V> NewSingle(final K key, final V value)
+	public static <K, V> HashTable<K, V> NewSingle(final K key, final V value)
 	{
 		final HashTable<K, V> instance = New();
 		instance.internalAdd(key, value);
@@ -150,7 +141,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 	}
 
 	@SafeVarargs
-	public static final <K, V> HashTable<K, V> New(
+	public static <K, V> HashTable<K, V> New(
 		final KeyValue<? extends K, ? extends V>... entries
 	)
 	{
@@ -160,7 +151,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 	}
 
 	@SafeVarargs
-	public static final <K, V> HashTable<K, V> NewCustom(
+	public static <K, V> HashTable<K, V> NewCustom(
 		final long                                  desiredCapacity,
 		final float                                 hashDensity    ,
 		final KeyValue<? extends K, ? extends V>... entries
@@ -172,7 +163,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		).internalAddEntries(new ArrayView<>(entries));
 	}
 
-	public static final <K, VK, VV> Function<K, HashTable<VK, VV>> supplier()
+	public static <K, VK, VV> Function<K, HashTable<VK, VV>> supplier()
 	{
 		return new Function<>()
 		{
@@ -185,7 +176,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		};
 	}
 
-	public static final <KI, VI, KO, VO> HashTable<KO, VO> NewProjected(
+	public static <KI, VI, KO, VO> HashTable<KO, VO> NewProjected(
 		final float                                         hashDensity  ,
 		final XGettingCollection<? extends KeyValue<KI, VI>> entries      ,
 		final Function<? super KI, KO>                      keyProjector ,
@@ -203,14 +194,14 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		return newMap;
 	}
 
-	public static final <KO, VO, KI extends KO, VI extends VO> HashTable<KO, VO> NewProjected(
+	public static <KO, VO, KI extends KO, VI extends VO> HashTable<KO, VO> NewProjected(
 		final XGettingCollection<? extends KeyValue<KI, VI>> entries
 	)
 	{
 		return NewProjected(entries, XFunc.<KO>passThrough(), XFunc.<VO>passThrough());
 	}
 
-	public static final <KI, VI, KO, VO> HashTable<KO, VO> NewProjected(
+	public static <KI, VI, KO, VO> HashTable<KO, VO> NewProjected(
 		final XGettingCollection<? extends KeyValue<KI, VI>> entries       ,
 		final Function<? super KI, KO>                       keyProjector  ,
 		final Function<? super VI, VO>                       valueProjector
@@ -837,7 +828,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 	@Override
 	public final boolean hasVolatileElements()
 	{
-		return false;
+        return this.chain.hasVolatileValues();
 	}
 
 	@Override
@@ -940,12 +931,6 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 	public final boolean isFull()
 	{
 		return this.size >= Integer.MAX_VALUE;
-	}
-
-	@Override
-	public final boolean hasVolatileValues()
-	{
-		return this.chain.hasVolatileValues();
 	}
 
 	@Override
@@ -2075,12 +2060,6 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME HashTable.Entries#set()
 	}
 	
-	@Override
-	public long substitute(final Function<? super KeyValue<K, V>, ? extends KeyValue<K, V>> mapper)
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME HashTable#substitute()
-	}
-	
 	final void replace(final ChainMapEntryLinkedStrongStrong<K, V> oldEntry, final K newElement)
 	{
 		final int newHash = System.identityHashCode(newElement);
@@ -2109,6 +2088,12 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		
 		throw new UnsupportedOperationException("Hash-changing replacement not supported, yet.");
 	}
+
+    @Override
+    public long substitute(final Function<? super KeyValue<K, V>, ? extends KeyValue<K, V>> mapper)
+    {
+        throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME HashTable#substitute()
+    }
 
 
 	public final class Keys implements XTable.Keys<K, V>, HashCollection<K>
@@ -3338,7 +3323,7 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 		@Override
 		public final boolean hasVolatileElements()
 		{
-			return HashTable.this.hasVolatileValues();
+			return HashTable.this.hasVolatileElements();
 		}
 
 		@Override
@@ -3894,6 +3879,237 @@ implements XTable<K, V>, HashCollection<K>, Composition, IdentityEqualityLogic
 			HashTable.this.chain.swap(indexA, indexB, length);
 			return this;
 		}
+
+        @Override
+        public boolean add(final V element)
+        {
+            // FIXME XCollection<V>#add()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean nullAdd()
+        {
+            // FIXME XCollection<V>#nullAdd()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean put(final V element)
+        {
+            // FIXME XCollection<V>#put()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean nullPut()
+        {
+            // FIXME XCollection<V>#nullPut()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public CapacityExtendable ensureCapacity(final long minimalCapacity)
+        {
+            // FIXME CapacityExtendable#ensureCapacity()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public CapacityExtendable ensureFreeCapacity(final long minimalFreeCapacity)
+        {
+            // FIXME CapacityExtendable#ensureFreeCapacity()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public long currentCapacity()
+        {
+            // FIXME CapacityExtendable#currentCapacity()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> addAll(final V... elements)
+        {
+            // FIXME XList<V>#addAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> addAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#addAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> addAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#addAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> putAll(final V... elements)
+        {
+            // FIXME XList<V>#putAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> putAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#putAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> putAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#putAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> prependAll(final V... elements)
+        {
+            // FIXME XList<V>#prependAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> prependAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#prependAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> prependAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#prependAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> preputAll(final V... elements)
+        {
+            // FIXME XList<V>#preputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> preputAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#preputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public XList<V> preputAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#preputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean input(final long index, final V element)
+        {
+            // FIXME XSequence<V>#input()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean nullInput(final long index)
+        {
+            // FIXME XSequence<V>#nullInput()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public long inputAll(final long index, final V... elements)
+        {
+            // FIXME XSequence<V>#inputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public long inputAll(final long index, final V[] elements, final int offset, final int length)
+        {
+            // FIXME XSequence<V>#inputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public long inputAll(final long index, final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XSequence<V>#inputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean prepend(final V element)
+        {
+            // FIXME XSequence<V>#prepend()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean nullPrepend()
+        {
+            // FIXME XSequence<V>#nullPrepend()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean preput(final V element)
+        {
+            // FIXME XSequence<V>#preput()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean nullPreput()
+        {
+            // FIXME XSequence<V>#nullPreput()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean insert(final long index, final V element)
+        {
+            // FIXME XSequence<V>#insert()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public boolean nullInsert(final long index)
+        {
+            // FIXME XSequence<V>#nullInsert()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public long insertAll(final long index, final V... elements)
+        {
+            // FIXME XSequence<V>#insertAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public long insertAll(final long index, final V[] elements, final int offset, final int length)
+        {
+            // FIXME XSequence<V>#insertAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+        public long insertAll(final long index, final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XSequence<V>#insertAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
 
 	}
 

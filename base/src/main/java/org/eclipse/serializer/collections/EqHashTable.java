@@ -15,29 +15,10 @@ package org.eclipse.serializer.collections;
  */
 
 
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
 import org.eclipse.serializer.collections.interfaces.HashCollection;
-import org.eclipse.serializer.collections.types.XEnum;
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.collections.types.XGettingEnum;
-import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.collections.types.XGettingTable;
-import org.eclipse.serializer.collections.types.XImmutableList;
-import org.eclipse.serializer.collections.types.XIterable;
-import org.eclipse.serializer.collections.types.XList;
-import org.eclipse.serializer.collections.types.XProcessingCollection;
-import org.eclipse.serializer.collections.types.XTable;
+import org.eclipse.serializer.collections.types.*;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
 import org.eclipse.serializer.functional.IndexedAcceptor;
@@ -48,6 +29,16 @@ import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+import static org.eclipse.serializer.util.X.notNull;
 
 
 /* (12.07.2012 TM) FIXME: complete EqHashTable implementation
@@ -493,23 +484,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 			}
 		});
 		return this;
-	}
-
-
-	// only used for backwards compatibility with old collections
-	final V oldPutGet(final K key, final V value)
-	{
-		final int hash;
-		for(ChainMapEntryLinkedHashedStrongStrong<K, V> e = this.slots[(hash = this.hashEqualator.hash(key)) & this.range]; e != null; e = e.link)
-		{
-			if(e.hash == hash && this.hashEqualator.equal(e.key(), key))
-			{
-				// set only value, not key, according to inconsistent nonsense behavior in old collections
-				return e.setValue(value);
-			}
-		}
-		this.chain.appendEntry(this.createNewEntry(hash, key, value));
-		return null;
 	}
 	
 	@Override
@@ -965,7 +939,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 	@Override
 	public final boolean hasVolatileElements()
 	{
-		return false;
+		return this.chain.hasVolatileElements();
 	}
 
 	@Override
@@ -1068,12 +1042,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 	public final boolean isFull()
 	{
 		return this.size >= Integer.MAX_VALUE;
-	}
-
-	@Override
-	public final boolean hasVolatileValues()
-	{
-		return this.chain.hasVolatileValues();
 	}
 
 	@Override
@@ -1381,12 +1349,6 @@ implements XTable<K, V>, HashCollection<K>, Composition
 	{
 		this.chain.sort(comparator);
 		return this;
-	}
-
-	@Override
-	public long substitute(final Function<? super KeyValue<K, V>, ? extends KeyValue<K, V>> mapper)
-	{
-		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable#substitute()
 	}
 		
 
@@ -2236,7 +2198,12 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME EqHashTable.Entries#set()
 	}
 
-
+    @Override
+    public long substitute(final Function<? super KeyValue<K, V>, ? extends KeyValue<K, V>> mapper)
+    {
+        // FIXME XCollection<KeyValue<K,V>>#substitute()
+        throw new org.eclipse.serializer.meta.NotImplementedYetError();
+    }
 
 	public static final <K, VK, VV> Function<K, EqHashTable<VK, VV>> supplier(final HashEqualator<VK> hashEqualator)
 	{
@@ -3497,7 +3464,7 @@ implements XTable<K, V>, HashCollection<K>, Composition
 		@Override
 		public final boolean hasVolatileElements()
 		{
-			return EqHashTable.this.hasVolatileValues();
+			return EqHashTable.this.hasVolatileElements();
 		}
 
 		@Override
@@ -4059,6 +4026,275 @@ implements XTable<K, V>, HashCollection<K>, Composition
 			EqHashTable.this.chain.swap(indexA, indexB, length);
 			return this;
 		}
+
+        @Override
+        public boolean add(final V element)
+        {
+            // FIXME XCollection<V>#add()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean nullAdd()
+        {
+            // FIXME XCollection<V>#nullAdd()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean put(final V element)
+        {
+            // FIXME XCollection<V>#put()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean nullPut()
+        {
+            // FIXME XCollection<V>#nullPut()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public CapacityExtendable ensureCapacity(final long minimalCapacity)
+        {
+            // FIXME CapacityExtendable#ensureCapacity()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public CapacityExtendable ensureFreeCapacity(final long minimalFreeCapacity)
+        {
+            // FIXME CapacityExtendable#ensureFreeCapacity()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public long currentCapacity()
+        {
+            // FIXME CapacityExtendable#currentCapacity()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public XList<V> addAll(final V... elements)
+        {
+            // FIXME XList<V>#addAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> addAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#addAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> addAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#addAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public XList<V> putAll(final V... elements)
+        {
+            // FIXME XList<V>#putAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> putAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#putAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> putAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#putAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public XList<V> prependAll(final V... elements)
+        {
+            // FIXME XList<V>#prependAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> prependAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#prependAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> prependAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#prependAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public XList<V> preputAll(final V... elements)
+        {
+            // FIXME XList<V>#preputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> preputAll(final V[] elements, final int offset, final int length)
+        {
+            // FIXME XList<V>#preputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public XList<V> preputAll(final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XList<V>#preputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean input(final long index, final V element)
+        {
+            // FIXME XSequence<V>#input()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean nullInput(final long index)
+        {
+            // FIXME XSequence<V>#nullInput()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public long inputAll(final long index, final V... elements)
+        {
+            // FIXME XSequence<V>#inputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public long inputAll(final long index, final V[] elements, final int offset, final int length)
+        {
+            // FIXME XSequence<V>#inputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public long inputAll(final long index, final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XSequence<V>#inputAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean prepend(final V element)
+        {
+            // FIXME XSequence<V>#prepend()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean nullPrepend()
+        {
+            // FIXME XSequence<V>#nullPrepend()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean preput(final V element)
+        {
+            // FIXME XSequence<V>#preput()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean nullPreput()
+        {
+            // FIXME XSequence<V>#nullPreput()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean insert(final long index, final V element)
+        {
+            // FIXME XSequence<V>#insert()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public boolean nullInsert(final long index)
+        {
+            // FIXME XSequence<V>#nullInsert()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+        @Override
+
+        @SuppressWarnings("unchecked")
+        public long insertAll(final long index, final V... elements)
+        {
+            // FIXME XSequence<V>#insertAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public long insertAll(final long index, final V[] elements, final int offset, final int length)
+        {
+            // FIXME XSequence<V>#insertAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
+
+
+        @Override
+        public long insertAll(final long index, final XGettingCollection<? extends V> elements)
+        {
+            // FIXME XSequence<V>#insertAll()
+            throw new org.eclipse.serializer.meta.NotImplementedYetError();
+        }
 
 	}
 
