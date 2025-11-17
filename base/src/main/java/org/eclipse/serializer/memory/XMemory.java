@@ -842,17 +842,12 @@ public final class XMemory
 	 */
 	public static final ByteBuffer allocateDirectNative(final int capacity) throws IllegalArgumentException
 	{
-		return ByteBuffer
-			.allocateDirect(capacity)
-			.order(ByteOrder.nativeOrder())
-		;
+		return MEMORY_ACCESSOR.allocateDirectNative(capacity);
 	}
 
 	public static final ByteBuffer allocateDirectNative(final long capacity) throws IllegalArgumentException
 	{
-		return allocateDirectNative(
-			X.checkArrayRange(capacity)
-		);
+		return MEMORY_ACCESSOR.allocateDirectNative(capacity);
 	}
 
 	public static final byte[] toArray(final ByteBuffer source)
