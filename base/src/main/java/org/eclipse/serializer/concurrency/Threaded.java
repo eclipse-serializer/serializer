@@ -15,7 +15,7 @@ package org.eclipse.serializer.concurrency;
  */
 
 import org.eclipse.serializer.collections.interfaces.ConsolidatableCollection;
-import org.eclipse.serializer.collections.interfaces.OptimizableCollection;
+import org.eclipse.serializer.collections.interfaces.Sized;
 import org.eclipse.serializer.functional.Instantiator;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.reference.Referencing;
@@ -80,7 +80,7 @@ import static java.lang.Thread.currentThread;
  *
  * 
  */
-public class Threaded<E> implements ConsolidatableCollection, OptimizableCollection, Referencing<E>
+public class Threaded<E> implements ConsolidatableCollection, Sized, Referencing<E>
 {
 	/*
 	 * General note on usage of Thread.currentThread():
@@ -488,7 +488,7 @@ public class Threaded<E> implements ConsolidatableCollection, OptimizableCollect
 
 	/**
 	 * Optimizes the internal storage of this {@link Threaded} instance by removing all entries that no longer
-	 * reference an existing thread, determining the new required storage size afterwards and rebuilding the storage
+	 * reference an existing thread, determining the new required storage size afterward and rebuilding the storage
 	 * if necessary.
 	 * <p>
 	 * Note that determining dead entries takes a certain amount of time, so repeated calls of this method
@@ -498,18 +498,14 @@ public class Threaded<E> implements ConsolidatableCollection, OptimizableCollect
 	 * internal storage. This also leads to automatically shrinking the internal storage if possible.
 	 * That is if the analysis of internal storage space prior to enlarging it discards enough empty entries so that
 	 * a smaller internal storage suffices.<br>
-	 * As a consequence, this method has hardly to be called at all. The only situation where explicit calls
+	 * As a consequence, this method hardly has to be called at all. The only situation where explicit calls
 	 * of this method are needed is if the {@link Threaded} instance maintains many (potentially obsolote)
 	 * associations but no further {@link #set(Object)} procedure is performed that would eventually shrink the
 	 * storage automatically.
-	 * <p>
-	 * This method returns the amount of associations (threads) that can be added before the internal storage
-	 * has to be optimized again, as defined by {@link OptimizableCollection#optimize()}.
 	 *
-	 * @return amount of associations (threads) that can be added before the internal storage has to be optimized again.
+	 * @return number of associations (threads) that can be added before the internal storage has to be optimized again.
 	 * @see #consolidate()
 	 */
-	@Override
 	public synchronized long optimize()
 	{
 		return this.internalOptimize();

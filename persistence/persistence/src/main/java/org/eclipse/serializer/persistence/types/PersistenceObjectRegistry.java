@@ -53,6 +53,10 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 
 	public boolean containsObjectId(long objectId);
 
+    public boolean containsLiveObject(long objectId);
+
+    public boolean containsClearedObject(long objectId);
+
 	public <A extends PersistenceAcceptor> A iterateEntries(A acceptor);
 
 	// general querying //

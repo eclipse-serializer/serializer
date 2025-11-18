@@ -92,18 +92,18 @@ implements XList<E>, Composition, IdentityEqualityLogic
 			: startIndex + ";" + (startIndex + length - 1)) + "] not in [0;" + (size - 1) + "]";
 	}
 
-	public static final <E> LimitList<E> New(final long initialCapacity)
+	public static <E> LimitList<E> New(final long initialCapacity)
 	{
 		return new LimitList<>(X.checkArrayRange(initialCapacity));
 	}
 
 	@SafeVarargs
-	public static final <E> LimitList<E> New(final E... initialElements)
+	public static <E> LimitList<E> New(final E... initialElements)
 	{
 		return new LimitList<>(initialElements);
 	}
 
-	public static final <E> LimitList<E> New(final XGettingCollection<E> initialElements)
+	public static <E> LimitList<E> New(final XGettingCollection<E> initialElements)
 	{
 		return new LimitList<>(initialElements);
 	}
@@ -280,34 +280,6 @@ implements XList<E>, Composition, IdentityEqualityLogic
 		System.arraycopy(elements ,     0, this.data, index         , length           );
 		this.size += length;
 		return length;
-	}
-
-
-	public static final class Creator<E> implements XList.Creator<E>
-	{
-		private final int initialCapacity;
-
-		public Creator(final int initialCapacity)
-		{
-			super();
-			if(initialCapacity < 0)
-			{
-				throw new IllegalArgumentException("initial capacity may not be negative.");
-			}
-			this.initialCapacity = initialCapacity;
-		}
-
-		public final int getInitialCapacity()
-		{
-			return this.initialCapacity;
-		}
-
-		@Override
-		public final LimitList<E> newInstance()
-		{
-			return new LimitList<>(AbstractArrayCollection.<E>newArray(this.initialCapacity), this.initialCapacity);
-		}
-
 	}
 
 

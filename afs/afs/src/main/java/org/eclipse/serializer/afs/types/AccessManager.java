@@ -14,21 +14,15 @@ package org.eclipse.serializer.afs.types;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.util.function.Function;
-
-import org.eclipse.serializer.util.X;
-import org.eclipse.serializer.afs.exceptions.AfsExceptionConsistency;
-import org.eclipse.serializer.afs.exceptions.AfsExceptionExclusiveAttemptConflict;
-import org.eclipse.serializer.afs.exceptions.AfsExceptionExclusiveAttemptSharedUserConflict;
-import org.eclipse.serializer.afs.exceptions.AfsExceptionMutation;
-import org.eclipse.serializer.afs.exceptions.AfsExceptionMutationInUse;
-import org.eclipse.serializer.afs.exceptions.AfsExceptionSharedAttemptExclusiveUserConflict;
+import org.eclipse.serializer.afs.exceptions.*;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.XArrays;
-import org.eclipse.serializer.collections.interfaces.OptimizableCollection;
+import org.eclipse.serializer.util.X;
+
+import java.util.function.Function;
+
+import static org.eclipse.serializer.util.X.notNull;
 
 public interface AccessManager
 {
@@ -831,7 +825,7 @@ public interface AccessManager
 			return true;
 		}
 		
-		private static void optimizeMemoryUsage(final OptimizableCollection collection)
+		private static void optimizeMemoryUsage(final HashTable<?, ?> collection)
 		{
 			if((collection.size() & 127) != 0)
 			{

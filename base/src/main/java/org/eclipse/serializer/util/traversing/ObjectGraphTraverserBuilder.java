@@ -14,6 +14,12 @@ package org.eclipse.serializer.util.traversing;
  * #L%
  */
 
+import org.eclipse.serializer.collections.ConstHashEnum;
+import org.eclipse.serializer.collections.ConstHashTable;
+import org.eclipse.serializer.collections.HashTable;
+import org.eclipse.serializer.collections.types.*;
+import org.eclipse.serializer.util.X;
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,20 +35,6 @@ import java.util.Date;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
-import org.eclipse.serializer.collections.ConstHashEnum;
-import org.eclipse.serializer.collections.ConstHashTable;
-import org.eclipse.serializer.collections.HashTable;
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.collections.types.XGettingEnum;
-import org.eclipse.serializer.collections.types.XGettingMap;
-import org.eclipse.serializer.collections.types.XGettingSet;
-import org.eclipse.serializer.collections.types.XGettingTable;
-import org.eclipse.serializer.collections.types.XMap;
-import org.eclipse.serializer.collections.types.XReplacingBag;
-import org.eclipse.serializer.collections.types.XSet;
-import org.eclipse.serializer.collections.types.XTable;
-import org.eclipse.serializer.util.X;
 
 
 public interface ObjectGraphTraverserBuilder
@@ -278,10 +270,10 @@ public interface ObjectGraphTraverserBuilder
 	
 	public static XGettingTable<Class<?>, TypeTraverser<?>> defaultPolymorphTypeTraversers()
 	{
-		return ConstHashTable.<Class<?>, TypeTraverser<?>>New(
+		return ConstHashTable.New(
 			X.KeyValue(XMap              .class, new TraverserXMapReplacing()          ),
 			X.KeyValue(XGettingMap       .class, new TraverserXMapNonReplacing()       ),
-			X.KeyValue(XReplacingBag     .class, new TraverserXCollectionReplacing()   ),
+			X.KeyValue(XBag              .class, new TraverserXCollectionReplacing()   ),
 			X.KeyValue(XGettingCollection.class, new TraverserXCollectionNonReplacing()),
 			X.KeyValue(Collection        .class, new TraverserCollectionOld()          ),
 			X.KeyValue(Object[]          .class, new TraverserArray()                  )
@@ -290,7 +282,7 @@ public interface ObjectGraphTraverserBuilder
 	
 	public static XGettingTable<Class<?>, TypeTraverser<?>> defaultConcreteTypeTraversers()
 	{
-		return ConstHashTable.<Class<?>, TypeTraverser<?>>New(
+		return ConstHashTable.New(
 			/* empty so far */
 		);
 	}

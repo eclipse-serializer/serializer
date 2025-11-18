@@ -15,6 +15,9 @@ package org.eclipse.serializer.collections.types;
  */
 
 
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 /**
  * Bag type collections make the single demand (thus being a level 1 collection type) that duplicate elements have
  * to be allowed, effectively being the opposite to set type collections.
@@ -38,35 +41,52 @@ package org.eclipse.serializer.collections.types;
  *
  * 
  */
-public interface XBag<E> extends XPutGetBag<E>, XProcessingBag<E>, XCollection<E>
+public interface XBag<E> extends XGettingBag<E>, XCollection<E>
 {
-	public interface Factory<E> extends XPutGetBag.Factory<E>, XProcessingBag.Factory<E>, XCollection.Factory<E>
-	{
-		@Override
-		public XBag<E> newInstance();
-	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public XBag<E> putAll(E... elements);
+    @SuppressWarnings("unchecked")
+    @Override
+    public XBag<E> putAll(E... elements);
 
-	@Override
-	public XBag<E> putAll(E[] elements, int srcStartIndex, int srcLength);
+    @Override
+    public XBag<E> putAll(E[] elements, int srcStartIndex, int srcLength);
 
-	@Override
-	public XBag<E> putAll(XGettingCollection<? extends E> elements);
+    @Override
+    public XBag<E> putAll(XGettingCollection<? extends E> elements);
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public XBag<E> addAll(E... elements);
+    @SuppressWarnings("unchecked")
+    @Override
+    public XBag<E> addAll(E... elements);
 
-	@Override
-	public XBag<E> addAll(E[] elements, int srcStartIndex, int srcLength);
+    @Override
+    public XBag<E> addAll(E[] elements, int srcStartIndex, int srcLength);
 
-	@Override
-	public XBag<E> addAll(XGettingCollection<? extends E> elements);
+    @Override
+    public XBag<E> addAll(XGettingCollection<? extends E> elements);
 
-	@Override
-	public XBag<E> copy();
+    @Override
+    public XBag<E> copy();
+
+    /**
+     * Replaces the first element that is equal to the given element
+     * with the replacement and then returns true.
+     *
+     * @param element to replace
+     * @param replacement for the found element
+     * @return {@code true} if element is found, {@code false} if not
+     */
+    public boolean replaceOne(E element, E replacement);
+
+    public long replace(E element, E replacement);
+
+    public long replaceAll(XGettingCollection<? extends E> elements, E replacement);
+
+    public boolean replaceOne(Predicate<? super E> predicate, E replacement);
+
+    public long replace(Predicate<? super E> predicate, E replacement);
+
+    public long substitute(Predicate<? super E> predicate, Function<E, E> mapper);
+
+
 
 }

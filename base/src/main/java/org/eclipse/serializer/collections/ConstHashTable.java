@@ -60,7 +60,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 	// static methods //
 	///////////////////
 
-	public static final <KI, VI, KO, VO> Aggregator<KeyValue<KI, VI>, ConstHashTable<KO, VO>> projector(
+	public static <KI, VI, KO, VO> Aggregator<KeyValue<KI, VI>, ConstHashTable<KO, VO>> projector(
 		final ConstHashTable<KO, VO> target        ,
 		final Function<KI, KO>       keyProjector  ,
 		final Function<VI, VO>       valueProjector
@@ -86,7 +86,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 	}
 
 
-	public static final <K, V> ConstHashTable<K, V> New()
+	public static <K, V> ConstHashTable<K, V> New()
 	{
 		return new ConstHashTable<>(
 			DEFAULT_HASH_LENGTH,
@@ -94,7 +94,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		);
 	}
 
-	public static final <K, V> ConstHashTable<K, V> NewCustom(final int initialHashLength)
+	public static <K, V> ConstHashTable<K, V> NewCustom(final int initialHashLength)
 	{
 		return new ConstHashTable<>(
 			XHashing.padHashLength(initialHashLength),
@@ -102,7 +102,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		);
 	}
 
-	public static final <K, V> ConstHashTable<K, V> NewCustom(final float hashDensity)
+	public static <K, V> ConstHashTable<K, V> NewCustom(final float hashDensity)
 	{
 		return new ConstHashTable<>(
 			DEFAULT_HASH_LENGTH,
@@ -110,14 +110,14 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		);
 	}
 
-	public static final <K, V> ConstHashTable<K, V> NewCustom(final int initialHashLength, final float hashDensity)
+	public static <K, V> ConstHashTable<K, V> NewCustom(final int initialHashLength, final float hashDensity)
 	{
 		return new ConstHashTable<>(
 			XHashing.padHashLength(initialHashLength),
 			XHashing.validateHashDensity(hashDensity)
 		);
 	}
-	public static final <K, V> ConstHashTable<K, V> New(
+	public static <K, V> ConstHashTable<K, V> New(
 		final XGettingCollection<? extends KeyValue<? extends K, ? extends V>> entries
 	)
 	{
@@ -127,7 +127,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		).internalAddEntries(entries);
 	}
 
-	public static final <K, V> ConstHashTable<K, V> NewCustom(
+	public static <K, V> ConstHashTable<K, V> NewCustom(
 		final int                                                              initialHashLength,
 		final float                                                            hashDensity      ,
 		final XGettingCollection<? extends KeyValue<? extends K, ? extends V>> entries
@@ -139,7 +139,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		).internalAddEntries(entries);
 	}
 
-	public static final <K, V> ConstHashTable<K, V> NewSingle(final K key, final V value)
+	public static <K, V> ConstHashTable<K, V> NewSingle(final K key, final V value)
 	{
 		final ConstHashTable<K, V> instance = New();
 		instance.internalAdd(key, value);
@@ -147,7 +147,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 	}
 
 	@SafeVarargs
-	public static final <K, V> ConstHashTable<K, V> New(final KeyValue<? extends K, ? extends V>... entries)
+	public static <K, V> ConstHashTable<K, V> New(final KeyValue<? extends K, ? extends V>... entries)
 	{
 		return new ConstHashTable<K, V>(
 			DEFAULT_HASH_LENGTH,
@@ -156,7 +156,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 	}
 
 	@SafeVarargs
-	public static final <K, V> ConstHashTable<K, V> NewCustom(
+	public static <K, V> ConstHashTable<K, V> NewCustom(
 		final int                                   initialHashLength,
 		final float                                 hashDensity      ,
 		final KeyValue<? extends K, ? extends V>... entries
@@ -168,7 +168,7 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		).internalAddEntries(new ArrayView<>(entries));
 	}
 
-	public static final <KI, VI, KO, VO> ConstHashTable<KO, VO> NewProjected(
+	public static <KI, VI, KO, VO> ConstHashTable<KO, VO> NewProjected(
 		final float                                          hashDensity  ,
 		final XGettingCollection<? extends KeyValue<KI, VI>> entries      ,
 		final Function<? super KI, KO>                       keyProjector ,
@@ -186,14 +186,14 @@ implements XImmutableTable<K, V>, HashCollection<K>, Composition, IdentityEquali
 		return newMap;
 	}
 
-	public static final <KO, VO, KI extends KO, VI extends VO> ConstHashTable<KO, VO> NewProjected(
+	public static <KO, VO, KI extends KO, VI extends VO> ConstHashTable<KO, VO> NewProjected(
 		final XGettingCollection<? extends KeyValue<KI, VI>> entries
 	)
 	{
 		return NewProjected(entries, XFunc.<KO>passThrough(), XFunc.<VO>passThrough());
 	}
 
-	public static final <KI, VI, KO, VO> ConstHashTable<KO, VO> NewProjected(
+	public static <KI, VI, KO, VO> ConstHashTable<KO, VO> NewProjected(
 		final XGettingCollection<? extends KeyValue<KI, VI>> entries       ,
 		final Function<? super KI, KO>                      keyProjector  ,
 		final Function<? super VI, VO>                      valueProjector

@@ -14,42 +14,21 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
+import org.eclipse.serializer.chars.VarString;
+import org.eclipse.serializer.chars.XChars;
+import org.eclipse.serializer.collections.types.*;
+import org.eclipse.serializer.equality.Equalator;
+import org.eclipse.serializer.exceptions.IndexBoundsException;
+import org.eclipse.serializer.functional.*;
+import org.eclipse.serializer.math.FastRandom;
+import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
+
 import java.util.Comparator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
-import org.eclipse.serializer.chars.VarString;
-import org.eclipse.serializer.chars.XChars;
-import org.eclipse.serializer.collections.types.XAddingCollection;
-import org.eclipse.serializer.collections.types.XCollection;
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.collections.types.XInsertingList;
-import org.eclipse.serializer.collections.types.XIterable;
-import org.eclipse.serializer.collections.types.XProcessingCollection;
-import org.eclipse.serializer.collections.types.XProcessingSequence;
-import org.eclipse.serializer.collections.types.XPuttingCollection;
-import org.eclipse.serializer.collections.types.XSettingList;
-import org.eclipse.serializer.collections.types.XSortableSequence;
-import org.eclipse.serializer.collections.types.XTable;
-import org.eclipse.serializer.equality.Equalator;
-import org.eclipse.serializer.exceptions.IndexBoundsException;
-import org.eclipse.serializer.functional.AggregateCountingAdd;
-import org.eclipse.serializer.functional.AggregateCountingPut;
-import org.eclipse.serializer.functional.AggregateMax;
-import org.eclipse.serializer.functional.AggregateMin;
-import org.eclipse.serializer.functional.AggregateOffsetLength;
-import org.eclipse.serializer.functional.Aggregator;
-import org.eclipse.serializer.functional.IndexedAcceptor;
-import org.eclipse.serializer.functional.IsCustomEqual;
-import org.eclipse.serializer.functional.IsGreater;
-import org.eclipse.serializer.functional.IsSmaller;
-import org.eclipse.serializer.functional.XFunc;
-import org.eclipse.serializer.math.FastRandom;
-import org.eclipse.serializer.typing.XTypes;
-import org.eclipse.serializer.util.X;
 
 public final class XUtilsCollection
 {
@@ -115,7 +94,7 @@ public final class XUtilsCollection
 	}
 
 
-	public static <E, C extends XSortableSequence<E>> C valueSort(
+	public static <E, C extends XSequence<E>> C valueSort(
 		final C                     collection,
 		final Comparator<? super E> order
 	)
@@ -137,7 +116,7 @@ public final class XUtilsCollection
 	}
 
 
-	public static <E> void shuffle(final XSortableSequence<E> collection)
+	public static <E> void shuffle(final XSequence<E> collection)
 	{
 		if(collection instanceof AbstractSimpleArrayCollection<?>)
 		{
@@ -155,7 +134,7 @@ public final class XUtilsCollection
 		}
 	}
 
-	public static <E> void rngShuffle(final XSortableSequence<E> collection, final long offset, final long length)
+	public static <E> void rngShuffle(final XSequence<E> collection, final long offset, final long length)
 	{
 		if(collection instanceof AbstractSimpleArrayCollection<?>)
 		{
@@ -197,7 +176,7 @@ public final class XUtilsCollection
 		return elements;
 	}
 
-	public static <E, C extends XProcessingCollection<E>> C partition(
+	public static <E, C extends XCollection<E>> C partition(
 		final C collection,
 		final Predicate<? super E> predicate,
 		final Consumer<? super E> positiveTarget,
@@ -1281,7 +1260,7 @@ public final class XUtilsCollection
 	// adding / putting //
 	/////////////////////
 
-	public static <E, C extends XAddingCollection<? super E>> C addAll(
+	public static <E, C extends XCollection<? super E>> C addAll(
 		final C target,
 		final E[] elements,
 		final long offset,
@@ -1291,7 +1270,7 @@ public final class XUtilsCollection
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
-	public static <E, C extends XAddingCollection<? super E>> C addAll(
+	public static <E, C extends XCollection<? super E>> C addAll(
 		final C target,
 		final XGettingCollection<? extends E> elements,
 		final Predicate<? super E> predicate
@@ -1300,7 +1279,7 @@ public final class XUtilsCollection
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
-	public static <E, C extends XAddingCollection<? super E>> C putAll(
+	public static <E, C extends XCollection<? super E>> C putAll(
 		final C target,
 		final E[] elements,
 		final long offset,
@@ -1310,7 +1289,7 @@ public final class XUtilsCollection
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
-	public static <E, C extends XAddingCollection<? super E>> C putAll(
+	public static <E, C extends XCollection<? super E>> C putAll(
 		final C target,
 		final XGettingCollection<? extends E> elements,
 		final Predicate<? super E> predicate
@@ -1319,7 +1298,7 @@ public final class XUtilsCollection
 		throw new org.eclipse.serializer.meta.NotImplementedYetError(); // FIXME not implemented yet
 	}
 
-	public static <E, C extends XInsertingList<? super E>> C insert(
+	public static <E, C extends XList<? super E>> C insert(
 		final C target,
 		final int index,
 		final E[] elements,
@@ -1352,7 +1331,7 @@ public final class XUtilsCollection
 		return target;
 	}
 
-	public static <E, C extends XInsertingList<? super E>> C insert(
+	public static <E, C extends XList<? super E>> C insert(
 		final C target,
 		final long index,
 		final XGettingCollection<? extends E> elements,
@@ -1389,7 +1368,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> E rngRetrieve(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final E element
@@ -1412,7 +1391,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> E rngRetrieve(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final E sample,
@@ -1437,7 +1416,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> E rngRetrieve(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final Predicate<? super E> predicate
@@ -1459,7 +1438,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> boolean rngRemoveOne(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final E element
@@ -1480,7 +1459,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> boolean rngRemoveOne(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final E sample,
@@ -1503,7 +1482,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> int rngRemoveNull(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length
 	)
@@ -1522,7 +1501,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> int rngRemove(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final E element
@@ -1543,7 +1522,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> int rngRemove(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final E sample,
@@ -1567,7 +1546,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> int rngRemoveAll(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final XGettingCollection<? extends E> samples,
@@ -1591,7 +1570,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> int rngRemoveAll(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final XGettingCollection<? extends E> elements
@@ -1613,7 +1592,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> int rngRetainAll(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final XGettingCollection<? extends E> samples,
@@ -1638,7 +1617,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> int rngRetainAll(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final XGettingCollection<? extends E> elements
@@ -1661,7 +1640,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> int rngRemoveDuplicates(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final Equalator<? super E> equalator
@@ -1684,7 +1663,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> int rngRemoveDuplicates(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length
 	)
@@ -1705,7 +1684,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E> int rngReduce(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final Predicate<? super E> predicate
@@ -1728,7 +1707,7 @@ public final class XUtilsCollection
 
 	@SuppressWarnings("unchecked")
 	public static <E, C extends Consumer<? super E>> C rngMoveTo(
-		final XProcessingSequence<E> sequence,
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final C target,
@@ -1753,8 +1732,8 @@ public final class XUtilsCollection
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <E> XProcessingSequence<E> rngProcess(
-		final XProcessingSequence<E> sequence,
+	public static <E> XSequence<E> rngProcess(
+		final XSequence<E> sequence,
 		final long offset,
 		final long length,
 		final Consumer<? super E> procedure
@@ -1777,7 +1756,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> void rngSort(
-		final XSettingList<E> sequence,
+		final XList<E> sequence,
 		final long offset,
 		final long length,
 		final Comparator<? super E> comparator
@@ -1798,7 +1777,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> void rngShuffle(
-		final XSettingList<E> sequence,
+		final XList<E> sequence,
 		final long offset,
 		final long length
 	)
@@ -1817,7 +1796,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> void rngSortMerge(
-		final XSettingList<E> sequence,
+		final XList<E> sequence,
 		final long offset,
 		final long length,
 		final Comparator<? super E> comparator
@@ -1838,7 +1817,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> void rngSortInsertion(
-		final XSettingList<E> sequence,
+		final XList<E> sequence,
 		final long offset,
 		final long length,
 		final Comparator<? super E> comparator
@@ -1859,7 +1838,7 @@ public final class XUtilsCollection
 	}
 
 	public static <E> void rngSortQuick(
-		final XSettingList<E> sequence,
+		final XList<E> sequence,
 		final long offset,
 		final long length,
 		final Comparator<? super E> comparator
@@ -2019,12 +1998,12 @@ public final class XUtilsCollection
 	// counting add and put //
 
 	@SuppressWarnings("unchecked")
-	public static <E> int addAll(final XAddingCollection<E> target, final E... elements)
+	public static <E> int addAll(final XCollection<E> target, final E... elements)
 	{
 		// parameter type ensures target really implements the internal adding methods
-		if(target instanceof AbstractExtendedCollection<?>)
+		if(target instanceof AbstractBaseCollection<?>)
 		{
-			return ((AbstractExtendedCollection<E>)target).internalCountingAddAll(elements);
+			return ((AbstractBaseCollection<E>)target).internalCountingAddAll(elements);
 		}
 
 		int addCount = 0;
@@ -2038,12 +2017,12 @@ public final class XUtilsCollection
 		return addCount;
 	}
 	@SuppressWarnings("unchecked")
-	public static <E> int addAll(final XAddingCollection<E> target, final E[] elements, final int offset, final int length)
+	public static <E> int addAll(final XCollection<E> target, final E[] elements, final int offset, final int length)
 	{
 		// parameter type ensures target really implements the internal adding methods
-		if(target instanceof AbstractExtendedCollection<?>)
+		if(target instanceof AbstractBaseCollection<?>)
 		{
-			return ((AbstractExtendedCollection<E>)target).internalCountingAddAll(
+			return ((AbstractBaseCollection<E>)target).internalCountingAddAll(
 				elements,
 				XTypes.to_int(offset),
 				XTypes.to_int(length)
@@ -2068,24 +2047,24 @@ public final class XUtilsCollection
 		return addCount;
 	}
 	@SuppressWarnings("unchecked")
-	public static <E> int addAll(final XAddingCollection<E> target, final XGettingCollection<? extends E> elements)
+	public static <E> int addAll(final XCollection<E> target, final XGettingCollection<? extends E> elements)
 	{
 		// parameter type ensures target really implements the internal adding methods
-		if(target instanceof AbstractExtendedCollection<?>)
+		if(target instanceof AbstractBaseCollection<?>)
 		{
-			return ((AbstractExtendedCollection<E>)target).internalCountingAddAll(elements);
+			return ((AbstractBaseCollection<E>)target).internalCountingAddAll(elements);
 		}
 
 		return elements.iterate(new AggregateCountingAdd<>(target)).yield();
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <E> int putAll(final XPuttingCollection<E> target, final E... elements)
+	public static <E> int putAll(final XCollection<E> target, final E... elements)
 	{
 		// parameter type ensures target really implements the internal putting methods
-		if(target instanceof AbstractExtendedCollection<?>)
+		if(target instanceof AbstractBaseCollection<?>)
 		{
-			return ((AbstractExtendedCollection<E>)target).internalCountingPutAll(elements);
+			return ((AbstractBaseCollection<E>)target).internalCountingPutAll(elements);
 		}
 
 		int addCount = 0;
@@ -2100,16 +2079,16 @@ public final class XUtilsCollection
 	}
 	@SuppressWarnings("unchecked")
 	public static <E> int putAll(
-		final XPuttingCollection<E> target  ,
+		final XCollection<E> target  ,
 		final E[]                   elements,
 		final int                   offset  ,
 		final int                   length
 	)
 	{
 		// parameter type ensures target really implements the internal putting methods
-		if(target instanceof AbstractExtendedCollection<?>)
+		if(target instanceof AbstractBaseCollection<?>)
 		{
-			return ((AbstractExtendedCollection<E>)target).internalCountingPutAll(elements, offset, length);
+			return ((AbstractBaseCollection<E>)target).internalCountingPutAll(elements, offset, length);
 		}
 
 		final int d;
@@ -2131,12 +2110,12 @@ public final class XUtilsCollection
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <E> int putAll(final XPuttingCollection<E> target, final XGettingCollection<? extends E> elements)
+	public static <E> int putAll(final XCollection<E> target, final XGettingCollection<? extends E> elements)
 	{
 		// parameter type ensures target really implements the internal putting methods
-		if(target instanceof AbstractExtendedCollection<?>)
+		if(target instanceof AbstractBaseCollection<?>)
 		{
-			return ((AbstractExtendedCollection<E>)target).internalCountingPutAll(elements);
+			return ((AbstractBaseCollection<E>)target).internalCountingPutAll(elements);
 		}
 
 		return elements.iterate(new AggregateCountingPut<>(target)).yield();
@@ -2207,7 +2186,7 @@ public final class XUtilsCollection
 		return indexer.sortAndYield();
 	}
 	
-	public static <I, O, C extends XAddingCollection<? super O>> C projectInto(
+	public static <I, O, C extends XCollection<? super O>> C projectInto(
 		final Iterable<? extends I> elements ,
 		final Function<I, O>        projector,
 		final C                     target

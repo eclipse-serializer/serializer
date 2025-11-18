@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
 import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.memory.XMemory;
@@ -819,6 +820,11 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			}
 		}
 
+        private void populate(final Consumer<Object> collector, final Set_long oids)
+        {
+            oids.iterate(oid -> collector.accept(this.getBuildInstance(oid)));
+        }
+
 		@Override
 		public final Object get()
 		{
@@ -866,7 +872,23 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			}
 		}
 
-		@Override
+        @Override
+        public final <C extends Consumer<Object>> C collect(final C collector, final Set_long objectIds)
+        {
+            synchronized(this.objectRegistry)
+            {
+                objectIds.iterate(this::requireReference);
+
+                this.readLoadOidData();
+                this.build();
+                this.populate(collector, objectIds);
+                this.clearBuildItems();
+
+                return collector;
+            }
+        }
+
+        @Override
 		public PersistenceRoots loadRoots()
 		{
 			final Object initial = this.get();

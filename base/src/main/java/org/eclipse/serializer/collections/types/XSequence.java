@@ -14,7 +14,10 @@ package org.eclipse.serializer.collections.types;
  * #L%
  */
 
+import org.eclipse.serializer.collections.IndexExceededException;
+
 import java.util.Comparator;
+import java.util.function.Consumer;
 
 /**
  * Level 1 collection type defining the single demand for the collection's elements to be ordered.
@@ -36,44 +39,241 @@ import java.util.Comparator;
  * in practice.
  *
  */
-public interface XSequence<E> extends XBasicSequence<E>, XSortableSequence<E>, XInputtingSequence<E>
+public interface XSequence<E> extends XGettingSequence<E>, XCollection<E>
 {
-	public interface Creator<E>
-	extends XBasicSequence.Factory<E>, XSortableSequence.Creator<E>, XInputtingSequence.Creator<E>
-	{
-		@Override
-		public XSequence<E> newInstance();
-	}
+    public boolean input(long index, E element);
+
+    public boolean nullInput(long index);
+
+    @SuppressWarnings("unchecked")
+    public long inputAll(long index, E... elements);
+
+    public long inputAll(long index, E[] elements, int offset, int length);
+
+    public long inputAll(long index, XGettingCollection<? extends E> elements);
+
+
+    public boolean prepend(E element);
+
+    public boolean nullPrepend();
+
+    public default boolean shiftAdd(final E element)
+    {
+        return this.add(element);
+    }
+
+    public default boolean shiftPrepend(final E element)
+    {
+        return this.prepend(element);
+    }
+
+    public default boolean shiftPut(final E element)
+    {
+        return this.put(element);
+    }
+
+    @SuppressWarnings("unchecked")
+    public XSequence<E> prependAll(E... elements);
+
+    public XSequence<E> prependAll(E[] elements, int srcStartIndex, int srcLength);
+
+    public XSequence<E> prependAll(XGettingCollection<? extends E> elements);
+
+
+    public boolean preput(E element);
+
+    public boolean nullPreput();
+
+    public default boolean shiftPreput(final E element)
+    {
+        return this.preput(element);
+    }
+
+    @SuppressWarnings("unchecked")
+    public XSequence<E> preputAll(E... elements);
+
+    public XSequence<E> preputAll(E[] elements, int offset, int length);
+
+    public XSequence<E> preputAll(XGettingCollection<? extends E> elements);
+
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public XSequence<E> putAll(E... elements);
+
+    @Override
+    public XSequence<E> putAll(E[] elements, int srcStartIndex, int srcLength);
+
+    @Override
+    public XSequence<E> putAll(XGettingCollection<? extends E> elements);
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public XSequence<E> addAll(E... elements);
+
+    @Override
+    public XSequence<E> addAll(E[] elements, int srcStartIndex, int srcLength);
+
+    @Override
+    public XSequence<E> addAll(XGettingCollection<? extends E> elements);
+
+
+    public boolean insert(long index, E element);
+
+    public boolean nullInsert(long index);
+
+    @SuppressWarnings("unchecked")
+    public long insertAll(long index, E... elements);
+
+    public long insertAll(long index, E[] elements, int offset, int length);
+
+    public long insertAll(long index, XGettingCollection<? extends E> elements);
 
 
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public XSequence<E> putAll(E... elements);
+    public boolean set(long index, E element);
 
-	@Override
-	public XSequence<E> putAll(E[] elements, int srcStartIndex, int srcLength);
+    public E setGet(long index, E element);
 
-	@Override
-	public XSequence<E> putAll(XGettingCollection<? extends E> elements);
+    // intentionally not returning old element for performance reasons. set(int, E) does that already.
+    public void setFirst(E element);
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public XSequence<E> addAll(E... elements);
+    public void setLast(E element);
 
-	@Override
-	public XSequence<E> addAll(E[] elements, int srcStartIndex, int srcLength);
+    @SuppressWarnings("unchecked")
+    public XSequence<E> setAll(long index, E... elements);
 
-	@Override
-	public XSequence<E> addAll(XGettingCollection<? extends E> elements);
+    public XSequence<E> set(long index, E[] elements, int offset, int length);
 
-	@Override
-	public XSequence<E> copy();
+    public XSequence<E> set(long index, XGettingSequence<? extends E> elements, long offset, long length);
 
-	@Override
-	public XSequence<E> toReversed();
+    @Override
+    public XSequence<E> copy();
 
-	@Override
-	public XSequence<E> sort(Comparator<? super E> comparator);
+    @Override
+    public XSequence<E> toReversed();
+
+    // (11.11.2025 TM)TODO: maybe define #shuffle here.
+//	/**
+//	 * Randomizes the elements in this {@link Shuffleable}.
+//	 * @return this
+//	 */
+//	public XSequence<E> shuffle();
+
+    /**
+     * Sorts this collection according to the given comparator
+     * and returns itself.
+     * @param comparator to sort this collection
+     * @return this
+     */
+    public XSequence<E> sort(Comparator<? super E> comparator);
+
+    /**
+     * Moves the element from the sourceIndex in the sequence to the targetIndex.<br>
+     * All other elements are possibly moved to create the empty slot for the shifting element.
+     * <p>
+     * Does not expand or shrink the capacity of the sequence.
+     * <p>
+     * Throws a {@link IndexExceededException} if sourceIndex or targetIndex are
+     * greater than the size of the sequence.
+     *
+     * @param sourceIndex points to the source element; Index of the source element
+     * @param targetIndex points to the target element; Index of the target element
+     * @return this
+     */
+    public XSequence<E> shiftTo(long sourceIndex, long targetIndex);
+
+    /**
+     * Moves multiple elements from the sourceIndex in the sequence to the targetIndex.<br>
+     * All other elements are possibly moved to create the empty slot for the shifting element.
+     * <p>
+     * Does not expand or shrink the capacity of the sequence.
+     * <p>
+     * Throws a {@link IndexExceededException} if sourceIndex or targetIndex
+     * exceed the size of the sequence.
+     *
+     * @param sourceIndex points to the source element; Index of the source element
+     * @param targetIndex points to the target element; Index of the target element
+     * @param length Amount of moved elements.
+     * @return self
+     */
+    public XSequence<E> shiftTo(long sourceIndex, long targetIndex, long length);
+
+    /**
+     * Moves the element from the sourceIndex in the sequence to a higher index position.<br>
+     * All other elements are possibly moved to create the empty slot for the shifting element.
+     * ("to the right")
+     * <p>
+     * Does not expand or shrink the capacity of the sequence.
+     * <p>
+     * Throws a {@link IndexExceededException} if sourceIndex or targetIndex
+     * (sourceIndex+distance) exceed the size of the sequence.
+     *
+     * @param sourceIndex points to the source element; Index of the source element
+     * @param distance of how far the element should be moved.
+     * Example: 1 moves the element from position 21 to position 22
+     * @return self
+     */
+    public XSequence<E> shiftBy(long sourceIndex, long distance);
+
+    /**
+     * Moves multiple elements from the sourceIndex in the sequence to a higher index position.<br>
+     * All other elements are possibly moved to create the empty slot for the shifting elements.
+     * ("to the right")
+     * <p>
+     * Does not expand or shrink the capacity of the sequence.
+     * <p>
+     * Throws a {@link IndexExceededException} if sourceIndex or targetIndex
+     * (sourceIndex+distance+length) exceed the size of the sequence.
+     *
+     * @param sourceIndex points to the source element; Index of the source element
+     * @param distance of how far the element should be moved.
+     * Example: 1 moves the element from position 21 to position 22
+     * @param length Amount of moved elements.
+     *
+     * @return self
+     */
+    public XSequence<E> shiftBy(long sourceIndex, long distance, long length);
+
+    public XSequence<E> swap(long indexA, long indexB);
+
+    public XSequence<E> swap(long indexA, long indexB, long length);
+
+    /**
+     * Reverses the order of its own elements and returns itself.
+     *
+     * @return this
+     */
+    public XSequence<E> reverse();
+
+    public E removeAt(long index); // remove and retrieve element at index or throw IndexOutOfBoundsException if invalid
+
+    public XSequence<E> removeRange(long offset, long length);
+
+    /**
+     * Removing all elements but the ones from the offset (basically start index)
+     * to the offset+length (end index).
+     *
+     * @param offset is the index of the first element to retain
+     * @param length is the amount of elements to retain
+     * @return this
+     */
+    public XSequence<E> retainRange(long offset, long length);
+
+    public long removeSelection(long[] indices);
+
+    //	@Override
+//	public E fetch(); // remove and retrieve first or throw IndexOutOfBoundsException if empty (fetch ~= first)
+    public E pop();   // remove and retrieve last  or throw IndexOutOfBoundsException if empty (stack conceptional pop)
+
+    //	@Override
+//	public E pinch(); // remove and retrieve first or null if empty (like forcefull extraction from collection's base)
+    public E pick();  // remove and retrieve last  or null if empty (like easy extraction from collection's end)
+
+
+    public <C extends Consumer<? super E>> C moveSelection(C target, long... indices);
+
+    @Override
+    public XGettingSequence<E> view(long fromIndex, long toIndex);
 
 }

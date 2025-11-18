@@ -14,19 +14,9 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.collections.types.XImmutableList;
-import org.eclipse.serializer.collections.types.XList;
-import org.eclipse.serializer.collections.types.XSettingList;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
 import org.eclipse.serializer.functional.IndexedAcceptor;
@@ -36,12 +26,17 @@ import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.iterables.ReadOnlyListIterator;
 
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 
 /**
  * Immutable implementation of extended collection type {@link XGettingList}.
- * <p>
- * For mutable extended lists (implementors of {@link XSettingList}, {@link XList}), see {@link FixedList},
- * {@link LimitList}, {@link BulkList}.
  * <p>
  * As instances of this class are completely immutable after creation, this list is automatically thread-safe.
  * <p>

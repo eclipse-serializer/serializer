@@ -14,13 +14,12 @@ package org.eclipse.serializer.collections.types;
  * #L%
  */
 
+import org.eclipse.serializer.typing.ComponentType;
+import org.eclipse.serializer.typing.KeyValue;
+
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import org.eclipse.serializer.collections.interfaces.ExtendedMap;
-import org.eclipse.serializer.typing.ComponentType;
-import org.eclipse.serializer.typing.KeyValue;
 
 
 /**
@@ -28,15 +27,8 @@ import org.eclipse.serializer.typing.KeyValue;
  * @param <K> the key type
  * @param <V> the value type
  */
-public interface XGettingMap<K, V> extends ExtendedMap<K, V>, XGettingSet<KeyValue<K, V>>
+public interface XGettingMap<K, V> extends XGettingSet<KeyValue<K, V>>
 {
-	public interface Creator<K, V>
-	{
-		public XGettingMap<K, V> newInstance();
-	}
-
-
-
 	// key to value querying
 	public V get(K key);
 	

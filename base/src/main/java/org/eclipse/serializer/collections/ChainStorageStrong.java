@@ -40,23 +40,23 @@ import org.eclipse.serializer.util.X;
 public class ChainStorageStrong<E, K, V, EN extends AbstractChainEntry<E, K, V, EN>>
 extends AbstractChainStorage<E, K, V, EN>
 {
-	static final String exceptionRange(final long size, final long offset, final long length)
+	static String exceptionRange(final long size, final long offset, final long length)
 	{
 		return "Range [" + (length < 0 ? offset + length + 1 + ";" + offset
 			: offset + ";" + (offset + length - 1)) + "] not in [0;" + (size - 1) + "]";
 	}
 
-	static final String exceptionIndexOutOfBounds(final long size, final long index)
+	static String exceptionIndexOutOfBounds(final long size, final long index)
 	{
 		return "Index: " + index + ", Size: " + size;
 	}
 
-	static final String exceptionIllegalSwapBounds(final long indexA, final long indexB, final long length)
+	static String exceptionIllegalSwapBounds(final long indexA, final long indexB, final long length)
 	{
 		return "Illegal swap bounds: (" + indexA + " [" + length + "] -> " + indexB + " [" + length + "])";
 	}
 
-	static final int validateArrayIteration(final Object[] array, final int offset, final int length)
+	static int validateArrayIteration(final Object[] array, final int offset, final int length)
 	{
 		// elements array range checking
 		if(length >= 0)

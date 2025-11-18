@@ -14,13 +14,13 @@ package org.eclipse.serializer.util.cql;
  * #L%
  */
 
+import org.eclipse.serializer.collections.types.XSequence;
+import org.eclipse.serializer.functional.Aggregator;
+
 import java.util.Comparator;
 import java.util.function.BiConsumer;
 
-import org.eclipse.serializer.collections.sorting.Sortable;
-import org.eclipse.serializer.functional.Aggregator;
-
-public final class CqlWrapperCollectorLinkingSorting<O, R extends Sortable<O>> implements Aggregator<O, R>
+public final class CqlWrapperCollectorLinkingSorting<O, R extends XSequence<O>> implements Aggregator<O, R>
 {
 	final R                     target;
 	final BiConsumer<O, R>     linker;

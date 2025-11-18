@@ -37,7 +37,7 @@ public class SubListView<E> implements XGettingList<E>
 	// static methods //
 	///////////////////
 
-	static final <E> IndexedAcceptor<E> offset(
+	static <E> IndexedAcceptor<E> offset(
 		final IndexedAcceptor<? super E> procedure,
 		final long startIndex,
 		final int d
@@ -389,7 +389,7 @@ public class SubListView<E> implements XGettingList<E>
 	@Override
 	public ListIterator<E> listIterator(final long index)
 	{
-		AbstractExtendedCollection.validateIndex(this.list.size(), index);
+		AbstractBaseCollection.validateIndex(this.list.size(), index);
 		return new ReadOnlyListIterator<>(this, (int)index);
 	}
 

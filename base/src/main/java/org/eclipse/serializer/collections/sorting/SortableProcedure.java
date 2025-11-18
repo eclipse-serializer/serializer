@@ -17,13 +17,7 @@ package org.eclipse.serializer.collections.sorting;
 import java.util.Comparator;
 import java.util.function.Consumer;
 
-/**
- * Composite type to guarantee that the implementation of {@link Sortable} and {@link Consumer} refers to the same
- * parametrized type.
- *
- * @param <E> the type of the input to the operation
- */
-public interface SortableProcedure<E> extends Sortable<E>, Consumer<E>
+public interface SortableProcedure<E> extends Consumer<E>
 {
 	public static <E> void sortIfApplicable(final Consumer<E> procedure, final Comparator<? super E> comparator)
 	{
@@ -33,4 +27,11 @@ public interface SortableProcedure<E> extends Sortable<E>, Consumer<E>
 		}
 		((SortableProcedure<E>)procedure).sort(comparator);
 	}
+
+    /**
+     * Sorts this procedure's content according to the given comparator and returns itself.
+     * @param comparator to sort this collection
+     * @return this
+     */
+    public SortableProcedure<E> sort(Comparator<? super E> comparator);
 }

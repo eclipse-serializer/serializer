@@ -15,7 +15,7 @@ package org.eclipse.serializer.persistence.types;
  */
 
 import org.eclipse.serializer.collections.XUtilsCollection;
-import org.eclipse.serializer.collections.types.XSortableSequence;
+import org.eclipse.serializer.collections.types.XSequence;
 
 public interface PersistenceTypeIdOwner
 {
@@ -29,7 +29,7 @@ public interface PersistenceTypeIdOwner
 	}
 
 
-	public static <E extends PersistenceTypeIdOwner, C extends XSortableSequence<E>>
+	public static <E extends PersistenceTypeIdOwner, C extends XSequence<E>>
 	C sortByTypeIdAscending(final C elements)
 	{
 		return XUtilsCollection.valueSort(elements, PersistenceTypeIdOwner::orderAscending);

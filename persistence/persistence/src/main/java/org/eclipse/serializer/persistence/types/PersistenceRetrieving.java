@@ -16,6 +16,7 @@ package org.eclipse.serializer.persistence.types;
 
 import java.util.function.Consumer;
 
+import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 
 public interface PersistenceRetrieving extends ObjectSwizzling
@@ -42,6 +43,8 @@ public interface PersistenceRetrieving extends ObjectSwizzling
 	public Object getObject(long objectId);
 
 	public <C extends Consumer<Object>> C collect(C collector, long... objectIds);
+
+    public <C extends Consumer<Object>> C collect(C collector, Set_long objectIds);
 
 //	public <T, C extends Collector<? super T>> C collectByType(C collector, Class<T> type);
 

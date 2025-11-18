@@ -14,27 +14,14 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
  * #L%
  */
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.ConstHashEnum;
-import org.eclipse.serializer.collections.ConstHashTable;
-import org.eclipse.serializer.collections.ConstList;
-import org.eclipse.serializer.collections.EqBulkList;
-import org.eclipse.serializer.collections.EqConstHashEnum;
-import org.eclipse.serializer.collections.EqConstHashTable;
-import org.eclipse.serializer.collections.EqHashEnum;
-import org.eclipse.serializer.collections.EqHashTable;
-import org.eclipse.serializer.collections.FixedList;
-import org.eclipse.serializer.collections.HashEnum;
-import org.eclipse.serializer.collections.HashTable;
-import org.eclipse.serializer.collections.LimitList;
-import org.eclipse.serializer.collections.Singleton;
+import org.eclipse.serializer.collections.*;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.memory.sun.JdkInternals;
 import org.eclipse.serializer.reflect.XReflect;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 final class XCollectionsInternals
 {
@@ -53,7 +40,6 @@ final class XCollectionsInternals
 		OFFSET_EqHashTable_hashEqualator = getFieldOffset(EqHashTable     .class, "hashEqualator"),
 		OFFSET_EqHashTable_keys          = getFieldOffset(EqHashTable     .class, "keys"         ),
 		OFFSET_EqHashTable_values        = getFieldOffset(EqHashTable     .class, "values"       ),
-		OFFSET_FixedList_data            = getFieldOffset(FixedList       .class, "data"         ),
 		OFFSET_HashEnum_size             = getFieldOffset(HashEnum        .class, "size"         ),
 		OFFSET_HashTable_size            = getFieldOffset(EqHashTable     .class, "size"         ),
 		OFFSET_HashTable_keys            = getFieldOffset(EqHashTable     .class, "keys"         ),
@@ -91,7 +77,7 @@ final class XCollectionsInternals
 	;
 	// CHECKSTYLE.ON: ConstantName
 	
-	static final long getFieldOffset(final Class<?> type, final String declaredFieldName)
+	static long getFieldOffset(final Class<?> type, final String declaredFieldName)
 	{
 		// minimal algorithm, only for local use
 		for(Class<?> c = type; c != null && c != Object.class; c = c.getSuperclass())
@@ -114,7 +100,7 @@ final class XCollectionsInternals
 		throw new Error("Field not found: " + type.getName() + '#' + declaredFieldName);
 	}
 	
-	static final Method getDeclaredMethod(final Class<?> c, final String name, final Class<?>... parameterTypes)
+	static Method getDeclaredMethod(final Class<?> c, final String name, final Class<?>... parameterTypes)
 	{
 		return XReflect.setAccessible(XReflect.getDeclaredMethod(c, name, parameterTypes));
 	}
@@ -132,11 +118,6 @@ final class XCollectionsInternals
 	public static Object[] getData(final EqBulkList<?> instance)
 	{
 		return (Object[])XMemory.getObject(instance, OFFSET_EqBulkList_data);
-	}
-	
-	public static Object[] getData(final FixedList<?> instance)
-	{
-		return (Object[])XMemory.getObject(instance, OFFSET_FixedList_data);
 	}
 	
 	public static Object[] getData(final LimitList<?> instance)

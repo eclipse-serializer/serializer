@@ -14,26 +14,23 @@ package org.eclipse.serializer.util.traversing;
  * #L%
  */
 
-import org.eclipse.serializer.collections.types.XReplacingBag;
+import org.eclipse.serializer.collections.types.XCollection;
 
 
-public final class TraverserXCollectionReplacing implements TypeTraverser<XReplacingBag<Object>>
+public final class TraverserXCollectionReplacing implements TypeTraverser<XCollection<Object>>
 {
 	@Override
 	public final void traverseReferences(
-		final XReplacingBag<Object> instance,
+		final XCollection<Object> instance,
 		final TraversalEnqueuer     enqueuer
 	)
 	{
-		instance.iterate(current ->
-		{
-			enqueuer.enqueue(current);
-		});
+		instance.iterate(enqueuer::enqueue);
 	}
 	
 	@Override
 	public final void traverseReferences(
-		final XReplacingBag<Object> instance,
+		final XCollection<Object> instance,
 		final TraversalEnqueuer     enqueuer,
 		final TraversalAcceptor     acceptor
 	)
@@ -56,7 +53,7 @@ public final class TraverserXCollectionReplacing implements TypeTraverser<XRepla
 	
 	@Override
 	public final void traverseReferences(
-		final XReplacingBag<Object> instance        ,
+		final XCollection<Object> instance        ,
 		final TraversalEnqueuer     enqueuer        ,
 		final TraversalMutator      mutator         ,
 		final MutationListener      mutationListener
@@ -89,7 +86,7 @@ public final class TraverserXCollectionReplacing implements TypeTraverser<XRepla
 	
 	@Override
 	public final void traverseReferences(
-		final XReplacingBag<Object> instance        ,
+		final XCollection<Object> instance        ,
 		final TraversalEnqueuer     enqueuer        ,
 		final TraversalAcceptor     acceptor        ,
 		final TraversalMutator      mutator         ,
@@ -127,7 +124,7 @@ public final class TraverserXCollectionReplacing implements TypeTraverser<XRepla
 	
 	@Override
 	public final void traverseReferences(
-		final XReplacingBag<Object> instance,
+		final XCollection<Object> instance,
 		final TraversalAcceptor     acceptor
 	)
 	{
@@ -146,7 +143,7 @@ public final class TraverserXCollectionReplacing implements TypeTraverser<XRepla
 	
 	@Override
 	public final void traverseReferences(
-		final XReplacingBag<Object> instance        ,
+		final XCollection<Object> instance        ,
 		final TraversalMutator      mutator         ,
 		final MutationListener      mutationListener
 	)
@@ -174,7 +171,7 @@ public final class TraverserXCollectionReplacing implements TypeTraverser<XRepla
 	
 	@Override
 	public final void traverseReferences(
-		final XReplacingBag<Object> instance        ,
+		final XCollection<Object> instance        ,
 		final TraversalAcceptor     acceptor        ,
 		final TraversalMutator      mutator         ,
 		final MutationListener      mutationListener

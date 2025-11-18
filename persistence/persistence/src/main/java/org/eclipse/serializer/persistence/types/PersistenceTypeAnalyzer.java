@@ -14,39 +14,37 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.notNull;
+import org.eclipse.serializer.collections.types.XEnum;
+import org.eclipse.serializer.collections.types.XSequence;
+import org.eclipse.serializer.reflect.XReflect;
 
 import java.lang.reflect.Field;
 
-import org.eclipse.serializer.collections.types.XAddingEnum;
-import org.eclipse.serializer.collections.types.XAddingSequence;
-import org.eclipse.serializer.collections.types.XPrependingEnum;
-import org.eclipse.serializer.collections.types.XPrependingSequence;
-import org.eclipse.serializer.reflect.XReflect;
+import static org.eclipse.serializer.util.X.notNull;
 
 public interface PersistenceTypeAnalyzer
 {
 	public boolean isUnpersistable(Class<?> type);
 	
-	public <C extends XPrependingEnum<Field>> C collectPersistableFieldsEntity(
+	public <C extends XEnum<Field>> C collectPersistableFieldsEntity(
 		Class<?>               type             ,
 		C                      persistableFields,
-		XPrependingEnum<Field> persisterFields  ,
-		XAddingEnum<Field>     problematicFields
+		XEnum<Field> persisterFields  ,
+		XEnum<Field>     problematicFields
 	);
 	
-	public <C extends XPrependingEnum<Field>> C collectPersistableFieldsCollection(
+	public <C extends XEnum<Field>> C collectPersistableFieldsCollection(
 		Class<?>               type             ,
 		C                      persistableFields,
-		XPrependingEnum<Field> persisterFields  ,
-		XAddingEnum<Field>     problematicFields
+		XEnum<Field> persisterFields  ,
+		XEnum<Field>     problematicFields
 	);
 	
-	public <C extends XPrependingEnum<Field>> C collectPersistableFieldsEnum(
+	public <C extends XEnum<Field>> C collectPersistableFieldsEnum(
 		Class<?>               type             ,
 		C                      persistableFields,
-		XPrependingEnum<Field> persisterFields  ,
-		XAddingEnum<Field>     problematicFields
+		XEnum<Field> persisterFields  ,
+		XEnum<Field>     problematicFields
 	);
 
 
@@ -74,14 +72,14 @@ public interface PersistenceTypeAnalyzer
 		// static methods //
 		///////////////////
 
-		public static final void iterateInstanceFields(
+		public static void iterateInstanceFields(
 			final Class<?>                   entityType       ,
 			final PersistenceFieldEvaluator  isPersistable    ,
 			final PersistenceFieldEvaluator  isPersisterField ,
-			final XPrependingSequence<Field> persistableFields,
-			final XPrependingSequence<Field> persisterFields  ,
+			final XSequence<Field>           persistableFields,
+			final XSequence<Field>           persisterFields  ,
 			final PersistenceFieldEvaluator  isProblematic    ,
-			final XAddingSequence<Field>     problematicFields
+			final XSequence<Field>           problematicFields
 		)
 		{
 			XReflect.iterateDeclaredFieldsUpwards(entityType, field ->
@@ -176,11 +174,11 @@ public interface PersistenceTypeAnalyzer
 		}
 
 		@Override
-		public <C extends XPrependingEnum<Field>> C collectPersistableFieldsEntity(
+		public <C extends XEnum<Field>> C collectPersistableFieldsEntity(
 			final Class<?>               type             ,
 			final C                      persistableFields,
-			final XPrependingEnum<Field> persisterFields  ,
-			final XAddingEnum<Field>     problematicFields
+			final XEnum<Field> persisterFields  ,
+			final XEnum<Field>     problematicFields
 		)
 		{
 			iterateInstanceFields(
@@ -197,11 +195,11 @@ public interface PersistenceTypeAnalyzer
 		}
 		
 		@Override
-		public <C extends XPrependingEnum<Field>> C collectPersistableFieldsEnum(
-			final Class<?>               type             ,
-			final C                      persistableFields,
-			final XPrependingEnum<Field> persisterFields  ,
-			final XAddingEnum<Field>     problematicFields
+		public <C extends XEnum<Field>> C collectPersistableFieldsEnum(
+			final Class<?>     type             ,
+			final C            persistableFields,
+			final XEnum<Field> persisterFields  ,
+			final XEnum<Field> problematicFields
 		)
 		{
 			iterateInstanceFields(
@@ -221,11 +219,11 @@ public interface PersistenceTypeAnalyzer
 	
 
 		@Override
-		public <C extends XPrependingEnum<Field>> C collectPersistableFieldsCollection(
-			final Class<?>               type             ,
-			final C                      persistableFields,
-			final XPrependingEnum<Field> persisterFields  ,
-			final XAddingEnum<Field>     problematicFields
+		public <C extends XEnum<Field>> C collectPersistableFieldsCollection(
+			final Class<?>     type             ,
+			final C            persistableFields,
+			final XEnum<Field> persisterFields  ,
+			final XEnum<Field> problematicFields
 		)
 		{
 			iterateInstanceFields(

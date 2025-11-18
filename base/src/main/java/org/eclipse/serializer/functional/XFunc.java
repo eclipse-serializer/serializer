@@ -41,7 +41,7 @@ public final class XFunc
 	 * @param <T> the type of the input to the predicate
 	 * @return the all predicate
 	 */
-	public static final <T> Predicate<T> all()
+	public static <T> Predicate<T> all()
 	{
 		// note on performance: equal to caching an instance in a constant field (lambdas are cached internally)
 		return e -> true;
@@ -58,19 +58,19 @@ public final class XFunc
 		return e -> e != null;
 	}
 
-	public static final <T, R> Function<T, R> toNull()
+	public static <T, R> Function<T, R> toNull()
 	{
 		// note on performance: equal to caching an instance in a constant field (lambdas are cached internally)
 		return t -> null;
 	}
 
-	public static final <T> Function<T, T> passThrough()
+	public static <T> Function<T, T> passThrough()
 	{
 		// note on performance: equal to caching an instance in a constant field (lambdas are cached internally)
 		return t -> t;
 	}
 
-	public static final <T> Predicate<T> isEqualTo(final T subject)
+	public static <T> Predicate<T> isEqualTo(final T subject)
 	{
 		return new Predicate<>()
 		{
@@ -82,7 +82,7 @@ public final class XFunc
 		};
 	}
 
-	public static final <T, E extends T> Predicate<T> predicate(final E subject, final Equalator<T> equalator)
+	public static <T, E extends T> Predicate<T> predicate(final E subject, final Equalator<T> equalator)
 	{
 		return new Predicate<>()
 		{
@@ -151,7 +151,7 @@ public final class XFunc
 		};
 	}
 
-	public static final <E> Consumer<E> wrapWithPredicate(
+	public static <E> Consumer<E> wrapWithPredicate(
 		final Consumer<? super E>  target   ,
 		final Predicate<? super E> predicate
 	)
@@ -243,7 +243,7 @@ public final class XFunc
 		};
 	}
 
-	public static final <I, O> Consumer<I> wrapWithFunction(
+	public static <I, O> Consumer<I> wrapWithFunction(
 		final Consumer<? super O>    target  ,
 		final Function<? super I, O> function
 	)
@@ -319,7 +319,7 @@ public final class XFunc
 		};
 	}
 
-	public static final <I, O> Consumer<I> wrapWithPredicateFunction(
+	public static <I, O> Consumer<I> wrapWithPredicateFunction(
 		final Consumer<? super O>    target   ,
 		final Predicate<? super I>   predicate,
 		final Function<? super I, O> function

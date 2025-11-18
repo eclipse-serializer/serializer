@@ -16,12 +16,12 @@ package org.eclipse.serializer.collections.interfaces;
 
 
 /**
- * The capacity of a capacity carrying type (e.g. a collection) defines the amount of elements it can carry
+ * The capacity of a capacity carrying type (e.g. a collection) defines the number of elements it can carry
  * in the current state before an internal rebuild becomes necessary. The capacity can be, but does not have to be,
  * the size of the internal storage (e.g. an array) itself. It can also be a meta value derived from the actual
  * storage size, like "threshold" in hash collections.
  */
-public interface CapacityExtendable extends CapacityCarrying
+public interface CapacityExtendable extends XBaseCollection
 {
 	public CapacityExtendable ensureCapacity(long minimalCapacity);
 

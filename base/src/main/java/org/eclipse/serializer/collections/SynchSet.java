@@ -14,12 +14,6 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XImmutableSet;
 import org.eclipse.serializer.collections.types.XSet;
@@ -27,6 +21,13 @@ import org.eclipse.serializer.concurrency.Synchronized;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.iterables.SynchronizedIterator;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 
 /**
@@ -545,5 +546,11 @@ public final class SynchSet<E> implements XSet<E>, Synchronized
 	{
 		return new SetView<>(this);
 	}
+
+    @Override
+    public synchronized long substitute(final Function<? super E, ? extends E> mapper)
+    {
+        return this.subject.substitute(mapper);
+    }
 
 }

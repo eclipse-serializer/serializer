@@ -16,18 +16,8 @@ package org.eclipse.serializer.collections.types;
 
 import java.util.ListIterator;
 
-import org.eclipse.serializer.collections.interfaces.ExtendedList;
-
-public interface XGettingList<E> extends XGettingSequence<E>, XGettingBag<E>, ExtendedList<E>
+public interface XGettingList<E> extends XGettingSequence<E>, XGettingBag<E>
 {
-	public interface Factory<E> extends XGettingCollection.Creator<E>
-	{
-		@Override
-		public XGettingList<E> newInstance();
-	}
-
-
-
 	/**
 	 * {@inheritDoc}
 	 */

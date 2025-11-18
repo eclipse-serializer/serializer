@@ -14,18 +14,17 @@ package org.eclipse.serializer.util.cql;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.notNull;
+import org.eclipse.serializer.collections.sorting.SortableProcedure;
+import org.eclipse.serializer.collections.types.XIterable;
+import org.eclipse.serializer.collections.types.XSequence;
+import org.eclipse.serializer.functional.Aggregator;
 
 import java.util.Comparator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.eclipse.serializer.collections.sorting.Sortable;
-import org.eclipse.serializer.collections.sorting.SortableProcedure;
-import org.eclipse.serializer.collections.types.XIterable;
-import org.eclipse.serializer.collections.types.XSequence;
-import org.eclipse.serializer.functional.Aggregator;
+import static org.eclipse.serializer.util.X.notNull;
 
 @FunctionalInterface
 public interface CqlResultor<O, R>
@@ -103,7 +102,7 @@ public interface CqlResultor<O, R>
 		};
 	}
 
-	public static <O, T extends Sortable<O>> CqlResultor<O, T> NewFromSupplier(
+	public static <O, T extends XSequence<O>> CqlResultor<O, T> NewFromSupplier(
 		final Supplier<T>           supplier,
 		final BiConsumer<O, T>      linker  ,
 		final Comparator<? super O> order

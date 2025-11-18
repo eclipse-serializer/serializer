@@ -14,7 +14,6 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import org.eclipse.serializer.collections.interfaces.Sized;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.util.X;
 
@@ -24,7 +23,7 @@ import org.eclipse.serializer.util.X;
  * 
  *
  */
-public abstract class AbstractArrayCollection<E> extends AbstractExtendedCollection<E> implements Sized
+public abstract class AbstractArrayCollection<E> extends AbstractBaseCollection<E>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// constants //
@@ -40,26 +39,26 @@ public abstract class AbstractArrayCollection<E> extends AbstractExtendedCollect
 	///////////////////
 
 	@SuppressWarnings("unchecked")
-	protected static final <E> E marker()
+	protected static <E> E marker()
 	{
 		return (E)MARKER;
 	}
 
 
 	@SuppressWarnings("unchecked")
-	protected static final <E> E[] newArray(final int length)
+	protected static <E> E[] newArray(final int length)
 	{
 		return (E[])new Object[length];
 	}
 
-	protected static final <E> E[] newArray(final int length, final E[] oldData, final int oldDataLength)
+	protected static <E> E[] newArray(final int length, final E[] oldData, final int oldDataLength)
 	{
 		final E[] newArray = newArray(length);
 		System.arraycopy(oldData, 0, newArray, 0, oldDataLength);
 		return newArray;
 	}
 
-	public static final int pow2BoundMaxed(final long n)
+	public static int pow2BoundMaxed(final long n)
 	{
 		return XMath.pow2BoundMaxed(X.checkArrayRange(n));
 	}

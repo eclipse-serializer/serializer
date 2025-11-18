@@ -15,20 +15,18 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
+import org.eclipse.serializer.collections.types.XGettingCollection;
+import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.collections.types.XList;
+import org.eclipse.serializer.equality.Equalator;
+import org.eclipse.serializer.typing.XTypes;
+
 import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.eclipse.serializer.collections.types.XGettingCollection;
-import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.collections.types.XList;
-import org.eclipse.serializer.collections.types.XProcessingList;
-import org.eclipse.serializer.collections.types.XSettingList;
-import org.eclipse.serializer.equality.Equalator;
-import org.eclipse.serializer.typing.XTypes;
 
-
-public final class SubList<E> extends SubListAccessor<E> implements XList<E>
+public final class SubList<E> extends SubListAccessor<E>
 {
 	/* (12.07.2012 TM)FIXME: complete SubList implementation
 	 * See all "FIXME"s
@@ -438,7 +436,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final <P extends Consumer<? super E>> P process(final P procedure)
 	{
 		final int oldListSize = XTypes.to_int(this.list.size());
-		XUtilsCollection.rngProcess((XProcessingList<E>)this.list, this.startIndex, this.length, procedure);
+		XUtilsCollection.rngProcess((XList<E>)this.list, this.startIndex, this.length, procedure);
 		this.decrement(oldListSize - XTypes.to_int(this.list.size()));
 		return procedure;
 	}
@@ -447,7 +445,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final long removeDuplicates(final Equalator<? super E> equalator)
 	{
 		final long removeCount, oldListSize = ((XList<E>)this.list).size();
-		XUtilsCollection.rngRemoveDuplicates((XProcessingList<E>)this.list, this.startIndex, this.length, equalator);
+		XUtilsCollection.rngRemoveDuplicates((XList<E>)this.list, this.startIndex, this.length, equalator);
 		this.decrement(removeCount = oldListSize - XTypes.to_int(this.list.size()));
 		return XTypes.to_int(removeCount);
 	}
@@ -456,7 +454,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final E retrieve(final E element)
 	{
 		final int oldListSize = XTypes.to_int(this.list.size());
-		final E e = XUtilsCollection.rngRetrieve((XProcessingList<E>)this.list, this.startIndex, this.length, element);
+		final E e = XUtilsCollection.rngRetrieve((XList<E>)this.list, this.startIndex, this.length, element);
 		this.decrement(oldListSize - XTypes.to_int(this.list.size()));
 		return e;
 	}
@@ -466,7 +464,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	{
 		final int oldListSize = XTypes.to_int(this.list.size());
 		final E e = XUtilsCollection.rngRetrieve(
-			(XProcessingList<E>)this.list, this.startIndex, this.length, predicate
+			(XList<E>)this.list, this.startIndex, this.length, predicate
 		);
 		this.decrement(oldListSize - XTypes.to_int(this.list.size()));
 		return e;
@@ -475,7 +473,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	@Override
 	public final boolean removeOne(final E element)
 	{
-		if(XUtilsCollection.rngRemoveOne((XProcessingList<E>)this.list, this.startIndex, this.length, element))
+		if(XUtilsCollection.rngRemoveOne((XList<E>)this.list, this.startIndex, this.length, element))
 		{
 			this.decrement();
 			return true;
@@ -487,7 +485,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final long remove(final E element)
 	{
 		final long removeCount, oldListSize = ((XList<E>)this.list).size();
-		XUtilsCollection.rngRemove((XProcessingList<E>)this.list, this.startIndex, this.length, element);
+		XUtilsCollection.rngRemove((XList<E>)this.list, this.startIndex, this.length, element);
 		this.decrement(removeCount = oldListSize - XTypes.to_int(this.list.size()));
 		return XTypes.to_int(removeCount);
 	}
@@ -496,7 +494,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final long removeAll(final XGettingCollection<? extends E> elements)
 	{
 		final long removeCount, oldListSize = ((XList<E>)this.list).size();
-		XUtilsCollection.rngRemoveAll((XProcessingList<E>)this.list, this.startIndex, this.length, elements);
+		XUtilsCollection.rngRemoveAll((XList<E>)this.list, this.startIndex, this.length, elements);
 		this.decrement(removeCount = oldListSize - XTypes.to_int(this.list.size()));
 		return XTypes.to_int(removeCount);
 	}
@@ -505,7 +503,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final long removeDuplicates()
 	{
 		final long removeCount, oldListSize = ((XList<E>)this.list).size();
-		XUtilsCollection.rngRemoveDuplicates((XProcessingList<E>)this.list, this.startIndex, this.length);
+		XUtilsCollection.rngRemoveDuplicates((XList<E>)this.list, this.startIndex, this.length);
 		this.decrement(removeCount = oldListSize - XTypes.to_int(this.list.size()));
 		return XTypes.to_int(removeCount);
 	}
@@ -514,7 +512,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final long retainAll(final XGettingCollection<? extends E> elements)
 	{
 		final long removeCount, oldListSize = ((XList<E>)this.list).size();
-		XUtilsCollection.rngRetainAll((XProcessingList<E>)this.list, this.startIndex, this.length, elements);
+		XUtilsCollection.rngRetainAll((XList<E>)this.list, this.startIndex, this.length, elements);
 		this.decrement(removeCount = oldListSize - XTypes.to_int(this.list.size()));
 		return XTypes.to_int(removeCount);
 	}
@@ -523,7 +521,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final long removeBy(final Predicate<? super E> predicate)
 	{
 		final long removeCount, oldListSize = ((XList<E>)this.list).size();
-		XUtilsCollection.rngReduce((XProcessingList<E>)this.list, this.startIndex, this.length, predicate);
+		XUtilsCollection.rngReduce((XList<E>)this.list, this.startIndex, this.length, predicate);
 		this.decrement(removeCount = oldListSize - XTypes.to_int(this.list.size()));
 		return XTypes.to_int(removeCount);
 	}
@@ -574,7 +572,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final <C extends Consumer<? super E>> C moveTo(final C target, final Predicate<? super E> predicate)
 	{
 		final int oldListSize = XTypes.to_int(this.list.size());
-		XUtilsCollection.rngMoveTo((XProcessingList<E>)this.list, this.startIndex, this.length, target, predicate);
+		XUtilsCollection.rngMoveTo((XList<E>)this.list, this.startIndex, this.length, target, predicate);
 		this.decrement(oldListSize - XTypes.to_int(this.list.size()));
 		return target;
 	}
@@ -676,7 +674,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	public final long nullRemove()
 	{
 		final long removeCount, oldListSize = ((XList<E>)this.list).size();
-		XUtilsCollection.rngRemoveNull((XProcessingList<E>)this.list, this.startIndex, this.length);
+		XUtilsCollection.rngRemoveNull((XList<E>)this.list, this.startIndex, this.length);
 		this.decrement(removeCount = oldListSize - XTypes.to_int(this.list.size()));
 		return XTypes.to_int(removeCount);
 	}
@@ -684,7 +682,7 @@ public final class SubList<E> extends SubListAccessor<E> implements XList<E>
 	@Override
 	public final SubList<E> sort(final Comparator<? super E> comparator)
 	{
-		XUtilsCollection.rngSort((XSettingList<E>)this.list, this.startIndex, this.length, comparator);
+		XUtilsCollection.rngSort((XList<E>)this.list, this.startIndex, this.length, comparator);
 		return this;
 	}
 

@@ -14,8 +14,7 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import org.eclipse.serializer.collections.interfaces.ExtendedCollection;
-import org.eclipse.serializer.collections.types.XAddingCollection;
+import org.eclipse.serializer.collections.interfaces.XBaseCollection;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.exceptions.ArrayCapacityException;
 import org.eclipse.serializer.exceptions.IndexBoundsException;
@@ -23,12 +22,6 @@ import org.eclipse.serializer.exceptions.IndexBoundsException;
 
 /**
  * This class is an implementation-internal for optional performance optimisation.
- * <p>
- * It is the base class for every extended collection, even if the extending class does not implement
- * {@link XAddingCollection}. Subclasses of this class that do not implement {@link XAddingCollection} will throw an
- * {@link UnsupportedOperationException} in the adding methods defined in this class.<br>
- * All code using the optimisation methods in here has to ensure that it can only be legally called for implementations
- * of {@link XAddingCollection}, for example by using {@link XAddingCollection} as the concrete parameter type.
  * <p>
  * Note that this technique of using {@link UnsupportedOperationException} is explicitly not comparable to the
  * JDK's approach like in {@link java.util.Collections#unmodifiableCollection(java.util.Collection)} where a
@@ -39,7 +32,7 @@ import org.eclipse.serializer.exceptions.IndexBoundsException;
  *
  * @param <E> type of contained elements
  */
-public abstract class AbstractExtendedCollection<E> implements ExtendedCollection<E>
+public abstract class AbstractBaseCollection<E> implements XBaseCollection
 {
 	public static void validateIndex(final long bound, final long index) throws IndexBoundsException
 	{

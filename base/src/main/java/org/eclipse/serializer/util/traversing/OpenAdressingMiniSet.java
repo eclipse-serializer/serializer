@@ -14,11 +14,6 @@ package org.eclipse.serializer.util.traversing;
  * #L%
  */
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import org.eclipse.serializer.collections.CapacityExceededException;
 import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.interfaces.CapacityExtendable;
@@ -27,6 +22,12 @@ import org.eclipse.serializer.collections.types.XImmutableSet;
 import org.eclipse.serializer.collections.types.XSet;
 import org.eclipse.serializer.equality.Equalator;
 import org.eclipse.serializer.math.XMath;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 
 /**
@@ -722,6 +723,12 @@ public final class OpenAdressingMiniSet<E> implements XSet<E>
 	{
 		throw new org.eclipse.serializer.meta.NotImplementedYetError();
 	}
+
+    @Override
+    public long substitute(final Function<? super E, ? extends E> mapper)
+    {
+        throw new org.eclipse.serializer.meta.NotImplementedYetError();
+    }
 
 	@Override
 	public String toString()
