@@ -15,5 +15,6 @@ module org.eclipse.serializer.nativememory
 {
 	exports org.eclipse.serializer.nativememory;
 	requires transitive org.eclipse.serializer.base;
+	requires transitive org.apache.commons.lang3;
 }
 
