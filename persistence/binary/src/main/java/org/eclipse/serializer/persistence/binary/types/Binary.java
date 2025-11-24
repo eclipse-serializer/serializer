@@ -27,8 +27,8 @@ import java.util.function.Consumer;
 
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.EqHashEnum;
-import org.eclipse.serializer.collections.types.XAddingMap;
 import org.eclipse.serializer.collections.types.XGettingTable;
+import org.eclipse.serializer.collections.types.XMap;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
@@ -627,7 +627,7 @@ public abstract class Binary implements Chunk
 		);
 	}
 	
-	public final <T extends XAddingMap<String, Long>> T buildRootMapping(final T mapping)
+	public final <T extends XMap<String, Long>> T buildRootMapping(final T mapping)
 	{
 		final long[] objectIds = this.build_longs(OFFSET_ROOTS_OID_LIST);
 		

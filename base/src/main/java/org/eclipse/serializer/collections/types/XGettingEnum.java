@@ -18,14 +18,6 @@ import java.util.function.Consumer;
 
 public interface XGettingEnum<E> extends XGettingSet<E>, XGettingSequence<E>
 {
-	public interface Creator<E> extends XGettingSet.Creator<E>, XGettingSequence.Factory<E>
-	{
-		@Override
-		public XGettingEnum<E> newInstance();
-	}
-
-
-
 	///////////////////////////////////////////////////////////////////////////
 	// override methods //
 	/////////////////////

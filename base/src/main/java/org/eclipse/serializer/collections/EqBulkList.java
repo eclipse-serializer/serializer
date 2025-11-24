@@ -210,7 +210,8 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 	 * Internal constructor to directly supply the storage array instance and size.
 	 * <p>
 	 * The passed storage array must comply to the power of two aligned size rules as specified in
-	 * {@link #BulkList(int)} and the size must be consistent to the storage array.<br>
+     *
+	 * {@link BulkList#BulkList(int)} and the size must be consistent to the storage array.<br>
 	 * Calling this constructor without complying to these rules will result in a broken instance.
 	 * <p>
 	 * It is recommended to NOT use this constructor outside collections-framework-internal implementations.
@@ -2147,38 +2148,6 @@ public final class EqBulkList<E> extends AbstractSimpleArrayCollection<E> implem
 	public int hashCode()
 	{
 		return XArrays.arrayHashCode(this.data, this.size);
-	}
-
-
-
-	public static class Creator<E> implements XList.Creator<E>
-	{
-		private final int initialCapacity;
-		private final Equalator<? super E> equalator;
-
-		public Creator(final Equalator<? super E> equalator, final int initialCapacity)
-		{
-			super();
-			this.initialCapacity = XMath.pow2BoundMaxed(initialCapacity);
-			this.equalator = equalator;
-		}
-
-		public int getInitialCapacity()
-		{
-			return this.initialCapacity;
-		}
-
-		public Equalator<? super E> getEqualator()
-		{
-			return this.equalator;
-		}
-
-		@Override
-		public EqBulkList<E> newInstance()
-		{
-			return new EqBulkList<>(this.equalator, AbstractArrayCollection.<E>newArray(this.initialCapacity), this.initialCapacity);
-		}
-
 	}
 
 }

@@ -14,11 +14,7 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import static java.lang.System.identityHashCode;
-
-import java.util.function.Consumer;
-
-import org.eclipse.serializer.collections.interfaces.OptimizableCollection;
+import org.eclipse.serializer.collections.interfaces.Sized;
 import org.eclipse.serializer.collections.types.XList;
 import org.eclipse.serializer.equality.IdentityEqualityLogic;
 import org.eclipse.serializer.functional._longProcedure;
@@ -26,11 +22,15 @@ import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 
+import java.util.function.Consumer;
+
+import static java.lang.System.identityHashCode;
+
 /**
  * Primitive (read: fast) synchronized pseudo map implementation that maps long id values to weakly referenced objects.
  *
  */
-public final class HashMapObjectId<T> implements OptimizableCollection, Composition, IdentityEqualityLogic
+public final class HashMapObjectId<T> implements Sized, Composition, IdentityEqualityLogic
 {
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
@@ -42,12 +42,12 @@ public final class HashMapObjectId<T> implements OptimizableCollection, Composit
 		return new Entry[length];
 	}
 
-	public static final <T> HashMapObjectId<T> New()
+	public static <T> HashMapObjectId<T> New()
 	{
 		return new HashMapObjectId<>(1);
 	}
 
-	public static final <T> HashMapObjectId<T> New(final int initialSlotLength)
+	public static <T> HashMapObjectId<T> New(final int initialSlotLength)
 	{
 		return new HashMapObjectId<>(XMath.pow2BoundCapped(initialSlotLength));
 	}
@@ -287,10 +287,9 @@ public final class HashMapObjectId<T> implements OptimizableCollection, Composit
 	}
 
 	/**
-	 * Optimizes the internal storage and returns the remaining amount of entries.
-	 * @return the amount of entries after the optimization is been completed.
+	 * Optimizes the internal storage and returns the remaining number of entries.
+	 * @return the number of entries after the optimization is completed.
 	 */
-	@Override
 	public long optimize()
 	{
 		final int newCapacity;

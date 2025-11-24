@@ -459,7 +459,7 @@ public class ListView<E> implements XGettingList<E>
 	@Override
 	public ListIterator<E> listIterator(final long index)
 	{
-		AbstractExtendedCollection.validateIndex(this.subject.size(), index);
+		AbstractBaseCollection.validateIndex(this.subject.size(), index);
 		return new ReadOnlyListIterator<>(this, (int)index);
 	}
 

@@ -24,14 +24,6 @@ import java.util.function.Consumer;
  */
 public interface XGettingSet<E> extends XGettingCollection<E>
 {
-	public interface Creator<E> extends XGettingCollection.Creator<E>
-	{
-		@Override
-		public XGettingSet<E> newInstance();
-	}
-
-
-
 	@Override
 	public XImmutableSet<E> immure();
 

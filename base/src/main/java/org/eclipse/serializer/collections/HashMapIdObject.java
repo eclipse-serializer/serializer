@@ -14,21 +14,21 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import java.util.function.Consumer;
-
 import org.eclipse.serializer.chars.VarString;
-import org.eclipse.serializer.collections.interfaces.OptimizableCollection;
+import org.eclipse.serializer.collections.interfaces.Sized;
 import org.eclipse.serializer.collections.types.XList;
 import org.eclipse.serializer.functional._longProcedure;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.typing.Composition;
 import org.eclipse.serializer.typing.KeyValue;
 
+import java.util.function.Consumer;
+
 /**
  * Primitive (read: fast) synchronized pseudo map implementation that maps long id values to weakly referenced objects.
  *
  */
-public final class HashMapIdObject<E> implements OptimizableCollection, Composition
+public final class HashMapIdObject<E> implements Sized, Composition
 {
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
@@ -40,12 +40,12 @@ public final class HashMapIdObject<E> implements OptimizableCollection, Composit
 		return new Entry[length];
 	}
 
-	public static final <T> HashMapIdObject<T> New()
+	public static <T> HashMapIdObject<T> New()
 	{
 		return new HashMapIdObject<>(1);
 	}
 
-	public static final <T> HashMapIdObject<T> New(final int initialSlotLength)
+	public static <T> HashMapIdObject<T> New(final int initialSlotLength)
 	{
 		return new HashMapIdObject<>(XMath.pow2BoundCapped(initialSlotLength));
 	}
@@ -307,10 +307,9 @@ public final class HashMapIdObject<E> implements OptimizableCollection, Composit
 	}
 
 	/**
-	 * Optimizes the internal storage and returns the remaining amount of entries.
-	 * @return the amount of entries after the optimization is been completed.
+	 * Optimizes the internal storage and returns the remaining number of entries.
+	 * @return the number of entries after the optimization is completed.
 	 */
-	@Override
 	public final long optimize()
 	{
 		this.rebuild(XMath.pow2BoundCapped(this.size));
