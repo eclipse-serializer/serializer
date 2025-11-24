@@ -74,7 +74,6 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 	 * Constructor
 	 *
 	 * @param type the handled type.
-	 * @throws NoSuchFieldException
 	 */
 	protected AbstractBinaryHandlerGenericImmutableCollections12(final Class<T> type)
 	{
