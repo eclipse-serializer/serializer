@@ -24,7 +24,7 @@ jobs:
               cd nativememory
               mkdir build && cd build
               cmake .. && cmake --build .
-              cp libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-x86_64.so
+              cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-x86_64.so
           - os: windows-latest
             ext: dll
             build-cmd: |
@@ -32,14 +32,14 @@ jobs:
               mkdir build
               cd build
               cmake .. && cmake --build .
-              copy libEclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
+              copy ..\target\libs\libEclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
           - os: macos-latest
             ext: dylib
             build-cmd: |
               cd nativememory
               mkdir build && cd build
               cmake .. && cmake --build .
-              cp libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-x86_64.dylib
+              cp ../target/libs/libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-x86_64.dylib
 
 
     steps:
