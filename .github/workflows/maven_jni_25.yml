@@ -32,7 +32,7 @@ jobs:
               mkdir build
               cd build
               cmake .. && cmake --build .
-              copy ..\target\libs\Debug\EclipseStoreNativeMemory.dll ..\EclipseStoreNativeMemory.dll
+              copy ..\target\libs\Debug\EclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
           - os: macos-latest
             ext: dylib
             build-cmd: |
