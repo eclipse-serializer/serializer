@@ -26,6 +26,18 @@ jobs:
               mkdir build && cd build
               cmake .. && cmake --build .
               cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-x86_64.so
+
+          - os: ubuntu-24.04-arm64
+            ext: so
+            arch: arm64
+            build-cmd: |
+              sudo apt-get update && sudo apt-get install -y cmake gcc g++
+              cd nativememory
+              mkdir build && cd build
+              cmake .. -DCMAKE_SYSTEM_PROCESSOR=arm64
+              cmake --build .
+              cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-arm64.so
+
           - os: windows-latest
             arch: x86_64
             ext: dll
@@ -35,6 +47,7 @@ jobs:
               cd build
               cmake .. && cmake --build .
               copy ..\target\libs\Debug\EclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
+
           - os: macos-latest
             arch: x86_64
             ext: dylib
@@ -43,6 +56,7 @@ jobs:
               mkdir build && cd build
               cmake .. && cmake --build .
               cp ../target/libs/libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-x86_64.dylib
+
           - os: macos-latest
             arch: arm64
             ext: dylib
