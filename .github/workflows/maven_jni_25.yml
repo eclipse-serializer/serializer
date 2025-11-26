@@ -33,18 +33,18 @@ jobs:
             build-cmd: |
               sudo apt-get update
               sudo apt-get install -y cmake gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-              
+
               cd nativememory
               mkdir build && cd build
-            
+
               cmake .. \
                 -DCMAKE_SYSTEM_NAME=Linux \
                 -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
                 -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-                -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ 
-            
+                -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+
               cmake --build .
-            
+
               cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-arm64.so
 
           - os: windows-latest
@@ -81,7 +81,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: 25
           distribution: temurin
 
       - name: Generate JNI headers
@@ -96,6 +96,25 @@ jobs:
           name: native-${{ matrix.os }}-${{ matrix.arch || 'x86_64' }}
           path: nativememory/libEclipseStoreNativeMemory-*.${{ matrix.ext }}
 
+  build-java:
+    name: Build Java artifact
+    runs-on: ubuntu-latest
+    needs: build-native
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 25
+          distribution: temurin
+      - name: Build Java package
+        run: mvn -B -DskipTests package --no-transfer-progress
+      - name: Upload Java artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-artifact
+          path: target/*.jar
+
   package-jar:
     name: Package all natives into one JAR
     runs-on: ubuntu-latest
@@ -106,26 +125,22 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: natives/
+          path: target/natives/
 
-      - name: Verify contents
-        run: ls -R natives/
-
-      - name: Create multi-platform JAR
+      - name: Move natives into nativememory build dir
         run: |
-          mkdir -p build/natives/linux build/natives/windows build/natives/macos
-          mv natives/native-ubuntu-latest-arm64/*.so build/natives/linux/ || true
-          mv natives/native-ubuntu-latest-x86_64/*.so build/natives/linux/ || true
-          mv natives/native-windows-latest-x86_64/*.dll build/natives/windows/ || true
-          mv natives/native-macos-latest-x86_64/*.dylib build/natives/macos/ || true
-          mv natives/native-macos-latest-arm64/*.dylib build/natives/macos/ || true
+          mkdir -p nativememory/target/libs
+          shopt -s nullglob || true
+          mv target/natives/* nativememory/target/libs/ || true
+          ls -l nativememory/target/libs || true          
 
-          # pack everything into a single jar
-          mkdir -p target
-          jar cf target/mylib-natives.jar -C build .
+      - name: build final JAR
+        run: |
+          mvn -pl nativememory -am -Ppackage-natives -P '!native-build' clean package --no-transfer-progress
 
-      - name: Upload final jar
+      - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
-          name: mylib-natives
-          path: target/mylib-natives.jar
+          name: final-jar
+          path: target/EclipseStore-*.jar
+
