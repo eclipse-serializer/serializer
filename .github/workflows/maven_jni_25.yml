@@ -84,7 +84,8 @@ jobs:
           mv natives/native-windows-latest/*.dll build/natives/windows/ || true
           mv natives/native-macos-latest/*.dylib build/natives/macos/ || true
 
-          # zabalíme všechny nativy do jaru
+          # pack everything into a single jar
+          mkdir -p target
           jar cf target/mylib-natives.jar -C build .
 
       - name: Upload final jar
