@@ -21,12 +21,14 @@ jobs:
             ext: so
             build-cmd: |
               sudo apt-get update && sudo apt-get install -y cmake gcc g++
+              cd nativememory
               mkdir build && cd build
               cmake .. && cmake --build .
               cp libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-x86_64.so
           - os: windows-latest
             ext: dll
             build-cmd: |
+              cd nativememory
               mkdir build
               cd build
               cmake .. && cmake --build .
@@ -34,7 +36,7 @@ jobs:
           - os: macos-latest
             ext: dylib
             build-cmd: |
-              brew install cmake
+              cd nativememory
               mkdir build && cd build
               cmake .. && cmake --build .
               cp libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-x86_64.dylib
@@ -49,7 +51,7 @@ jobs:
           distribution: temurin
 
       - name: Generate JNI headers
-        run: mvn compile
+        run: mvn compile --no-transfer-progress
 
       - name: Build native library
         run: ${{ matrix.build-cmd }}
