@@ -32,7 +32,7 @@ jobs:
               mkdir build
               cd build
               cmake .. && cmake --build .
-              copy ..\target\libs\libEclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
+              copy ..\target\libs\Debug\libEclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
           - os: macos-latest
             ext: dylib
             build-cmd: |
@@ -60,4 +60,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.os }}
-          path: libmylib-*.${{ matrix.ext }}
+          path: libEclipseStoreNativeMemory-*.${{ matrix.ext }}
