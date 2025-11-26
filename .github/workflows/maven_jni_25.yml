@@ -96,25 +96,6 @@ jobs:
           name: native-${{ matrix.os }}-${{ matrix.arch || 'x86_64' }}
           path: nativememory/libEclipseStoreNativeMemory-*.${{ matrix.ext }}
 
-  build-java:
-    name: Build Java artifact
-    runs-on: ubuntu-latest
-    needs: build-native
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: 25
-          distribution: temurin
-      - name: Build Java package
-        run: mvn -B -DskipTests package --no-transfer-progress
-      - name: Upload Java artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: java-artifact
-          path: target/*.jar
-
   package-jar:
     name: Package all natives into one JAR
     runs-on: ubuntu-latest
@@ -147,5 +128,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: final-jar
-          path: target/EclipseStore-*.jar
+          path: target/nativememory-*.jar
 
