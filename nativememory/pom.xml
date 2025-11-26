@@ -130,7 +130,7 @@
                                     <outputDirectory>${project.build.outputDirectory}/native</outputDirectory>
                                     <resources>
                                         <resource>
-                                            <directory>${project.build.directory}/natives</directory>
+                                            <directory>${project.build.directory}/libs</directory>
                                             <includes>
                                                 <include>**/*</include>
                                             </includes>
