@@ -122,7 +122,7 @@ jobs:
 
       - name: build final JAR
         run: |
-          mvn -pl nativememory -am -Ppackage-natives -P '!native-build' clean package --no-transfer-progress
+          mvn -pl nativememory -am -Ppackage-natives -P '!native-build' package --no-transfer-progress
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
