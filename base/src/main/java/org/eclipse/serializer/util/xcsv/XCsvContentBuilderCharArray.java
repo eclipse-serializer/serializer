@@ -14,20 +14,20 @@ package org.eclipse.serializer.util.xcsv;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.mayNull;
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.util.function.Consumer;
-
 import org.eclipse.serializer.chars.StringTable;
 import org.eclipse.serializer.chars.XCsvParserCharArray;
 import org.eclipse.serializer.chars._charArrayRange;
 import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.types.XAddingEnum;
-import org.eclipse.serializer.collections.types.XAddingList;
+import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XGettingList;
 import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.collections.types.XList;
 import org.eclipse.serializer.util.Substituter;
+
+import java.util.function.Consumer;
+
+import static org.eclipse.serializer.util.X.mayNull;
+import static org.eclipse.serializer.util.X.notNull;
 
 
 public final class XCsvContentBuilderCharArray implements XCsvContent.Builder<_charArrayRange>
@@ -36,26 +36,26 @@ public final class XCsvContentBuilderCharArray implements XCsvContent.Builder<_c
 	// static methods //
 	///////////////////
 
-	public static final XCsvContentBuilderCharArray New()
+	public static XCsvContentBuilderCharArray New()
 	{
 		return New(XCSV.configurationDefault());
 	}
 	
-	public static final XCsvContentBuilderCharArray New(
+	public static XCsvContentBuilderCharArray New(
 		final XCsvDataType dataType
 	)
 	{
 		return New(null, dataType);
 	}
 
-	public static final XCsvContentBuilderCharArray New(
+	public static XCsvContentBuilderCharArray New(
 		final XCsvConfiguration csvConfiguration
 	)
 	{
 		return New(csvConfiguration, null);
 	}
 	
-	public static final XCsvContentBuilderCharArray New(
+	public static XCsvContentBuilderCharArray New(
 		final XCsvConfiguration csvConfiguration,
 		final XCsvDataType      dataType
 	)
@@ -208,7 +208,7 @@ public final class XCsvContentBuilderCharArray implements XCsvContent.Builder<_c
 		// instance fields //
 		////////////////////
 
-		private final XAddingEnum<String> columnNames;
+		private final XEnum<String> columnNames;
 
 
 
@@ -216,7 +216,7 @@ public final class XCsvContentBuilderCharArray implements XCsvContent.Builder<_c
 		// constructors //
 		/////////////////
 
-		public ColumnNamesCollector(final XAddingEnum<String> columnNames)
+		public ColumnNamesCollector(final XEnum<String> columnNames)
 		{
 			super();
 			this.columnNames = notNull(columnNames);
@@ -242,7 +242,7 @@ public final class XCsvContentBuilderCharArray implements XCsvContent.Builder<_c
 		// instance fields //
 		////////////////////
 
-		private final XAddingList<String> columnTypes;
+		private final XList<String> columnTypes;
 
 
 
@@ -250,7 +250,7 @@ public final class XCsvContentBuilderCharArray implements XCsvContent.Builder<_c
 		// constructors //
 		/////////////////
 
-		public ColumnTypesCollector(final XAddingList<String> columnTypes)
+		public ColumnTypesCollector(final XList<String> columnTypes)
 		{
 			super();
 			this.columnTypes = notNull(columnTypes);

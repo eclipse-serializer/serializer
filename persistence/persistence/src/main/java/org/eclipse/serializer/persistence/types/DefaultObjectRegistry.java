@@ -431,6 +431,15 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
         }
     }
 
+    @Override
+    public boolean containsClearedObject(final long objectId)
+    {
+        synchronized(this.mutex)
+        {
+            return this.synchContainsClearedObject(objectId);
+        }
+    }
+
     private boolean synchContainsObjectId(final long objectId)
 	{
 		for(Entry e = this.oidHashTable[(int)objectId & this.hashRange]; e != null; e = e.oidNext)
@@ -451,6 +460,19 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
             if(e.objectId == objectId)
             {
                 return e.get() != null;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean synchContainsClearedObject(final long objectId)
+    {
+        for(Entry e = this.oidHashTable[(int)objectId & this.hashRange]; e != null; e = e.oidNext)
+        {
+            if(e.objectId == objectId)
+            {
+                return e.get() == null;
             }
         }
 

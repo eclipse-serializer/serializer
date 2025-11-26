@@ -14,7 +14,7 @@ package org.eclipse.serializer.collections.lazy;
  * #L%
  */
 
-import static org.eclipse.serializer.collections.AbstractExtendedCollection.validateIndex;
+import static org.eclipse.serializer.collections.AbstractBaseCollection.validateIndex;
 import static org.eclipse.serializer.math.XMath.positive;
 
 import java.lang.reflect.Array;

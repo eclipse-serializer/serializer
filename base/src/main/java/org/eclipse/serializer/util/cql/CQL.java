@@ -14,37 +14,22 @@ package org.eclipse.serializer.util.cql;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.coalesce;
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.util.Comparator;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.EqHashEnum;
-import org.eclipse.serializer.collections.EqHashTable;
-import org.eclipse.serializer.collections.HashEnum;
-import org.eclipse.serializer.collections.HashTable;
-import org.eclipse.serializer.collections.LimitList;
-import org.eclipse.serializer.collections.XSort;
+import org.eclipse.serializer.collections.*;
 import org.eclipse.serializer.collections.interfaces.Sized;
-import org.eclipse.serializer.collections.sorting.Sortable;
 import org.eclipse.serializer.collections.sorting.SortableProcedure;
 import org.eclipse.serializer.collections.types.XIterable;
 import org.eclipse.serializer.collections.types.XSequence;
-import org.eclipse.serializer.functional.Aggregate_doubleMin;
-import org.eclipse.serializer.functional.Aggregate_doubleSum;
-import org.eclipse.serializer.functional.Aggregator;
-import org.eclipse.serializer.functional.To_double;
-import org.eclipse.serializer.functional.XFunc;
+import org.eclipse.serializer.functional.*;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.X;
+
+import java.util.Comparator;
+import java.util.function.*;
+
+import static org.eclipse.serializer.util.X.coalesce;
+import static org.eclipse.serializer.util.X.notNull;
 
 
 /**
@@ -123,7 +108,7 @@ public final class CQL
 		return aggregate(CqlResultor.NewFromSupplier(supplier, linker));
 	}
 
-	public static <I, R extends Sortable<I>> CqlAggregation<I, R> aggregate(
+	public static <I, R extends XSequence<I>> CqlAggregation<I, R> aggregate(
 		final Supplier<R>           supplier,
 		final BiConsumer<I, R>      linker  ,
 		final Comparator<? super I> order

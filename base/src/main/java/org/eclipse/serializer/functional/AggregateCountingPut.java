@@ -14,7 +14,7 @@ package org.eclipse.serializer.functional;
  * #L%
  */
 
-import org.eclipse.serializer.collections.types.XPuttingCollection;
+import org.eclipse.serializer.collections.types.XCollection;
 
 public class AggregateCountingPut<E> implements Aggregator<E, Integer>
 {
@@ -22,7 +22,7 @@ public class AggregateCountingPut<E> implements Aggregator<E, Integer>
 	// instance fields //
 	////////////////////
 
-	private final XPuttingCollection<? super E> target;
+	private final XCollection<? super E> target;
 	private int putCount;
 
 
@@ -31,7 +31,7 @@ public class AggregateCountingPut<E> implements Aggregator<E, Integer>
 	// constructors //
 	/////////////////
 
-	public AggregateCountingPut(final XPuttingCollection<? super E> target)
+	public AggregateCountingPut(final XCollection<? super E> target)
 	{
 		super();
 		this.target = target;

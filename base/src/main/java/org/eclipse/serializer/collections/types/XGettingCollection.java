@@ -14,19 +14,18 @@ package org.eclipse.serializer.collections.types;
  * #L%
  */
 
+import org.eclipse.serializer.collections.interfaces.XBaseCollection;
+import org.eclipse.serializer.equality.Equalator;
+import org.eclipse.serializer.functional.ToArrayAggregator;
+import org.eclipse.serializer.typing.Copyable;
+import org.eclipse.serializer.util.X;
+
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import org.eclipse.serializer.collections.interfaces.CapacityCarrying;
-import org.eclipse.serializer.collections.interfaces.ExtendedCollection;
-import org.eclipse.serializer.equality.Equalator;
-import org.eclipse.serializer.functional.ToArrayAggregator;
-import org.eclipse.serializer.typing.Copyable;
-import org.eclipse.serializer.util.X;
 
 
 /**
@@ -38,9 +37,8 @@ public interface XGettingCollection<E>
 extends
 XIterable<E>,
 XJoinable<E>,
-ExtendedCollection<E>,
+XBaseCollection,
 Iterable<E>,
-CapacityCarrying,
 Copyable
 {
 	/**
@@ -442,13 +440,5 @@ Copyable
 	@Override
 	@Deprecated
 	public int hashCode();
-
-
-
-	public interface Creator<E> extends XFactory<E>
-	{
-		@Override
-		public XGettingCollection<E> newInstance();
-	}
 
 }

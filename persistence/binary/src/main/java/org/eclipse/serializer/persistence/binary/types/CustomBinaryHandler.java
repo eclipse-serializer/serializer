@@ -14,8 +14,19 @@ package org.eclipse.serializer.persistence.binary.types;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.mayNull;
-import static org.eclipse.serializer.util.X.notNull;
+import org.eclipse.serializer.chars.XChars;
+import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.collections.EqConstHashTable;
+import org.eclipse.serializer.collections.EqHashTable;
+import org.eclipse.serializer.collections.HashTable;
+import org.eclipse.serializer.collections.types.XCollection;
+import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.collections.types.XGettingTable;
+import org.eclipse.serializer.collections.types.XTable;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
+import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.reflect.*;
+import org.eclipse.serializer.typing.KeyValue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -23,42 +34,8 @@ import java.lang.reflect.Type;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.eclipse.serializer.chars.XChars;
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.collections.EqConstHashTable;
-import org.eclipse.serializer.collections.EqHashTable;
-import org.eclipse.serializer.collections.HashTable;
-import org.eclipse.serializer.collections.types.XAddingCollection;
-import org.eclipse.serializer.collections.types.XGettingSequence;
-import org.eclipse.serializer.collections.types.XGettingTable;
-import org.eclipse.serializer.collections.types.XTable;
-import org.eclipse.serializer.persistence.exceptions.PersistenceException;
-import org.eclipse.serializer.persistence.types.PersistenceFunction;
-import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
-import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
-import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
-import org.eclipse.serializer.persistence.types.PersistenceTypeInstantiator;
-import org.eclipse.serializer.reflect.Getter;
-import org.eclipse.serializer.reflect.Getter_boolean;
-import org.eclipse.serializer.reflect.Getter_byte;
-import org.eclipse.serializer.reflect.Getter_char;
-import org.eclipse.serializer.reflect.Getter_double;
-import org.eclipse.serializer.reflect.Getter_float;
-import org.eclipse.serializer.reflect.Getter_int;
-import org.eclipse.serializer.reflect.Getter_long;
-import org.eclipse.serializer.reflect.Getter_short;
-import org.eclipse.serializer.reflect.Setter;
-import org.eclipse.serializer.reflect.Setter_boolean;
-import org.eclipse.serializer.reflect.Setter_byte;
-import org.eclipse.serializer.reflect.Setter_char;
-import org.eclipse.serializer.reflect.Setter_double;
-import org.eclipse.serializer.reflect.Setter_float;
-import org.eclipse.serializer.reflect.Setter_int;
-import org.eclipse.serializer.reflect.Setter_long;
-import org.eclipse.serializer.reflect.Setter_short;
-import org.eclipse.serializer.reflect.XReflect;
-import org.eclipse.serializer.typing.KeyValue;
+import static org.eclipse.serializer.util.X.mayNull;
+import static org.eclipse.serializer.util.X.notNull;
 
 
 public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
@@ -67,12 +44,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 	// static methods //
 	///////////////////
 	
-	protected static final <T> BinaryField<T> Field_byte(final Getter_byte<T> getter)
+	protected static <T> BinaryField<T> Field_byte(final Getter_byte<T> getter)
 	{
 		return Field_byte(getter, null);
 	}
 	
-	protected static final <T> BinaryField<T> Field_byte(
+	protected static <T> BinaryField<T> Field_byte(
 		final Getter_byte<T> getter,
 		final Setter_byte<T> setter
 	)
@@ -80,12 +57,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_byte(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T> BinaryField<T> Field_boolean(final Getter_boolean<T> getter)
+	protected static <T> BinaryField<T> Field_boolean(final Getter_boolean<T> getter)
 	{
 		return Field_boolean(getter, null);
 	}
 		
-	protected static final <T> BinaryField<T> Field_boolean(
+	protected static <T> BinaryField<T> Field_boolean(
 		final Getter_boolean<T> getter,
 		final Setter_boolean<T> setter
 	)
@@ -93,12 +70,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_boolean(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T> BinaryField<T> Field_short(final Getter_short<T> getter)
+	protected static <T> BinaryField<T> Field_short(final Getter_short<T> getter)
 	{
 		return Field_short(getter, null);
 	}
 		
-	protected static final <T> BinaryField<T> Field_short(
+	protected static <T> BinaryField<T> Field_short(
 		final Getter_short<T> getter,
 		final Setter_short<T> setter
 	)
@@ -106,12 +83,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_short(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T> BinaryField<T> Field_char(final Getter_char<T> getter)
+	protected static <T> BinaryField<T> Field_char(final Getter_char<T> getter)
 	{
 		return Field_char(getter, null);
 	}
 		
-	protected static final <T> BinaryField<T> Field_char(
+	protected static <T> BinaryField<T> Field_char(
 		final Getter_char<T> getter,
 		final Setter_char<T> setter
 	)
@@ -119,12 +96,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_char(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T> BinaryField<T> Field_int(final Getter_int<T> getter)
+	protected static <T> BinaryField<T> Field_int(final Getter_int<T> getter)
 	{
 		return Field_int(getter, null);
 	}
 		
-	protected static final <T> BinaryField<T> Field_int(
+	protected static <T> BinaryField<T> Field_int(
 		final Getter_int<T> getter,
 		final Setter_int<T> setter
 	)
@@ -132,12 +109,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_int(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T> BinaryField<T> Field_float(final Getter_float<T> getter)
+	protected static <T> BinaryField<T> Field_float(final Getter_float<T> getter)
 	{
 		return Field_float(getter, null);
 	}
 		
-	protected static final <T> BinaryField<T> Field_float(
+	protected static <T> BinaryField<T> Field_float(
 		final Getter_float<T> getter,
 		final Setter_float<T> setter
 	)
@@ -145,12 +122,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_float(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T> BinaryField<T> Field_long(final Getter_long<T> getter)
+	protected static <T> BinaryField<T> Field_long(final Getter_long<T> getter)
 	{
 		return Field_long(getter, null);
 	}
 		
-	protected static final <T> BinaryField<T> Field_long(
+	protected static <T> BinaryField<T> Field_long(
 		final Getter_long<T> getter,
 		final Setter_long<T> setter
 	)
@@ -158,12 +135,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_long(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T> BinaryField<T> Field_double(final Getter_double<T> getter)
+	protected static <T> BinaryField<T> Field_double(final Getter_double<T> getter)
 	{
 		return Field_double(getter, null);
 	}
 		
-	protected static final <T> BinaryField<T> Field_double(
+	protected static <T> BinaryField<T> Field_double(
 		final Getter_double<T> getter,
 		final Setter_double<T> setter
 	)
@@ -171,12 +148,12 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 		return Binary.Field_double(BinaryField.Defaults.defaultUninitializedName(), getter, setter);
 	}
 	
-	protected static final <T, R> BinaryField<T> Field(final Class<R> referenceType, final Getter<T, R> getter)
+	protected static <T, R> BinaryField<T> Field(final Class<R> referenceType, final Getter<T, R> getter)
 	{
 		return Field(referenceType, getter, null);
 	}
 		
-	protected static final <T, R> BinaryField<T> Field(
+	protected static <T, R> BinaryField<T> Field(
 		final Class<R>     referenceType,
 		final Getter<T, R> getter       ,
 		final Setter<T, R> setter
@@ -552,8 +529,8 @@ public class CustomBinaryHandler<T> extends AbstractBinaryHandlerCustom<T>
 	}
 
 	protected void collectDeclaredBinaryFields(
-		final Class<?>                                        clazz ,
-		final XAddingCollection<BinaryField.Initializable<T>> target
+		final Class<?>                                  clazz ,
+		final XCollection<BinaryField.Initializable<T>> target
 	)
 	{
 		for(final Field field : clazz.getDeclaredFields())

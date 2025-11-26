@@ -14,14 +14,14 @@ package org.eclipse.serializer.collections;
  * #L%
  */
 
-import org.eclipse.serializer.collections.interfaces.OptimizableCollection;
+import org.eclipse.serializer.collections.interfaces.Sized;
 import org.eclipse.serializer.functional._longIterable;
 import org.eclipse.serializer.functional._longPredicate;
 import org.eclipse.serializer.functional._longProcedure;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.typing.Composition;
 
-public interface Set_long extends OptimizableCollection, Composition, _longIterable
+public interface Set_long extends Composition, _longIterable, Sized
 {
 	public boolean add(long element);
 
@@ -69,17 +69,17 @@ public interface Set_long extends OptimizableCollection, Composition, _longItera
 		// static methods //
 		///////////////////
 
-		public static final int defaultSlotLength()
+		public static int defaultSlotLength()
 		{
 			return 1;
 		}
 
-		public static final int defaultChainLength()
+		public static int defaultChainLength()
 		{
 			return 1;
 		}
 
-		public static final float defaultChainGrowthFactor()
+		public static float defaultChainGrowthFactor()
 		{
 			// grow by 1 for small chains but grow bigger chains by 10%.
 			return 1.1f;
@@ -270,10 +270,9 @@ public interface Set_long extends OptimizableCollection, Composition, _longItera
 		}
 
 		/**
-		 * Optimizes the internal storage and returns the remaining amount of entries.
-		 * @return the amount of entries after the optimization has been completed.
+		 * Optimizes the internal storage and returns the remaining number of entries.
+		 * @return the number of entries after the optimization has been completed.
 		 */
-		@Override
 		public long optimize()
 		{
 			this.rebuild(XMath.pow2BoundCapped(this.size));

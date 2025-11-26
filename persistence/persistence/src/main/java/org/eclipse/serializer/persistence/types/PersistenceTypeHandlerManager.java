@@ -14,16 +14,11 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.XArrays;
-import org.eclipse.serializer.collections.types.XAddingEnum;
+import org.eclipse.serializer.collections.types.XEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.equality.Equalator;
@@ -36,6 +31,11 @@ import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+import static org.eclipse.serializer.util.X.notNull;
 
 
 public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager, PersistenceTypeHandlerRegistry<D>
@@ -1003,7 +1003,7 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		
 		private void synchTypeRegisterInitializedTypeHandlers(
 			final XGettingEnum<PersistenceTypeHandler<D, ?>> typeUnregisteredInitializedTypeHandlers,
-			final XAddingEnum<PersistenceTypeHandler<D, ?>>  typeRegisteredInitializedTypeHandlers
+			final XEnum<PersistenceTypeHandler<D, ?>>        typeRegisteredInitializedTypeHandlers
 		)
 		{
 			// register the matched Type<->TypeId mappings
@@ -1019,7 +1019,7 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		private void synchInitializeFromDictionary(
 			final PersistenceTypeDictionary                 typeDictionary            ,
 			final HashEnum<PersistenceTypeHandler<D, ?>>    newTypeHandlers           ,
-			final XAddingEnum<PersistenceTypeHandler<D, ?>> typeRegisteredTypeHandlers
+			final XEnum<PersistenceTypeHandler<D, ?>>       typeRegisteredTypeHandlers
 		)
 		{
 			final HashEnum<PersistenceTypeHandler<D, ?>> initializedMatchingTypeHandlers = HashEnum.New();

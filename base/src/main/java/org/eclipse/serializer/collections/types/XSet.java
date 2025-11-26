@@ -21,15 +21,17 @@ package org.eclipse.serializer.collections.types;
  * 
  *
  */
-public interface XSet<E> extends XCollection<E>, XPutGetSet<E>, XProcessingSet<E>
+public interface XSet<E> extends XCollection<E>, XGettingSet<E>
 {
-	public interface Factory<E> extends XCollection.Factory<E>, XPutGetSet.Factory<E>, XProcessingSet.Factory<E>
-	{
-		@Override
-		public XSet<E> newInstance();
-	}
+    public E addGet(E element);
+
+    public E deduplicate(E element);
 
 
+
+    public E putGet(E element);
+
+    public E replace(E element);
 
 	@SuppressWarnings("unchecked")
 	@Override
