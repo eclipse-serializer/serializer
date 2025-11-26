@@ -27,15 +27,24 @@ jobs:
               cmake .. && cmake --build .
               cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-x86_64.so
 
-          - os: ubuntu-24.04-arm64
+          - os: ubuntu-latest
             ext: so
             arch: arm64
             build-cmd: |
-              sudo apt-get update && sudo apt-get install -y cmake gcc g++
+              sudo apt-get update
+              sudo apt-get install -y cmake gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+              
               cd nativememory
               mkdir build && cd build
-              cmake .. -DCMAKE_SYSTEM_PROCESSOR=arm64
+            
+              cmake .. \
+                -DCMAKE_SYSTEM_NAME=Linux \
+                -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+                -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ 
+            
               cmake --build .
+            
               cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-arm64.so
 
           - os: windows-latest
@@ -84,7 +93,7 @@ jobs:
       - name: Upload native library
         uses: actions/upload-artifact@v4
         with:
-          name: native-${{ matrix.os }}-${{ matrix.arch }}
+          name: native-${{ matrix.os }}-${{ matrix.arch || 'x86_64' }}
           path: nativememory/libEclipseStoreNativeMemory-*.${{ matrix.ext }}
 
   package-jar:
