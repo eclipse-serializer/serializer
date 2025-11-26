@@ -1,0 +1,40 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Java CI 25 with Maven
+
+on:
+  push:
+    branches: 
+      - '**'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-native:
+    name: Build JNI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            ext: so
+            build-cmd: |
+              sudo apt-get update && sudo apt-get install -y cmake gcc g++
+              mkdir build && cd build
+              cmake .. && cmake --build .
+              cp libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-x86_64.so
+          - os: windows-latest
+            ext: dll
+            build-cmd: |
+              mkdir build
+              cd build
+              cmake .. && cmake --build .
+              copy libEclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
+          - os: macos-latest
+            ext: dylib
+            build-cmd: |
+              brew install cmake
+              mkdir build && cd build
+              cmake .. && cmake --build .
+              cp libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-x86_64.dylib
