@@ -114,9 +114,11 @@ jobs:
       - name: Create multi-platform JAR
         run: |
           mkdir -p build/natives/linux build/natives/windows build/natives/macos
-          mv natives/native-ubuntu-latest/*.so build/natives/linux/ || true
-          mv natives/native-windows-latest/*.dll build/natives/windows/ || true
-          mv natives/native-macos-latest/*.dylib build/natives/macos/ || true
+          mv natives/native-ubuntu-latest-arm64/*.so build/natives/linux/ || true
+          mv natives/native-ubuntu-latest-x86_64/*.so build/natives/linux/ || true
+          mv natives/native-windows-latest-x86_64/*.dll build/natives/windows/ || true
+          mv natives/native-macos-latest-x86-64/*.dylib build/natives/macos/ || true
+          mv natives/native-macos-latest-arm64/*.dylib build/natives/macos/ || true
 
           # pack everything into a single jar
           mkdir -p target
