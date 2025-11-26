@@ -61,3 +61,34 @@ jobs:
         with:
           name: native-${{ matrix.os }}
           path: nativememory/libEclipseStoreNativeMemory-*.${{ matrix.ext }}
+
+  package-jar:
+    name: Package all natives into one JAR
+    runs-on: ubuntu-latest
+    needs: build-native
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: natives/
+
+      - name: Verify contents
+        run: ls -R natives/
+
+      - name: Create multi-platform JAR
+        run: |
+          mkdir -p build/natives/linux build/natives/windows build/natives/macos
+          mv natives/native-ubuntu-latest/*.so build/natives/linux/ || true
+          mv natives/native-windows-latest/*.dll build/natives/windows/ || true
+          mv natives/native-macos-latest/*.dylib build/natives/macos/ || true
+
+          # zabalíme všechny nativy do jaru
+          jar cf target/mylib-natives.jar -C build .
+
+      - name: Upload final jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: mylib-natives
+          path: target/mylib-natives.jar
