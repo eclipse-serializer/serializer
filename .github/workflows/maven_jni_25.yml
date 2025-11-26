@@ -40,7 +40,14 @@ jobs:
               mkdir build && cd build
               cmake .. && cmake --build .
               cp ../target/libs/libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-x86_64.dylib
-
+          - os: macos-latest
+            ext: dylib
+            build-cmd: |
+              cd nativememory
+              mkdir build && cd build
+              cmake .. -DCMAKE_OSX_ARCHITECTURES=arm64
+              cmake --build .
+              cp ../target/libs/libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-arm64.dylib
 
     steps:
       - uses: actions/checkout@v4
@@ -76,6 +83,28 @@ jobs:
 
       - name: Verify contents
         run: ls -R natives/
+
+      - name: Create macOS universal binary
+        run: |
+          set -e
+          X86_LIB=$(find natives -name "*macos-x86_64*.dylib" | head -n 1)
+          ARM_LIB=$(find natives -name "*macos-arm64*.dylib" | head -n 1)
+          
+          echo "x86_64 lib: $X86_LIB"
+          echo "arm64 lib:  $ARM_LIB"
+          
+          if [[ -n "$X86_LIB" && -n "$ARM_LIB" ]]; then
+            UNIVERSAL_DIR="natives/universal-macos"
+            mkdir -p "$UNIVERSAL_DIR"
+
+            lipo -create "$X86_LIB" "$ARM_LIB" \
+            -output "$UNIVERSAL_DIR/libEclipseStoreNativeMemory-macos-universal.dylib"
+
+            echo "Universal binary created:"
+            ls -l "$UNIVERSAL_DIR"
+          else
+            echo "One or both architectures missing, universal binary NOT created."
+          fi        
 
       - name: Create multi-platform JAR
         run: |
