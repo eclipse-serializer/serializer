@@ -1,23 +1,8 @@
 package org.eclipse.serializer.nativememory;
 
-/*-
- * #%L
- * Eclipse Serializer NativeMemory
- * %%
- * Copyright (C) 2023 - 2025 MicroStream Software
- * %%
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
- * SPDX-License-Identifier: EPL-2.0
- * #L%
- */
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.util.jar.Manifest;
 
@@ -28,7 +13,7 @@ public class LibraryLoader
 {
 	private final static Logger logger = Logging.getLogger(NativeMemoryAccessor.class);
 	
-	private final static String JAR_NATIVEFOLDER = "native";
+	private final static String JAR_NATIVEFOLDER = "/native/";
 	private final static String LIBRARY_BASE_NAME = "libEclipseStoreNativeMemory";
 	
 	private final static String PROPERTY_OS_NAME = System.getProperty("os.name").toLowerCase();
@@ -51,7 +36,7 @@ public class LibraryLoader
 		OS_ARCH = switch(PROPERTY_OS_ARCH) {
 			case String os_name when os_name.contains("aarch64") -> "arm";
 			case String os_name when os_name.contains("arm64") -> "arm";
-			case String os_name when os_name.contains("amd64") -> "x86_amd64";
+			case String os_name when os_name.contains("amd64") -> "x86_64";
 			default -> "UNKOWN";
 		};
 		
@@ -65,13 +50,13 @@ public class LibraryLoader
 		
 		RELEASE_VERSION = getReleaseVersion();
 		
-		String libPath = buildInternalPath(buildLibraryName());
-		logger.info("selected native library: {}", libPath);
-		
+		String libName = buildLibraryName();
+		logger.info("selected native library: {}", libName);
+				
 		//String library = extractLibrary("natives/windows/libEclipseStoreNativeMemory-windows-x86_64.dll");
 		
-//		String library = extractLibrary(buildInternalPath(buildLibraryName()));
-//		System.load(library);
+		String library = extractLibrary(JAR_NATIVEFOLDER, libName);
+		System.load(library);
 		
 	}
 		
@@ -102,34 +87,22 @@ public class LibraryLoader
 	private static String buildLibraryName() {
 		return LIBRARY_BASE_NAME + "-" + OS_NAME + "-" + OS_ARCH + LIB_FILE_EXTENSION;
 	}
-	
-	private static String buildInternalPath(String libName) {
-		return JAR_NATIVEFOLDER + "/" + OS_NAME + "/" + libName;
-	}
-	
-	private static String extractLibrary(String name) {
-
-		URL url = LibraryLoader.class.getResource("/" + name);
-		File tmpDir;
-		File library;
 		
-		try {
-			tmpDir = Files.createTempDirectory("EclipseStoreNativeMemory").toFile();
+	
+	private static String extractLibrary(String source, String targetFileName) {
+		
+		try ( InputStream in = LibraryLoader.class.getResourceAsStream(source + targetFileName)) {
+			
+			File tmpDir = Files.createTempDirectory("EclipseStoreNativeMemory").toFile();
 			tmpDir.deleteOnExit();
-			library = new File(tmpDir, "library.dll");
+			File library = new File(tmpDir, targetFileName);
 			library.deleteOnExit();
 			
-			try (InputStream in = url.openStream()) {
-			    Files.copy(in, library.toPath());
-			}
-			
+			Files.copy(in, library.toPath());
 			return library.toString();
 			
-		} catch(IOException e) {
+		} catch (Exception e) {
 			throw new RuntimeException("failed to extract native library to temp directory!", e);
 		}
-		
-		
-		
 	}
 }
