@@ -1,34 +1,34 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.eclipse.serializer</groupId>
-        <artifactId>serializer-parent</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-    </parent>
-    <artifactId>nativememory</artifactId>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.eclipse.serializer</groupId>
+		<artifactId>serializer-parent</artifactId>
+		<version>4.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>nativememory</artifactId>
 
-    <name>Eclipse Serializer NativeMemory</name>
-    <description>Native Memory access module of the Eclipse Serializer Framework</description>
-    <url>https://projects.eclipse.org/projects/technology.serializer</url>
+	<name>Eclipse Serializer NativeMemory</name>
+	<description>Native Memory access module of the Eclipse Serializer Framework</description>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 
-    <properties>
-        <maven.compiler.release>22</maven.compiler.release>
-        <maven.java.version.minimum>22</maven.java.version.minimum>
-    </properties>
+	<properties>
+		<maven.compiler.release>22</maven.compiler.release>
+		<maven.java.version.minimum>22</maven.java.version.minimum>
+	</properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.eclipse.serializer</groupId>
-            <artifactId>base</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-    </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>org.eclipse.serializer</groupId>
+			<artifactId>base</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+	</dependencies>
 
     <profiles>
         <profile>
@@ -117,28 +117,27 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
-                                <id>copy-natives-flatten</id>
+                                <id>copy-natives-to-classes</id>
                                 <phase>prepare-package</phase>
-                                <configuration>
-                                    <target>
-                                        <mkdir dir="${project.build.outputDirectory}/native"/>
-                                        <copy todir="${project.build.outputDirectory}/native" overwrite="true">
-                                            <fileset dir="${project.build.directory}/libs">
-                                                <include name="**/*"/>
-                                            </fileset>
-                                            <mapper>
-                                                <flattenmapper/>
-                                            </mapper>
-                                        </copy>
-                                    </target>
-                                </configuration>
                                 <goals>
-                                    <goal>run</goal>
+                                    <goal>copy-resources</goal>
                                 </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}/native</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}/libs</directory>
+                                            <includes>
+                                                <include>**/*</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -146,6 +145,7 @@
             </build>
         </profile>
     </profiles>
+
 
 
 </project>
