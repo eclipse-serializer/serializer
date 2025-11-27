@@ -117,27 +117,28 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>3.3.1</version>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
-                                <id>copy-natives-to-classes</id>
+                                <id>copy-natives-flatten</id>
                                 <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.outputDirectory}/native</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.build.directory}/libs</directory>
-                                            <includes>
-                                                <include>**/*</include>
-                                            </includes>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
+                                    <tasks>
+                                        <mkdir dir="${project.build.outputDirectory}/native"/>
+                                        <copy todir="${project.build.outputDirectory}/native" overwrite="true">
+                                            <fileset dir="${project.build.directory}/libs">
+                                                <include name="**/*"/>
+                                            </fileset>
+                                            <mapper>
+                                                <flattenmapper/>
+                                            </mapper>
+                                        </copy>
+                                    </tasks>
                                 </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>
