@@ -19,7 +19,6 @@ public class LibraryLoader
 	
 	private final static String OS_NAME;
 	private final static String OS_ARCH;
-	private final static String RELEASE_VERSION;
 	private final static String LIB_FILE_EXTENSION;
 	
 	static {
