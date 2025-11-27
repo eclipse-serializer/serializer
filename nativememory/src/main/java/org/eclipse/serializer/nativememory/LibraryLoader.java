@@ -55,7 +55,7 @@ public class LibraryLoader
 		
 	public LibraryLoader() {
 		logger.info("OS Name: {},  arch: {}", PROPERTY_OS_NAME, PROPERTY_OS_ARCH);
-		logger.info("OS Name: {},  arch: {}, version {}", OS_NAME, OS_ARCH, RELEASE_VERSION);
+		logger.info("OS Name: {},  arch: {}", OS_NAME, OS_ARCH);
 		
 	}
 		
