@@ -1,10 +1,8 @@
 package org.eclipse.serializer.nativememory;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.jar.Manifest;
 
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
@@ -45,16 +43,12 @@ public class LibraryLoader
 			case String os_name when os_name.startsWith("linux") -> ".so";
 			case String os_name when os_name.startsWith("mac") -> ".dylib";
 			case String os_name when os_name.startsWith("Darwin") ->".dylib";
-		default -> "UNKOWN";
-	};
-		
-		RELEASE_VERSION = getReleaseVersion();
+			default -> "UNKOWN";
+		};
 		
 		String libName = buildLibraryName();
 		logger.info("selected native library: {}", libName);
-				
-		//String library = extractLibrary("natives/windows/libEclipseStoreNativeMemory-windows-x86_64.dll");
-		
+						
 		String library = extractLibrary(JAR_NATIVEFOLDER, libName);
 		System.load(library);
 		
@@ -62,33 +56,14 @@ public class LibraryLoader
 		
 	public LibraryLoader() {
 		logger.info("OS Name: {},  arch: {}", PROPERTY_OS_NAME, PROPERTY_OS_ARCH);
-		
 		logger.info("OS Name: {},  arch: {}, version {}", OS_NAME, OS_ARCH, RELEASE_VERSION);
 		
 	}
-	
-	private static String getReleaseVersion() {
 		
-		final String implVersion = "Implementation-Version";
-		
-		try(var in =  NativeMemoryAccessor.class.getResource("/META-INF/MANIFEST.MF").openStream()) {
-			Manifest manifest = new Manifest(in);
-			var entries = manifest.getEntries();
-			
-			logger.info("Manifest Entries: {}", entries);
-			
-			return NativeMemoryAccessor.class.getPackage().getImplementationVersion();
-			
-		} catch(IOException e) {
-			throw new RuntimeException("Failed to read implementation version from manifest!");
-		}
-	}
-	
 	private static String buildLibraryName() {
 		return LIBRARY_BASE_NAME + "-" + OS_NAME + "-" + OS_ARCH + LIB_FILE_EXTENSION;
 	}
 		
-	
 	private static String extractLibrary(String source, String targetFileName) {
 		
 		try ( InputStream in = LibraryLoader.class.getResourceAsStream(source + targetFileName)) {
