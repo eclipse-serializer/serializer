@@ -112,6 +112,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: nativememory/target/libs
+          merge-multiple: 'true'
 
       - name: build final JAR
         run: |
