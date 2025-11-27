@@ -111,14 +111,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: target/natives/
-
-      - name: Move natives into nativememory build dir
-        run: |
-          mkdir -p nativememory/target/libs
-          shopt -s nullglob || true
-          mv target/natives/* nativememory/target/libs/ || true
-          ls -l nativememory/target/libs || true          
+          path: nativememory/target/libs
 
       - name: build final JAR
         run: |
