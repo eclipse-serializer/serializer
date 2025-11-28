@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
 import org.eclipse.serializer.exceptions.UnhandledPlatformError;
 import org.eclipse.serializer.memory.android.AndroidAdapter;
+import org.eclipse.serializer.memory.sun.JdkMemoryAccessor;
 import org.eclipse.serializer.util.X;
 
 
@@ -38,9 +39,9 @@ public final class XMemory
 	// constants //
 	//////////////
 
-	public static MemoryAccessor       MEMORY_ACCESSOR         ;
-	public static MemoryAccessor       MEMORY_ACCESSOR_REVERSED;
-	static MemorySizeProperties MEMORY_SIZE_PROPERTIES  ;
+	public static MemoryAccessor MEMORY_ACCESSOR         ;
+	public static MemoryAccessor MEMORY_ACCESSOR_REVERSED;
+	static MemorySizeProperties	 MEMORY_SIZE_PROPERTIES  ;
 
 	static
 	{
@@ -89,7 +90,6 @@ public final class XMemory
 				AndroidAdapter::setupFull,
 				entry("org.graalvm.nativeimage.imagecode")
 			)
-
 			// add additional checks here
 		);
 	}
@@ -120,27 +120,33 @@ public final class XMemory
 
 	private static void initializeMemoryAccess()
 	{
-//		// no sense in permanently occupying memory with data that is only used exactly once during initialization.
-//		final VmCheck[] vmChecks = createVmChecks();
-//
-//		for(final VmCheck vmCheck : vmChecks)
-//		{
-//			// can either set an Memory accessing/handling implementation or throw an Error.
-//			if(vmCheck.check())
-//			{
-//				return;
-//			}
-//		}
-//
-//		/* (18.11.2019 TM)NOTE:
-//		 * If no specific vm check applied, the default initialization is used, assuming a fully
-//		 * JDK/-Unsafe-compatible JVM. It might not seem that way, but this is actually the normal case.
-//		 * Tests showed that almost all Java VM vendors fully support Unsafe. This is quite plausible:
-//		 * They want to draw Java developers/applications onto their platform, so they try to provide
-//		 * as much compatibility as possible, including Unsafe.
-//		 * So far, the only known Java VM to not fully support Unsafe is Android.
-//		 */
-//		setMemoryHandling(JdkMemoryAccessor.New());
+		// no sense in permanently occupying memory with data that is only used exactly once during initialization.
+		final VmCheck[] vmChecks = createVmChecks();
+
+		for(final VmCheck vmCheck : vmChecks)
+		{
+			// can either set an Memory accessing/handling implementation or throw an Error.
+			if(vmCheck.check())
+			{
+				return;
+			}
+		}
+
+		/* (18.11.2019 TM)NOTE:
+		 * If no specific vm check applied, the default initialization is used, assuming a fully
+		 * JDK/-Unsafe-compatible JVM. It might not seem that way, but this is actually the normal case.
+		 * Tests showed that almost all Java VM vendors fully support Unsafe. This is quite plausible:
+		 * They want to draw Java developers/applications onto their platform, so they try to provide
+		 * as much compatibility as possible, including Unsafe.
+		 * So far, the only known Java VM to not fully support Unsafe is Android.
+		 */
+		
+		
+		if(Runtime.version().feature() >= 25) {
+			MemoryAccessorResolver.resolve();
+		}
+		
+		setMemoryHandling(JdkMemoryAccessor.New());
 	}
 
 	private static VmCheck VmCheckEquality(
