@@ -511,7 +511,7 @@ public class Persistence
 	)
 	{
 		final int bound = offset + length;
-		for(int i = offset; offset < bound; i++)
+		for(int i = offset; i < bound; i++)
 		{
 			iterator.apply(array[i]);
 		}
