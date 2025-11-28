@@ -144,14 +144,32 @@
 					</archive>
 				</configuration>
 			</plugin>
+			<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-resources-plugin</artifactId>
+    <version>3.3.1</version>
+    <executions>
+        <execution>
+            <id>copy-natives-to-classes</id>
+            <phase>prepare-package</phase>
+            <goals>
+                <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>${project.build.outputDirectory}/native</outputDirectory>
+                <resources>
+                    <resource>
+                        <directory>${project.build.directory}/libs</directory>
+                        <includes>
+                            <include>**/*</include>
+                        </includes>
+                        <filtering>false</filtering>
+                    </resource>
+                </resources>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>${project.build.directory}/libs/Debug</directory>
-				<includes>
-					<include>*.lib</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
 </project>
