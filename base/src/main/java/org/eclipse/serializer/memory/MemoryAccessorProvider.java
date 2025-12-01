@@ -1,8 +1,10 @@
+package org.eclipse.serializer.memory;
+
 /*-
  * #%L
  * Eclipse Serializer Base
  * %%
- * Copyright (C) 2023 MicroStream Software
+ * Copyright (C) 2023 - 2025 MicroStream Software
  * %%
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -11,10 +13,13 @@
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
-module org.eclipse.serializer.nativememory
-{
-	exports org.eclipse.serializer.nativememory;
-	requires transitive org.eclipse.serializer.base;
-	requires transitive org.apache.commons.lang3;
-}
 
+/**
+ * Java Service Provider
+ * 
+ * Provides an {@link MemoryAccessor}
+ */
+public interface MemoryAccessorProvider
+{
+	MemoryAccessor create();
+}

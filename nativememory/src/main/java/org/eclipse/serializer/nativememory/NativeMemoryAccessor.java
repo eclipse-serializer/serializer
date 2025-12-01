@@ -31,6 +31,12 @@ import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+
+/**
+ * Java 22 and greater MemoryAccessor implementation.
+ * This implementation relies on native code to replace
+ * obsolete api from misc.unsafe.
+ */
 public class NativeMemoryAccessor implements MemoryAccessor
 {
 	///////////////////////////////////////////////////////////////////////////
@@ -52,26 +58,36 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	/////////////////
 	
 	public static MemoryAccessor New() {
+		NativeLibraryJarLoader.loadNativeLibrary();
+		return new NativeMemoryAccessor();
+	}
+	
+	public static MemoryAccessor New(String nativeLibrary) {
+		NativeLibraryJarLoader.loadNativeLibrary(nativeLibrary);
 		return new NativeMemoryAccessor();
 	}
 			
 	public NativeMemoryAccessor() {
 		super();
-		System.loadLibrary("EclipseStoreNativeMemory");
+		logger.info("initializing NativeMemoryAccessor");
 	}
 
 
-	public static void notImplemented() {
+	///////////////////////////////////////////////////////////////////////////
+	// static methods //
+	///////////////////
+	
+	private static void notImplemented() {
 		throw new RuntimeException("not implemented");
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
-	// methods //
+	// helper methods //
 	////////////
 
 	@Override
 	public void guaranteeUsability() {
-		//notImplemented();
+		//no-op
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -109,7 +125,7 @@ public class NativeMemoryAccessor implements MemoryAccessor
 
 	///////////////////////////////////////////////////////////////////////////
 	// primitive values getter //
-	/////////////////////////////
+	////////////////////////////
 	
 	@Override
 	public native long allocateMemory(final long bytes);
@@ -174,6 +190,11 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	@Override
 	public native Object getObject(final Object instance, final long offset);
 
+	
+	///////////////////////////////////////////////////////////////////////////
+	// primitive values setter //
+	////////////////////////////
+	
 	@Override
 	public native void set_byte(final long address, final byte value);
 
@@ -282,6 +303,11 @@ public class NativeMemoryAccessor implements MemoryAccessor
 		segment.set(ValueLayout.JAVA_DOUBLE_UNALIGNED, index, value);
 	}
 		
+	
+	///////////////////////////////////////////////////////////////////////////
+	// range and arrays //
+	/////////////////////
+	
 	@Override
 	public void copyRange(final long sourceAddress, final long targetAddress, final long length) {
 		final MemorySegment srcSegment = MemorySegment.ofAddress(sourceAddress).reinterpret(length);
