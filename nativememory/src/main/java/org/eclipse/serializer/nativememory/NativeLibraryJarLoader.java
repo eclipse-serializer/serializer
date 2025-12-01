@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
-public class LibraryLoader
+public class NativeLibraryJarLoader
 {
 	private final static Logger logger = Logging.getLogger(NativeMemoryAccessor.class);
 	
@@ -58,19 +58,18 @@ public class LibraryLoader
 			case String os_name when os_name.startsWith("Darwin") ->".dylib";
 			default -> "UNKOWN";
 		};
-		
+	}
+	
+	public static void loadNativeLibrary() {
 		String libName = buildLibraryName();
-		logger.info("selected native library: {}", libName);
-						
+		logger.debug("loading native library: {}", libName);
 		String library = extractLibrary(JAR_NATIVEFOLDER, libName);
 		System.load(library);
-		
-	}
-		
-	public LibraryLoader() {
-		logger.info("OS Name: {},  arch: {}", PROPERTY_OS_NAME, PROPERTY_OS_ARCH);
-		logger.info("OS Name: {},  arch: {}", OS_NAME, OS_ARCH);
-		
+	};
+	
+	public static void loadNativeLibrary(String nativeLibrary) {
+		logger.info("loading native library: {}", nativeLibrary);
+		System.load(nativeLibrary);
 	}
 		
 	private static String buildLibraryName() {
@@ -79,7 +78,7 @@ public class LibraryLoader
 		
 	private static String extractLibrary(String source, String targetFileName) {
 		
-		try ( InputStream in = LibraryLoader.class.getResourceAsStream(source + targetFileName)) {
+		try ( InputStream in = NativeLibraryJarLoader.class.getResourceAsStream(source + targetFileName)) {
 			
 			File tmpDir = Files.createTempDirectory("EclipseStoreNativeMemory").toFile();
 			tmpDir.deleteOnExit();
@@ -90,7 +89,9 @@ public class LibraryLoader
 			return library.toString();
 			
 		} catch (Exception e) {
-			throw new RuntimeException("failed to extract native library to temp directory!", e);
+			throw new RuntimeException("failed to extract native library" + source + targetFileName + " to temp directory!", e);
 		}
 	}
+
+
 }

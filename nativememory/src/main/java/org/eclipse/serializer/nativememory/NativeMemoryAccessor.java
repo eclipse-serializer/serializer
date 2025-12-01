@@ -52,16 +52,18 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	/////////////////
 	
 	public static MemoryAccessor New() {
+		NativeLibraryJarLoader.loadNativeLibrary();
+		return new NativeMemoryAccessor();
+	}
+	
+	public static MemoryAccessor New(String nativeLibrary) {
+		NativeLibraryJarLoader.loadNativeLibrary(nativeLibrary);
 		return new NativeMemoryAccessor();
 	}
 			
 	public NativeMemoryAccessor() {
 		super();
 		logger.info("initializing NativeMemoryAccessor");
-		
-		LibraryLoader loader = new LibraryLoader();
-		
-		//System.loadLibrary("EclipseStoreNativeMemory");
 	}
 
 
