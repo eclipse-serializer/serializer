@@ -69,7 +69,6 @@ public class NativeMemoryAccessor implements MemoryAccessor
 			
 	public NativeMemoryAccessor() {
 		super();
-		logger.info("initializing NativeMemoryAccessor");
 	}
 
 
