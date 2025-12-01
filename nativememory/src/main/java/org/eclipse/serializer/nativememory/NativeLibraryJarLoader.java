@@ -21,12 +21,24 @@ import java.nio.file.Files;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+/**
+ * Helper class to load the NativeMemoryAccosser native code library.
+ * Try to detect the current os and architectuer, extract a matching
+ * dynimac linked library from the jar this class is deplyed with to
+ * system temp dir and load the lib.
+ * 
+ * Or try to load a names library from the systems library path.
+ * 
+ * Please be aware that this class
+ * 
+ */
 public class NativeLibraryJarLoader
 {
 	private final static Logger logger = Logging.getLogger(NativeMemoryAccessor.class);
 	
 	private final static String JAR_NATIVEFOLDER = "/native/";
 	private final static String LIBRARY_BASE_NAME = "libEclipseStoreNativeMemory";
+	private final static String TEMP_DIR_PREFIX = "EclipseStoreNativeMemory";
 	
 	private final static String PROPERTY_OS_NAME = System.getProperty("os.name").toLowerCase();
 	private final static String PROPERTY_OS_ARCH = System.getProperty("os.arch").toLowerCase();
@@ -80,7 +92,7 @@ public class NativeLibraryJarLoader
 		
 		try ( InputStream in = NativeLibraryJarLoader.class.getResourceAsStream(source + targetFileName)) {
 			
-			File tmpDir = Files.createTempDirectory("EclipseStoreNativeMemory").toFile();
+			File tmpDir = Files.createTempDirectory(TEMP_DIR_PREFIX).toFile();
 			tmpDir.deleteOnExit();
 			File library = new File(tmpDir, targetFileName);
 			library.deleteOnExit();
