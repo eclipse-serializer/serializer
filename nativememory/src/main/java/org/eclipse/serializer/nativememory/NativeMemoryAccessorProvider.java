@@ -17,6 +17,10 @@ package org.eclipse.serializer.nativememory;
 import org.eclipse.serializer.memory.MemoryAccessor;
 import org.eclipse.serializer.memory.MemoryAccessorProvider;
 
+/**
+ * Simple java service provider for easy
+ * NativeMemoryAccessor setup.
+ */
 public class NativeMemoryAccessorProvider implements MemoryAccessorProvider
 {
 	@Override

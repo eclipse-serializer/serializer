@@ -20,7 +20,6 @@ import java.util.ServiceLoader;
 
 /**
  * Service loader for {@link MemoryAccessor}s.
- *
  */
 public final class MemoryAccessorResolver
 {

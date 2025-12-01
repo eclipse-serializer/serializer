@@ -29,8 +29,8 @@ import org.slf4j.Logger;
  * 
  * Or try to load a names library from the systems library path.
  * 
- * Please be aware that this class
- * 
+ * Please be aware that this depends on the release jar it is deployed
+ * with.
  */
 public class NativeLibraryJarLoader
 {
@@ -46,6 +46,8 @@ public class NativeLibraryJarLoader
 	private final static String OS_NAME;
 	private final static String OS_ARCH;
 	private final static String LIB_FILE_EXTENSION;
+	
+	private final static boolean initalized;
 	
 	static {
 		OS_NAME = switch(PROPERTY_OS_NAME) {
@@ -70,9 +72,17 @@ public class NativeLibraryJarLoader
 			case String os_name when os_name.startsWith("Darwin") ->".dylib";
 			default -> "UNKOWN";
 		};
+		
+		initalized = true;
 	}
 	
 	public static void loadNativeLibrary() {
+		
+		if(initalized) {
+			logger.info("native library allready initalized");
+			return;
+		}
+		
 		String libName = buildLibraryName();
 		logger.debug("loading native library: {}", libName);
 		String library = extractLibrary(JAR_NATIVEFOLDER, libName);
@@ -80,8 +90,14 @@ public class NativeLibraryJarLoader
 	};
 	
 	public static void loadNativeLibrary(String nativeLibrary) {
+		
+		if(initalized) {
+			logger.info("native library allready initalized");
+			return;
+		}
+		
 		logger.info("loading native library: {}", nativeLibrary);
-		System.load(nativeLibrary);
+		System.loadLibrary(nativeLibrary);
 	}
 		
 	private static String buildLibraryName() {
@@ -105,5 +121,8 @@ public class NativeLibraryJarLoader
 		}
 	}
 
+	private NativeLibraryJarLoader() {
+		// do not instantiate...
+	}
 
 }

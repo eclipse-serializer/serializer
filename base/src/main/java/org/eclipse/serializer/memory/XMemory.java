@@ -141,7 +141,9 @@ public final class XMemory
 		 * So far, the only known Java VM to not fully support Unsafe is Android.
 		 */
 		
-		
+		/**
+		 * Java 25 VM requires a new MemoryAccessor
+		 */
 		if(Runtime.version().feature() >= 25) {
 			MemoryAccessorResolver.resolve();
 		}
