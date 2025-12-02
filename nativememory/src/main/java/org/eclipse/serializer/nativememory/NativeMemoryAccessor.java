@@ -50,7 +50,14 @@ public class NativeMemoryAccessor implements MemoryAccessor
 		NativeLibraryJarLoader.loadNativeLibrary();
 		return new NativeMemoryAccessor();
 	}
-	
+
+    /**
+     * Initialize with a user defined library.
+     * The library must be named according to the rules of
+     * java.lang.System.loadLibrary(String)
+     *
+     * @param nativeLibrary the name of the library.
+     */
 	public static MemoryAccessor New(String nativeLibrary)
 	{
 		NativeLibraryJarLoader.loadNativeLibrary(nativeLibrary);
