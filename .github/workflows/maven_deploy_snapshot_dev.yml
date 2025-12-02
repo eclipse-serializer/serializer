@@ -45,5 +45,5 @@ jobs:
     secrets:
       MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
       MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
-      GPG_PASSPHRAS: ${{ secrets.ORG_GPG_PASSPHRASE }}
+      GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
       GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
