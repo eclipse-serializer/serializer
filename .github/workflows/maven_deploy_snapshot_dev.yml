@@ -38,3 +38,7 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
           MAVEN_GPG_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
+
+  build-native-jar:
+    needs: publish
+    uses: ./.github/workflows/maven_jni_25.yml

@@ -4,11 +4,7 @@
 name: Java Native Build 25
 
 on:
-  push:
-    branches: 
-      - '**'
-  pull_request:
-    branches: [ main ]
+  workflow_call:
 
 jobs:
   build-native:
@@ -123,4 +119,3 @@ jobs:
         with:
           name: final-jar
           path: nativememory/target/nativememory-*.jar
-
