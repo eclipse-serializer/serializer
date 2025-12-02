@@ -58,7 +58,6 @@
 		<module>communication</module>
 		<module>persistence</module>
 		<module>serializer</module>
-        <module>nativememory</module>
 	</modules>
 
 	<scm>
