@@ -5,6 +5,10 @@ name: Java Native Build 25
 
 on:
   workflow_call:
+    inputs:
+      project-version:
+        required: true
+        type: string
     secrets:
       MAVEN_USERNAME:
         required: true
@@ -122,6 +126,9 @@ jobs:
         with:
           path: nativememory/target/libs
           merge-multiple: 'true'
+
+      - name: Set project version
+        run: mvn versions:set -DnewVersion=${{ inputs.project-version }} --batch-mode
 
       - name: Deploy final JAR
         run: |
