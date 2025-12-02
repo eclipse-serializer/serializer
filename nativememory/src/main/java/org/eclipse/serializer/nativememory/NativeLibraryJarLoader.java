@@ -22,13 +22,13 @@ import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
 /**
- * Helper class to load the NativeMemoryAccosser native code library.
- * Try to detect the current os and architectuer, extract a matching
- * dynimac linked library from the jar this class is deplyed with to
+ * Helper class to load the NativeMemoryAccessor native code library.
+ * Try to detect the current os and architecture, extract a matching
+ * dynamic linked library from the jar this class is deployed with to
  * system temp dir and load the lib.
- * 
+ * <br>
  * Or try to load a names library from the systems library path.
- * 
+ * <br>
  * Please be aware that this depends on the release jar it is deployed
  * with.
  */
@@ -36,7 +36,7 @@ public class NativeLibraryJarLoader
 {
 	private final static Logger logger = Logging.getLogger(NativeMemoryAccessor.class);
 	
-	private final static String JAR_NATIVEFOLDER = "/native/";
+	private final static String JAR_LIB_FOLDER = "/native/";
 	private final static String LIBRARY_BASE_NAME = "libEclipseStoreNativeMemory";
 	private final static String TEMP_DIR_PREFIX = "EclipseStoreNativeMemory";
 	
@@ -47,7 +47,7 @@ public class NativeLibraryJarLoader
 	private final static String OS_ARCH;
 	private final static String LIB_FILE_EXTENSION;
 	
-	private static boolean initalized;
+	private static boolean initialized;
 	
 	static {
 		OS_NAME = switch(PROPERTY_OS_NAME) {
@@ -55,14 +55,14 @@ public class NativeLibraryJarLoader
 			case String os_name when os_name.startsWith("linux") -> "ubuntu";
 			case String os_name when os_name.startsWith("mac") -> "macos";
 			case String os_name when os_name.startsWith("Darwin") -> "macos";
-			default -> "UNKOWN";
+			default -> "UNKNOWN";
 		};
 		
 		OS_ARCH = switch(PROPERTY_OS_ARCH) {
 			case String os_name when os_name.contains("aarch64") -> "arm";
 			case String os_name when os_name.contains("arm64") -> "arm";
 			case String os_name when os_name.contains("amd64") -> "x86_64";
-			default -> "UNKOWN";
+			default -> "UNKNOWN";
 		};
 		
 		LIB_FILE_EXTENSION = switch(PROPERTY_OS_NAME) {
@@ -70,43 +70,43 @@ public class NativeLibraryJarLoader
 			case String os_name when os_name.startsWith("linux") -> ".so";
 			case String os_name when os_name.startsWith("mac") -> ".dylib";
 			case String os_name when os_name.startsWith("Darwin") ->".dylib";
-			default -> "UNKOWN";
+			default -> "UNKNOWN";
 		};
 	}
 	
 	public static synchronized void loadNativeLibrary() {
 		
-		if(initalized) {
-			logger.debug("native library allready initalized");
+		if(initialized) {
+			logger.debug("native library already initialized");
 			return;
 		}
 		
 		String libName = buildLibraryName();
 		logger.info("loading native library: {}", libName);
-		String library = extractLibrary(JAR_NATIVEFOLDER, libName);
+		String library = extractLibrary(libName);
 		System.load(library);
-		initalized = true;
-	};
+		initialized = true;
+	}
 	
 	public static synchronized void loadNativeLibrary(String nativeLibrary) {
 		
-		if(initalized) {
-			logger.debug("native library allready initalized");
+		if(initialized) {
+			logger.debug("native library already initialized");
 			return;
 		}
 		
 		logger.info("loading native library: {}", nativeLibrary);
 		System.loadLibrary(nativeLibrary);
-		initalized = true;
+		initialized = true;
 	}
 		
 	private static String buildLibraryName() {
 		return LIBRARY_BASE_NAME + "-" + OS_NAME + "-" + OS_ARCH + LIB_FILE_EXTENSION;
 	}
 		
-	private static String extractLibrary(String source, String targetFileName) {
+	private static String extractLibrary(String targetFileName) {
 		
-		try ( InputStream in = NativeLibraryJarLoader.class.getResourceAsStream(source + targetFileName)) {
+		try ( InputStream in = NativeLibraryJarLoader.class.getResourceAsStream(JAR_LIB_FOLDER + targetFileName)) {
 			
 			File tmpDir = Files.createTempDirectory(TEMP_DIR_PREFIX).toFile();
 			tmpDir.deleteOnExit();
@@ -117,7 +117,7 @@ public class NativeLibraryJarLoader
 			return library.toString();
 			
 		} catch (Exception e) {
-			throw new RuntimeException("failed to extract native library" + source + targetFileName + " to temp directory!", e);
+			throw new RuntimeException("failed to extract native library" + JAR_LIB_FOLDER + targetFileName + " to temp directory!", e);
 		}
 	}
 

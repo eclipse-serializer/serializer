@@ -16,7 +16,6 @@ package org.eclipse.serializer.memory;
 
 /**
  * Java Service Provider
- * 
  * Provides an {@link MemoryAccessor}
  */
 public interface MemoryAccessorProvider

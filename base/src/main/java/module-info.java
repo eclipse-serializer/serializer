@@ -13,7 +13,7 @@
  */
 module org.eclipse.serializer.base
 {
-	/* All packages are exported */
+    /* All packages are exported */
 	exports org.eclipse.serializer.branching;
 	exports org.eclipse.serializer.bytes;
 	exports org.eclipse.serializer.chars;
@@ -54,5 +54,6 @@ module org.eclipse.serializer.base
 	requires transitive jdk.unsupported;
 	requires transitive org.slf4j;
 
+    uses org.eclipse.serializer.memory.MemoryAccessorProvider;
 }
 

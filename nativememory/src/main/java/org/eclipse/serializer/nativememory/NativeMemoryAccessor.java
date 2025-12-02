@@ -20,16 +20,12 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
-import org.eclipse.serializer.exceptions.MemoryException;
 import org.eclipse.serializer.functional.DefaultInstantiator;
 import org.eclipse.serializer.memory.MemoryAccessor;
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.memory.sun.JdkInstantiatorBlank;
 import org.eclipse.serializer.typing.XTypes;
-import org.eclipse.serializer.util.logging.Logging;
-import org.slf4j.Logger;
 
 
 /**
@@ -40,17 +36,9 @@ import org.slf4j.Logger;
 public class NativeMemoryAccessor implements MemoryAccessor
 {
 	///////////////////////////////////////////////////////////////////////////
-	// static fields //
-	//////////////////
-	
-	private final static Logger logger = Logging.getLogger(NativeMemoryAccessor.class);
-	
-	///////////////////////////////////////////////////////////////////////////
 	// fields //
 	///////////
-	
-	private final HashTable<Class<?>, Field[]> objectFieldsRegistry = HashTable.New();
-	
+
 	private final DefaultInstantiator classInstantiator = JdkInstantiatorBlank.New();
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -70,7 +58,6 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	public NativeMemoryAccessor() {
 		super();
 	}
-
 
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
@@ -326,7 +313,7 @@ public class NativeMemoryAccessor implements MemoryAccessor
 
 		for(int i = 0; i < target.length; i++)
 		{
-			target[i] = segment.get(ValueLayout.JAVA_BOOLEAN, i + 0);
+			target[i] = segment.get(ValueLayout.JAVA_BOOLEAN, i);
 		}
 	}
 
@@ -455,23 +442,6 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	// class initialization //
 	/////////////////////////
 
-	private static void validateObjectFieldsNotNull(final Field[] objectFields, final Class<?> c)
-	{
-		if(objectFields == null)
-		{
-			throw new MemoryException("No object fields registered for " + c + ".");
-		}
-	}
-	
-	private static RuntimeException createInvalidOffsetException(
-			final Field[]  objectFields,
-			final Class<?> c           ,
-			final int      offset
-		)
-	{
-		return new MemoryException("Unknown object field offset " + offset + " for " + c + ".");
-	}
-	
 	@Override
 	public void ensureClassInitialized(final Class<?> c) {
 		try
@@ -504,7 +474,6 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	@Override
 	public void volatileSet_long(final Object subject, final long address, final long value) {
 		notImplemented();
-		return;
 	}
 
 	@Override
