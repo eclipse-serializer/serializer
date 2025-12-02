@@ -49,8 +49,10 @@ public class NativeLibraryJarLoader
 	
 	private static boolean initialized;
 	
-	static {
-		OS_NAME = switch(PROPERTY_OS_NAME) {
+	static
+	{
+		OS_NAME = switch(PROPERTY_OS_NAME)
+		{
 			case String os_name when os_name.startsWith("windows") -> "windows";
 			case String os_name when os_name.startsWith("linux") -> "ubuntu";
 			case String os_name when os_name.startsWith("mac") -> "macos";
@@ -58,14 +60,16 @@ public class NativeLibraryJarLoader
 			default -> "UNKNOWN";
 		};
 		
-		OS_ARCH = switch(PROPERTY_OS_ARCH) {
+		OS_ARCH = switch(PROPERTY_OS_ARCH)
+		{
 			case String os_name when os_name.contains("aarch64") -> "arm";
 			case String os_name when os_name.contains("arm64") -> "arm";
 			case String os_name when os_name.contains("amd64") -> "x86_64";
 			default -> "UNKNOWN";
 		};
 		
-		LIB_FILE_EXTENSION = switch(PROPERTY_OS_NAME) {
+		LIB_FILE_EXTENSION = switch(PROPERTY_OS_NAME)
+		{
 			case String os_name when os_name.startsWith("windows") -> ".dll";
 			case String os_name when os_name.startsWith("linux") -> ".so";
 			case String os_name when os_name.startsWith("mac") -> ".dylib";
@@ -74,9 +78,10 @@ public class NativeLibraryJarLoader
 		};
 	}
 	
-	public static synchronized void loadNativeLibrary() {
-		
-		if(initialized) {
+	public static synchronized void loadNativeLibrary()
+	{
+		if(initialized)
+		{
 			logger.debug("native library already initialized");
 			return;
 		}
@@ -88,9 +93,10 @@ public class NativeLibraryJarLoader
 		initialized = true;
 	}
 	
-	public static synchronized void loadNativeLibrary(String nativeLibrary) {
-		
-		if(initialized) {
+	public static synchronized void loadNativeLibrary(String nativeLibrary)
+	{
+		if(initialized)
+		{
 			logger.debug("native library already initialized");
 			return;
 		}
@@ -100,14 +106,15 @@ public class NativeLibraryJarLoader
 		initialized = true;
 	}
 		
-	private static String buildLibraryName() {
+	private static String buildLibraryName()
+	{
 		return LIBRARY_BASE_NAME + "-" + OS_NAME + "-" + OS_ARCH + LIB_FILE_EXTENSION;
 	}
 		
-	private static String extractLibrary(String targetFileName) {
-		
-		try ( InputStream in = NativeLibraryJarLoader.class.getResourceAsStream(JAR_LIB_FOLDER + targetFileName)) {
-			
+	private static String extractLibrary(String targetFileName)
+	{
+		try ( InputStream in = NativeLibraryJarLoader.class.getResourceAsStream(JAR_LIB_FOLDER + targetFileName))
+		{
 			File tmpDir = Files.createTempDirectory(TEMP_DIR_PREFIX).toFile();
 			tmpDir.deleteOnExit();
 			File library = new File(tmpDir, targetFileName);
@@ -116,12 +123,15 @@ public class NativeLibraryJarLoader
 			Files.copy(in, library.toPath());
 			return library.toString();
 			
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			throw new RuntimeException("failed to extract native library" + JAR_LIB_FOLDER + targetFileName + " to temp directory!", e);
 		}
 	}
 
-	private NativeLibraryJarLoader() {
+	private NativeLibraryJarLoader()
+	{
 		// do not instantiate...
 	}
 

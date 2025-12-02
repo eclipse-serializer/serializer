@@ -45,17 +45,20 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	// constructors //
 	/////////////////
 	
-	public static MemoryAccessor New() {
+	public static MemoryAccessor New()
+	{
 		NativeLibraryJarLoader.loadNativeLibrary();
 		return new NativeMemoryAccessor();
 	}
 	
-	public static MemoryAccessor New(String nativeLibrary) {
+	public static MemoryAccessor New(String nativeLibrary)
+	{
 		NativeLibraryJarLoader.loadNativeLibrary(nativeLibrary);
 		return new NativeMemoryAccessor();
 	}
 			
-	public NativeMemoryAccessor() {
+	public NativeMemoryAccessor()
+	{
 		super();
 	}
 
@@ -63,7 +66,8 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	// static methods //
 	///////////////////
 	
-	private static void notImplemented() {
+	private static void notImplemented()
+	{
 		throw new RuntimeException("not implemented");
 	}
 	
@@ -72,7 +76,8 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	////////////
 
 	@Override
-	public void guaranteeUsability() {
+	public void guaranteeUsability()
+	{
 		//no-op
 	}
 
@@ -81,12 +86,14 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	///////////////
 
 	@Override
-	public ByteBuffer allocateDirectNative(final int capacity) {
+	public ByteBuffer allocateDirectNative(final int capacity)
+	{
 		return ByteBuffer.allocateDirect(capacity).order(ByteOrder.nativeOrder());
 	}
 
 	@Override
-	public ByteBuffer allocateDirectNative(final long capacity) {
+	public ByteBuffer allocateDirectNative(final long capacity)
+	{
 		return ByteBuffer.allocateDirect((int)capacity).order(ByteOrder.nativeOrder());
 	}
 	
@@ -94,18 +101,20 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	public native long getDirectByteBufferAddress(final ByteBuffer directBuffer);
 
 	@Override
-	public boolean deallocateDirectByteBuffer(final ByteBuffer directBuffer) {
-		//notImplemented();
+	public boolean deallocateDirectByteBuffer(final ByteBuffer directBuffer)
+	{
 		return false;
 	}
 
 	@Override
-	public boolean isDirectByteBuffer(final ByteBuffer byteBuffer) {
+	public boolean isDirectByteBuffer(final ByteBuffer byteBuffer)
+	{
 		return XTypes.isDirectByteBuffer(byteBuffer);
 	}
 
 	@Override
-	public ByteBuffer guaranteeDirectByteBuffer(final ByteBuffer directBuffer) {
+	public ByteBuffer guaranteeDirectByteBuffer(final ByteBuffer directBuffer)
+	{
 		return XTypes.guaranteeDirectByteBuffer(directBuffer);
 	}
 
@@ -295,20 +304,23 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	/////////////////////
 	
 	@Override
-	public void copyRange(final long sourceAddress, final long targetAddress, final long length) {
+	public void copyRange(final long sourceAddress, final long targetAddress, final long length)
+	{
 		final MemorySegment srcSegment = MemorySegment.ofAddress(sourceAddress).reinterpret(length);
 		final MemorySegment dstSegment = MemorySegment.ofAddress(targetAddress).reinterpret(length);
 		MemorySegment.copy(srcSegment, 0, dstSegment, 0, length);
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final byte[] target) {
+	public void copyRangeToArray(final long sourceAddress, final byte[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length);
 		MemorySegment.copy(segment, ValueLayout.JAVA_BYTE, 0, target, 0, target.length);
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final boolean[] target) {
+	public void copyRangeToArray(final long sourceAddress, final boolean[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length);
 
 		for(int i = 0; i < target.length; i++)
@@ -318,89 +330,103 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final short[] target) {
+	public void copyRangeToArray(final long sourceAddress, final short[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length * Short.BYTES);
 		MemorySegment.copy(segment, ValueLayout.JAVA_SHORT_UNALIGNED, 0, target, 0, target.length);
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final char[] target) {
+	public void copyRangeToArray(final long sourceAddress, final char[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length * Character.BYTES);
 		MemorySegment.copy(segment, ValueLayout.JAVA_CHAR_UNALIGNED, 0, target, 0, target.length);
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final int[] target) {
+	public void copyRangeToArray(final long sourceAddress, final int[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length * Integer.BYTES);
 		MemorySegment.copy(segment, ValueLayout.JAVA_INT_UNALIGNED, 0, target, 0, target.length);
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final float[] target) {
+	public void copyRangeToArray(final long sourceAddress, final float[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length * Float.BYTES);
 		MemorySegment.copy(segment, ValueLayout.JAVA_FLOAT_UNALIGNED, 0, target, 0, target.length);
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final long[] target) {
+	public void copyRangeToArray(final long sourceAddress, final long[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length * Long.BYTES);
 		MemorySegment.copy(segment, ValueLayout.JAVA_LONG_UNALIGNED, 0, target, 0, target.length);
 	}
 
 	@Override
-	public void copyRangeToArray(final long sourceAddress, final double[] target) {
+	public void copyRangeToArray(final long sourceAddress, final double[] target)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(sourceAddress).reinterpret(target.length * Double.BYTES);
 		MemorySegment.copy(segment, ValueLayout.JAVA_DOUBLE_UNALIGNED, 0, target, 0, target.length);
 	}
 	
 	@Override
-	public void copyArrayToAddress(final byte[] array, final long targetAddress) {
+	public void copyArrayToAddress(final byte[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length);
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_BYTE, 0, array.length);
 	}
 
 	@Override
-	public void copyArrayToAddress(final boolean[] array, final long targetAddress) {
-
+	public void copyArrayToAddress(final boolean[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length);
 
-		for (int i = 0; i < array.length; i++) {
+		for (int i = 0; i < array.length; i++)
+		{
 			segment.set(ValueLayout.JAVA_BOOLEAN, i, array[i]);
 		}
 	}
 
 	@Override
-	public void copyArrayToAddress(final short[] array, final long targetAddress) {
+	public void copyArrayToAddress(final short[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Short.BYTES);
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_SHORT_UNALIGNED, 0, array.length);
 	}
 
 	@Override
-	public void copyArrayToAddress(final char[] array, final long targetAddress) {
+	public void copyArrayToAddress(final char[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Character.BYTES);
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_CHAR_UNALIGNED, 0, array.length);
 	}
 
 	@Override
-	public void copyArrayToAddress(final int[] array, final long targetAddress) {
+	public void copyArrayToAddress(final int[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Integer.BYTES);
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_INT_UNALIGNED, 0, array.length);
 	}
 
 	@Override
-	public void copyArrayToAddress(final float[] array, final long targetAddress) {
+	public void copyArrayToAddress(final float[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Float.BYTES);
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_FLOAT_UNALIGNED, 0, array.length);
 	}
 
 	@Override
-	public void copyArrayToAddress(final long[] array, final long targetAddress) {
+	public void copyArrayToAddress(final long[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Long.BYTES);
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_LONG_UNALIGNED, 0, array.length);
 	}
 
 	@Override
-	public void copyArrayToAddress(final double[] array, final long targetAddress) {
+	public void copyArrayToAddress(final double[] array, final long targetAddress)
+	{
 		final MemorySegment segment = MemorySegment.ofAddress(targetAddress).reinterpret(array.length * Double.BYTES);
 		MemorySegment.copy(array, 0, segment, ValueLayout.JAVA_DOUBLE_UNALIGNED, 0, array.length);
 	}
@@ -443,7 +469,8 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	/////////////////////////
 
 	@Override
-	public void ensureClassInitialized(final Class<?> c) {
+	public void ensureClassInitialized(final Class<?> c)
+	{
 		try
 		{
 			Class.forName(c.getName(), true, c.getClassLoader());
@@ -455,7 +482,8 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	}
 
 	@Override
-	public <T> T instantiateBlank(final Class<T> c) throws InstantiationRuntimeException {
+	public <T> T instantiateBlank(final Class<T> c) throws InstantiationRuntimeException
+	{
 		return this.classInstantiator.instantiate(c);
 	}
 	
@@ -466,43 +494,50 @@ public class NativeMemoryAccessor implements MemoryAccessor
 
 
 	@Override
-	public long volatileGet_long(final Object subject, final long address) {
+	public long volatileGet_long(final Object subject, final long address)
+	{
 		notImplemented();
 		return 0;
 	}
 
 	@Override
-	public void volatileSet_long(final Object subject, final long address, final long value) {
+	public void volatileSet_long(final Object subject, final long address, final long value)
+	{
 		notImplemented();
 	}
 
 	@Override
-	public boolean compareAndSwap_int(final Object subject, final long address, final int expected, final int replacement) {
-		notImplemented();
-		return false;
-	}
-
-	@Override
-	public boolean compareAndSwap_long(final Object subject, final long address, final long expected, final long replacement) {
+	public boolean compareAndSwap_int(final Object subject, final long address, final int expected, final int replacement)
+	{
 		notImplemented();
 		return false;
 	}
 
 	@Override
-	public boolean compareAndSwapObject(final Object subject, final long address, final Object expected, final Object replacement) {
+	public boolean compareAndSwap_long(final Object subject, final long address, final long expected, final long replacement)
+	{
+		notImplemented();
+		return false;
+	}
+
+	@Override
+	public boolean compareAndSwapObject(final Object subject, final long address, final Object expected, final Object replacement)
+	{
 		notImplemented();
 		return false;
 	}
 
 	
 	@Override
-	public MemoryStatistics createHeapMemoryStatistics() {
+	public MemoryStatistics createHeapMemoryStatistics()
+	{
 		notImplemented();
 		return null;
 	}
 
 	@Override
-	public MemoryStatistics createNonHeapMemoryStatistics() {
+	public MemoryStatistics createNonHeapMemoryStatistics()
+	{
 		notImplemented();
 		return null;
 	}

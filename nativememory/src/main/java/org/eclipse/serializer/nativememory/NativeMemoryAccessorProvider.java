@@ -24,7 +24,8 @@ import org.eclipse.serializer.memory.MemoryAccessorProvider;
 public class NativeMemoryAccessorProvider implements MemoryAccessorProvider
 {
 	@Override
-	public MemoryAccessor create() {
+	public MemoryAccessor create()
+	{
 		return NativeMemoryAccessor.New();
 	}
 }
