@@ -75,96 +75,126 @@ public interface UsageMarkable
 	{
 		return new UsageMarkable.Default();
 	}
-	
-	
-	public class Default implements UsageMarkable
-	{
-		///////////////////////////////////////////////////////////////////////////
-		// instance fields //
-		////////////////////
-		
-		private final transient HashEnum<Object> usageMarks = HashEnum.New();
-		
-				
-		
-		///////////////////////////////////////////////////////////////////////////
-		// constructors //
-		/////////////////
-		
-		protected Default()
-		{
-			super();
-		}
-		
-		protected Default(final XGettingCollection<Object> usageMarks)
-		{
-			super();
-			this.usageMarks.addAll(this.usageMarks);
-		}
-		
-		
 
-		///////////////////////////////////////////////////////////////////////////
-		// methods //
-		////////////
-		
-		@Override
-		public int markUsedFor(final Object instance)
-		{
-			// lock internal instance to avoid side effect deadlocks
-			synchronized(this.usageMarks)
-			{
-				final boolean added = this.usageMarks.add(instance);
-				
-				return this.usageMarks.intSize() * (added ? 1 : -1);
-			}
-		}
-		
-		@Override
-		public int unmarkUsedFor(final Object instance)
-		{
-			// lock internal instance to avoid side effect deadlocks
-			synchronized(this.usageMarks)
-			{
-				final boolean removed = this.usageMarks.removeOne(instance);
-				
-				return this.usageMarks.intSize() * (removed ? 1 : -1);
-			}
-		}
-		
-		@Override
-		public boolean isUsed()
-		{
-			// lock internal instance to avoid side effect deadlocks
-			synchronized(this.usageMarks)
-			{
-				return this.usageMarks != null && !this.usageMarks.isEmpty();
-			}
-		}
 
-		@Override
-		public int markUnused()
-		{
-			// lock internal instance to avoid side effect deadlocks
-			synchronized(this.usageMarks)
-			{
-				final int currentSize = this.usageMarks.intSize();
-				this.usageMarks.clear();
-				
-				return currentSize;
-			}
-		}
+    public class Default implements UsageMarkable
+    {
+        ///////////////////////////////////////////////////////////////////////////
+        // instance fields //
+        ////////////////////
 
-		@Override
-		public void accessUsageMarks(final Consumer<? super XGettingEnum<Object>> logic)
-		{
-			// lock internal instance to avoid side effect deadlocks
-			synchronized(this.usageMarks)
-			{
-				// no null check to give logic a chance to notice no-marks case.
-				logic.accept(this.usageMarks);
-			}
-		}
-	}
+        /*
+         * Lazy-initialized field to ensure non-null instance after this instance has been restored
+         * out of a persistent context.
+         */
+        private transient volatile HashEnum<Object> usageMarks;
+
+
+        ///////////////////////////////////////////////////////////////////////////
+        // constructors //
+        /////////////////
+
+        protected Default()
+        {
+            super();
+        }
+
+        protected Default(final XGettingCollection<Object> usageMarks)
+        {
+            super();
+            this.usageMarks().addAll(usageMarks);
+        }
+
+
+
+        ///////////////////////////////////////////////////////////////////////////
+        // methods //
+        ////////////
+
+        private HashEnum<Object> usageMarks()
+        {
+            /*
+             * Double-checked locking to reduce the overhead of acquiring a lock
+             * by testing the locking criterion.
+             * The field (this.usageMarks) has to be volatile.
+             */
+            HashEnum<Object> usageMarks = this.usageMarks;
+            if(usageMarks == null)
+            {
+                synchronized(this)
+                {
+                    if((usageMarks = this.usageMarks) == null)
+                    {
+                        usageMarks = this.usageMarks = HashEnum.New();
+                    }
+                }
+            }
+            return usageMarks;
+        }
+
+        @Override
+        public int markUsedFor(final Object instance)
+        {
+            // lock internal instance to avoid side effect deadlocks
+            final HashEnum<Object> usageMarks;
+            synchronized((usageMarks = this.usageMarks()))
+            {
+                final boolean added = usageMarks.add(instance);
+
+                return usageMarks.intSize() * (added ? 1 : -1);
+            }
+        }
+
+        @Override
+        public int unmarkUsedFor(final Object instance)
+        {
+            // lock internal instance to avoid side effect deadlocks
+            final HashEnum<Object> usageMarks;
+            synchronized((usageMarks = this.usageMarks()))
+            {
+                final boolean removed = usageMarks.removeOne(instance);
+
+                return usageMarks.intSize() * (removed ? 1 : -1);
+            }
+        }
+
+        @Override
+        public boolean isUsed()
+        {
+            // lock internal instance to avoid side effect deadlocks
+            final HashEnum<Object> usageMarks;
+            synchronized((usageMarks = this.usageMarks()))
+            {
+                return !usageMarks.isEmpty();
+            }
+        }
+
+        @Override
+        public int markUnused()
+        {
+            // lock internal instance to avoid side effect deadlocks
+            final HashEnum<Object> usageMarks;
+            synchronized((usageMarks = this.usageMarks()))
+            {
+                final int currentSize = usageMarks.intSize();
+                usageMarks.clear();
+
+                return currentSize;
+            }
+        }
+
+        @Override
+        public void accessUsageMarks(final Consumer<? super XGettingEnum<Object>> logic)
+        {
+            // lock internal instance to avoid side effect deadlocks
+            final HashEnum<Object> usageMarks;
+            synchronized((usageMarks = this.usageMarks()))
+            {
+                // no null check to give logic a chance to notice no-marks case.
+                logic.accept(usageMarks);
+            }
+        }
+
+    }
 		
 }
