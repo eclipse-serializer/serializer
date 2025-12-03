@@ -54,7 +54,7 @@ public class NativeLibraryJarLoader
 		OS_NAME = switch(PROPERTY_OS_NAME)
 		{
 			case String os_name when os_name.startsWith("windows") -> "windows";
-			case String os_name when os_name.startsWith("linux") -> "ubuntu";
+			case String os_name when os_name.startsWith("linux") -> "linux";
 			case String os_name when os_name.startsWith("mac") -> "macos";
 			case String os_name when os_name.startsWith("Darwin") -> "macos";
 			default -> "UNKNOWN";
