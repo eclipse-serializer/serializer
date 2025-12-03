@@ -16,6 +16,7 @@ package org.eclipse.serializer.nativememory;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 
 import org.eclipse.serializer.util.logging.Logging;
@@ -38,6 +39,7 @@ public class NativeLibraryJarLoader
 	
 	private final static String JAR_LIB_FOLDER = "/native/";
 	private final static String LIBRARY_BASE_NAME = "libEclipseStoreNativeMemory";
+	private final static String LIBRARY_FALLBACK_BASE_NAME = "EclipseStoreNativeMemory";
 	private final static String TEMP_DIR_PREFIX = "EclipseStoreNativeMemory";
 	
 	private final static String PROPERTY_OS_NAME = System.getProperty("os.name").toLowerCase();
@@ -46,6 +48,9 @@ public class NativeLibraryJarLoader
 	private final static String OS_NAME;
 	private final static String OS_ARCH;
 	private final static String LIB_FILE_EXTENSION;
+
+	private static final String NATIVE_LIBRARY_NAME;
+	private static final String NATIVE_LIBRARY_FALLBACK_NAME;
 	
 	private static boolean initialized;
 	
@@ -76,6 +81,9 @@ public class NativeLibraryJarLoader
 			case String os_name when os_name.startsWith("Darwin") ->".dylib";
 			default -> "UNKNOWN";
 		};
+		
+		NATIVE_LIBRARY_NAME = JAR_LIB_FOLDER + LIBRARY_BASE_NAME + "-" + OS_NAME + "-" + OS_ARCH + LIB_FILE_EXTENSION;
+		NATIVE_LIBRARY_FALLBACK_NAME = JAR_LIB_FOLDER + LIBRARY_FALLBACK_BASE_NAME + LIB_FILE_EXTENSION;
 	}
 	
 	public static synchronized void loadNativeLibrary()
@@ -86,9 +94,9 @@ public class NativeLibraryJarLoader
 			return;
 		}
 		
-		String libName = buildLibraryName();
-		logger.info("loading native library: {}", libName);
-		String library = extractLibrary(libName);
+		URL libUrl = getJarLibraryURL();
+		String library = extractLibrary(libUrl);
+		logger.info("loading native library: {}", library);
 		System.load(library);
 		initialized = true;
 	}
@@ -113,18 +121,18 @@ public class NativeLibraryJarLoader
 		initialized = true;
 	}
 		
-	private static String buildLibraryName()
+	private static String extractLibrary(URL libUrl)
 	{
-		return LIBRARY_BASE_NAME + "-" + OS_NAME + "-" + OS_ARCH + LIB_FILE_EXTENSION;
-	}
+		if(libUrl == null)
+		{
+			throw new RuntimeException("No matching native library found in jar!");
+		}
 		
-	private static String extractLibrary(String targetFileName)
-	{
-		try ( InputStream in = NativeLibraryJarLoader.class.getResourceAsStream(JAR_LIB_FOLDER + targetFileName))
+		try (InputStream in = libUrl.openStream())
 		{
 			File tmpDir = Files.createTempDirectory(TEMP_DIR_PREFIX).toFile();
 			tmpDir.deleteOnExit();
-			File library = new File(tmpDir, targetFileName);
+			File library = new File(tmpDir, libUrl.getFile());
 			library.deleteOnExit();
 			
 			Files.copy(in, library.toPath());
@@ -133,8 +141,23 @@ public class NativeLibraryJarLoader
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException("failed to extract native library " + JAR_LIB_FOLDER + targetFileName + " to temp directory!", e);
+			throw new RuntimeException("failed to extract native library " + JAR_LIB_FOLDER + libUrl + " to temp directory!", e);
 		}
+	}
+
+	private static URL getJarLibraryURL()
+	{
+		URL url = NativeLibraryJarLoader.class.getResource(NATIVE_LIBRARY_NAME);
+		if(url == null)
+		{
+			logger.error("library {} not found!", NATIVE_LIBRARY_NAME);
+			url = NativeLibraryJarLoader.class.getResource(NATIVE_LIBRARY_FALLBACK_NAME);
+			if(url == null)
+			{
+				logger.error("library {} not found!", NATIVE_LIBRARY_FALLBACK_NAME);
+			}
+		}
+		return url;
 	}
 
 	private NativeLibraryJarLoader()
