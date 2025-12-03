@@ -92,7 +92,14 @@ public class NativeLibraryJarLoader
 		System.load(library);
 		initialized = true;
 	}
-	
+
+    /**
+     * Load user defined library.
+     * The library must be named according to the rules of
+     * java.lang.System.loadLibrary(String)
+     *
+     * @param nativeLibrary the name of the library.
+     */
 	public static synchronized void loadNativeLibrary(String nativeLibrary)
 	{
 		if(initialized)
