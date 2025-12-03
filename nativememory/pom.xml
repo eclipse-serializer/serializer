@@ -71,14 +71,6 @@
                                         ${project.basedir}
                                     </sourcePath>
                                     <projectDirectory>${project.build.directory}/cmake</projectDirectory>
-                                    <generator>
-                                    </generator>
-                                    <environmentVariables>
-                                        <key>value</key>
-                                    </environmentVariables>
-                                    <options>
-                                        <option>-DBUILD_THIRDPARTY:bool=on</option>
-                                    </options>
                                 </configuration>
                             </execution>
                             <execution>
@@ -87,16 +79,9 @@
                                     <goal>compile</goal>
                                 </goals>
                                 <configuration>
-                                    <config>
-                                        <!-- Optional: the build configuration (e.g.
-                                        "x64|Release") -->
-                                    </config>
                                     <projectDirectory>
                                         ${project.build.directory}/cmake
                                     </projectDirectory>
-                                    <environmentVariables>
-                                        <key>value</key>
-                                    </environmentVariables>
                                 </configuration>
                             </execution>
                         </executions>
