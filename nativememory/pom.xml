@@ -1,99 +1,36 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.eclipse.serializer</groupId>
-        <artifactId>serializer-parent</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-    </parent>
-    <artifactId>nativememory</artifactId>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.eclipse.serializer</groupId>
+		<artifactId>serializer-parent</artifactId>
+		<version>4.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>nativememory</artifactId>
 
-    <name>Eclipse Serializer NativeMemory</name>
-    <description>Native Memory access module of the Eclipse Serializer Framework</description>
-    <url>https://projects.eclipse.org/projects/technology.serializer</url>
+	<name>Eclipse Serializer NativeMemory</name>
+	<description>Native Memory access module of the Eclipse Serializer Framework</description>
+	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 
-    <properties>
-        <maven.compiler.release>22</maven.compiler.release>
-        <native.lib.name>EclipseStoreNativeMemory</native.lib.name>
-    </properties>
+	<properties>
+		<maven.compiler.release>22</maven.compiler.release>
+		<maven.java.version.minimum>22</maven.java.version.minimum>
+	</properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.eclipse.serializer</groupId>
-            <artifactId>base</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <!-- Extension to detect OS/Arch automatically -->
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.1</version>
-            </extension>
-        </extensions>
-
-        <plugins>
-            <!-- 1. Generate JNI Headers -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-headers</id>
-                        <phase>compile</phase> <!-- Headers need compiled classes -->
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <compilerArgs>
-                                <arg>-h</arg>
-                                <arg>${project.basedir}/src/main/cpp</arg>
-                            </compilerArgs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- 2. Include everything from target/libs into the JAR -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-natives-to-jar</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/native</outputDirectory>
-                            <overwrite>true</overwrite>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.directory}/libs</directory>
-                                    <includes>
-                                        <include>**/*</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+	<dependencies>
+		<dependency>
+			<groupId>org.eclipse.serializer</groupId>
+			<artifactId>base</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+	</dependencies>
 
     <profiles>
-        <!-- Profile for Local Compilation (Active by default, skipped in CI deploy step) -->
         <profile>
             <id>native-build</id>
             <activation>
@@ -101,7 +38,25 @@
             </activation>
             <build>
                 <plugins>
-                    <!-- Compile C++ Code -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>generate-headers</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <compilerArgs>
+                                        <arg>-h</arg>
+                                        <arg>${project.basedir}/src/main/cpp</arg>
+                                    </compilerArgs>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>io.github.cmake-maven-plugin</groupId>
                         <artifactId>cmake-maven-plugin</artifactId>
@@ -112,8 +67,15 @@
                                     <goal>generate</goal>
                                 </goals>
                                 <configuration>
-                                    <sourcePath>${project.basedir}</sourcePath>
+                                    <sourcePath>
+                                        ${project.basedir}
+                                    </sourcePath>
                                     <projectDirectory>${project.build.directory}/cmake</projectDirectory>
+                                    <generator>
+                                    </generator>
+                                    <environmentVariables>
+                                        <key>value</key>
+                                    </environmentVariables>
                                     <options>
                                         <option>-DBUILD_THIRDPARTY:bool=on</option>
                                     </options>
@@ -125,112 +87,56 @@
                                     <goal>compile</goal>
                                 </goals>
                                 <configuration>
-                                    <config>Release</config>
-                                    <projectDirectory>${project.build.directory}/cmake</projectDirectory>
+                                    <config>
+                                        <!-- Optional: the build configuration (e.g.
+                                        "x64|Release") -->
+                                    </config>
+                                    <projectDirectory>
+                                        ${project.build.directory}/cmake
+                                    </projectDirectory>
+                                    <environmentVariables>
+                                        <key>value</key>
+                                    </environmentVariables>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-                    <!-- Rename and move to target/libs so resources-plugin finds it -->
+        <profile>
+            <id>package-natives</id>
+            <activation>
+                <property>
+                    <name>native-build</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
-                                <id>package-native-artifact</id>
-                                <phase>process-classes</phase> <!-- Before prepare-package -->
+                                <id>copy-natives-to-classes</id>
+                                <phase>prepare-package</phase>
                                 <goals>
-                                    <goal>run</goal>
+                                    <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <target>
-                                        <mkdir dir="${project.build.directory}/libs"/>
-
-                                        <!-- Load Maven properties into Ant for safer access -->
-                                        <property name="os.raw" value="${os.detected.name}"/>
-                                        <property name="arch.raw" value="${os.detected.arch}"/>
-
-                                        <echo message="[DEBUG] Raw OS: ${os.raw}, Raw Arch: ${arch.raw}"/>
-
-                                        <!-- Define extension based on OS -->
-                                        <condition property="native.ext" value="dll">
-                                            <os family="windows"/>
-                                        </condition>
-                                        <condition property="native.ext" value="dylib">
-                                            <os family="mac"/>
-                                        </condition>
-                                        <condition property="native.ext" value="so">
-                                            <not>
-                                                <isset property="native.ext"/>
-                                            </not>
-                                        </condition>
-
-                                        <!-- Define prefix (empty on windows) -->
-                                        <condition property="lib.prefix" value="">
-                                            <os family="windows"/>
-                                        </condition>
-                                        <condition property="lib.prefix" value="lib">
-                                            <not>
-                                                <isset property="lib.prefix"/>
-                                            </not>
-                                        </condition>
-
-                                        <!-- NORMALIZE OS Name (osx -> macos) to match CI naming -->
-                                        <condition property="os.normalized" value="macos">
-                                            <equals arg1="${os.raw}" arg2="osx"/>
-                                        </condition>
-                                        <condition property="os.normalized" value="${os.raw}">
-                                            <not>
-                                                <isset property="os.normalized"/>
-                                            </not>
-                                        </condition>
-
-                                        <!-- NORMALIZE Arch (amd64 -> x86_64, aarch64/aarch_64 -> arm64) -->
-                                        <!-- Note: Ant properties are immutable (first set wins), so we check specific cases first -->
-
-                                        <!-- Case 1: AMD64 -->
-                                        <condition property="arch.normalized" value="x86_64">
-                                            <equals arg1="${arch.raw}" arg2="amd64"/>
-                                        </condition>
-
-                                        <!-- Case 2: AARCH64 (standard) -->
-                                        <condition property="arch.normalized" value="arm64">
-                                            <equals arg1="${arch.raw}" arg2="aarch64"/>
-                                        </condition>
-
-                                        <!-- Case 3: AARCH_64 (mac/os-maven-plugin specific quirk) -->
-                                        <condition property="arch.normalized" value="arm64">
-                                            <equals arg1="${arch.raw}" arg2="aarch_64"/>
-                                        </condition>
-
-                                        <!-- Case 4: Fallback (use raw) -->
-                                        <condition property="arch.normalized" value="${arch.raw}">
-                                            <not>
-                                                <isset property="arch.normalized"/>
-                                            </not>
-                                        </condition>
-
-                                        <!-- Construct target name using NORMALIZED values -->
-                                        <property name="target.name"
-                                                  value="${lib.prefix}${native.lib.name}-${os.normalized}-${arch.normalized}.${native.ext}"/>
-
-                                        <echo message="Renaming native lib in libs/ to: ${target.name}"/>
-
-                                        <!--
-                                            MOVE logic:
-                                            Finds the file in 'libs' (recursively, to handle Windows Release/ subfolder),
-                                            and moves it to 'libs/NewName'.
-                                            This ensures the original bad name is gone and only the new one remains.
-                                        -->
-                                        <move todir="${project.build.directory}/libs" flatten="true" overwrite="true">
-                                            <fileset dir="${project.build.directory}/libs">
-                                                <include name="**/${lib.prefix}${native.lib.name}.${native.ext}"/>
-                                            </fileset>
-                                            <mapper type="glob" from="*" to="${target.name}"/>
-                                        </move>
-                                    </target>
+                                    <outputDirectory>${project.build.outputDirectory}/native</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}/libs</directory>
+                                            <includes>
+                                                <include>**/*</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>
@@ -239,4 +145,7 @@
             </build>
         </profile>
     </profiles>
+
+
+
 </project>
