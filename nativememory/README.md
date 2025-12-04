@@ -32,8 +32,9 @@ NativeMemoryAccessor.New("EclipseStoreNativeMemory");
 ## Building the native code locally
 
 Prerequisites:
-- a C++ 11 compatible compiler
+- C++ 11 compatible compiler
 - CMake version 3.12 or greater
+- JAVA_HOME set 
 
 switch to a projects '\target' sub folder
 
