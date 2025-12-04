@@ -136,7 +136,7 @@ public class NativeLibraryJarLoader
 			File library = new File(tmpDir, libUrl.getFile());
 			library.deleteOnExit();
 			
-			logger.debug("Extracting library {} from jar to {} temp directory {}", libUrl.getFile(), library);
+			logger.debug("Extracting library {} from jar to {} temp directory {}", libUrl.getFile(), library, tmpDir);
 			
 			Files.copy(in, library.toPath());
 			return library.toString();
