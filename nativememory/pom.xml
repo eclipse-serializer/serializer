@@ -79,6 +79,9 @@
                                     <goal>compile</goal>
                                 </goals>
                                 <configuration>
+                                <config>
+							          "Release"
+							        </config>
                                     <projectDirectory>
                                         ${project.build.directory}/cmake
                                     </projectDirectory>
