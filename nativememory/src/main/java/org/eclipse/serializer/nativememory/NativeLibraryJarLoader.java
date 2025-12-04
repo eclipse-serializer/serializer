@@ -155,7 +155,7 @@ public class NativeLibraryJarLoader
 			url = NativeLibraryJarLoader.class.getResource(NATIVE_LIBRARY_FALLBACK_NAME);
 			if(url == null)
 			{
-				logger.error("alterate library {} not found!", NATIVE_LIBRARY_FALLBACK_NAME);
+				logger.error("alternate library {} not found!", NATIVE_LIBRARY_FALLBACK_NAME);
 			}
 		}
 		return url;
