@@ -39,7 +39,6 @@ public class NativeLibraryJarLoader
 	
 	private final static String JAR_LIB_FOLDER = "/native/";
 	private final static String LIBRARY_BASE_NAME = "libEclipseStoreNativeMemory";
-	private final static String LIBRARY_FALLBACK_BASE_NAME = "EclipseStoreNativeMemory";
 	private final static String TEMP_DIR_PREFIX = "EclipseStoreNativeMemory";
 	
 	private final static String PROPERTY_OS_NAME = System.getProperty("os.name").toLowerCase();
@@ -84,7 +83,7 @@ public class NativeLibraryJarLoader
 		};
 		
 		NATIVE_LIBRARY_NAME = JAR_LIB_FOLDER + LIBRARY_BASE_NAME + "-" + OS_NAME + "-" + OS_ARCH + LIB_FILE_EXTENSION;
-		NATIVE_LIBRARY_FALLBACK_NAME = JAR_LIB_FOLDER + LIBRARY_FALLBACK_BASE_NAME + LIB_FILE_EXTENSION;
+		NATIVE_LIBRARY_FALLBACK_NAME = JAR_LIB_FOLDER + LIBRARY_BASE_NAME + LIB_FILE_EXTENSION;
 	}
 	
 	public static synchronized void loadNativeLibrary()

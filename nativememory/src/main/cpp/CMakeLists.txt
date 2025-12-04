@@ -10,6 +10,8 @@ else()
     message (STATUS "JNI NOT FOUND")
 endif()
 
+set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
+
 add_library (EclipseStoreNativeMemory SHARED 
 	 
 	"org_eclipse_serializer_nativememory_NativeMemoryAccessor.cpp" "org_eclipse_serializer_nativememory_NativeMemoryAccessor.h")
