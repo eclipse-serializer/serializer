@@ -133,7 +133,8 @@ public class NativeLibraryJarLoader
 		{
 			File tmpDir = Files.createTempDirectory(TEMP_DIR_PREFIX).toFile();
 			tmpDir.deleteOnExit();
-			File library = new File(tmpDir, libUrl.getFile());
+		
+			File library = new File(tmpDir, new File(libUrl.getFile()).getName());
 			library.deleteOnExit();
 			
 			logger.debug("Extracting library {} from jar to {} temp directory {}", libUrl.getFile(), library, tmpDir);
