@@ -64,7 +64,7 @@ jobs:
               mkdir build
               cd build
               cmake .. && cmake --build . --config Release
-              copy ..\target\libs\Release\EclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
+              copy ..\target\libs\EclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
 
           - os: macos-latest
             arch: x86_64
