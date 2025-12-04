@@ -67,10 +67,10 @@ public class NativeLibraryJarLoader
 		
 		OS_ARCH = switch(PROPERTY_OS_ARCH)
 		{
-			case String os_name when os_name.contains("aarch64") -> "arm64";
-			case String os_name when os_name.contains("arm64") -> "arm64";
-			case String os_name when os_name.contains("amd64") -> "x86_64";
-			case String os_name when os_name.contains("x86_64") -> "x86_64";
+			case String os_arch when os_arch.contains("aarch64") -> "arm64";
+			case String os_arch when os_arch.contains("arm64") -> "arm64";
+			case String os_arch when os_arch.contains("amd64") -> "x86_64";
+			case String os_arch when os_arch.contains("x86_64") -> "x86_64";
 			default -> "UNKNOWN";
 		};
 		
