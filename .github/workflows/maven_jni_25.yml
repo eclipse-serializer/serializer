@@ -66,7 +66,7 @@ jobs:
               cmake .. && cmake --build . --config Release
               copy ..\target\libs\EclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
 
-          - os: macos-latest
+          - os: macos-15-intel
             arch: x86_64
             ext: dylib
             build-cmd: |
