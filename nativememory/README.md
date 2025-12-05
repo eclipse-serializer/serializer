@@ -3,7 +3,18 @@ The Native Memory Accessor module provides a Java 25 upwards compatible implemen
 
 Please note that we only support a limited set of operating systems and architectures.
 If your system is not supported please try to build the required native library by yourself.
-See [Building the native code locally](#Building-the-native-code-locally).
+See [Building locally](#Building-locally).
+
+
+## Supported systems
+| Operating system | Architecture |
+|:-----------------|:-------------|
+| Linux            | 64Bit x86    |
+| Linux            | 64Bit arm    |
+| Windows          | 64Bit x86    |
+| Mac OS           | 64Bit x86    |
+| Mac OS           | 64Bit arm    |
+
 
 ## Usage
 ### Maven
@@ -21,21 +32,28 @@ By default, the required library will be loaded automatically if
 
 ### Manual setup
 - ensure that the 'nativememory' module is on the class path.
-- set up the java library path to include the native library
+- build or extract the native library from the jar to a custom folder.
+- set up the java library path to include the native libraries' directory.
 
 - initialize the NativeMemoryAccessor in code before it is used,
 the library must be named according to the rules defined by java.lang.System.loadLibrary(String).
 ```java
-NativeMemoryAccessor.New("EclipseStoreNativeMemory");
+NativeMemoryAccessor.New("libEclipseStoreNativeMemory");
 ```
 
-## Building the native code locally
+## Building locally
 
-Prerequisites:
+### Prerequisites:
 - C++ 11 compatible compiler
 - CMake version 3.12 or greater
-- JAVA_HOME set 
+- configure JAVA_HOME
 
+### building with maven
+If running a local maven build the created jar only contains the native libraries
+build for the current system, this library is named 'libEclipseStoreNativeMemory' without
+os or architecture postfixes.
+
+### building the native library using Cmake
 switch to a projects '\target' sub folder
 
 configure the local build
