@@ -7,8 +7,9 @@ on:
   workflow_call:
     inputs:
       project-version:
-        required: true
+        required: false
         type: string
+        default: UNCHANGED
     secrets:
       MAVEN_USERNAME:
         required: true
@@ -128,6 +129,7 @@ jobs:
           merge-multiple: 'true'
 
       - name: Set project version
+        if: ${{ inputs.project-version != 'UNCHANGED' && inputs.project-version != '' }}
         run: mvn versions:set -DnewVersion=${{ inputs.project-version }} --batch-mode
 
       - name: Deploy final JAR
