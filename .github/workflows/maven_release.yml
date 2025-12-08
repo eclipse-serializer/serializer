@@ -1,4 +1,3 @@
- 
 # This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
 # For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
 
@@ -31,3 +30,16 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
           MAVEN_GPG_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
+
+  build-native-jar:
+    needs: publish
+    # Call the reusable workflow in the same repository after publish completes.
+    uses: ./.github/workflows/maven_jni_25.yml
+    with:
+      # pass release tag as project-version input (adjust input name if the reusable workflow expects a different key)
+      project-version: ${{ github.event.release.tag_name }}
+    secrets:
+      MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
+      MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
+      GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
+      GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
