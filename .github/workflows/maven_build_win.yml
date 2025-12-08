@@ -5,24 +5,34 @@ name: Java CI Windows with Maven
 
 on:
   push:
-    branches: 
+    branches:
       - '**'
   pull_request:
     branches: [ main ]
 
 jobs:
   build:
-
     runs-on: windows-latest
 
     steps:
-      #Build with java 17
-    - uses: actions/checkout@v3
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: 'maven'
-    - name: Build with Maven
-      run: mvn -B clean package --file pom.xml
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -B clean package --file pom.xml
+
+  build-native-jar:
+    needs: build
+    # Calls to a reusable workflow in the same repository must be at the job level.
+    uses: ./.github/workflows/maven_jni_25.yml
+    with:
+      project-version: UNCHANGED
+    secrets:
+      MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
+      MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
+      GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
+      GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
