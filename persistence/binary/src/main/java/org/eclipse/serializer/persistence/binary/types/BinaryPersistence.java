@@ -1,5 +1,10 @@
 package org.eclipse.serializer.persistence.binary.types;
 
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Optional;
+
 /*-
  * #%L
  * Eclipse Serializer Persistence Binary
@@ -24,20 +29,90 @@ import org.eclipse.serializer.functional.InstanceDispatcherLogic;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
 import org.eclipse.serializer.persistence.binary.java.io.BinaryHandlerFile;
-import org.eclipse.serializer.persistence.binary.java.lang.*;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerBoolean;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerByte;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerCharacter;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerClass;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerDouble;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerFloat;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerInteger;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerLong;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_boolean;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_byte;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_char;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_double;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_float;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_int;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_long;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerNativeArray_short;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerObject;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerShort;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerString;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerStringBuffer;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerStringBuilder;
+import org.eclipse.serializer.persistence.binary.java.lang.BinaryHandlerVoid;
 import org.eclipse.serializer.persistence.binary.java.math.BinaryHandlerBigDecimal;
 import org.eclipse.serializer.persistence.binary.java.math.BinaryHandlerBigInteger;
-import org.eclipse.serializer.persistence.binary.java.net.*;
+import org.eclipse.serializer.persistence.binary.java.net.BinaryHandlerInet4Address;
+import org.eclipse.serializer.persistence.binary.java.net.BinaryHandlerInet6Address;
+import org.eclipse.serializer.persistence.binary.java.net.BinaryHandlerInetAddress;
+import org.eclipse.serializer.persistence.binary.java.net.BinaryHandlerInetSocketAddress;
+import org.eclipse.serializer.persistence.binary.java.net.BinaryHandlerURI;
+import org.eclipse.serializer.persistence.binary.java.net.BinaryHandlerURL;
 import org.eclipse.serializer.persistence.binary.java.nio.file.BinaryHandlerPath;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlDate;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTime;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTimestamp;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerLocalDate;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerPeriod;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerZoneOffset;
-import org.eclipse.serializer.persistence.binary.java.util.*;
-import org.eclipse.serializer.persistence.binary.java.util.concurrent.*;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayDeque;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayList;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerBitSet;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerCopyOnWriteArrayList;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerCopyOnWriteArraySet;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerCurrency;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerDate;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerHashMap;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerHashSet;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerHashtable;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerIdentityHashMap;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerImmutableCollectionsList12;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerImmutableCollectionsSet12;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedHashMap;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedHashSet;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedList;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLocale;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptionalDouble;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptionalInt;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptionalLong;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerPriorityQueue;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerProperties;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerSetFromMap;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerStack;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerTreeMap;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerTreeSet;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerVector;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerWeakHashMap;
+import org.eclipse.serializer.persistence.binary.java.util.concurrent.BinaryHandlerConcurrentHashMap;
+import org.eclipse.serializer.persistence.binary.java.util.concurrent.BinaryHandlerConcurrentLinkedDeque;
+import org.eclipse.serializer.persistence.binary.java.util.concurrent.BinaryHandlerConcurrentLinkedQueue;
+import org.eclipse.serializer.persistence.binary.java.util.concurrent.BinaryHandlerConcurrentSkipListMap;
+import org.eclipse.serializer.persistence.binary.java.util.concurrent.BinaryHandlerConcurrentSkipListSet;
 import org.eclipse.serializer.persistence.binary.java.util.regex.BinaryHandlerPattern;
-import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.*;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerBulkList;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerConstHashEnum;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerConstHashTable;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerConstList;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqBulkList;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqConstHashEnum;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqConstHashTable;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqHashEnum;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqHashTable;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerHashEnum;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerHashTable;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerLimitList;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerSingleton;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.lazy.BinaryHandlerLazyArrayList;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.lazy.BinaryHandlerLazyHashMap;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.lazy.BinaryHandlerLazyHashMapSegmentEntryList;
@@ -45,16 +120,20 @@ import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collecti
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.reference.BinaryHandlerControlledLazy;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.reference.BinaryHandlerLazyDefault;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.util.BinaryHandlerSubstituterDefault;
-import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.persistence.types.Persistence;
+import org.eclipse.serializer.persistence.types.PersistenceCustomTypeHandlerRegistry;
+import org.eclipse.serializer.persistence.types.PersistenceFunction;
+import org.eclipse.serializer.persistence.types.PersistenceSizedArrayLengthController;
+import org.eclipse.serializer.persistence.types.PersistenceTypeDictionary;
+import org.eclipse.serializer.persistence.types.PersistenceTypeDictionaryFileHandler;
+import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
+import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerCreator;
+import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
+import org.eclipse.serializer.persistence.types.PersistenceTypeIdLookup;
 import org.eclipse.serializer.reference.Referencing;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.VMInfo;
-
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Optional;
 
 public final class BinaryPersistence extends Persistence
 {
@@ -168,7 +247,7 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerLocale.New()  ,
 				BinaryHandlerCurrency.New(),
 				BinaryHandlerPattern.New() ,
-
+								
 				BinaryHandlerInetAddress.New() ,
 				BinaryHandlerInet4Address.New(),
 				BinaryHandlerInet6Address.New(),
@@ -192,6 +271,8 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerOptionalDouble.New(),
 				
 				BinaryHandlerBitSet.New(),
+				
+				BinaryHandlerLocalDate.New(),
 
 			/* (12.11.2019 TM)NOTE:
 			 * One might think that "empty" implementations of a collection interface would have no fields, anyway.
@@ -324,7 +405,7 @@ public final class BinaryPersistence extends Persistence
 	@SuppressWarnings("unchecked")
 	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> platformDependentHandlers()
 	{
-		VMInfo vmInfo = new VMInfo.Default();
+		final VMInfo vmInfo = new VMInfo.Default();
 		
 		final BulkList<PersistenceTypeHandler<Binary, ?>> platformDependentHandlers = BulkList.New();
 		
