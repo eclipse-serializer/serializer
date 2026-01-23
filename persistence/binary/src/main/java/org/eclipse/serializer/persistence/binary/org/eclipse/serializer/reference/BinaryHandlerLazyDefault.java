@@ -18,6 +18,7 @@ import java.lang.reflect.Constructor;
 
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
@@ -96,6 +97,15 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 		if(referent == null)
 		{
 			referenceOid = instance.objectId();
+			
+			if(instance.$getLoader() != handler.getObjectRetriever())
+			{
+				throw new PersistenceException(
+						"Cannot persist an unloaded lazy reference to another storage. " +
+								"The referenced object is not loaded and its state is unknown. " +
+								"Persisting it would result in data loss."
+				);
+			}
 		}
 		else
 		{
