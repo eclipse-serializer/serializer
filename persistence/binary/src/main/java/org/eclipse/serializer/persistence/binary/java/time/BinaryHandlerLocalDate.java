@@ -26,7 +26,7 @@ import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
  * Required for java &ge; 26 because of transient fields and
  * changed binary format of YearMonth implementation.
  * 
- * Binary Format must be compatibe with java < 26 versions!
+ * Binary Format must be compatibe with java &lt; 26 versions!
  * 
  */
 public class BinaryHandlerLocalDate extends AbstractBinaryHandlerCustomNonReferentialFixedLength<LocalDate>
