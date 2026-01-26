@@ -21,6 +21,14 @@ import org.eclipse.serializer.persistence.binary.types.Binary;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
+/**
+ * Binary Handler for java.time.LocalDate
+ * Required for java &ge; 26 because of transient fields and
+ * changed binary format of YearMonth implementation.
+ * 
+ * Binary Format must be compatibe with java < 26 versions!
+ * 
+ */
 public class BinaryHandlerLocalDate extends AbstractBinaryHandlerCustomNonReferentialFixedLength<LocalDate>
 {
 	static final long BINARY_OFFSET_YEAR   = 0L;

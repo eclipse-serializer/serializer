@@ -23,7 +23,7 @@ import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
 /**
  * Binary Handler for java.time.MonthDay
- * Required for java >= 26 because of transient fields and
+ * Required for java &ge; 26 because of transient fields and
  * changed binary format of MonthDay implementation.
  * 
  * Binary Format must be compatibe with java < 26 versions!
