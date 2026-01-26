@@ -953,7 +953,7 @@ public final class JdkInternals
 		}
 		else
 		{
-			VM.ensureClassInitialized(c);
+			throw new Error("Method ensureInitialized not found in class MethodHandles.Lookup.");
 		}
 	}
 

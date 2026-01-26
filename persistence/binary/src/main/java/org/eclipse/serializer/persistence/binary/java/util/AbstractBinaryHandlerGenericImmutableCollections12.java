@@ -23,6 +23,7 @@ import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.reference.Swizzling;
+import org.eclipse.serializer.reflect.XReflect;
 
 /**
  * Generic abstract class for specialized handler for
@@ -81,9 +82,11 @@ public abstract class AbstractBinaryHandlerGenericImmutableCollections12<T> exte
 				CustomField(Object.class, "e0"),
 				CustomField(Object.class, "e1")
 				));
+		
+		this.memoryOffset_e0 = (int) XMemory.objectFieldOffset(XReflect.getAnyField(type, "e0"));
+		this.memoryOffset_e1 = (int) XMemory.objectFieldOffset(XReflect.getAnyField(type, "e1"));
 
-		this.memoryOffset_e0 = XMemory.byteSizeObjectHeader(type);
-		this.memoryOffset_e1 = this.memoryOffset_e0 + XMemory.byteSizeReference();
+		
 	}
 
 

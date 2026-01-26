@@ -16,12 +16,14 @@ package org.eclipse.serializer.memory.sun;
 
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import org.eclipse.serializer.exceptions.InstantiationRuntimeException;
 import org.eclipse.serializer.memory.MemoryAccessor;
 import org.eclipse.serializer.memory.MemorySizeProperties;
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.typing.XTypes;
+import org.eclipse.serializer.util.X;
 
 public final class JdkMemoryAccessor implements MemoryAccessor, MemorySizeProperties
 {
@@ -54,6 +56,20 @@ public final class JdkMemoryAccessor implements MemoryAccessor, MemorySizeProper
 	
 	
 	// direct byte buffer handling //
+	
+	@Override
+	public ByteBuffer allocateDirectNative(final int capacity) {
+		return ByteBuffer
+				.allocateDirect(capacity)
+				.order(ByteOrder.nativeOrder())	;
+	}
+
+	@Override
+	public ByteBuffer allocateDirectNative(final long capacity) {
+		return this.allocateDirectNative(
+				X.checkArrayRange(capacity)
+			);
+	}
 	
 	@Override
 	public final long getDirectByteBufferAddress(final ByteBuffer directBuffer)

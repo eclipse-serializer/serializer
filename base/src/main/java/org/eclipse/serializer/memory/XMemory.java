@@ -39,9 +39,9 @@ public final class XMemory
 	// constants //
 	//////////////
 
-	public static MemoryAccessor       MEMORY_ACCESSOR         ;
-	public static MemoryAccessor       MEMORY_ACCESSOR_REVERSED;
-	static MemorySizeProperties MEMORY_SIZE_PROPERTIES  ;
+	public static MemoryAccessor MEMORY_ACCESSOR         ;
+	public static MemoryAccessor MEMORY_ACCESSOR_REVERSED;
+	static MemorySizeProperties	 MEMORY_SIZE_PROPERTIES  ;
 
 	static
 	{
@@ -90,7 +90,6 @@ public final class XMemory
 				AndroidAdapter::setupFull,
 				entry("org.graalvm.nativeimage.imagecode")
 			)
-
 			// add additional checks here
 		);
 	}
@@ -141,6 +140,14 @@ public final class XMemory
 		 * as much compatibility as possible, including Unsafe.
 		 * So far, the only known Java VM to not fully support Unsafe is Android.
 		 */
+		
+		/**
+		 * Java 25 VM requires a new MemoryAccessor
+		 */
+		if(Runtime.version().feature() >= 25) {
+			MemoryAccessorResolver.resolve();
+		}
+		
 		setMemoryHandling(JdkMemoryAccessor.New());
 	}
 
@@ -361,20 +368,20 @@ public final class XMemory
 		return 4096;
 	}
 
-	public static final int byteSizeInstance(final Class<?> c)
-	{
-		return MEMORY_SIZE_PROPERTIES.byteSizeInstance(c);
-	}
-
-	public static final int byteSizeObjectHeader(final Class<?> c)
-	{
-		return MEMORY_SIZE_PROPERTIES.byteSizeObjectHeader(c);
-	}
-
-	public static final long byteSizeArrayObject(final long elementCount)
-	{
-		return MEMORY_SIZE_PROPERTIES.byteSizeArrayObject(elementCount);
-	}
+//	public static final int byteSizeInstance(final Class<?> c)
+//	{
+//		return MEMORY_SIZE_PROPERTIES.byteSizeInstance(c);
+//	}
+//
+//	public static final int byteSizeObjectHeader(final Class<?> c)
+//	{
+//		return MEMORY_SIZE_PROPERTIES.byteSizeObjectHeader(c);
+//	}
+//
+//	public static final long byteSizeArrayObject(final long elementCount)
+//	{
+//		return MEMORY_SIZE_PROPERTIES.byteSizeArrayObject(elementCount);
+//	}
 
 	public static final int byteSizePrimitive(final Class<?> type)
 	{
@@ -842,17 +849,12 @@ public final class XMemory
 	 */
 	public static final ByteBuffer allocateDirectNative(final int capacity) throws IllegalArgumentException
 	{
-		return ByteBuffer
-			.allocateDirect(capacity)
-			.order(ByteOrder.nativeOrder())
-		;
+		return MEMORY_ACCESSOR.allocateDirectNative(capacity);
 	}
 
 	public static final ByteBuffer allocateDirectNative(final long capacity) throws IllegalArgumentException
 	{
-		return allocateDirectNative(
-			X.checkArrayRange(capacity)
-		);
+		return MEMORY_ACCESSOR.allocateDirectNative(capacity);
 	}
 
 	public static final byte[] toArray(final ByteBuffer source)

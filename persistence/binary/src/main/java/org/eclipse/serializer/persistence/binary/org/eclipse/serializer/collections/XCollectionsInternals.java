@@ -17,7 +17,6 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
 import org.eclipse.serializer.collections.*;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.memory.XMemory;
-import org.eclipse.serializer.memory.sun.JdkInternals;
 import org.eclipse.serializer.reflect.XReflect;
 
 import java.lang.reflect.Field;
@@ -88,7 +87,7 @@ final class XCollectionsInternals
 				{
 					if(field.getName().equals(declaredFieldName))
 					{
-						return JdkInternals.VM().objectFieldOffset(field);
+						return XMemory.objectFieldOffset(field);
 					}
 				}
 			}
