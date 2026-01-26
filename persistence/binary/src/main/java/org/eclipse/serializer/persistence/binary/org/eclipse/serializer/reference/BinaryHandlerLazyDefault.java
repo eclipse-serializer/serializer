@@ -98,7 +98,7 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 		{
 			referenceOid = instance.objectId();
 			
-			if(instance.$getLoader() != handler.getObjectRetriever())
+			if(referenceOid != 0 && instance.$getLoader() != handler.getObjectRetriever())
 			{
 				throw new PersistenceException(
 						"Cannot persist an unloaded lazy reference to another storage. " +
