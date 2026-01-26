@@ -64,7 +64,9 @@ import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlDate;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTime;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTimestamp;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerLocalDate;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerMonthDay;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerPeriod;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerYearMonth;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerZoneOffset;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayDeque;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayList;
@@ -273,6 +275,8 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerBitSet.New(),
 				
 				BinaryHandlerLocalDate.New(),
+				BinaryHandlerYearMonth.New(),
+				BinaryHandlerMonthDay.New(),
 
 			/* (12.11.2019 TM)NOTE:
 			 * One might think that "empty" implementations of a collection interface would have no fields, anyway.

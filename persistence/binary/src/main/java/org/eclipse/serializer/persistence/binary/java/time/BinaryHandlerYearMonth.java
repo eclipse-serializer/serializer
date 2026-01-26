@@ -14,7 +14,7 @@ package org.eclipse.serializer.persistence.binary.java.time;
  * #L%
  */
 
-import java.time.LocalDate;
+import java.time.YearMonth;
 
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomNonReferentialFixedLength;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -22,27 +22,26 @@ import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
 /**
- * Binary Handler for java.time.LocalDate
+ * Binary Handler for java.time.YearMonth
  * Required for java &ge; 26 because of transient fields and
  * changed binary format of YearMonth implementation.
  * 
  * Binary Format must be compatibe with java &lt; 26 versions!
  * 
  */
-public class BinaryHandlerLocalDate extends AbstractBinaryHandlerCustomNonReferentialFixedLength<LocalDate>
+public class BinaryHandlerYearMonth extends AbstractBinaryHandlerCustomNonReferentialFixedLength<YearMonth>
 {
 	static final long BINARY_OFFSET_YEAR   = 0L;
 	static final long BINARY_OFFSET_MONTH  = BINARY_OFFSET_YEAR  + Integer.BYTES;
-	static final long BINARY_OFFSET_DAY    = BINARY_OFFSET_MONTH + Short.BYTES;
-	static final long BINARY_LENGTH        = BINARY_OFFSET_DAY   + Short.BYTES;
+	static final long BINARY_LENGTH        = BINARY_OFFSET_MONTH + Integer.BYTES;
 	
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
 	///////////////////
 	
-	public static BinaryHandlerLocalDate New()
+	public static BinaryHandlerYearMonth New()
 	{
-		return new BinaryHandlerLocalDate();
+		return new BinaryHandlerYearMonth();
 	}
 
 	
@@ -50,14 +49,13 @@ public class BinaryHandlerLocalDate extends AbstractBinaryHandlerCustomNonRefere
 	// constructors //
 	/////////////////
 
-	protected BinaryHandlerLocalDate()
+	protected BinaryHandlerYearMonth()
 	{
 		super(
-			LocalDate.class,
+			YearMonth.class,
 			CustomFields(
-				CustomField(int.class,   "year"  ),
-				CustomField(short.class, "month" ),
-				CustomField(short.class, "day"   )
+				CustomField(int.class, "year"  ),
+				CustomField(int.class, "month" )
 			)
 		);
 	}
@@ -67,28 +65,26 @@ public class BinaryHandlerLocalDate extends AbstractBinaryHandlerCustomNonRefere
 	////////////
 	///
 	@Override
-	public void updateState(final Binary data, final LocalDate instance, final PersistenceLoadHandler handler)
+	public void updateState(final Binary data, final YearMonth instance, final PersistenceLoadHandler handler)
 	{
 		// no-op
 	}
 
 	@Override
-	public void store(final Binary data, final LocalDate instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
+	public void store(final Binary data, final YearMonth instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
 		data.storeEntityHeader(BINARY_LENGTH, this.typeId(), objectId);
 		
-		data.store_int  (BINARY_OFFSET_YEAR  , instance.getYear());
-		data.store_short(BINARY_OFFSET_MONTH , (short)instance.getMonthValue());
-		data.store_short(BINARY_OFFSET_DAY   , (short)instance.getDayOfMonth());
+		data.store_int (BINARY_OFFSET_YEAR  , instance.getYear());
+		data.store_int (BINARY_OFFSET_MONTH , instance.getMonthValue());
 	}
 
 	@Override
-	public LocalDate create(final Binary data, final PersistenceLoadHandler handler)
+	public YearMonth create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		return LocalDate.of(
-			data.read_int  (BINARY_OFFSET_YEAR),
-			data.read_short(BINARY_OFFSET_MONTH),
-			data.read_short(BINARY_OFFSET_DAY));
+		return YearMonth.of(
+			data.read_int (BINARY_OFFSET_YEAR),
+			data.read_int (BINARY_OFFSET_MONTH));
 	}
 
 }
