@@ -1,5 +1,10 @@
 package org.eclipse.serializer.persistence.types;
 
+import static org.eclipse.serializer.util.X.notNull;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 /*-
  * #%L
  * Eclipse Serializer Persistence
@@ -31,11 +36,6 @@ import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
-
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import static org.eclipse.serializer.util.X.notNull;
 
 
 public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager, PersistenceTypeHandlerRegistry<D>
@@ -94,7 +94,7 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 	
 	public void checkForPendingRootInstances();
 	
-	public void checkForPendingRootsStoring(PersistenceStoring storingCallback);
+	public void checkForPendingRootsStoring(PersistenceStoringCallback storingCallback);
 	
 	public void clearStorePendingRoots();
 	
@@ -809,15 +809,18 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		}
 		
 		@Override
-		public void checkForPendingRootsStoring(final PersistenceStoring storingCallback)
+		public void checkForPendingRootsStoring(final PersistenceStoringCallback storingCallback)
 		{
 			if(this.pendingStoreRoot == null)
 			{
+				logger.debug("No pending root store");
 				// nothing pending
 				return;
 			}
 			
-			storingCallback.store(this.pendingStoreRoot);
+			logger.debug("pendingStoreRoot {}", this.pendingStoreRoot.entries());
+			
+			storingCallback.forceRootStore(this.pendingStoreRoot);
 		}
 		
 		@Override
@@ -834,6 +837,7 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		{
 			synchronized(this.typeHandlerRegistry)
 			{
+				logger.debug("registering enum constant {}", typeHandler.typeName() );
 				// might fail if meanwhile already added. Should not happen, but who knows ...
 				PersistenceTypeHandlerManager.registerEnumContantRoots(
 					this.pendingEnumConstantRootStoringHandlers,

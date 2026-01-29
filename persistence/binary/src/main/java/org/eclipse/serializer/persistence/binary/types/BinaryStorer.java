@@ -32,8 +32,10 @@ import org.eclipse.serializer.persistence.types.PersistenceLocalObjectIdRegistry
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
 import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
 import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
+import org.eclipse.serializer.persistence.types.PersistenceRoots;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStorer;
+import org.eclipse.serializer.persistence.types.PersistenceStoringCallback;
 import org.eclipse.serializer.persistence.types.PersistenceTarget;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
@@ -45,7 +47,7 @@ import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
 
-public interface BinaryStorer extends PersistenceStorer
+public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallback
 {
 	@Override
 	public PersistenceStorer reinitialize();
@@ -859,9 +861,38 @@ public interface BinaryStorer extends PersistenceStorer
 
 			return objectId;
 		}
-		
-		
-				
+
+
+
+		@Override
+		public void forceRootStore(final PersistenceRoots pendingStoreRoot) {
+			
+			logger.debug("Storing updated root {}", pendingStoreRoot);
+			
+			long rootOid;
+			if(Swizzling.isFoundId(rootOid = this.lookupOid(pendingStoreRoot)))
+			{
+				this.registerGuaranteed(rootOid, pendingStoreRoot, null);
+			}
+			else
+			{
+				rootOid = this.registerGuaranteed(notNull(pendingStoreRoot));
+			}
+									
+			if(!this.isProcessingItems)
+			{
+				try
+				{
+					this.isProcessingItems = true;
+					this.processItems();
+				}
+				finally
+				{
+					this.isProcessingItems = false;
+				}
+			}
+		}
+						
 	}
 	
 	/**

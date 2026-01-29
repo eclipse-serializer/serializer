@@ -35,9 +35,10 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfe
 import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
 import org.eclipse.serializer.persistence.types.PersistenceIdSet;
 import org.eclipse.serializer.persistence.types.PersistenceManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
 import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
+import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
+import org.eclipse.serializer.persistence.types.PersistenceRoots;
 import org.eclipse.serializer.persistence.types.PersistenceSource;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStorer;
@@ -571,7 +572,7 @@ public interface Serializer<M> extends AutoCloseable
 			 * Not implemented!
 			 */
 			@Override
-			public long store(Object instance, long objectId)
+			public long store(final Object instance, final long objectId)
 			{
 				throw new NotImplementedYetError();
 			}
@@ -608,7 +609,7 @@ public interface Serializer<M> extends AutoCloseable
 			}
 			
 			@Override
-			public void registerRegistrationListener(PersistenceObjectRegistrationListener listener)
+			public void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
 			{
 				throw new NotImplementedYetError();
 			}
@@ -776,6 +777,14 @@ public interface Serializer<M> extends AutoCloseable
 					this.link        = link       ;
 				}
 
+			}
+
+
+
+			@Override
+			public void forceRootStore(final PersistenceRoots pendingStoreRoot) {
+				// TODO Auto-generated method stub
+				throw new NotImplementedYetError();
 			}
 			
 		}
