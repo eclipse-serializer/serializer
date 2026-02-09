@@ -148,7 +148,8 @@ public final class XMemory
 		{
 			if(MemoryAccessorResolver.resolve() == null) 
 			{
-				throw new RuntimeException("No MemoryAccessor implementation found! Please check if you added the nativeMemory dependency required for java 25 and greater!");
+				throw new RuntimeException("No MemoryAccessor implementation found! "
+					+ "Please check if you added the nativeMemory dependency required for java 25 and greater or see the project documentation!");
 			};
 		}
 		
