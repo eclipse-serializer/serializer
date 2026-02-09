@@ -40,7 +40,7 @@ public final class MemoryAccessorResolver
 			return provider.create();
 		}
 
-		throw new RuntimeException("No MemoryAccessor implementation found");
+		return null;
 	}
 
 	public static MemoryAccessorProvider resolveProvider()

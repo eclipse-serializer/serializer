@@ -144,8 +144,12 @@ public final class XMemory
 		/**
 		 * Java 25 VM requires a new MemoryAccessor
 		 */
-		if(Runtime.version().feature() >= 25) {
-			MemoryAccessorResolver.resolve();
+		if(Runtime.version().feature() >= 25) 
+		{
+			if(MemoryAccessorResolver.resolve() == null) 
+			{
+				throw new RuntimeException("No MemoryAccessor implementation found! Please check if you added the nativeMemory dependency required for java 25 and greater!");
+			};
 		}
 		
 		setMemoryHandling(JdkMemoryAccessor.New());
