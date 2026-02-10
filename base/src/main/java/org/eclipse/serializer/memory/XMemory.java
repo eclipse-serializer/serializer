@@ -149,12 +149,16 @@ public final class XMemory
 		/**
 		 * Search and use custom memory MemoryAccessor if available. 
 		 */		
-		MemoryAccessorProvider accessorProvider = MemoryAccessorResolver.resolveProvider();
-		if(accessorProvider != null) 
+		if(Runtime.version().feature() >= 25) 
 		{
-			setMemoryAccessor(accessorProvider.create());
-			return;
-		}			
+			MemoryAccessorProvider accessorProvider = MemoryAccessorResolver.resolveProvider();
+			if(accessorProvider != null) 
+			{
+				setMemoryAccessor(accessorProvider.create());
+				return;
+			}	
+		}
+				
 		
 		setMemoryHandling(JdkMemoryAccessor.New());
 	}
