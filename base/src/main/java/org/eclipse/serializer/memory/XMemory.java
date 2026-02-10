@@ -26,6 +26,8 @@ import org.eclipse.serializer.exceptions.UnhandledPlatformError;
 import org.eclipse.serializer.memory.android.AndroidAdapter;
 import org.eclipse.serializer.memory.sun.JdkMemoryAccessor;
 import org.eclipse.serializer.util.X;
+import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 
 /**
@@ -35,6 +37,8 @@ import org.eclipse.serializer.util.X;
  */
 public final class XMemory
 {
+	private final static Logger logger = Logging.getLogger(XMemory.class);
+	
 	///////////////////////////////////////////////////////////////////////////
 	// constants //
 	//////////////
@@ -46,6 +50,7 @@ public final class XMemory
 	static
 	{
 		initializeMemoryAccess();
+		logger.debug("Using memory accessor {}", memoryAccessor().getClass());
 	}
 
 	private static VmCheck[] createVmChecks()
@@ -142,11 +147,14 @@ public final class XMemory
 		 */
 		
 		/**
-		 * Java 25 VM requires a new MemoryAccessor
-		 */
-		if(Runtime.version().feature() >= 25) {
-			MemoryAccessorResolver.resolve();
-		}
+		 * Search and use custom memory MemoryAccessor if available. 
+		 */		
+		MemoryAccessorProvider accessorProvider = MemoryAccessorResolver.resolveProvider();
+		if(accessorProvider != null) 
+		{
+			setMemoryAccessor(accessorProvider.create());
+			return;
+		}			
 		
 		setMemoryHandling(JdkMemoryAccessor.New());
 	}
