@@ -10,6 +10,10 @@ on:
         required: false
         type: string
         default: UNCHANGED
+      server-id:
+        required: false
+        type: string
+        default: ossrh
     secrets:
       MAVEN_USERNAME:
         required: true
