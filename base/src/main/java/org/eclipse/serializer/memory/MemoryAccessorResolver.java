@@ -14,7 +14,6 @@ package org.eclipse.serializer.memory;
  * #L%
  */
 
-import java.util.Iterator;
 import java.util.ServiceLoader;
 
 
@@ -47,11 +46,15 @@ public final class MemoryAccessorResolver
 	{
 		final ServiceLoader<MemoryAccessorProvider> serviceLoader =
 			ServiceLoader.load(MemoryAccessorProvider.class);
-		final Iterator<MemoryAccessorProvider> iterator = serviceLoader.iterator();
-		return iterator.hasNext()
-			? iterator.next()
-			: null
-		;
+		
+		for(MemoryAccessorProvider memoryAccessorProvider : serviceLoader) {
+			if(memoryAccessorProvider.javaVersionCheck())
+			{
+				return memoryAccessorProvider;
+			}
+		}
+		
+		return null;
 	}
 
 
