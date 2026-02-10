@@ -28,10 +28,4 @@ public class NativeMemoryAccessorProvider implements MemoryAccessorProvider
 	{
 		return NativeMemoryAccessor.New();
 	}
-	
-	@Override
-	public boolean javaVersionCheck() 
-	{
-		return Runtime.version().feature() >= 25;
-	}
 }
