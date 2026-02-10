@@ -38,6 +38,7 @@ jobs:
     with:
       # pass release tag as project-version input (adjust input name if the reusable workflow expects a different key)
       project-version: ${{ github.event.release.tag_name }}
+      server-id: central
     secrets:
       MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
       MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
