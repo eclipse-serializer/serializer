@@ -780,10 +780,9 @@ public interface Serializer<M> extends AutoCloseable
 			}
 
 
-
 			@Override
-			public void forceRootStore(final PersistenceRoots pendingStoreRoot) {
-				// TODO Auto-generated method stub
+			public void forceRootStore(final PersistenceRoots pendingStoreRoot) 
+			{
 				throw new NotImplementedYetError();
 			}
 			

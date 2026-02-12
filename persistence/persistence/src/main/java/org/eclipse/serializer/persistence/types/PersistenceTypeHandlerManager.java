@@ -813,7 +813,6 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		{
 			if(this.pendingStoreRoot == null)
 			{
-				logger.debug("No pending root store");
 				// nothing pending
 				return;
 			}
