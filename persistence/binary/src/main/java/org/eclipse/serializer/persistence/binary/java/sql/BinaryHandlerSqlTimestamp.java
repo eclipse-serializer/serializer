@@ -48,7 +48,8 @@ public final class BinaryHandlerSqlTimestamp extends AbstractBinaryHandlerCustom
 		super(
 			Timestamp.class,
 			CustomFields(
-				CustomField(long.class, "timestamp")
+				CustomField(long.class, "date"),
+				CustomField(int.class, "nanos")
 			)
 		);
 	}
@@ -59,16 +60,6 @@ public final class BinaryHandlerSqlTimestamp extends AbstractBinaryHandlerCustom
 	// methods //
 	////////////
 	
-	private static long instanceState(final Timestamp instance)
-	{
-		return instance.getTime();
-	}
-	
-	private static long binaryState(final Binary data)
-	{
-		return data.read_long(0);
-	}
-
 	@Override
 	public final void store(
 		final Binary                          data    ,
@@ -77,22 +68,29 @@ public final class BinaryHandlerSqlTimestamp extends AbstractBinaryHandlerCustom
 		final PersistenceStoreHandler<Binary> handler
 	)
 	{
-		data.storeEntityHeader(Long.BYTES, this.typeId(), objectId);
+		data.storeEntityHeader(Long.BYTES + Integer.BYTES, this.typeId(), objectId);
 		
-		// the data content of a date is simple the timestamp long, nothing else
-		data.store_long(instanceState(instance));
+		data.store_long(instance.getTime());
+		data.store_int(Long.BYTES, instance.getNanos());
 	}
 
 	@Override
 	public final Timestamp create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		return new Timestamp(binaryState(data));
+		long date = data.read_long(0);
+		int nanos = data.read_int(Long.BYTES);
+		Timestamp ts = new Timestamp(date);
+		ts.setNanos(nanos);
+		return ts;
 	}
 
 	@Override
 	public final void updateState(final Binary data, final Timestamp instance, final PersistenceLoadHandler handler)
 	{
-		instance.setTime(binaryState(data));
+		long date = data.read_long(0);
+		int nanos = data.read_int(Long.BYTES);
+		instance.setTime(date);
+		instance.setNanos(nanos);
 	}
 
 }
