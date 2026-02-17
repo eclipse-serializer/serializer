@@ -16,7 +16,7 @@ package org.eclipse.serializer.persistence.binary.types;
 
 import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandlerSupplier;
 
-public interface BinaryTypeHandlerSupplier<T> extends PersistenceLegacyTypeHandlerSupplier<Binary, T>
+public interface BinaryLegacyTypeHandlerSupplier<T> extends PersistenceLegacyTypeHandlerSupplier<Binary, T>
 {
 
 }
