@@ -18,7 +18,7 @@ package org.eclipse.serializer.persistence.types;
  * Classes implementing this interface must supply a PersistenceLegacyTypeHandler
  * 
  * @param <D> Persitence implementation type
- * @param <T> Class&lt?&gt of the legacy type
+ * @param <T> Class&lt;?&gt; of the legacy type
  */
 public interface PersistenceLegacyTypeHandlerSupplier<D,T>
 {
