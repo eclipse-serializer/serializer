@@ -63,6 +63,7 @@ import org.eclipse.serializer.persistence.binary.java.nio.file.BinaryHandlerPath
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlDate;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTime;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTimestamp;
+import org.eclipse.serializer.persistence.binary.java.sql.BinaryLegacyTypeHandlerSqlTimestamp;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerLocalDate;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerMonthDay;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerPeriod;
@@ -180,7 +181,9 @@ public final class BinaryPersistence extends Persistence
 			.registerTypeHandlers(platformDependentHandlers())
 			.registerTypeHandlers(customHandlers)
 		;
-
+		
+		defaultCustomTypeHandlerRegistry.registerLegacyTypeHandler(BinaryLegacyTypeHandlerSqlTimestamp.New());
+		
 		return defaultCustomTypeHandlerRegistry;
 	}
 
@@ -265,8 +268,8 @@ public final class BinaryPersistence extends Persistence
 
 				// non-nonsensical handlers required for confused developers
 				BinaryHandlerSqlDate.New()     ,
-				BinaryHandlerSqlTime.New()     ,
-				BinaryHandlerSqlTimestamp.New(),
+				BinaryHandlerSqlTime.New()     ,				
+				BinaryHandlerSqlTimestamp.New(),				
 
 				BinaryHandlerOptionalInt.New(),
 				BinaryHandlerOptionalLong.New(),
