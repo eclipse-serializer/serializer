@@ -338,6 +338,18 @@ public interface PersistenceLegacyTypeMapper<D>
 				return null;
 			}
 			
+			validateLegacyTypeHandler(type, legacyTypeDefinition, legacyTypeHandlerbyId);
+			
+			return legacyTypeHandlerbyId;
+		}
+
+
+
+		private <T> void validateLegacyTypeHandler(
+			final Class<?> type,
+			final PersistenceTypeDefinition legacyTypeDefinition,
+			final PersistenceLegacyTypeHandler<D, T> legacyTypeHandlerbyId) 
+		{
 			// validate if the found handler with matching explicit typeId also has matching type and structure
 			if(type != null && type != legacyTypeDefinition.type()
 				|| !PersistenceTypeDescription.equalStructure(legacyTypeHandlerbyId, legacyTypeDefinition)
@@ -347,8 +359,6 @@ public interface PersistenceLegacyTypeMapper<D>
 					"Type handler structure mismatch for " + legacyTypeDefinition.toTypeIdentifier()
 				);
 			}
-			
-			return legacyTypeHandlerbyId;
 		}
 		
 		private <T> PersistenceLegacyTypeHandler<D, T> lookupCustomHandlerByStructure(
@@ -378,6 +388,16 @@ public interface PersistenceLegacyTypeMapper<D>
 			final PersistenceTypeHandler<D, T> currentTypeHandler
 		)
 		{
+			//check for supplied handler
+			if(currentTypeHandler instanceof PersistenceLegacyTypeHandlerSupplier supplier) 
+			{
+				@SuppressWarnings("unchecked")
+				PersistenceLegacyTypeHandler<D, T> legacyTypeHandler = supplier.getLegacyTypeHandler();
+				validateLegacyTypeHandler(legacyTypeDefinition.type(), legacyTypeDefinition, legacyTypeHandler);
+				return legacyTypeHandler.initialize(legacyTypeDefinition.typeId());
+			} 
+			
+			
 			// check for a custom handler with matching structure
 			final PersistenceLegacyTypeHandler<D, T> customHandler = this.lookupCustomHandler(legacyTypeDefinition);
 			if(customHandler != null)
