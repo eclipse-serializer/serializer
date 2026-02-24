@@ -9,18 +9,18 @@ package org.eclipse.serializer.persistence.util;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.eclipse.serializer.persistence.types.PersistenceStoring;
+import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
+import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
 import org.eclipse.serializer.persistence.types.Storer;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.eclipse.serializer.util.X.notNull;
 
@@ -31,12 +31,10 @@ import static org.eclipse.serializer.util.X.notNull;
  * <p>
  * Usage:
  * <pre>
- * BatchStorer storer = BatchStorer.New(
+ * try (BatchStorer storer = BatchStorer.New(
  *     storageManager.createLazyStorer(),
  *     BatchStorer.Controller(Duration.ofSeconds(1))
- * );
- *
- * void bulkUpdate(Object... instances)
+ * ))
  * {
  *     storer.storeAll(instances);
  * }
@@ -44,7 +42,7 @@ import static org.eclipse.serializer.util.X.notNull;
  * It commits automatically when the controller decides to flush.
  * Or manually, by calling {@link #flush()}.
  */
-public interface BatchStorer extends PersistenceStoring
+public interface BatchStorer extends Storer, AutoCloseable
 {
     /**
      * Flushes accumulated data to the underlying storage or delegate. This method
@@ -53,6 +51,19 @@ public interface BatchStorer extends PersistenceStoring
      * regardless of the configured flush cycle or size thresholds.
      */
     public void flush();
+
+    /**
+     * Returns whether this {@code BatchStorer} has pending data that has not yet been flushed.
+     *
+     * @return {@code true} if there is unflushed data; {@code false} otherwise
+     */
+    public boolean hasPendingData();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close();
 
 
     /**
@@ -69,6 +80,22 @@ public interface BatchStorer extends PersistenceStoring
         final long flushCycleMillis = flushCycle.toMillis();
         return (size, millisSinceLastFlush) ->
             millisSinceLastFlush >= flushCycleMillis
+        ;
+    }
+
+
+    /**
+     * Creates a {@code Controller} instance configured to trigger a flush operation
+     * when the accumulated size reaches a specified threshold.
+     *
+     * @param maxSize the maximum size of the batch or buffer that triggers a flush
+     * @return a {@code Controller} that determines when a flush operation should be triggered
+     *         based on the given size threshold
+     */
+    public static Controller Controller(final long maxSize)
+    {
+        return (size, millisSinceLastFlush) ->
+            size >= maxSize
         ;
     }
 
@@ -134,7 +161,7 @@ public interface BatchStorer extends PersistenceStoring
 
         private final Storer     delegate  ;
         private final Controller controller;
-        private final AtomicLong lastFlush = new AtomicLong(0);
+        private       long       lastFlush = -1;
 
         Default(final Storer delegate, final Controller controller)
         {
@@ -173,17 +200,142 @@ public interface BatchStorer extends PersistenceStoring
         }
 
         @Override
-        public void flush()
+        public long store(final Object instance, final long objectId)
+        {
+            final long id = this.delegate.store(instance, objectId);
+
+            this.optFlush();
+
+            return id;
+        }
+
+        @Override
+        public synchronized void flush()
         {
             this.internalFlush(System.currentTimeMillis());
         }
 
-        private void optFlush()
+        @Override
+        public boolean hasPendingData()
+        {
+            return !this.delegate.isEmpty();
+        }
+
+        @Override
+        public synchronized void close()
+        {
+            if (!this.delegate.isEmpty())
+            {
+                this.internalFlush(System.currentTimeMillis());
+            }
+            this.delegate.clear();
+        }
+
+        @Override
+        public synchronized Object commit()
+        {
+            this.flush();
+            return null;
+        }
+
+        @Override
+        public synchronized void clear()
+        {
+            this.delegate.clear();
+            this.lastFlush = -1;
+        }
+
+        @Override
+        public boolean skip(final Object instance)
+        {
+            return this.delegate.skip(instance);
+        }
+
+        @Override
+        public boolean skipNulled(final Object instance)
+        {
+            return this.delegate.skipNulled(instance);
+        }
+
+        @Override
+        public boolean skipMapped(final Object instance, final long objectId)
+        {
+            return this.delegate.skipMapped(instance, objectId);
+        }
+
+        @Override
+        public long size()
+        {
+            return this.delegate.size();
+        }
+
+        @Override
+        public boolean isEmpty()
+        {
+            return this.delegate.isEmpty();
+        }
+
+        @Override
+        public long currentCapacity()
+        {
+            return this.delegate.currentCapacity();
+        }
+
+        @Override
+        public long maximumCapacity()
+        {
+            return this.delegate.maximumCapacity();
+        }
+
+        @Override
+        public synchronized Storer reinitialize()
+        {
+            this.delegate.reinitialize();
+            this.lastFlush = -1;
+            return this;
+        }
+
+        @Override
+        public synchronized Storer reinitialize(final long initialCapacity)
+        {
+            this.delegate.reinitialize(initialCapacity);
+            this.lastFlush = -1;
+            return this;
+        }
+
+        @Override
+        public synchronized Storer ensureCapacity(final long desiredCapacity)
+        {
+            this.delegate.ensureCapacity(desiredCapacity);
+            this.lastFlush = -1;
+            return this;
+        }
+
+        @Override
+        public void registerCommitListener(final PersistenceCommitListener listener)
+        {
+            this.delegate.registerCommitListener(listener);
+        }
+
+        @Override
+        public void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
+        {
+            this.delegate.registerRegistrationListener(listener);
+        }
+
+        private synchronized void optFlush()
         {
             final long now = System.currentTimeMillis();
+
+            if (this.lastFlush == -1)
+            {
+                this.lastFlush = now;
+                return;
+            }
+
             if (this.controller.shouldFlush(
                 this.delegate.size(),
-                now - this.lastFlush.get()
+                now - this.lastFlush
             ))
             {
                 this.internalFlush(now);
@@ -195,7 +347,7 @@ public interface BatchStorer extends PersistenceStoring
             logger.debug("Flushing batch storer with size = {}", this.delegate.size());
 
             this.delegate.commit();
-            this.lastFlush.set(timestamp);
+            this.lastFlush = timestamp;
         }
 
     }
