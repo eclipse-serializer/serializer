@@ -14,7 +14,15 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ *  This interface defines storer callbacks that shoud not be exposed to the top level Storer API.
+ */
 public interface PersistenceStoringCallback
 {
+	/**
+	 * Forces pending root changes to be stored even if the root has been stored allready.
+	 * 
+	 * @param pendingStoreRoot the modifed root.
+	 */
 	void forceRootStore(PersistenceRoots pendingStoreRoot);
 }
