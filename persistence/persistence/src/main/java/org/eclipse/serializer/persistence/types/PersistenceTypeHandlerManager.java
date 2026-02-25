@@ -817,8 +817,6 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 				return;
 			}
 			
-			logger.debug("pendingStoreRoot {}", this.pendingStoreRoot.entries());
-			
 			storingCallback.forceRootStore(this.pendingStoreRoot);
 		}
 		
