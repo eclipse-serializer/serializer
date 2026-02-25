@@ -867,7 +867,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		@Override
 		public void forceRootStore(final PersistenceRoots pendingStoreRoot) {
 			
-			logger.debug("Storing updated root {}", pendingStoreRoot);
+			logger.debug("Storing updated root");
 			
 			long rootOid;
 			if(Swizzling.isFoundId(rootOid = this.lookupOid(pendingStoreRoot)))
