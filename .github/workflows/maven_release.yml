@@ -37,7 +37,7 @@ jobs:
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} --batch-mode
 
       - name: Deploy everything in one shot
-        run: mvn -Pdeploy -P '!native-build' --no-transfer-progress --batch-mode clean deploy
+        run: mvn -Pdeploy -P '!native-build' --no-transfer-progress --batch-mode deploy
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}

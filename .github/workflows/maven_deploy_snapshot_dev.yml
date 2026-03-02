@@ -46,7 +46,7 @@ jobs:
           mvn versions:set -DnewVersion=$newVersion --batch-mode
 
       - name: Deploy everything in one shot
-        run: mvn -Pdeploy -P '!native-build' --no-transfer-progress --batch-mode clean deploy -Dmaven.javadoc.skip=true -Dgpg.skip=true
+        run: mvn -Pdeploy -P '!native-build' --no-transfer-progress --batch-mode deploy -Dmaven.javadoc.skip=true -Dgpg.skip=true
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
