@@ -8,39 +8,39 @@ on:
     types: [created]
 
 jobs:
+  build-native:
+    uses: ./.github/workflows/maven_jni_25.yml
+
   publish:
     runs-on: ubuntu-latest
+    needs: build-native
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Java for publishing to Maven Central Repository
-        uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 25 for publishing
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '25'
           distribution: 'temurin'
           cache: 'maven'
           server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-      - name: Maven change version
+
+      - name: Download all native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: nativememory/target/libs
+          merge-multiple: 'true'
+
+      - name: Set project version
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} --batch-mode
-      - name: Make a release
-        run: mvn -Pdeploy -Pproduction --no-transfer-progress --batch-mode clean deploy
+
+      - name: Deploy everything in one shot
+        run: mvn -Pdeploy -P '!native-build' --no-transfer-progress --batch-mode deploy
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
           MAVEN_GPG_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
 
-  build-native-jar:
-    needs: publish
-    # Call the reusable workflow in the same repository after publish completes.
-    uses: ./.github/workflows/maven_jni_25.yml
-    with:
-      # pass release tag as project-version input (adjust input name if the reusable workflow expects a different key)
-      project-version: ${{ github.event.release.tag_name }}
-      server-id: central
-    secrets:
-      MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
-      MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
-      GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
-      GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}

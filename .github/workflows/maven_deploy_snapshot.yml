@@ -10,36 +10,37 @@ on:
       - 'release/**'
 
 jobs:
+  build-native:
+    uses: ./.github/workflows/maven_jni_25.yml
+
   publish:
     if: github.repository == 'eclipse-serializer/serializer'
     runs-on: ubuntu-latest
+    needs: build-native
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Java for publishing to Maven Central Snapshot Repository
+
+      - name: Set up Java 25 for publishing
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '25'
           distribution: 'temurin'
           cache: 'maven'
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-      - name: Make a snapshot
-        run: mvn -Pdeploy -Pproduction --no-transfer-progress --batch-mode clean deploy -Dmaven.javadoc.skip=true -Dgpg.skip=true
+
+      - name: Download all native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: nativememory/target/libs
+          merge-multiple: 'true'
+
+      - name: Deploy everything in one shot
+        run: mvn -Pdeploy -P '!native-build' --no-transfer-progress --batch-mode deploy -Dmaven.javadoc.skip=true -Dgpg.skip=true
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
           MAVEN_GPG_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
 
-  build-native-jar:
-    needs: publish
-    uses: ./.github/workflows/maven_jni_25.yml
-    with:
-      project-version: UNCHANGED
-      server-id: ossrh
-    secrets:
-      MAVEN_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
-      MAVEN_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
-      GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
-      GPG_PRIVATE_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
