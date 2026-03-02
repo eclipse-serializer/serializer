@@ -136,6 +136,9 @@ jobs:
         if: ${{ inputs.project-version != 'UNCHANGED' && inputs.project-version != '' }}
         run: mvn versions:set -DnewVersion=${{ inputs.project-version }} --batch-mode
 
+      - name: Install parent and dependencies
+        run: mvn -pl nativememory -am -P '!native-build' --no-transfer-progress --batch-mode install
+
       - name: Deploy final JAR
         run: |
           mvn -pl nativememory -P '!native-build' -Pdeploy --no-transfer-progress --batch-mode deploy
