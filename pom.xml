@@ -197,9 +197,10 @@
 					<artifactId>maven-javadoc-plugin</artifactId>
 					<version>3.12.0</version>
 					<configuration>
+						<doclint>none</doclint>
 						<failOnError>${javadoc.failed.on.error}</failOnError>
 						<notree>true</notree>
-						<source>8</source>
+						<source>${maven.compiler.release}</source>
 						<doctitle>Eclipse Serializer API</doctitle>
 						<windowtitle>Eclipse Serializer API</windowtitle>
 						<archive>
