@@ -6,39 +6,12 @@
 		<groupId>org.eclipse.serializer</groupId>
 		<artifactId>serializer-parent</artifactId>
 		<version>4.0.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>nativememory</artifactId>
 
 	<name>Eclipse Serializer NativeMemory</name>
 	<description>Native Memory access module of the Eclipse Serializer Framework</description>
 	<url>https://projects.eclipse.org/projects/technology.serializer</url>
-
-	<organization>
-		<name>MicroStream Software</name>
-		<url>https://microstream.one</url>
-	</organization>
-
-	<developers>
-		<developer>
-			<name>MicroStream Software</name>
-			<url>https://microstream.one</url>
-		</developer>
-	</developers>
-
-	<licenses>
-		<license>
-			<name>Eclipse Public License - v 2.0</name>
-			<url>https://www.eclipse.org/legal/epl-2.0/</url>
-		</license>
-	</licenses>
-
-    <scm>
-        <connection>scm:git:git@github.com:eclipse-serializer/serializer.git</connection>
-        <developerConnection>scm:git:git@github.com:eclipse-serializer/serializer.git</developerConnection>
-        <url>https://github.com/eclipse-serializer</url>
-        <tag>HEAD</tag>
-    </scm>
 
 	<properties>
 		<maven.compiler.release>22</maven.compiler.release>
@@ -54,7 +27,6 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-            <version>2.0.17</version>
 		</dependency>
 	</dependencies>
 
