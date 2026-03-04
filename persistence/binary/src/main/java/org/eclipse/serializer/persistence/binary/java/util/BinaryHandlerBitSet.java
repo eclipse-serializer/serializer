@@ -66,11 +66,11 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	@Override
 	public void store(final Binary data, final BitSet instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
-		final long entityContentLenght = BINARY_OFFSET_WORDS +
+		final long entityContentLength = BINARY_OFFSET_WORDS +
 			Binary.toBinaryListTotalByteLength(instance.size() / BYTES_PER_WORD)
 		;
 				
-		data.storeEntityHeader(entityContentLenght, this.typeId(), objectId);
+		data.storeEntityHeader(entityContentLength, this.typeId(), objectId);
 		
 		data.store_boolean(
 			BINARY_OFFSET_SIZE_IS_STICKY,
