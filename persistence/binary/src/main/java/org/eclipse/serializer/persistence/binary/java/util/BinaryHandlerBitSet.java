@@ -85,10 +85,7 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	@Override
 	public BitSet create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		final BitSet instance = BitSet.valueOf(data.build_longs(BINARY_OFFSET_WORDS));
-		XMemory.set_boolean(instance, fieldOffset_sizeIsSticky, data.read_boolean(BINARY_OFFSET_SIZE_IS_STICKY));
-		
-		return instance;
+		return new BitSet();
 	}
 
 	@Override
