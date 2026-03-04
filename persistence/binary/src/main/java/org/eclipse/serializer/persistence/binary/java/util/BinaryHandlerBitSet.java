@@ -64,9 +64,11 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	////////////
 
 	@Override
-	public void store(Binary data, BitSet instance, long objectId, PersistenceStoreHandler<Binary> handler)
+	public void store(final Binary data, final BitSet instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
-		long entityContentLenght = BINARY_OFFSET_WORDS + Binary.toBinaryListTotalByteLength(instance.size() / BYTES_PER_WORD);
+		final long entityContentLenght = BINARY_OFFSET_WORDS +
+			Binary.toBinaryListTotalByteLength(instance.size() / BYTES_PER_WORD)
+		;
 				
 		data.storeEntityHeader(entityContentLenght, this.typeId(), objectId);
 		
@@ -81,16 +83,16 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	}
 
 	@Override
-	public BitSet create(Binary data, PersistenceLoadHandler handler)
+	public BitSet create(final Binary data, final PersistenceLoadHandler handler)
 	{
-		BitSet instance = BitSet.valueOf(data.build_longs(BINARY_OFFSET_WORDS));
+		final BitSet instance = BitSet.valueOf(data.build_longs(BINARY_OFFSET_WORDS));
 		XMemory.set_boolean(instance, fieldOffset_sizeIsSticky, data.read_boolean(BINARY_OFFSET_SIZE_IS_STICKY));
 		
 		return instance;
 	}
 
 	@Override
-	public void updateState(Binary data, BitSet instance, PersistenceLoadHandler handler)
+	public void updateState(final Binary data, final BitSet instance, final PersistenceLoadHandler handler)
 	{
 		final long[] words = data.build_longs(BINARY_OFFSET_WORDS);
 
