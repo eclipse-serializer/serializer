@@ -25,7 +25,6 @@ import org.eclipse.serializer.reflect.XReflect;
 
 public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferential<BitSet>
 {
-	private static final int  BYTES_PER_WORD               = 8;
 	private static final long BINARY_OFFSET_SIZE_IS_STICKY = 0;
 	private static final long BINARY_OFFSET_WORDS          = BINARY_OFFSET_SIZE_IS_STICKY + Byte.BYTES;
 	
@@ -66,18 +65,20 @@ public class BinaryHandlerBitSet extends AbstractBinaryHandlerCustomNonReferenti
 	@Override
 	public void store(final Binary data, final BitSet instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
+		final long[] words = (long[]) XMemory.getObject(instance, fieldOffset_words);
+
 		final long entityContentLength = BINARY_OFFSET_WORDS +
-			Binary.toBinaryListTotalByteLength(instance.size() / BYTES_PER_WORD)
+			Binary.toBinaryListTotalByteLength((long) words.length * Long.BYTES)
 		;
-				
+
 		data.storeEntityHeader(entityContentLength, this.typeId(), objectId);
-		
+
 		data.store_boolean(
 			BINARY_OFFSET_SIZE_IS_STICKY,
 			XMemory.get_boolean(instance, fieldOffset_sizeIsSticky));
-		
+
 		data.store_longs(
-			(long[]) XMemory.getObject(instance, fieldOffset_words),
+			words,
 			BINARY_OFFSET_WORDS);
 				
 	}
