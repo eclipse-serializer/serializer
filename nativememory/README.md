@@ -22,7 +22,7 @@ See [Building locally](#Building-locally).
 <dependency>
 	<groupId>org.eclipse.serializer</groupId>
 	<artifactId>nativememory</artifactId>
-	<version>4.0.0-SNAPSHOT</version>
+	<version>5.0.0-SNAPSHOT</version>
 </dependency>
 ```
 ### Automatic setup
