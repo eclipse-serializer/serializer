@@ -79,6 +79,7 @@ jobs:
         with:
           java-version: 25
           distribution: temurin
+          cache: 'maven'
 
       - name: Generate JNI headers
         run: mvn compile --no-transfer-progress
