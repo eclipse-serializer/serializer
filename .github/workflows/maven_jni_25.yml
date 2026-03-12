@@ -79,9 +79,10 @@ jobs:
         with:
           java-version: 25
           distribution: temurin
+          cache: 'maven'
 
       - name: Generate JNI headers
-        run: mvn compile --no-transfer-progress
+        run: mvn compile -U -B --no-transfer-progress
 
       - name: Build native library
         run: ${{ matrix.build-cmd }}
