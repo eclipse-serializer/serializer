@@ -2096,9 +2096,10 @@ public abstract class Binary implements Chunk
 		// (19.03.2019 TM)NOTE: added "|| iterator.hasNext()" check
 		if(address != elementsBinaryBound || iterator.hasNext())
 		{
+			final long iteratedCount = elementCount - (elementsBinaryBound - address) / entryLength;
 			throw new BinaryPersistenceException(
 				"Inconsistent element count: specified " + elementCount
-				+ " vs. iterated " + elementsBinaryBound / entryLength
+				+ " vs. iterated " + (iterator.hasNext() ? "more than " + iteratedCount : iteratedCount)
 			);
 		}
 	}

@@ -1,0 +1,94 @@
+# Reusable workflow for building native JNI libraries on multiple platforms.
+# Produces upload artifacts (native-*) that the caller workflow can download and include in the final deploy.
+
+name: Java Native Build 25
+
+on:
+  workflow_call:
+
+jobs:
+  build-native:
+    name: Build JNI (${{ matrix.os }} / ${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            ext: so
+            build-cmd: |
+              sudo apt-get update && sudo apt-get install -y cmake gcc g++
+              cd nativememory
+              mkdir build && cd build
+              cmake .. && cmake --build .
+              cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-x86_64.so
+
+          - os: ubuntu-latest
+            arch: arm64
+            ext: so
+            build-cmd: |
+              sudo apt-get update
+              sudo apt-get install -y cmake gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+              cd nativememory
+              mkdir build && cd build
+
+              cmake .. \
+                -DCMAKE_SYSTEM_NAME=Linux \
+                -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+                -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+
+              cmake --build .
+
+              cp ../target/libs/libEclipseStoreNativeMemory.so ../libEclipseStoreNativeMemory-linux-arm64.so
+
+          - os: windows-latest
+            arch: x86_64
+            ext: dll
+            build-cmd: |
+              cd nativememory
+              mkdir build
+              cd build
+              cmake .. && cmake --build . --config Release
+              copy ..\target\libs\libEclipseStoreNativeMemory.dll ..\libEclipseStoreNativeMemory-windows-x86_64.dll
+
+          - os: macos-15-intel
+            arch: x86_64
+            ext: dylib
+            build-cmd: |
+              cd nativememory
+              mkdir build && cd build
+              cmake .. && cmake --build .
+              cp ../target/libs/libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-x86_64.dylib
+
+          - os: macos-latest
+            arch: arm64
+            ext: dylib
+            build-cmd: |
+              cd nativememory
+              mkdir build && cd build
+              cmake .. -DCMAKE_OSX_ARCHITECTURES=arm64
+              cmake --build .
+              cp ../target/libs/libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-arm64.dylib
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 25
+          distribution: temurin
+          cache: 'maven'
+
+      - name: Generate JNI headers
+        run: mvn compile -U -B --no-transfer-progress
+
+      - name: Build native library
+        run: ${{ matrix.build-cmd }}
+
+      - name: Upload native library
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.os }}-${{ matrix.arch }}
+          path: nativememory/libEclipseStoreNativeMemory-*.${{ matrix.ext }}

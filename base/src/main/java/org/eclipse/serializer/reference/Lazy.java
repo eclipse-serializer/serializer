@@ -488,7 +488,10 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			this.loader = loader;
 		}
 
-
+		public final synchronized ObjectSwizzling $getLoader()
+		{
+			return this.loader;
+		}
 
 		///////////////////////////////////////////////////////////////////////////
 		// override methods //

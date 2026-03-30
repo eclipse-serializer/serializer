@@ -91,3 +91,4 @@ profile
 
 # Vim
 *.swp
+/nativememory/.vs

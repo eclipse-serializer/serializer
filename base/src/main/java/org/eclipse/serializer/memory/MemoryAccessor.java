@@ -42,6 +42,9 @@ public interface MemoryAccessor
 	 * So in order to being able to work properly, one has to add a lot of
 	 * magically and sometime pretty hacky support logic to fix this.
 	 */
+	ByteBuffer allocateDirectNative(int capacity);
+
+	ByteBuffer allocateDirectNative(long capacity);
 	
 	public long getDirectByteBufferAddress(ByteBuffer directBuffer);
 

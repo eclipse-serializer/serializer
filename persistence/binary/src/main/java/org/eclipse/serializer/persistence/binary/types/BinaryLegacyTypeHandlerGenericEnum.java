@@ -104,5 +104,10 @@ extends AbstractBinaryLegacyTypeHandlerReflective<T>
 		// debug hook
 		super.updateState(rawData, instance, handler);
 	}
-
+	
+	@Override
+	public int getPersistedEnumOrdinal(final Binary data)
+	{
+		return data.read_int(this.binaryOffsetOrdinal);			
+	}
 }

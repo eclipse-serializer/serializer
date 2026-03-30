@@ -8,7 +8,7 @@
 
 	<groupId>org.eclipse.serializer</groupId>
 	<artifactId>serializer-parent</artifactId>
-	<version>4.0.0-SNAPSHOT</version>
+	<version>5.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Eclipse Serializer</name>
@@ -114,23 +114,32 @@
 				<groupId>org.sonatype.central</groupId>
 				<artifactId>central-publishing-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>io.github.cmake-maven-plugin</groupId>
+				<artifactId>cmake-maven-plugin</artifactId>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.13.0</version>
+					<version>3.15.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-dependency-plugin</artifactId>
-					<version>3.8.0</version>
+					<version>3.10.0</version>
+				</plugin>
+				<plugin>
+					<groupId>io.github.cmake-maven-plugin</groupId>
+					<artifactId>cmake-maven-plugin</artifactId>
+					<version>4.0.3-b1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.felix</groupId>
 					<artifactId>maven-bundle-plugin</artifactId>
-					<version>5.1.9</version>
+					<version>6.0.2</version>
 					<extensions>true</extensions>
 					<executions>
 						<execution>
@@ -152,7 +161,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.4.2</version>
+					<version>3.5.0</version>
 					<configuration>
 						<archive>
 							<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -165,7 +174,7 @@
 				<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-source-plugin</artifactId>
-					<version>3.3.1</version>
+					<version>3.4.0</version>
 					<executions>
 						<execution>
 							<id>attach-sources</id>
@@ -186,11 +195,12 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.10.0</version>
+					<version>3.12.0</version>
 					<configuration>
+						<doclint>none</doclint>
 						<failOnError>${javadoc.failed.on.error}</failOnError>
 						<notree>true</notree>
-						<source>8</source>
+						<source>${maven.compiler.release}</source>
 						<doctitle>Eclipse Serializer API</doctitle>
 						<windowtitle>Eclipse Serializer API</windowtitle>
 						<archive>
@@ -384,6 +394,17 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>java24-plus-nativememory</id>
+			<activation>
+				<!-- activate for JDK 24 and newer -->
+				<jdk>[24,)</jdk>
+			</activation>
+			<modules>
+				<module>nativememory</module>
+			</modules>
+		</profile>
+
 	</profiles>
 
 </project>
