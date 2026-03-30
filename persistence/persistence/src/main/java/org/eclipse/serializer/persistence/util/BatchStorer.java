@@ -175,7 +175,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         private final Storer                    delegate  ;
         private final Controller                controller;
         private final ScheduledExecutorService  scheduler ;
-        private       long                      lastFlush = -1;
+        private       long                      lastFlush;
 
         Default(final Storer delegate, final Controller controller, final Duration checkInterval)
         {
@@ -183,6 +183,7 @@ public interface BatchStorer extends Storer, AutoCloseable
 
             this.delegate   = delegate  ;
             this.controller = controller;
+            this.lastFlush  = System.currentTimeMillis();
             this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
             {
                 final Thread t = new Thread(r, "batch-storer-flush");
@@ -283,7 +284,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized void clear()
         {
             this.delegate.clear();
-            this.lastFlush = -1;
+            this.lastFlush = System.currentTimeMillis();
         }
 
         @Override
@@ -332,7 +333,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer reinitialize()
         {
             this.delegate.reinitialize();
-            this.lastFlush = -1;
+            this.lastFlush = System.currentTimeMillis();
             return this;
         }
 
@@ -340,7 +341,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer reinitialize(final long initialCapacity)
         {
             this.delegate.reinitialize(initialCapacity);
-            this.lastFlush = -1;
+            this.lastFlush = System.currentTimeMillis();
             return this;
         }
 
@@ -348,7 +349,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer ensureCapacity(final long desiredCapacity)
         {
             this.delegate.ensureCapacity(desiredCapacity);
-            this.lastFlush = -1;
+            this.lastFlush = System.currentTimeMillis();
             return this;
         }
 
@@ -384,12 +385,6 @@ public interface BatchStorer extends Storer, AutoCloseable
             }
 
             final long now = System.currentTimeMillis();
-
-            if (this.lastFlush == -1)
-            {
-                this.lastFlush = now;
-                return;
-            }
 
             if (this.controller.shouldFlush(
                 this.delegate.size(),
