@@ -200,7 +200,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public long store(final Object instance)
+        public synchronized long store(final Object instance)
         {
             final long id = this.delegate.store(instance);
 
@@ -210,7 +210,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public long[] storeAll(final Object... instances)
+        public synchronized long[] storeAll(final Object... instances)
         {
             final long[] ids = this.delegate.storeAll(instances);
 
@@ -220,7 +220,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public void storeAll(final Iterable<?> instances)
+        public synchronized void storeAll(final Iterable<?> instances)
         {
             this.delegate.storeAll(instances);
 
@@ -228,7 +228,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public long store(final Object instance, final long objectId)
+        public synchronized long store(final Object instance, final long objectId)
         {
             final long id = this.delegate.store(instance, objectId);
 
@@ -253,6 +253,17 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized void close()
         {
             this.scheduler.shutdown();
+            try
+            {
+                if (!this.scheduler.awaitTermination(1, TimeUnit.HOURS))
+                {
+                    logger.warn("Background flush thread did not terminate within timeout");
+                }
+            }
+            catch (final InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+            }
 
             if (!this.delegate.isEmpty())
             {
