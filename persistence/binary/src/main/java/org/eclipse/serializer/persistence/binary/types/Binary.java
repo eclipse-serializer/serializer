@@ -2098,7 +2098,7 @@ public abstract class Binary implements Chunk
 		{
 			throw new BinaryPersistenceException(
 				"Inconsistent element count: specified " + elementCount
-				+ " vs. iterated " + elementsBinaryBound / entryLength
+				+ " vs. iterated " + (elementCount - (elementsBinaryBound - address) / entryLength)
 			);
 		}
 	}
