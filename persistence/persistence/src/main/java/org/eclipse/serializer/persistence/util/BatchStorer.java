@@ -21,6 +21,9 @@ import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
 import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static org.eclipse.serializer.util.X.notNull;
 
@@ -33,13 +36,17 @@ import static org.eclipse.serializer.util.X.notNull;
  * <pre>
  * try (BatchStorer storer = BatchStorer.New(
  *     storageManager.createLazyStorer(),
- *     BatchStorer.Controller(Duration.ofSeconds(1))
+ *     BatchStorer.Controller(Duration.ofSeconds(1)),
+ *     Duration.ofMillis(200)
  * ))
  * {
  *     storer.storeAll(instances);
  * }
  * </pre>
  * It commits automatically when the controller decides to flush.
+ * A background daemon thread periodically checks for pending flushes
+ * at the configured check interval, ensuring data is flushed even
+ * when no new store operations occur.
  * Or manually, by calling {@link #flush()}.
  */
 public interface BatchStorer extends Storer, AutoCloseable
@@ -139,18 +146,24 @@ public interface BatchStorer extends Storer, AutoCloseable
 
 
     /**
-     * Constructs a new instance of {@code BatchStorer} with the specified delegate and controller.
+     * Constructs a new instance of {@code BatchStorer} with the specified delegate, controller,
+     * and background check interval.
+     * <p>
+     * A daemon thread periodically invokes the flush check at the given interval,
+     * ensuring pending data is flushed even when no new store operations occur.
      *
      * @param delegate the underlying {@code Storer} implementation that handles storage operations
      * @param controller the {@code Controller} instance that manages flushing behavior and triggers
      *                   based on time or size constraints
+     * @param checkInterval the interval at which the background thread checks for pending flushes
      * @return a new {@code BatchStorer} instance configured with the provided delegate and controller
      */
-    public static BatchStorer New(final Storer delegate, final Controller controller)
+    public static BatchStorer New(final Storer delegate, final Controller controller, final Duration checkInterval)
     {
         return new Default(
-            notNull(delegate  ),
-            notNull(controller)
+            notNull(delegate     ),
+            notNull(controller   ),
+            notNull(checkInterval)
         );
     }
 
@@ -159,16 +172,31 @@ public interface BatchStorer extends Storer, AutoCloseable
     {
         private final static Logger logger = Logging.getLogger(BatchStorer.class);
 
-        private final Storer     delegate  ;
-        private final Controller controller;
-        private       long       lastFlush = -1;
+        private final Storer                    delegate  ;
+        private final Controller                controller;
+        private final ScheduledExecutorService  scheduler ;
+        private       long                      lastFlush = -1;
 
-        Default(final Storer delegate, final Controller controller)
+        Default(final Storer delegate, final Controller controller, final Duration checkInterval)
         {
             super();
 
             this.delegate   = delegate  ;
             this.controller = controller;
+            this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
+            {
+                final Thread t = new Thread(r, "batch-storer-flush");
+                t.setDaemon(true);
+                return t;
+            });
+
+            final long millis = checkInterval.toMillis();
+            this.scheduler.scheduleAtFixedRate(
+                this::backgroundFlush,
+                millis,
+                millis,
+                TimeUnit.MILLISECONDS
+            );
         }
 
         @Override
@@ -224,6 +252,8 @@ public interface BatchStorer extends Storer, AutoCloseable
         @Override
         public synchronized void close()
         {
+            this.scheduler.shutdown();
+
             if (!this.delegate.isEmpty())
             {
                 this.internalFlush(System.currentTimeMillis());
@@ -323,8 +353,25 @@ public interface BatchStorer extends Storer, AutoCloseable
             this.delegate.registerRegistrationListener(listener);
         }
 
+        private void backgroundFlush()
+        {
+            try
+            {
+                this.optFlush();
+            }
+            catch (final Exception e)
+            {
+                logger.error("Background flush failed", e);
+            }
+        }
+
         private synchronized void optFlush()
         {
+            if (this.delegate.isEmpty())
+            {
+                return;
+            }
+
             final long now = System.currentTimeMillis();
 
             if (this.lastFlush == -1)
