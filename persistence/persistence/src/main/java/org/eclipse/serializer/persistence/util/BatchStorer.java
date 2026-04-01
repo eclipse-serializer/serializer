@@ -173,6 +173,13 @@ public interface BatchStorer extends Storer, AutoCloseable
     }
 
 
+    /**
+     * Default implementation of {@link BatchStorer}.
+     * <p>
+     * All store operations are synchronized to ensure thread safety.
+     * A background daemon thread periodically checks for pending data
+     * and flushes it according to the configured {@link Controller}.
+     */
     public static class Default implements BatchStorer
     {
         private final static Logger logger = Logging.getLogger(BatchStorer.class);
