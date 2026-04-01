@@ -28,9 +28,19 @@ import java.util.concurrent.TimeUnit;
 import static org.eclipse.serializer.util.X.notNull;
 
 /**
- * Utility to auto-batch store operations.
+ * A batching {@link Storer} decorator designed for write-heavy operations.
+ * It accumulates store operations and commits them in batches rather than individually,
+ * significantly improving throughput when storing large numbers of objects.
  * <p>
- * It wraps another storer but only commits in cycles, depending on the controller's input.
+ * Instead of committing each store operation immediately, a {@code BatchStorer} delegates
+ * to an underlying {@link Storer} and only flushes when the configured {@link Controller}
+ * determines it is time — based on elapsed time, accumulated size, or both.
+ * A background daemon thread periodically checks for pending flushes at the configured
+ * check interval, ensuring data is flushed even when no new store operations occur.
+ * Flushing can also be triggered manually by calling {@link #flush()}.
+ * <p>
+ * {@code BatchStorer} implements {@link AutoCloseable}. On close, it flushes any remaining
+ * pending data and releases resources.
  * <p>
  * Usage:
  * <pre>
@@ -43,11 +53,6 @@ import static org.eclipse.serializer.util.X.notNull;
  *     storer.storeAll(instances);
  * }
  * </pre>
- * It commits automatically when the controller decides to flush.
- * A background daemon thread periodically checks for pending flushes
- * at the configured check interval, ensuring data is flushed even
- * when no new store operations occur.
- * Or manually, by calling {@link #flush()}.
  */
 public interface BatchStorer extends Storer, AutoCloseable
 {
