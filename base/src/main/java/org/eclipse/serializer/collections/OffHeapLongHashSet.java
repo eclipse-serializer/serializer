@@ -40,20 +40,21 @@ import java.nio.ByteBuffer;
 public final class OffHeapLongHashSet
 {
 	/* TODO: OffHeapLongHashSet memory segmentation
-	 * Currently, this implementation can theoretically grow infinitely (as long as there is free disk space...),
-	 * but it has one problem:
-	 * It needs to allocate larger and larger monolithic memory blocks, eventually exceeding the memory size.
+	 * Currently, this implementation can theoretically grow very large (as long as enough
+	 * native memory is available), but it has one problem:
+	 * It needs to allocate larger and larger monolithic memory blocks, eventually exceeding
+	 * the available native memory.
 	 * A solution would be:
-	 * - Switch from open adressing to chaining.
+	 * - Switch from open addressing to chaining.
 	 * - Chains are held in another allocated memory block. e.g. always 1024 chains per block (configurable).
 	 * - Multiple chain blocks are allocated as needed, as long as the configuration does not require a storage enlargement.
-	 * - Each chain has a pointer at is end, pointing to the next chain, if necessary.
+	 * - Each chain has a pointer at its end, pointing to the next chain, if necessary.
 	 *   This is important to not force a storage enlargement just because a single chain is full.
 	 *
 	 * This way, the set can be configured to have a maximum hash table length of a certain size (e.g. 1 GB)
 	 * and from then on grow only by having larger and larger chains.
 	 * This creates multiple memory segments that can be allocated and swapped step by step
-	 * without the need to allocate one gigantic block that exceeds the hardware's memory.
+	 * without the need to allocate one gigantic block that exceeds the available native memory.
 	 *
 	 * The tradeoff between hash table size and chain length can be perfectly configured
 	 * using a few simple int values. (maximum hash table length, chain length, chains per block, etc.)
