@@ -384,13 +384,13 @@ public interface BatchStorer extends Storer, AutoCloseable
 		}
 
 		@Override
-		public void registerCommitListener(final PersistenceCommitListener listener)
+		public synchronized void registerCommitListener(final PersistenceCommitListener listener)
 		{
 			this.delegate.registerCommitListener(listener);
 		}
 
 		@Override
-		public void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
+		public synchronized void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
 		{
 			this.delegate.registerRegistrationListener(listener);
 		}
