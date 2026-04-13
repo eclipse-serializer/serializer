@@ -371,20 +371,29 @@ public final class OffHeapLongHashSet
 		 * here is irrelevant anyway.
 		 */
 
-		int collisions = 0;
-		for(long i = this.hash(value); true; i = this.advanceIndex(i))
+		// Outer loop: if a resize occurs during probing, the probe must restart with the new
+		// hash range and a fresh collision count, otherwise the value could land in a slot
+		// that is unreachable from hash(value) in the resized table (breaking future contains).
+		while(true)
 		{
-			final long slotValue = this.getValue(i);
-			if(slotValue == EMPTY)
+			int collisions = 0;
+			for(long i = this.hash(value); true; i = this.advanceIndex(i))
 			{
-				this.insertAt(i, value); // empty slot found, insert and return.
-				return true;
+				final long slotValue = this.getValue(i);
+				if(slotValue == EMPTY)
+				{
+					this.insertAt(i, value); // empty slot found, insert and return.
+					return true;
+				}
+				if(slotValue == value)
+				{
+					return false; // value already contained
+				}
+				if(this.checkForRebuild(++collisions))
+				{
+					break; // resize happened; restart probing from hash(value) for the new table.
+				}
 			}
-			if(slotValue == value)
-			{
-				return false; // value already contained
-			}
-			this.checkForRebuild(++collisions); // check for rebuild before trying again.
 		}
 	}
 
@@ -419,17 +428,23 @@ public final class OffHeapLongHashSet
 		return i << 3;
 	}
 
-	private void checkForRebuild(final int collisions)
+	/**
+	 * @return {@code true} if a resize was performed (caller must restart probing with a fresh hash),
+	 *         {@code false} otherwise.
+	 */
+	private boolean checkForRebuild(final int collisions)
 	{
 		if(collisions < this.collisionThreshold)
 		{
-			return; // Acceptable number of collisions.
+			return false; // Acceptable number of collisions.
 		}
 
 		if(collisions >= this.collisionLimit || ++this.excessCount >= this.excessLimit)
 		{
 			this.enlarge(); // Unacceptable number of collisions, enlarge storage.
+			return true;
 		}
+		return false;
 	}
 
 	private boolean ensureInsertedZero()
