@@ -165,10 +165,18 @@ public interface BatchStorer extends Storer, AutoCloseable
      */
     public static BatchStorer New(final Storer delegate, final Controller controller, final Duration checkInterval)
     {
+        final long millis = notNull(checkInterval).toMillis();
+        if (millis <= 0L)
+        {
+            throw new IllegalArgumentException(
+                "checkInterval must be > 0ms, was " + checkInterval
+            );
+        }
+
         return new Default(
             notNull(delegate     ),
             notNull(controller   ),
-            notNull(checkInterval)
+                    checkInterval
         );
     }
 
@@ -193,14 +201,6 @@ public interface BatchStorer extends Storer, AutoCloseable
         {
             super();
 
-            final long millis = checkInterval.toMillis();
-            if (millis <= 0L)
-            {
-                throw new IllegalArgumentException(
-                    "checkInterval must be > 0ms, was " + checkInterval
-                );
-            }
-
             this.delegate   = delegate  ;
             this.controller = controller;
             this.lastFlush  = System.nanoTime();
@@ -211,6 +211,7 @@ public interface BatchStorer extends Storer, AutoCloseable
                 return t;
             });
 
+            final long millis = checkInterval.toMillis();
             this.scheduler.scheduleAtFixedRate(
                 this::backgroundFlush,
                 millis,
