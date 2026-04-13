@@ -109,7 +109,7 @@ public interface BatchStorer extends Storer, AutoCloseable
 		}
 		return (size, millisSinceLastFlush) ->
 			millisSinceLastFlush >= flushCycleMillis
-			;
+		;
 	}
 
 
@@ -131,7 +131,7 @@ public interface BatchStorer extends Storer, AutoCloseable
 		}
 		return (size, millisSinceLastFlush) ->
 			size >= maxSize
-			;
+		;
 	}
 
 
@@ -227,19 +227,19 @@ public interface BatchStorer extends Storer, AutoCloseable
 	{
 		private final static Logger logger = Logging.getLogger(BatchStorer.class);
 
-		private final Storer delegate;
-		private final Controller controller;
-		private final ScheduledExecutorService scheduler;
-		private long pendingSinceNanos;
-		private volatile boolean closed;
+		private final Storer                   delegate         ;
+		private final Controller               controller       ;
+		private final ScheduledExecutorService scheduler        ;
+		private long                           pendingSinceNanos;
+		private volatile boolean               closed           ;
 
 		Default(final Storer delegate, final Controller controller, final Duration checkInterval)
 		{
 			super();
 
-			this.delegate = delegate;
+			this.delegate   = delegate;
 			this.controller = controller;
-			this.scheduler = Executors.newSingleThreadScheduledExecutor(r ->
+			this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
 			{
 				final Thread t = new Thread(r, "batch-storer-flush");
 				t.setDaemon(true);
@@ -297,45 +297,6 @@ public interface BatchStorer extends Storer, AutoCloseable
 		public synchronized boolean hasPendingData()
 		{
 			return !this.delegate.isEmpty();
-		}
-
-		@Override
-		public void close()
-		{
-			synchronized (this)
-			{
-				if (this.closed)
-				{
-					return;
-				}
-				this.closed = true;
-			}
-
-			this.scheduler.shutdown();
-			try
-			{
-				if (!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
-				{
-					this.scheduler.shutdownNow();
-					if (!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
-					{
-						logger.warn("Background flush thread did not terminate within timeout");
-					}
-				}
-			} catch (final InterruptedException e)
-			{
-				this.scheduler.shutdownNow();
-				Thread.currentThread().interrupt();
-			}
-
-			synchronized (this)
-			{
-				if (!this.delegate.isEmpty())
-				{
-					this.internalFlush();
-				}
-				this.delegate.clear();
-			}
 		}
 
 		@Override
@@ -432,6 +393,46 @@ public interface BatchStorer extends Storer, AutoCloseable
 		public void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
 		{
 			this.delegate.registerRegistrationListener(listener);
+		}
+
+		@Override
+		public void close()
+		{
+			synchronized (this)
+			{
+				if (this.closed)
+				{
+					return;
+				}
+				this.closed = true;
+			}
+
+			this.scheduler.shutdown();
+			try
+			{
+				if (!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+				{
+					this.scheduler.shutdownNow();
+					if (!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+					{
+						logger.warn("Background flush thread did not terminate within timeout");
+					}
+				}
+			}
+			catch (final InterruptedException e)
+			{
+				this.scheduler.shutdownNow();
+				Thread.currentThread().interrupt();
+			}
+
+			synchronized (this)
+			{
+				if (!this.delegate.isEmpty())
+				{
+					this.internalFlush();
+				}
+				this.delegate.clear();
+			}
 		}
 
 		private void backgroundFlush()
