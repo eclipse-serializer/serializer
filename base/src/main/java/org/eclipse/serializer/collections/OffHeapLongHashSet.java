@@ -34,10 +34,15 @@ import java.nio.ByteBuffer;
  * memory chunks immediately instead of waiting for garbage collection.
  * <p>
  * Instances are not safe for concurrent modification by multiple threads.
+ * <p>
+ * The backing direct buffer holds off-heap memory that is not released by ordinary garbage
+ * collection in a timely manner. Callers must invoke {@link #close()} (e.g. via
+ * try-with-resources) when the set is no longer needed to free the native memory immediately.
+ * After {@code close()}, the set must not be used again.
  *
  * @see XMemory
  */
-public final class OffHeapLongHashSet
+public final class OffHeapLongHashSet implements AutoCloseable
 {
 	/* TODO: OffHeapLongHashSet memory segmentation
 	 * Currently, this implementation can theoretically grow very large (as long as enough
@@ -574,6 +579,29 @@ public final class OffHeapLongHashSet
 	public double currentLoad()
 	{
 		return this.capacity == 0 ? 0.0 : (double)this.size / this.capacity;
+	}
+
+	/**
+	 * Releases the off-heap memory backing this set. After this call the set must not be
+	 * used anymore; further calls to {@link #put(long)}, {@link #contains(long)}, etc. will
+	 * produce undefined results. Calling {@code close()} more than once is a no-op.
+	 */
+	@Override
+	public void close()
+	{
+		final ByteBuffer buffer = this.dbb;
+		if(buffer == null)
+		{
+			return; // already closed
+		}
+		this.dbb            = null;
+		this.dbbBaseAddress = 0L;
+		this.capacity       = 0L;
+		this.hashRange      = 0L;
+		this.size           = 0L;
+		this.excessCount    = 0;
+		this.containsZero   = false;
+		XMemory.deallocateDirectByteBuffer(buffer);
 	}
 
 }
