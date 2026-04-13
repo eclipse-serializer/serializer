@@ -14,18 +14,18 @@ package org.eclipse.serializer.persistence.util;
  * #L%
  */
 
-import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
-import org.eclipse.serializer.persistence.types.Storer;
-import org.eclipse.serializer.util.logging.Logging;
-import org.slf4j.Logger;
+import static org.eclipse.serializer.util.X.notNull;
 
 import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.eclipse.serializer.util.X.notNull;
+import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
+import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
+import org.eclipse.serializer.persistence.types.Storer;
+import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 /**
  * A batching {@link Storer} decorator designed for write-heavy operations.
@@ -193,9 +193,17 @@ public interface BatchStorer extends Storer, AutoCloseable
         {
             super();
 
+            final long millis = checkInterval.toMillis();
+            if (millis <= 0L)
+            {
+                throw new IllegalArgumentException(
+                    "checkInterval must be > 0ms, was " + checkInterval
+                );
+            }
+
             this.delegate   = delegate  ;
             this.controller = controller;
-            this.lastFlush  = System.currentTimeMillis();
+            this.lastFlush  = System.nanoTime();
             this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
             {
                 final Thread t = new Thread(r, "batch-storer-flush");
@@ -203,7 +211,6 @@ public interface BatchStorer extends Storer, AutoCloseable
                 return t;
             });
 
-            final long millis = checkInterval.toMillis();
             this.scheduler.scheduleAtFixedRate(
                 this::backgroundFlush,
                 millis,
@@ -253,7 +260,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         @Override
         public synchronized void flush()
         {
-            this.internalFlush(System.currentTimeMillis());
+            this.internalFlush(System.nanoTime());
         }
 
         @Override
@@ -263,56 +270,63 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public synchronized void close()
+        public void close()
         {
             this.scheduler.shutdown();
             try
             {
-                if (!this.scheduler.awaitTermination(1, TimeUnit.HOURS))
+                if (!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
                 {
-                    logger.warn("Background flush thread did not terminate within timeout");
+                    this.scheduler.shutdownNow();
+                    if (!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+                    {
+                        logger.warn("Background flush thread did not terminate within timeout");
+                    }
                 }
             }
             catch (final InterruptedException e)
             {
+                this.scheduler.shutdownNow();
                 Thread.currentThread().interrupt();
             }
 
-            if (!this.delegate.isEmpty())
+            synchronized (this)
             {
-                this.internalFlush(System.currentTimeMillis());
+                if (!this.delegate.isEmpty())
+                {
+                    this.internalFlush(System.nanoTime());
+                }
+                this.delegate.clear();
             }
-            this.delegate.clear();
         }
 
         @Override
         public synchronized Object commit()
         {
-            this.flush();
-            return null;
+            return this.internalFlush(System.nanoTime());
         }
 
         @Override
         public synchronized void clear()
         {
             this.delegate.clear();
-            this.lastFlush = System.currentTimeMillis();
+            this.lastFlush = System.nanoTime();
         }
 
         @Override
-        public boolean skip(final Object instance)
+        public synchronized boolean skip(final Object instance)
         {
             return this.delegate.skip(instance);
         }
 
         @Override
-        public boolean skipNulled(final Object instance)
+        public synchronized boolean skipNulled(final Object instance)
         {
             return this.delegate.skipNulled(instance);
         }
 
         @Override
-        public boolean skipMapped(final Object instance, final long objectId)
+        public synchronized boolean skipMapped(final Object instance, final long objectId)
         {
             return this.delegate.skipMapped(instance, objectId);
         }
@@ -345,7 +359,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer reinitialize()
         {
             this.delegate.reinitialize();
-            this.lastFlush = System.currentTimeMillis();
+            this.lastFlush = System.nanoTime();
             return this;
         }
 
@@ -353,7 +367,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer reinitialize(final long initialCapacity)
         {
             this.delegate.reinitialize(initialCapacity);
-            this.lastFlush = System.currentTimeMillis();
+            this.lastFlush = System.nanoTime();
             return this;
         }
 
@@ -361,7 +375,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer ensureCapacity(final long desiredCapacity)
         {
             this.delegate.ensureCapacity(desiredCapacity);
-            this.lastFlush = System.currentTimeMillis();
+            this.lastFlush = System.nanoTime();
             return this;
         }
 
@@ -396,23 +410,24 @@ public interface BatchStorer extends Storer, AutoCloseable
                 return;
             }
 
-            final long now = System.currentTimeMillis();
+            final long nowNanos = System.nanoTime();
 
             if (this.controller.shouldFlush(
                 this.delegate.size(),
-                now - this.lastFlush
+                TimeUnit.NANOSECONDS.toMillis(nowNanos - this.lastFlush)
             ))
             {
-                this.internalFlush(now);
+                this.internalFlush(nowNanos);
             }
         }
 
-        private void internalFlush(final long timestamp)
+        private Object internalFlush(final long nanoTimestamp)
         {
             logger.debug("Flushing batch storer with size = {}", this.delegate.size());
 
-            this.delegate.commit();
-            this.lastFlush = timestamp;
+            final Object result = this.delegate.commit();
+            this.lastFlush = nanoTimestamp;
+            return result;
         }
 
     }
