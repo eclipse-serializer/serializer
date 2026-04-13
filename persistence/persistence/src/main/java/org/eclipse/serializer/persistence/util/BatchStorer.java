@@ -39,6 +39,13 @@ import org.slf4j.Logger;
  * check interval, ensuring data is flushed even when no new store operations occur.
  * Flushing can also be triggered manually by calling {@link #flush()}.
  * <p>
+ * <b>Persistence guarantee:</b> a {@code store} call alone does not fully persist its data —
+ * it only buffers the operation in the underlying {@link Storer}. Data is only committed to
+ * the backing storage once a flush is triggered, either by the {@link Controller}, the
+ * background scheduler, an explicit {@link #flush()} or {@link #commit()} call, or on
+ * {@link #close()}. Callers that need a hard persistence guarantee at a specific point in
+ * time must invoke {@link #flush()} or {@link #commit()} explicitly.
+ * <p>
  * {@code BatchStorer} implements {@link AutoCloseable}. On close, it flushes any remaining
  * pending data and releases resources.
  * <p>
@@ -61,6 +68,10 @@ public interface BatchStorer extends Storer, AutoCloseable
      * ensures that all buffered or batched data is written and made persistent.
      * It may be called explicitly to force a flush at a specific point in time,
      * regardless of the configured flush cycle or size thresholds.
+     * <p>
+     * This is effectively a synonym for {@link #commit()} and simply delegates to it;
+     * the only difference is that {@code flush()} discards the commit result. Use
+     * {@link #commit()} if the underlying {@link Storer}'s commit status is needed.
      */
     public void flush();
 
@@ -259,12 +270,6 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public synchronized void flush()
-        {
-            this.internalFlush(System.nanoTime());
-        }
-
-        @Override
         public boolean hasPendingData()
         {
             return !this.delegate.isEmpty();
@@ -299,6 +304,12 @@ public interface BatchStorer extends Storer, AutoCloseable
                 }
                 this.delegate.clear();
             }
+        }
+
+        @Override
+        public synchronized void flush()
+        {
+            this.commit();
         }
 
         @Override
