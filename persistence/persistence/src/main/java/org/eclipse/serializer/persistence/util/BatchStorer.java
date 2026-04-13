@@ -100,7 +100,13 @@ public interface BatchStorer extends Storer, AutoCloseable
      */
     public static Controller Controller(final Duration flushCycle)
     {
-        final long flushCycleMillis = flushCycle.toMillis();
+        final long flushCycleMillis = notNull(flushCycle).toMillis();
+        if (flushCycleMillis <= 0L)
+        {
+            throw new IllegalArgumentException(
+                "flushCycle must be > 0ms, was " + flushCycle
+            );
+        }
         return (size, millisSinceLastFlush) ->
             millisSinceLastFlush >= flushCycleMillis
         ;
@@ -117,6 +123,12 @@ public interface BatchStorer extends Storer, AutoCloseable
      */
     public static Controller Controller(final long maxSize)
     {
+        if (maxSize <= 0L)
+        {
+            throw new IllegalArgumentException(
+                "maxSize must be > 0, was " + maxSize
+            );
+        }
         return (size, millisSinceLastFlush) ->
             size >= maxSize
         ;
@@ -135,7 +147,19 @@ public interface BatchStorer extends Storer, AutoCloseable
      */
     public static Controller Controller(final long maxSize, final Duration flushCycle)
     {
-        final long flushCycleMillis = flushCycle.toMillis();
+        if (maxSize <= 0L)
+        {
+            throw new IllegalArgumentException(
+                "maxSize must be > 0, was " + maxSize
+            );
+        }
+        final long flushCycleMillis = notNull(flushCycle).toMillis();
+        if (flushCycleMillis <= 0L)
+        {
+            throw new IllegalArgumentException(
+                "flushCycle must be > 0ms, was " + flushCycle
+            );
+        }
         return (size, millisSinceLastFlush) ->
             size >= maxSize
         ||  millisSinceLastFlush >= flushCycleMillis
@@ -203,10 +227,11 @@ public interface BatchStorer extends Storer, AutoCloseable
     {
         private final static Logger logger = Logging.getLogger(BatchStorer.class);
 
-        private final Storer                    delegate  ;
-        private final Controller                controller;
-        private final ScheduledExecutorService  scheduler ;
-        private       long                      lastFlush;
+        private final Storer                    delegate         ;
+        private final Controller                controller       ;
+        private final ScheduledExecutorService  scheduler        ;
+        private       long                      pendingSinceNanos;
+        private       volatile boolean          closed           ;
 
         Default(final Storer delegate, final Controller controller, final Duration checkInterval)
         {
@@ -214,7 +239,6 @@ public interface BatchStorer extends Storer, AutoCloseable
 
             this.delegate   = delegate  ;
             this.controller = controller;
-            this.lastFlush  = System.nanoTime();
             this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
             {
                 final Thread t = new Thread(r, "batch-storer-flush");
@@ -270,7 +294,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public boolean hasPendingData()
+        public synchronized boolean hasPendingData()
         {
             return !this.delegate.isEmpty();
         }
@@ -278,6 +302,15 @@ public interface BatchStorer extends Storer, AutoCloseable
         @Override
         public void close()
         {
+            synchronized (this)
+            {
+                if (this.closed)
+                {
+                    return;
+                }
+                this.closed = true;
+            }
+
             this.scheduler.shutdown();
             try
             {
@@ -300,7 +333,7 @@ public interface BatchStorer extends Storer, AutoCloseable
             {
                 if (!this.delegate.isEmpty())
                 {
-                    this.internalFlush(System.nanoTime());
+                    this.internalFlush();
                 }
                 this.delegate.clear();
             }
@@ -315,14 +348,14 @@ public interface BatchStorer extends Storer, AutoCloseable
         @Override
         public synchronized Object commit()
         {
-            return this.internalFlush(System.nanoTime());
+            return this.internalFlush();
         }
 
         @Override
         public synchronized void clear()
         {
             this.delegate.clear();
-            this.lastFlush = System.nanoTime();
+            this.pendingSinceNanos = 0L;
         }
 
         @Override
@@ -344,25 +377,25 @@ public interface BatchStorer extends Storer, AutoCloseable
         }
 
         @Override
-        public long size()
+        public synchronized long size()
         {
             return this.delegate.size();
         }
 
         @Override
-        public boolean isEmpty()
+        public synchronized boolean isEmpty()
         {
             return this.delegate.isEmpty();
         }
 
         @Override
-        public long currentCapacity()
+        public synchronized long currentCapacity()
         {
             return this.delegate.currentCapacity();
         }
 
         @Override
-        public long maximumCapacity()
+        public synchronized long maximumCapacity()
         {
             return this.delegate.maximumCapacity();
         }
@@ -371,7 +404,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer reinitialize()
         {
             this.delegate.reinitialize();
-            this.lastFlush = System.nanoTime();
+            this.pendingSinceNanos = 0L;
             return this;
         }
 
@@ -379,7 +412,7 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer reinitialize(final long initialCapacity)
         {
             this.delegate.reinitialize(initialCapacity);
-            this.lastFlush = System.nanoTime();
+            this.pendingSinceNanos = 0L;
             return this;
         }
 
@@ -387,7 +420,6 @@ public interface BatchStorer extends Storer, AutoCloseable
         public synchronized Storer ensureCapacity(final long desiredCapacity)
         {
             this.delegate.ensureCapacity(desiredCapacity);
-            this.lastFlush = System.nanoTime();
             return this;
         }
 
@@ -417,28 +449,32 @@ public interface BatchStorer extends Storer, AutoCloseable
 
         private synchronized void optFlush()
         {
-            if (this.delegate.isEmpty())
+            if (this.closed || this.delegate.isEmpty())
             {
                 return;
             }
 
             final long nowNanos = System.nanoTime();
+            if (this.pendingSinceNanos == 0L)
+            {
+                this.pendingSinceNanos = nowNanos;
+            }
 
             if (this.controller.shouldFlush(
                 this.delegate.size(),
-                TimeUnit.NANOSECONDS.toMillis(nowNanos - this.lastFlush)
+                TimeUnit.NANOSECONDS.toMillis(nowNanos - this.pendingSinceNanos)
             ))
             {
-                this.internalFlush(nowNanos);
+                this.internalFlush();
             }
         }
 
-        private Object internalFlush(final long nanoTimestamp)
+        private Object internalFlush()
         {
             logger.debug("Flushing batch storer with size = {}", this.delegate.size());
 
             final Object result = this.delegate.commit();
-            this.lastFlush = nanoTimestamp;
+            this.pendingSinceNanos = 0L;
             return result;
         }
 
