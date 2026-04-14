@@ -1070,7 +1070,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			synchronized(this.head)
 			{
-				return super.store(instance, objectId);
+				final long oid = super.store(instance, objectId);
+				// Default.internalStore(root, objectId) does not call optFlush(),
+				// so invoke it here to match the internalStore(Object) path and
+				// ensure size/time-based flush controllers trigger consistently.
+				this.optFlush();
+				return oid;
 			}
 		}
 
