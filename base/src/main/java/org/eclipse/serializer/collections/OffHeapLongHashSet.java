@@ -615,6 +615,7 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	 */
 	public long size()
 	{
+		this.ensureOpen();
 		return this.size;
 	}
 
@@ -623,9 +624,11 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	 * The capacity is always a power of two and grows only via storage enlargement.
 	 *
 	 * @return the current capacity.
+	 * @throws IllegalStateException if this set has been {@linkplain #close() closed}.
 	 */
 	public long capacity()
 	{
+		this.ensureOpen();
 		return this.capacity;
 	}
 
@@ -634,9 +637,11 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	 * to {@linkplain #capacity() capacity}.
 	 *
 	 * @return a value in {@code [0.0, 1.0]}, or {@code 0.0} if the capacity is zero.
+	 * @throws IllegalStateException if this set has been {@linkplain #close() closed}.
 	 */
 	public double currentLoad()
 	{
+		this.ensureOpen();
 		return this.capacity == 0 ? 0.0 : (double)this.size / this.capacity;
 	}
 
