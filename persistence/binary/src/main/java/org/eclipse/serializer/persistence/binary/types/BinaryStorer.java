@@ -231,6 +231,24 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			return this.chunks[0];
 		}
 
+		/**
+		 * Returns the maximum accumulated byte count across all channels,
+		 * including data in each channel's current (incomplete) buffer.
+		 */
+		protected long maxChannelByteCount()
+		{
+			long max = 0L;
+			for(final ChunksBuffer chunk : this.chunks)
+			{
+				final long len = chunk.currentTotalLength();
+				if(len > max)
+				{
+					max = len;
+				}
+			}
+			return max;
+		}
+
 		@Override
 		public PersistenceStorer reinitialize()
 		{
@@ -971,6 +989,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 	 */
 	public final class Batching extends Default implements BatchStorer
 	{
+		/**
+		 * Safety threshold: ~1.75 GB. Leaves 256 MB headroom below the 2^31 hard limit
+		 * to account for data written by the current store() call completing after the check.
+		 */
+		private static final long MAX_CHANNEL_BYTES_BEFORE_FLUSH =
+			Integer.MAX_VALUE - (256L * 1024 * 1024);
+
 		private final BatchStorer.Controller   controller        ;
 		private final ScheduledExecutorService scheduler         ;
 		private long                           pendingSinceNanos ;
@@ -1205,6 +1230,19 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			if(this.pendingSinceNanos == 0L)
 			{
 				this.pendingSinceNanos = nowNanos;
+			}
+
+			// Safety: force flush if any channel approaches the 2 GB storage limit
+			final long maxBytes = this.maxChannelByteCount();
+			if(maxBytes >= MAX_CHANNEL_BYTES_BEFORE_FLUSH)
+			{
+				logger.debug(
+					"Forcing flush: channel byte count {} exceeds safety threshold {}",
+					maxBytes,
+					MAX_CHANNEL_BYTES_BEFORE_FLUSH
+				);
+				this.internalFlush();
+				return;
 			}
 
 			if(this.controller.shouldFlush(

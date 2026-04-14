@@ -309,7 +309,20 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	{
 		return this.totalLength;
 	}
-	
+
+	/**
+	 * Returns the total accumulated byte count including data in the current
+	 * (not yet completed) buffer. Unlike {@link #totalLength()}, which only
+	 * accounts for completed buffers, this method provides a real-time
+	 * value suitable for size-based flush decisions.
+	 *
+	 * @return total bytes written so far, including the current buffer
+	 */
+	public final long currentTotalLength()
+	{
+		return this.totalLength + (this.currentAddress - this.currentBufferStartAddress);
+	}
+
 	@Override
 	public final void copyToAddress(
 		final long entityContentAddressOffset,
