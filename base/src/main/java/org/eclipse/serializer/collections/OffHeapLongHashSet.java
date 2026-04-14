@@ -72,6 +72,13 @@ public final class OffHeapLongHashSet implements AutoCloseable
 
 	private static final long EMPTY = 0L;
 
+	/**
+	 * The maximum capacity in number of {@code long} slots. Constrained by the underlying
+	 * {@link ByteBuffer} which is int-addressed, so the byte size must not exceed
+	 * {@link Integer#MAX_VALUE}.
+	 */
+	private static final long MAX_CAPACITY = Integer.MAX_VALUE / Long.BYTES;
+
 
 
 	///////////////////////////////////////////////////////////////////////////
@@ -149,6 +156,13 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	public static long padCapacity(final long desiredCapacity)
 	{
 		XMath.positive(desiredCapacity);
+
+		if(desiredCapacity > MAX_CAPACITY)
+		{
+			throw new IllegalArgumentException(
+				"Desired capacity " + desiredCapacity + " exceeds the maximum of " + MAX_CAPACITY + "."
+			);
+		}
 
 		long capacity = 1;
 		while(capacity < desiredCapacity)
@@ -286,14 +300,24 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	// methods //
 	////////////
 
+	private void ensureOpen()
+	{
+		if(this.dbb == null)
+		{
+			throw new IllegalStateException("OffHeapLongHashSet has been closed.");
+		}
+	}
+
 	/**
 	 * Returns whether this set contains the given value.
 	 *
 	 * @param value the value to look up.
 	 * @return {@code true} if the value is contained, {@code false} otherwise.
+	 * @throws IllegalStateException if this set has been {@linkplain #close() closed}.
 	 */
 	public boolean contains(final long value)
 	{
+		this.ensureOpen();
 		if(value == EMPTY)
 		{
 			return this.containsZero;
@@ -324,6 +348,7 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	 */
 	public boolean containsAll(final long... values)
 	{
+		this.ensureOpen();
 		for(final long value : values)
 		{
 			if(!this.contains(value))
@@ -342,6 +367,7 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	 */
 	public int putAll(final long... values)
 	{
+		this.ensureOpen();
 		int insertCount = 0;
 		for(final long value : values)
 		{
@@ -363,6 +389,7 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	 */
 	public boolean put(final long value)
 	{
+		this.ensureOpen();
 		if(value == EMPTY)
 		{
 			return this.ensureInsertedZero();
@@ -440,16 +467,22 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	 */
 	private boolean checkForRebuild(final int collisions)
 	{
-		if(collisions < this.collisionThreshold)
+		if(collisions >= this.collisionLimit)
 		{
-			return false; // Acceptable number of collisions.
-		}
-
-		if(collisions >= this.collisionLimit || ++this.excessCount >= this.excessLimit)
-		{
-			this.enlarge(); // Unacceptable number of collisions, enlarge storage.
+			this.enlarge(); // Hard limit reached, enlarge immediately.
 			return true;
 		}
+
+		// Increment excessCount exactly once per insertion — at the moment collisions
+		// first reach the threshold — so that excessCount reflects the number of
+		// insertions that exceeded the acceptable collision count, not the number of
+		// excess probe steps.
+		if(collisions == this.collisionThreshold && ++this.excessCount >= this.excessLimit)
+		{
+			this.enlarge(); // Too many insertions exceeded the collision threshold.
+			return true;
+		}
+
 		return false;
 	}
 
@@ -492,13 +525,26 @@ public final class OffHeapLongHashSet implements AutoCloseable
 
 	private void enlarge()
 	{
-		this.resize(this.capacity << 1);
+		final long doubled = this.capacity << 1;
+		if(doubled > MAX_CAPACITY)
+		{
+			throw new CapacityExceededException(
+				"Cannot enlarge beyond maximum capacity of " + MAX_CAPACITY + " long slots."
+			);
+		}
+		this.resize(doubled);
 	}
 
 	private void resize(final long newCapacity)
 	{
 		// DirectByteBuffer allocation
 		final long newByteCapacity = to_longByteSize(newCapacity);
+		if(newByteCapacity < 0 || newByteCapacity > Integer.MAX_VALUE)
+		{
+			throw new CapacityExceededException(
+				"Required byte capacity " + newByteCapacity + " exceeds the DirectByteBuffer int limit."
+			);
+		}
 		final ByteBuffer newDbb = XMemory.allocateDirectNative(newByteCapacity);
 		final long newBaseAddress = XMemory.getDirectByteBufferAddress(newDbb);
 		XMemory.clearMemory(newBaseAddress, newByteCapacity);
@@ -582,9 +628,9 @@ public final class OffHeapLongHashSet implements AutoCloseable
 	}
 
 	/**
-	 * Releases the off-heap memory backing this set. After this call the set must not be
-	 * used anymore; further calls to {@link #put(long)}, {@link #contains(long)}, etc. will
-	 * produce undefined results. Calling {@code close()} more than once is a no-op.
+	 * Releases the off-heap memory backing this set. After this call, further calls to
+	 * {@link #put(long)}, {@link #contains(long)}, etc. will throw {@link IllegalStateException}.
+	 * Calling {@code close()} more than once is a no-op.
 	 */
 	@Override
 	public void close()
