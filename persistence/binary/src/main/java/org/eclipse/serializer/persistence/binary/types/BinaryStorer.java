@@ -1014,7 +1014,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					"checkInterval must be > 0ms, was " + checkInterval
 				);
 			}
-			this.scheduler.scheduleAtFixedRate(
+			this.scheduler.scheduleWithFixedDelay(
 				this::backgroundFlush,
 				millis,
 				millis,
