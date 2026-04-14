@@ -334,9 +334,11 @@ public interface Set_long extends Composition, _longIterable, Sized
 		{
 			// +1 so that an exact power-of-two size doesn't leave us at size >= hashRange
 			// and trigger an immediate re-enlarge on the next add.
+			// Cap at the highest power-of-two int (2^30) to preserve the power-of-two invariant
+			// that hash() relies on (hashRange must be 2^n - 1).
 			final long desired = this.size + 1L;
-			final int targetLength = desired >= Integer.MAX_VALUE
-				? Integer.MAX_VALUE
+			final int targetLength = desired >= XMath.highestPowerOf2_int()
+				? XMath.highestPowerOf2_int()
 				: XMath.pow2BoundCapped((int)desired);
 			this.rebuild(targetLength);
 			return this.size;
