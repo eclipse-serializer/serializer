@@ -1294,19 +1294,6 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			Persister                             persister
 		);
 
-		public BatchStorer createBatchStorer(
-			PersistenceTypeHandlerManager<Binary> typeManager       ,
-			PersistenceObjectManager<Binary>      objectManager     ,
-			ObjectSwizzling                       objectRetriever   ,
-			PersistenceTarget<Binary>             target            ,
-			BufferSizeProviderIncremental         bufferSizeProvider,
-			Persister                             persister         ,
-			BatchStorer.Controller                controller        ,
-			Duration                              checkInterval
-		);
-
-
-
 		public abstract class Abstract implements BinaryStorer.Creator
 		{
 			///////////////////////////////////////////////////////////////////////////

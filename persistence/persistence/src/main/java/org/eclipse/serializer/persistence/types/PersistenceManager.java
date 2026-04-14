@@ -43,9 +43,6 @@ ByteOrderTargeting<PersistenceManager<D>>
 	@Override
 	public PersistenceStorer createEagerStorer();
 
-	@Override
-	public BatchStorer createBatchStorer(BatchStorer.Controller controller, Duration checkInterval);
-
 	public PersistenceStorer createStorer(PersistenceStorer.Creator<D> storerCreator);
 	
 	// manager methods //
