@@ -84,9 +84,14 @@ public interface Persister extends ObjectSwizzling, PersistenceStoring
 	 * @param checkInterval the interval at which a background thread checks for pending flushes
 	 * @return the newly created {@link BatchStorer} instance.
 	 */
-	public BatchStorer createBatchStorer(
+	public default BatchStorer createBatchStorer(
 		BatchStorer.Controller controller   ,
 		Duration               checkInterval
-	);
+	)
+	{
+		throw new UnsupportedOperationException(
+			this.getClass().getName() + " does not support batch storing."
+		);
+	}
 
 }

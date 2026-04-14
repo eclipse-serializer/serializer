@@ -51,7 +51,7 @@ import static org.eclipse.serializer.util.X.notNull;
  * }
  * </pre>
  */
-public interface BatchStorer extends Storer, AutoCloseable
+public interface BatchStorer extends PersistenceStorer, AutoCloseable
 {
 	/**
 	 * Flushes accumulated data to the underlying storage. This method ensures that all

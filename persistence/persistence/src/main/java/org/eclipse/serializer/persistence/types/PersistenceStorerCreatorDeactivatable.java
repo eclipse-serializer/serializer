@@ -122,7 +122,7 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 	}
 
 	@Override
-	public PersistenceStorer createBatchStorer(
+	public BatchStorer createBatchStorer(
 		final PersistenceTypeHandlerManager<D> typeManager       ,
 		final PersistenceObjectManager<D>      objectManager     ,
 		final ObjectSwizzling                  objectRetriever   ,
@@ -135,8 +135,9 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 	{
 		logger.debug("Creating batch storer");
 
-		// Batch storer is not wrapped in PersistenceStorerDeactivatable
-		// because it manages its own lifecycle via close().
+		// BatchStorer is not wrapped in PersistenceStorerDeactivatable
+		// because PersistenceStorerDeactivatable does not implement BatchStorer
+		// and BatchStorer manages its own lifecycle via close().
 		return this.creator.createBatchStorer(
 			typeManager,
 			objectManager,

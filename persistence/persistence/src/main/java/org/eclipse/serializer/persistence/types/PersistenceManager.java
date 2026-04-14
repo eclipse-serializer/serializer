@@ -281,7 +281,7 @@ ByteOrderTargeting<PersistenceManager<D>>
 			final Duration               checkInterval
 		)
 		{
-			return (BatchStorer)this.registerStorer(this.storerCreator.createBatchStorer(
+			return this.registerStorer(this.storerCreator.createBatchStorer(
 				this.contextDispatcher.dispatchTypeHandlerManager(this.typeHandlerManager),
 				this.contextDispatcher.dispatchObjectManager(this.objectManager),
 				this.getEffectivePersister(),

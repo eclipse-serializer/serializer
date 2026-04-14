@@ -999,7 +999,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				switchByteOrder   ,
 				persister
 			);
-			this.controller = controller;
+			this.controller = notNull(controller);
 			this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
 			{
 				final Thread t = new Thread(r, "batch-storer-flush");
@@ -1007,7 +1007,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return t;
 			});
 
-			final long millis = checkInterval.toMillis();
+			final long millis = notNull(checkInterval).toMillis();
+			if(millis <= 0)
+			{
+				throw new IllegalArgumentException(
+					"checkInterval must be > 0ms, was " + checkInterval
+				);
+			}
 			this.scheduler.scheduleAtFixedRate(
 				this::backgroundFlush,
 				millis,
@@ -1017,8 +1023,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 
 		@Override
-		protected long internalStore(final Object root)
+		protected synchronized long internalStore(final Object root)
 		{
+			if(this.closed)
+			{
+				throw new IllegalStateException("BatchStorer is already closed.");
+			}
+
 			logger.debug(
 				"Store request: {}({})",
 				LazyArg(() -> systemString(root)),
@@ -1222,7 +1233,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			Persister                             persister
 		);
 
-		public BinaryStorer createBatchStorer(
+		public BatchStorer createBatchStorer(
 			PersistenceTypeHandlerManager<Binary> typeManager       ,
 			PersistenceObjectManager<Binary>      objectManager     ,
 			ObjectSwizzling                       objectRetriever   ,
@@ -1343,7 +1354,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			}
 			
 			@Override
-			public BinaryStorer createBatchStorer(
+			public BatchStorer createBatchStorer(
 				final PersistenceTypeHandlerManager<Binary> typeManager       ,
 				final PersistenceObjectManager<Binary>      objectManager     ,
 				final ObjectSwizzling                       objectRetriever   ,

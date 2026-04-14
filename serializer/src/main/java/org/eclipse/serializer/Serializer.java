@@ -30,7 +30,6 @@ import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
 
 import java.nio.ByteBuffer;
-import java.time.Duration;
 import java.util.function.Function;
 
 import static org.eclipse.serializer.util.X.mayNull;
@@ -315,23 +314,6 @@ public interface Serializer<M> extends AutoCloseable
 						bufferSizeProvider  ,
 						this.switchByteOrder,
 						persister
-					);
-				}
-
-				@Override
-				public PersistenceStorer createBatchStorer(
-					final PersistenceTypeHandlerManager<Binary> typeManager       ,
-					final PersistenceObjectManager<Binary>      objectManager     ,
-					final ObjectSwizzling                       objectRetriever   ,
-					final PersistenceTarget<Binary>             target            ,
-					final BufferSizeProviderIncremental         bufferSizeProvider,
-					final Persister                             persister         ,
-					final BatchStorer.Controller                controller        ,
-					final Duration                              checkInterval
-				)
-				{
-					throw new UnsupportedOperationException(
-						"Batch storer is not supported by the Serializer"
 					);
 				}
 

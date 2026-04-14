@@ -129,16 +129,21 @@ public interface PersistenceStorer extends Storer
 			Persister                        persister
 		);
 
-		public PersistenceStorer createBatchStorer(
-			PersistenceTypeHandlerManager<D> typeManager       ,
-			PersistenceObjectManager<D>      objectManager     ,
-			ObjectSwizzling                  objectRetriever   ,
-			PersistenceTarget<D>             target            ,
-			BufferSizeProviderIncremental    bufferSizeProvider,
-			Persister                        persister         ,
-			BatchStorer.Controller           controller        ,
-			Duration                         checkInterval
-		);
+		public default BatchStorer createBatchStorer(
+			final PersistenceTypeHandlerManager<D> typeManager       ,
+			final PersistenceObjectManager<D>      objectManager     ,
+			final ObjectSwizzling                  objectRetriever   ,
+			final PersistenceTarget<D>             target            ,
+			final BufferSizeProviderIncremental    bufferSizeProvider,
+			final Persister                        persister         ,
+			final BatchStorer.Controller           controller        ,
+			final Duration                         checkInterval
+		)
+		{
+			throw new UnsupportedOperationException(
+				this.getClass().getName() + " does not support batch storer creation."
+			);
+		}
 	}
 	
 	
