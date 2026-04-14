@@ -170,6 +170,16 @@ public final class OffHeapLongHashSet implements AutoCloseable
 			capacity <<= 1;
 		}
 
+		// The rounded-up power of two may exceed MAX_CAPACITY even when desiredCapacity didn't
+		// (e.g. desiredCapacity == MAX_CAPACITY is not itself a power of two).
+		if(capacity > MAX_CAPACITY)
+		{
+			throw new IllegalArgumentException(
+				"Desired capacity " + desiredCapacity + " rounds up to " + capacity
+				+ " which exceeds the maximum of " + MAX_CAPACITY + "."
+			);
+		}
+
 		return capacity;
 	}
 
@@ -323,8 +333,12 @@ public final class OffHeapLongHashSet implements AutoCloseable
 			return this.containsZero;
 		}
 
-		int collisions = 0;
-		for(long i = this.hash(value); collisions < this.collisionLimit; i = this.advanceIndex(i))
+		// Probe until an EMPTY slot is found. insertBlind() (used during resize) places elements
+		// without enforcing collision limits, so a value may sit further from its hash position
+		// than collisionLimit. Bounding the lookup by collisionLimit would falsely miss it.
+		// The capacity guard ensures termination even if the table is unexpectedly full.
+		final long cap = this.capacity;
+		for(long i = this.hash(value), probes = 0; probes < cap; i = this.advanceIndex(i), probes++)
 		{
 			final long slotValue = this.getValue(i);
 			if(slotValue == EMPTY)
@@ -335,7 +349,6 @@ public final class OffHeapLongHashSet implements AutoCloseable
 			{
 				return true;
 			}
-			collisions++;
 		}
 		return false;
 	}
