@@ -1001,6 +1001,24 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private long                           pendingSinceNanos ;
 		private volatile boolean               closed            ;
 
+		/*
+		 * Concurrency note — why this.head, not synchronized(this):
+		 *
+		 * Default deliberately uses this.head as its internal mutex and warns
+		 * that "outside logic could lock the storer first, reversing the lock
+		 * order" (see Default field comment).  Using synchronized(this) on
+		 * Batching methods exposes the storer instance as a monitor, which is
+		 * exactly the anti-pattern Default's design was built to prevent.
+		 *
+		 * All Batching overrides therefore synchronize on this.head, which:
+		 * - keeps a single, consistent lock ordering (this.head → objectRegistry)
+		 * - serializes store / flush / close so that only one thread at a time
+		 *   can enter ensureObjectId* or processItems for this storer, avoiding
+		 *   the cross-thread head↔objectRegistry deadlock described in Default
+		 * - prevents external code from inadvertently reversing the lock order
+		 *   by synchronizing on the storer instance
+		 */
+
 		Batching(
 			final PersistenceObjectManager<Binary>      objectManager     ,
 			final ObjectSwizzling                       objectRetriever   ,
@@ -1048,130 +1066,169 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 
 		@Override
-		public synchronized long store(final Object instance, final long objectId)
+		public long store(final Object instance, final long objectId)
 		{
-			return super.store(instance, objectId);
-		}
-
-		@Override
-		public synchronized void storeAll(final Iterable<?> instances)
-		{
-			super.storeAll(instances);
-		}
-
-		@Override
-		public synchronized void forceRootStore(final PersistenceRoots pendingStoreRoot)
-		{
-			super.forceRootStore(pendingStoreRoot);
-		}
-
-		@Override
-		public synchronized PersistenceStorer reinitialize()
-		{
-			return super.reinitialize();
-		}
-
-		@Override
-		public synchronized PersistenceStorer reinitialize(final long initialCapacity)
-		{
-			return super.reinitialize(initialCapacity);
-		}
-
-		@Override
-		public synchronized PersistenceStorer ensureCapacity(final long desiredCapacity)
-		{
-			return super.ensureCapacity(desiredCapacity);
-		}
-
-		@Override
-		public synchronized void registerCommitListener(final PersistenceCommitListener listener)
-		{
-			super.registerCommitListener(listener);
-		}
-
-		@Override
-		public synchronized void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
-		{
-			super.registerRegistrationListener(listener);
-		}
-
-		@Override
-		protected synchronized long internalStore(final Object root)
-		{
-			if(this.closed)
+			synchronized(this.head)
 			{
-				throw new IllegalStateException("BatchStorer is already closed.");
+				return super.store(instance, objectId);
 			}
+		}
 
-			logger.debug(
-				"Store request: {}({})",
-				LazyArg(() -> systemString(root)),
-				LazyArgInContext(STORER_CONTEXT, root)
-			);
-
-			/*
-			 * Unlike the default lazy storer, a batch storer always re-registers
-			 * explicitly passed root instances to capture their current state.
-			 * Child graph traversal still uses lazy semantics (via apply()) —
-			 * children are only stored if not yet in the global registry.
-			 */
-			long rootOid;
-			if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
+		@Override
+		public void storeAll(final Iterable<?> instances)
+		{
+			synchronized(this.head)
 			{
-				this.registerGuaranteed(rootOid, root, null);
+				super.storeAll(instances);
 			}
-			else
-			{
-				rootOid = this.registerGuaranteed(notNull(root));
-			}
+		}
 
-			if(!this.isProcessingItems)
+		@Override
+		public void forceRootStore(final PersistenceRoots pendingStoreRoot)
+		{
+			synchronized(this.head)
 			{
-				try
+				super.forceRootStore(pendingStoreRoot);
+			}
+		}
+
+		@Override
+		public PersistenceStorer reinitialize()
+		{
+			synchronized(this.head)
+			{
+				return super.reinitialize();
+			}
+		}
+
+		@Override
+		public PersistenceStorer reinitialize(final long initialCapacity)
+		{
+			synchronized(this.head)
+			{
+				return super.reinitialize(initialCapacity);
+			}
+		}
+
+		@Override
+		public PersistenceStorer ensureCapacity(final long desiredCapacity)
+		{
+			synchronized(this.head)
+			{
+				return super.ensureCapacity(desiredCapacity);
+			}
+		}
+
+		@Override
+		public void registerCommitListener(final PersistenceCommitListener listener)
+		{
+			synchronized(this.head)
+			{
+				super.registerCommitListener(listener);
+			}
+		}
+
+		@Override
+		public void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
+		{
+			synchronized(this.head)
+			{
+				super.registerRegistrationListener(listener);
+			}
+		}
+
+		@Override
+		protected long internalStore(final Object root)
+		{
+			synchronized(this.head)
+			{
+				if(this.closed)
 				{
-					this.isProcessingItems = true;
-					this.processItems();
+					throw new IllegalStateException("BatchStorer is already closed.");
 				}
-				finally
+
+				logger.debug(
+					"Store request: {}({})",
+					LazyArg(() -> systemString(root)),
+					LazyArgInContext(STORER_CONTEXT, root)
+				);
+
+				/*
+				 * Unlike the default lazy storer, a batch storer always re-registers
+				 * explicitly passed root instances to capture their current state.
+				 * Child graph traversal still uses lazy semantics (via apply()) —
+				 * children are only stored if not yet in the global registry.
+				 */
+				long rootOid;
+				if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
 				{
-					this.isProcessingItems = false;
+					this.registerGuaranteed(rootOid, root, null);
 				}
+				else
+				{
+					rootOid = this.registerGuaranteed(notNull(root));
+				}
+
+				if(!this.isProcessingItems)
+				{
+					try
+					{
+						this.isProcessingItems = true;
+						this.processItems();
+					}
+					finally
+					{
+						this.isProcessingItems = false;
+					}
+				}
+
+				this.optFlush();
+
+				return rootOid;
 			}
-
-			this.optFlush();
-
-			return rootOid;
 		}
 
 		@Override
-		public synchronized void clear()
+		public void clear()
 		{
-			super.clear();
-			this.pendingSinceNanos = 0L;
+			synchronized(this.head)
+			{
+				super.clear();
+				this.pendingSinceNanos = 0L;
+			}
 		}
 
 		@Override
-		public synchronized Object commit()
+		public Object commit()
 		{
-			return super.commit();
+			synchronized(this.head)
+			{
+				return super.commit();
+			}
 		}
 
 		@Override
-		public synchronized void flush()
+		public void flush()
 		{
-			this.internalFlush();
+			synchronized(this.head)
+			{
+				this.internalFlush();
+			}
 		}
 
 		@Override
-		public synchronized boolean hasPendingData()
+		public boolean hasPendingData()
 		{
-			return !this.isEmpty();
+			synchronized(this.head)
+			{
+				return !this.isEmpty();
+			}
 		}
 
 		@Override
 		public void close()
 		{
-			synchronized(this)
+			synchronized(this.head)
 			{
 				if(this.closed)
 				{
@@ -1198,7 +1255,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				Thread.currentThread().interrupt();
 			}
 
-			synchronized(this)
+			synchronized(this.head)
 			{
 				if(!this.isEmpty())
 				{
@@ -1219,38 +1276,41 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			}
 		}
 
-		private synchronized void optFlush()
+		private void optFlush()
 		{
-			if(this.closed || this.isEmpty())
+			synchronized(this.head)
 			{
-				return;
-			}
+				if(this.closed || this.isEmpty())
+				{
+					return;
+				}
 
-			final long nowNanos = System.nanoTime();
-			if(this.pendingSinceNanos == 0L)
-			{
-				this.pendingSinceNanos = nowNanos;
-			}
+				final long nowNanos = System.nanoTime();
+				if(this.pendingSinceNanos == 0L)
+				{
+					this.pendingSinceNanos = nowNanos;
+				}
 
-			// Safety: force flush if any channel approaches the 2 GB storage limit
-			final long maxBytes = this.maxChannelByteCount();
-			if(maxBytes >= MAX_CHANNEL_BYTES_BEFORE_FLUSH)
-			{
-				logger.debug(
-					"Forcing flush: channel byte count {} exceeds safety threshold {}",
-					maxBytes,
-					MAX_CHANNEL_BYTES_BEFORE_FLUSH
-				);
-				this.internalFlush();
-				return;
-			}
+				// Safety: force flush if any channel approaches the 2 GB storage limit
+				final long maxBytes = this.maxChannelByteCount();
+				if(maxBytes >= MAX_CHANNEL_BYTES_BEFORE_FLUSH)
+				{
+					logger.debug(
+						"Forcing flush: channel byte count {} exceeds safety threshold {}",
+						maxBytes,
+						MAX_CHANNEL_BYTES_BEFORE_FLUSH
+					);
+					this.internalFlush();
+					return;
+				}
 
-			if(this.controller.shouldFlush(
-				this.size(),
-				TimeUnit.NANOSECONDS.toMillis(nowNanos - this.pendingSinceNanos)
-			))
-			{
-				this.internalFlush();
+				if(this.controller.shouldFlush(
+					this.size(),
+					TimeUnit.NANOSECONDS.toMillis(nowNanos - this.pendingSinceNanos)
+				))
+				{
+					this.internalFlush();
+				}
 			}
 		}
 
