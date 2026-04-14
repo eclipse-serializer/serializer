@@ -21,8 +21,12 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionStorerD
  * {@link PersistenceStorerDeactivatable}.
  * <p>
  * Store, commit, and flush operations are blocked when writes are disabled.
- * Lifecycle operations ({@link #close()}) and read-only queries
- * ({@link #hasPendingData()}) always delegate to the underlying batch storer.
+ * Read-only queries ({@link #hasPendingData()}) always delegate to the
+ * underlying batch storer.
+ * <p>
+ * {@link #close()} always releases lifecycle resources (e.g. background
+ * threads). When writes are disabled, any pending data is discarded rather
+ * than flushed, so that close never bypasses the write-disable contract.
  */
 public class BatchStorerDeactivatable extends PersistenceStorerDeactivatable implements BatchStorer
 {
@@ -67,6 +71,12 @@ public class BatchStorerDeactivatable extends PersistenceStorerDeactivatable imp
 	@Override
 	public void close()
 	{
+		if(!this.isWriteEnabled())
+		{
+			// Drop pending data so the underlying close() performs only
+			// lifecycle cleanup (scheduler shutdown) without flushing.
+			this.batchStorer.clear();
+		}
 		this.batchStorer.close();
 	}
 
