@@ -19,6 +19,8 @@ import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+import java.time.Duration;
+
 /**
  * PeristenceStorer creator that creates {@link org.eclipse.serializer.persistence.types.PersistenceStorerDeactivatable#PersistenceStorerDeactivatable PersistenceStorerDeactivatable}
  * instances.
@@ -104,7 +106,7 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 		)
 	{
 		logger.debug("Creating eager storer");
-		
+
 		return this.storerRegistry.register(
 			new PersistenceStorerDeactivatable(
 				this.creator.createEagerStorer(
@@ -116,6 +118,34 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 					persister
 				)
 			)
+		);
+	}
+
+	@Override
+	public PersistenceStorer createBatchStorer(
+		final PersistenceTypeHandlerManager<D> typeManager       ,
+		final PersistenceObjectManager<D>      objectManager     ,
+		final ObjectSwizzling                  objectRetriever   ,
+		final PersistenceTarget<D>             target            ,
+		final BufferSizeProviderIncremental    bufferSizeProvider,
+		final Persister                        persister         ,
+		final BatchStorer.Controller           controller        ,
+		final Duration                         checkInterval
+		)
+	{
+		logger.debug("Creating batch storer");
+
+		// Batch storer is not wrapped in PersistenceStorerDeactivatable
+		// because it manages its own lifecycle via close().
+		return this.creator.createBatchStorer(
+			typeManager,
+			objectManager,
+			objectRetriever,
+			target,
+			bufferSizeProvider,
+			persister,
+			controller,
+			checkInterval
 		);
 	}
 

@@ -14,6 +14,21 @@ package org.eclipse.serializer.persistence.binary.types;
  * #L%
  */
 
+import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.hashing.XHashing;
+import org.eclipse.serializer.math.XMath;
+import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.reference.Swizzling;
+import org.eclipse.serializer.util.BufferSizeProviderIncremental;
+import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import static java.lang.System.identityHashCode;
 import static org.eclipse.serializer.chars.XChars.systemString;
 import static org.eclipse.serializer.persistence.types.PersistenceLogging.STORER_CONTEXT;
@@ -21,30 +36,6 @@ import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.util.logging.Logging.LazyArg;
 import static org.eclipse.serializer.util.logging.Logging.LazyArgInContext;
-
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.hashing.XHashing;
-import org.eclipse.serializer.math.XMath;
-import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
-import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
-import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
-import org.eclipse.serializer.persistence.types.PersistenceLocalObjectIdRegistry;
-import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
-import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
-import org.eclipse.serializer.persistence.types.PersistenceRoots;
-import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
-import org.eclipse.serializer.persistence.types.PersistenceStorer;
-import org.eclipse.serializer.persistence.types.PersistenceStoringCallback;
-import org.eclipse.serializer.persistence.types.PersistenceTarget;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
-import org.eclipse.serializer.persistence.types.Persister;
-import org.eclipse.serializer.reference.ObjectSwizzling;
-import org.eclipse.serializer.reference.Swizzling;
-import org.eclipse.serializer.util.BufferSizeProviderIncremental;
-import org.eclipse.serializer.util.logging.Logging;
-import org.slf4j.Logger;
 
 
 public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallback
@@ -79,7 +70,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		// constants //
 		//////////////
 
-		private final static Logger logger = Logging.getLogger(BinaryStorer.class);
+		protected final static Logger logger = Logging.getLogger(BinaryStorer.class);
 		
 		
 		protected static int defaultSlotSize()
@@ -137,7 +128,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * So the state of already being processed must be recognized.
 		 * The easiest way to do that is by using a trivial flag, since head-tail comparison logic gets tricky with #storeAll.
 		 */
-		private boolean isProcessingItems;
+		protected boolean isProcessingItems;
 
 		/*
 		 * item hashing structures get initialized lazily for the following reasons:
@@ -427,7 +418,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * @param root the root object of the graph
 		 * @return the root's object id
 		 */
-		protected final long internalStore(final Object root)
+		protected long internalStore(final Object root)
 		{
 			logger.debug(
 				"Store request: {}({})",
@@ -469,7 +460,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			return rootOid;
 		}
 		
-		private void processItems()
+		protected void processItems()
 		{
 			// process and collect required instances in item chain (graph recursion transformed to iteration)
 			for(Item item = this.tail; item != null; item = item.next)
@@ -902,7 +893,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 	 * 
 	 * 
 	 */
-	public final class Eager extends Default
+	public class Eager extends Default
 	{
 		///////////////////////////////////////////////////////////////////////////
 		// constructors //
@@ -965,6 +956,201 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			this.registerGuaranteed(objectId, instance, optionalHandler);
 		}
 		
+	}
+
+	/**
+	 * A lazy storer with batching support designed for write-heavy operations.
+	 * <p>
+	 * Explicitly passed root instances are always re-serialized even if already registered,
+	 * ensuring mutable objects (e.g. collections) capture their current state. Child objects
+	 * use lazy semantics and are only stored if not yet known to the persistence context.
+	 * <p>
+	 * Accumulated store operations are committed in batches controlled by a
+	 * {@link BatchStorer.Controller}. A background daemon thread periodically checks
+	 * for pending flushes.
+	 */
+	public final class Batching extends Default implements BatchStorer
+	{
+		private final BatchStorer.Controller   controller        ;
+		private final ScheduledExecutorService scheduler         ;
+		private long                           pendingSinceNanos ;
+		private volatile boolean               closed            ;
+
+		Batching(
+			final PersistenceObjectManager<Binary>      objectManager     ,
+			final ObjectSwizzling                       objectRetriever   ,
+			final PersistenceTypeHandlerManager<Binary> typeManager       ,
+			final PersistenceTarget<Binary>             target            ,
+			final BufferSizeProviderIncremental         bufferSizeProvider,
+			final int                                   channelCount      ,
+			final boolean                               switchByteOrder   ,
+			final Persister                             persister         ,
+			final BatchStorer.Controller                controller        ,
+			final Duration                              checkInterval
+		)
+		{
+			super(
+				objectManager     ,
+				objectRetriever   ,
+				typeManager       ,
+				target            ,
+				bufferSizeProvider,
+				channelCount      ,
+				switchByteOrder   ,
+				persister
+			);
+			this.controller = controller;
+			this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
+			{
+				final Thread t = new Thread(r, "batch-storer-flush");
+				t.setDaemon(true);
+				return t;
+			});
+
+			final long millis = checkInterval.toMillis();
+			this.scheduler.scheduleAtFixedRate(
+				this::backgroundFlush,
+				millis,
+				millis,
+				TimeUnit.MILLISECONDS
+			);
+		}
+
+		@Override
+		protected long internalStore(final Object root)
+		{
+			logger.debug(
+				"Store request: {}({})",
+				LazyArg(() -> systemString(root)),
+				LazyArgInContext(STORER_CONTEXT, root)
+			);
+
+			/*
+			 * Unlike the default lazy storer, a batch storer always re-registers
+			 * explicitly passed root instances to capture their current state.
+			 * Child graph traversal still uses lazy semantics (via apply()) —
+			 * children are only stored if not yet in the global registry.
+			 */
+			long rootOid;
+			if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
+			{
+				this.registerGuaranteed(rootOid, root, null);
+			}
+			else
+			{
+				rootOid = this.registerGuaranteed(notNull(root));
+			}
+
+			if(!this.isProcessingItems)
+			{
+				try
+				{
+					this.isProcessingItems = true;
+					this.processItems();
+				}
+				finally
+				{
+					this.isProcessingItems = false;
+				}
+			}
+
+			this.optFlush();
+
+			return rootOid;
+		}
+
+		@Override
+		public synchronized void flush()
+		{
+			this.internalFlush();
+		}
+
+		@Override
+		public synchronized boolean hasPendingData()
+		{
+			return !this.isEmpty();
+		}
+
+		@Override
+		public void close()
+		{
+			synchronized(this)
+			{
+				if(this.closed)
+				{
+					return;
+				}
+				this.closed = true;
+			}
+
+			this.scheduler.shutdown();
+			try
+			{
+				if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+				{
+					this.scheduler.shutdownNow();
+					if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+					{
+						logger.warn("Background flush thread did not terminate within timeout");
+					}
+				}
+			}
+			catch(final InterruptedException e)
+			{
+				this.scheduler.shutdownNow();
+				Thread.currentThread().interrupt();
+			}
+
+			synchronized(this)
+			{
+				if(!this.isEmpty())
+				{
+					this.internalFlush();
+				}
+			}
+		}
+
+		private void backgroundFlush()
+		{
+			try
+			{
+				this.optFlush();
+			}
+			catch(final Exception e)
+			{
+				logger.error("Background flush failed", e);
+			}
+		}
+
+		private synchronized void optFlush()
+		{
+			if(this.closed || this.isEmpty())
+			{
+				return;
+			}
+
+			final long nowNanos = System.nanoTime();
+			if(this.pendingSinceNanos == 0L)
+			{
+				this.pendingSinceNanos = nowNanos;
+			}
+
+			if(this.controller.shouldFlush(
+				this.size(),
+				TimeUnit.NANOSECONDS.toMillis(nowNanos - this.pendingSinceNanos)
+			))
+			{
+				this.internalFlush();
+			}
+		}
+
+		private void internalFlush()
+		{
+			logger.debug("Flushing batch storer with size = {}", this.size());
+
+			this.commit();
+			this.pendingSinceNanos = 0L;
+		}
 	}
 
 	static final class Item
@@ -1035,9 +1221,20 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			BufferSizeProviderIncremental         bufferSizeProvider,
 			Persister                             persister
 		);
-		
-		
-		
+
+		public BinaryStorer createBatchStorer(
+			PersistenceTypeHandlerManager<Binary> typeManager       ,
+			PersistenceObjectManager<Binary>      objectManager     ,
+			ObjectSwizzling                       objectRetriever   ,
+			PersistenceTarget<Binary>             target            ,
+			BufferSizeProviderIncremental         bufferSizeProvider,
+			Persister                             persister         ,
+			BatchStorer.Controller                controller        ,
+			Duration                              checkInterval
+		);
+
+
+
 		public abstract class Abstract implements BinaryStorer.Creator
 		{
 			///////////////////////////////////////////////////////////////////////////
@@ -1145,6 +1342,37 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return storer;
 			}
 			
+			@Override
+			public BinaryStorer createBatchStorer(
+				final PersistenceTypeHandlerManager<Binary> typeManager       ,
+				final PersistenceObjectManager<Binary>      objectManager     ,
+				final ObjectSwizzling                       objectRetriever   ,
+				final PersistenceTarget<Binary>             target            ,
+				final BufferSizeProviderIncremental         bufferSizeProvider,
+				final Persister                             persister         ,
+				final BatchStorer.Controller                controller        ,
+				final Duration                              checkInterval
+			)
+			{
+				this.validateIsStoring(target);
+
+				final BinaryStorer.Batching storer = new BinaryStorer.Batching(
+					objectManager         ,
+					objectRetriever       ,
+					typeManager           ,
+					target                ,
+					bufferSizeProvider    ,
+					this.channelCount()   ,
+					this.switchByteOrder(),
+					persister             ,
+					controller            ,
+					checkInterval
+				);
+				objectManager.registerLocalRegistry(storer);
+
+				return storer;
+			}
+
 			protected void validateIsStoring(final PersistenceTarget<Binary> target)
 			{
 				// (06.08.2020 TM)TODO: validation should actually be done by a StorerProvider that uses the Creator

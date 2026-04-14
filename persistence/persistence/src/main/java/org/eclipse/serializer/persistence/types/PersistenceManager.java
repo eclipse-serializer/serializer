@@ -14,15 +14,16 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.mayNull;
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.nio.ByteOrder;
-import java.util.function.Consumer;
-
 import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
+
+import java.nio.ByteOrder;
+import java.time.Duration;
+import java.util.function.Consumer;
+
+import static org.eclipse.serializer.util.X.mayNull;
+import static org.eclipse.serializer.util.X.notNull;
 
 
 public interface PersistenceManager<D>
@@ -41,6 +42,9 @@ ByteOrderTargeting<PersistenceManager<D>>
 
 	@Override
 	public PersistenceStorer createEagerStorer();
+
+	@Override
+	public BatchStorer createBatchStorer(BatchStorer.Controller controller, Duration checkInterval);
 
 	public PersistenceStorer createStorer(PersistenceStorer.Creator<D> storerCreator);
 	
@@ -270,7 +274,25 @@ ByteOrderTargeting<PersistenceManager<D>>
 				this.persister
 			));
 		}
-		
+
+		@Override
+		public final BatchStorer createBatchStorer(
+			final BatchStorer.Controller controller   ,
+			final Duration               checkInterval
+		)
+		{
+			return (BatchStorer)this.registerStorer(this.storerCreator.createBatchStorer(
+				this.contextDispatcher.dispatchTypeHandlerManager(this.typeHandlerManager),
+				this.contextDispatcher.dispatchObjectManager(this.objectManager),
+				this.getEffectivePersister(),
+				this.target,
+				this.bufferSizeProvider,
+				this.persister,
+				controller,
+				checkInterval
+			));
+		}
+
 		@Override
 		public final PersistenceStorer createStorer(final PersistenceStorer.Creator<D> storerCreator)
 		{

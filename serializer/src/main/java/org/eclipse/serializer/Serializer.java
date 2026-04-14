@@ -14,44 +14,27 @@ package org.eclipse.serializer;
  * #L%
  */
 
-import static org.eclipse.serializer.util.X.mayNull;
-import static org.eclipse.serializer.util.X.notNull;
-
-import java.nio.ByteBuffer;
-import java.util.function.Function;
-
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.HashTable;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.meta.NotImplementedYetError;
-import org.eclipse.serializer.persistence.binary.types.Binary;
-import org.eclipse.serializer.persistence.binary.types.BinaryStorer;
-import org.eclipse.serializer.persistence.binary.types.ChunksBuffer;
-import org.eclipse.serializer.persistence.binary.types.ChunksBufferByteReversing;
-import org.eclipse.serializer.persistence.binary.types.ChunksWrapper;
+import org.eclipse.serializer.persistence.binary.types.*;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfer;
-import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
-import org.eclipse.serializer.persistence.types.PersistenceIdSet;
-import org.eclipse.serializer.persistence.types.PersistenceManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
-import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
-import org.eclipse.serializer.persistence.types.PersistenceRoots;
-import org.eclipse.serializer.persistence.types.PersistenceSource;
-import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
-import org.eclipse.serializer.persistence.types.PersistenceStorer;
-import org.eclipse.serializer.persistence.types.PersistenceTarget;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
-import org.eclipse.serializer.persistence.types.Persister;
-import org.eclipse.serializer.persistence.types.Storer;
+import org.eclipse.serializer.persistence.types.*;
 import org.eclipse.serializer.reference.Lazy;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
+
+import java.nio.ByteBuffer;
+import java.time.Duration;
+import java.util.function.Function;
+
+import static org.eclipse.serializer.util.X.mayNull;
+import static org.eclipse.serializer.util.X.notNull;
 
 /**
  * Convenient API layer to use the binary persistence functionality for a simple serializer.
@@ -324,7 +307,7 @@ public interface Serializer<M> extends AutoCloseable
 					final Persister                             persister
 				)
 				{
-					final SerializerStorer storer = new SerializerStorer(
+					return new SerializerStorer(
 						objectManager       ,
 						objectRetriever     ,
 						typeManager         ,
@@ -333,9 +316,25 @@ public interface Serializer<M> extends AutoCloseable
 						this.switchByteOrder,
 						persister
 					);
-					return storer;
 				}
-				
+
+				@Override
+				public PersistenceStorer createBatchStorer(
+					final PersistenceTypeHandlerManager<Binary> typeManager       ,
+					final PersistenceObjectManager<Binary>      objectManager     ,
+					final ObjectSwizzling                       objectRetriever   ,
+					final PersistenceTarget<Binary>             target            ,
+					final BufferSizeProviderIncremental         bufferSizeProvider,
+					final Persister                             persister         ,
+					final BatchStorer.Controller                controller        ,
+					final Duration                              checkInterval
+				)
+				{
+					throw new UnsupportedOperationException(
+						"Batch storer is not supported by the Serializer"
+					);
+				}
+
 			}
 			
 			

@@ -1,5 +1,10 @@
 package org.eclipse.serializer.persistence.types;
 
+import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.util.BufferSizeProviderIncremental;
+
+import java.time.Duration;
+
 import static org.eclipse.serializer.util.X.notNull;
 
 /*-
@@ -11,13 +16,10 @@ import static org.eclipse.serializer.util.X.notNull;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
-
-import org.eclipse.serializer.reference.ObjectSwizzling;
-import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 
 public interface PersistenceStorer extends Storer
 {
@@ -125,6 +127,17 @@ public interface PersistenceStorer extends Storer
 			PersistenceTarget<D>             target            ,
 			BufferSizeProviderIncremental    bufferSizeProvider,
 			Persister                        persister
+		);
+
+		public PersistenceStorer createBatchStorer(
+			PersistenceTypeHandlerManager<D> typeManager       ,
+			PersistenceObjectManager<D>      objectManager     ,
+			ObjectSwizzling                  objectRetriever   ,
+			PersistenceTarget<D>             target            ,
+			BufferSizeProviderIncremental    bufferSizeProvider,
+			Persister                        persister         ,
+			BatchStorer.Controller           controller        ,
+			Duration                         checkInterval
 		);
 	}
 	
