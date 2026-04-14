@@ -548,7 +548,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 
 		@Override
-		public final Object commit()
+		public Object commit()
 		{
 			logger.debug(
 				"Committing {} object(s)",
@@ -1075,6 +1075,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			super.clear();
 			this.pendingSinceNanos = 0L;
+		}
+
+		@Override
+		public synchronized Object commit()
+		{
+			return super.commit();
 		}
 
 		@Override
