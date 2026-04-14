@@ -1071,7 +1071,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 
 		@Override
-		public void clear()
+		public synchronized void clear()
 		{
 			super.clear();
 			this.pendingSinceNanos = 0L;
