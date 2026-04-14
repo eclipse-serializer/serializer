@@ -1,12 +1,5 @@
 package org.eclipse.serializer.persistence.types;
 
-import org.eclipse.serializer.reference.ObjectSwizzling;
-import org.eclipse.serializer.util.BufferSizeProviderIncremental;
-
-import java.time.Duration;
-
-import static org.eclipse.serializer.util.X.notNull;
-
 /*-
  * #%L
  * Eclipse Serializer Persistence
@@ -20,6 +13,13 @@ import static org.eclipse.serializer.util.X.notNull;
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
+
+import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.util.BufferSizeProviderIncremental;
+
+import java.time.Duration;
+
+import static org.eclipse.serializer.util.X.notNull;
 
 public interface PersistenceStorer extends Storer
 {
