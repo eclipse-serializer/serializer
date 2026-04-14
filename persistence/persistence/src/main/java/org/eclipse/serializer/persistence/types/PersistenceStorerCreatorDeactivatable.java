@@ -135,19 +135,20 @@ public class PersistenceStorerCreatorDeactivatable<D> implements PersistenceStor
 	{
 		logger.debug("Creating batch storer");
 
-		// BatchStorer is not wrapped in PersistenceStorerDeactivatable
-		// because PersistenceStorerDeactivatable does not implement BatchStorer
-		// and BatchStorer manages its own lifecycle via close().
-		return this.creator.createBatchStorer(
-			typeManager,
-			objectManager,
-			objectRetriever,
-			target,
-			bufferSizeProvider,
-			persister,
-			controller,
-			checkInterval
+		final BatchStorerDeactivatable wrapper = new BatchStorerDeactivatable(
+			this.creator.createBatchStorer(
+				typeManager,
+				objectManager,
+				objectRetriever,
+				target,
+				bufferSizeProvider,
+				persister,
+				controller,
+				checkInterval
+			)
 		);
+		this.storerRegistry.register(wrapper);
+		return wrapper;
 	}
 
 }
