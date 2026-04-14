@@ -1023,6 +1023,54 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 
 		@Override
+		public synchronized long store(final Object instance, final long objectId)
+		{
+			return super.store(instance, objectId);
+		}
+
+		@Override
+		public synchronized void storeAll(final Iterable<?> instances)
+		{
+			super.storeAll(instances);
+		}
+
+		@Override
+		public synchronized void forceRootStore(final PersistenceRoots pendingStoreRoot)
+		{
+			super.forceRootStore(pendingStoreRoot);
+		}
+
+		@Override
+		public synchronized PersistenceStorer reinitialize()
+		{
+			return super.reinitialize();
+		}
+
+		@Override
+		public synchronized PersistenceStorer reinitialize(final long initialCapacity)
+		{
+			return super.reinitialize(initialCapacity);
+		}
+
+		@Override
+		public synchronized PersistenceStorer ensureCapacity(final long desiredCapacity)
+		{
+			return super.ensureCapacity(desiredCapacity);
+		}
+
+		@Override
+		public synchronized void registerCommitListener(final PersistenceCommitListener listener)
+		{
+			super.registerCommitListener(listener);
+		}
+
+		@Override
+		public synchronized void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
+		{
+			super.registerRegistrationListener(listener);
+		}
+
+		@Override
 		protected synchronized long internalStore(final Object root)
 		{
 			if(this.closed)
