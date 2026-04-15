@@ -1143,6 +1143,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			synchronized(this.head)
 			{
+				if(this.closed)
+				{
+					throw new IllegalStateException("BatchStorer is already closed.");
+				}
+
 				super.forceRootStore(pendingStoreRoot);
 				// Default.forceRootStore does not call optFlush(), so invoke
 				// it here to match the internalStore(Object) path and ensure
