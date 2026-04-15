@@ -1,7 +1,5 @@
 package org.eclipse.serializer.persistence.types;
 
-import static org.eclipse.serializer.util.X.notNull;
-
 /*-
  * #%L
  * Eclipse Serializer Persistence
@@ -11,13 +9,17 @@ import static org.eclipse.serializer.util.X.notNull;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
+
+import java.time.Duration;
+
+import static org.eclipse.serializer.util.X.notNull;
 
 public interface PersistenceStorer extends Storer
 {
@@ -126,6 +128,22 @@ public interface PersistenceStorer extends Storer
 			BufferSizeProviderIncremental    bufferSizeProvider,
 			Persister                        persister
 		);
+
+		public default BatchStorer createBatchStorer(
+			final PersistenceTypeHandlerManager<D> typeManager       ,
+			final PersistenceObjectManager<D>      objectManager     ,
+			final ObjectSwizzling                  objectRetriever   ,
+			final PersistenceTarget<D>             target            ,
+			final BufferSizeProviderIncremental    bufferSizeProvider,
+			final Persister                        persister         ,
+			final BatchStorer.Controller           controller        ,
+			final Duration                         checkInterval
+		)
+		{
+			throw new UnsupportedOperationException(
+				this.getClass().getName() + " does not support batch storer creation."
+			);
+		}
 	}
 	
 	

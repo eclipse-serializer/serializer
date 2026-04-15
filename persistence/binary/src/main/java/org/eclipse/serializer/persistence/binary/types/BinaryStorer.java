@@ -14,6 +14,21 @@ package org.eclipse.serializer.persistence.binary.types;
  * #L%
  */
 
+import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.hashing.XHashing;
+import org.eclipse.serializer.math.XMath;
+import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.reference.Swizzling;
+import org.eclipse.serializer.util.BufferSizeProviderIncremental;
+import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import static java.lang.System.identityHashCode;
 import static org.eclipse.serializer.chars.XChars.systemString;
 import static org.eclipse.serializer.persistence.types.PersistenceLogging.STORER_CONTEXT;
@@ -21,30 +36,6 @@ import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.util.logging.Logging.LazyArg;
 import static org.eclipse.serializer.util.logging.Logging.LazyArgInContext;
-
-import org.eclipse.serializer.collections.BulkList;
-import org.eclipse.serializer.hashing.XHashing;
-import org.eclipse.serializer.math.XMath;
-import org.eclipse.serializer.persistence.types.PersistenceAcceptor;
-import org.eclipse.serializer.persistence.types.PersistenceCommitListener;
-import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEvaluator;
-import org.eclipse.serializer.persistence.types.PersistenceLocalObjectIdRegistry;
-import org.eclipse.serializer.persistence.types.PersistenceObjectIdRequestor;
-import org.eclipse.serializer.persistence.types.PersistenceObjectManager;
-import org.eclipse.serializer.persistence.types.PersistenceObjectRegistrationListener;
-import org.eclipse.serializer.persistence.types.PersistenceRoots;
-import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
-import org.eclipse.serializer.persistence.types.PersistenceStorer;
-import org.eclipse.serializer.persistence.types.PersistenceStoringCallback;
-import org.eclipse.serializer.persistence.types.PersistenceTarget;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
-import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
-import org.eclipse.serializer.persistence.types.Persister;
-import org.eclipse.serializer.reference.ObjectSwizzling;
-import org.eclipse.serializer.reference.Swizzling;
-import org.eclipse.serializer.util.BufferSizeProviderIncremental;
-import org.eclipse.serializer.util.logging.Logging;
-import org.slf4j.Logger;
 
 
 public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallback
@@ -79,7 +70,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		// constants //
 		//////////////
 
-		private final static Logger logger = Logging.getLogger(BinaryStorer.class);
+		protected final static Logger logger = Logging.getLogger(BinaryStorer.class);
 		
 		
 		protected static int defaultSlotSize()
@@ -137,7 +128,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * So the state of already being processed must be recognized.
 		 * The easiest way to do that is by using a trivial flag, since head-tail comparison logic gets tricky with #storeAll.
 		 */
-		private boolean isProcessingItems;
+		protected boolean isProcessingItems;
 
 		/*
 		 * item hashing structures get initialized lazily for the following reasons:
@@ -240,6 +231,24 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			return this.chunks[0];
 		}
 
+		/**
+		 * Returns the maximum accumulated byte count across all channels,
+		 * including data in each channel's current (incomplete) buffer.
+		 */
+		protected long maxChannelByteCount()
+		{
+			long max = 0L;
+			for(final ChunksBuffer chunk : this.chunks)
+			{
+				final long len = chunk.currentTotalLength();
+				if(len > max)
+				{
+					max = len;
+				}
+			}
+			return max;
+		}
+
 		@Override
 		public PersistenceStorer reinitialize()
 		{
@@ -290,6 +299,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			}
 		}
 		
+		protected boolean deduplicateChunkEntities()
+		{
+			return false;
+		}
+
 		private void synchCreateStoringChunksBuffers()
 		{
 			/* Note:
@@ -299,13 +313,14 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 * The released chunks must be handled by those threads if existing
 			 * or ultimately by the garbage collector (or by some tailored additional logic)
 			 */
-			
+
+			final boolean        dedup  = this.deduplicateChunkEntities();
 			final ChunksBuffer[] chunks = this.chunks = new ChunksBuffer[this.chunksHashRange + 1];
 			for(int i = 0; i < chunks.length; i++)
 			{
 				chunks[i] = this.switchByteOrder
-					? ChunksBufferByteReversing.New(chunks, this.bufferSizeProvider)
-					: ChunksBuffer.New(chunks, this.bufferSizeProvider)
+					? ChunksBufferByteReversing.New(chunks, this.bufferSizeProvider, dedup)
+					: ChunksBuffer.New(chunks, this.bufferSizeProvider, dedup)
 				;
 			}
 		}
@@ -427,7 +442,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * @param root the root object of the graph
 		 * @return the root's object id
 		 */
-		protected final long internalStore(final Object root)
+		protected long internalStore(final Object root)
 		{
 			logger.debug(
 				"Store request: {}({})",
@@ -469,7 +484,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			return rootOid;
 		}
 		
-		private void processItems()
+		protected void processItems()
 		{
 			// process and collect required instances in item chain (graph recursion transformed to iteration)
 			for(Item item = this.tail; item != null; item = item.next)
@@ -557,7 +572,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 
 		@Override
-		public final Object commit()
+		public Object commit()
 		{
 			logger.debug(
 				"Committing {} object(s)",
@@ -902,7 +917,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 	 * 
 	 * 
 	 */
-	public final class Eager extends Default
+	public class Eager extends Default
 	{
 		///////////////////////////////////////////////////////////////////////////
 		// constructors //
@@ -965,6 +980,440 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			this.registerGuaranteed(objectId, instance, optionalHandler);
 		}
 		
+	}
+
+	/**
+	 * A lazy storer with batching support designed for write-heavy operations.
+	 * <p>
+	 * Explicitly passed root instances are always re-serialized even if already registered,
+	 * ensuring mutable objects (e.g. collections) capture their current state. Child objects
+	 * use lazy semantics and are only stored if not yet known to the persistence context.
+	 * <p>
+	 * Accumulated store operations are committed in batches controlled by a
+	 * {@link BatchStorer.Controller}. A background daemon thread periodically checks
+	 * for pending flushes.
+	 */
+	public final class Batching extends Default implements BatchStorer
+	{
+		/**
+		 * Safety threshold: ~1.75 GB. Leaves 256 MB headroom below the 2^31 hard limit
+		 * to account for data written by the current store() call completing after the check.
+		 */
+		private static final long MAX_CHANNEL_BYTES_BEFORE_FLUSH =
+			Integer.MAX_VALUE - (256L * 1024 * 1024);
+
+		private final BatchStorer.Controller   controller        ;
+		private final ScheduledExecutorService scheduler         ;
+		private long                           pendingSinceNanos ;
+		private volatile boolean               closed            ;
+
+		/*
+		 * Concurrency note — why this.head, and why holding it across ensureObjectId* is safe here.
+		 *
+		 * Background: Default documents the canonical lock order as
+		 *     1) objectRegistry (acquired inside ObjectManager.ensureObjectId*)
+		 *     2) this.head
+		 * and warns at registerGuaranteed(Object) that "ensureObjectId may never be called under
+		 * a storer lock or a deadlock might happen!" — i.e. Default itself never holds this.head
+		 * while calling back into ensureObjectId*, precisely so two threads operating on different
+		 * storers cannot form a head↔objectRegistry cycle.
+		 *
+		 * Batching deliberately inverts that: every public mutator wraps its work in
+		 * synchronized(this.head) and the registration path (registerGuaranteed → ensureObjectId*)
+		 * runs while this.head is already held. This is normally forbidden, but is safe in this
+		 * subclass for the following combined reasons:
+		 *
+		 * - Single-thread-per-storer invariant (Default field comment, lines ~111-113):
+		 *   "A storer instance is never meant to be used in a mutating fashion by more than one
+		 *   thread at any given moment." Batching extends a single-writer storer; its lock is not
+		 *   meant to coordinate concurrent writers but to provide an atomic boundary for the
+		 *   close-check / register / processItems / optFlush sequence and for the background
+		 *   flush thread.
+		 *
+		 * - Reentrancy: synchronized(this.head) is reentrant, so callbacks from
+		 *   ObjectManager.ensureObjectIdGuaranteedRegister(...) that re-enter this storer
+		 *   (registerGuaranteed(long, Object, ...), synchRegisterObjectId, ...) acquire the same
+		 *   monitor without contention.
+		 *
+		 * - No cross-storer head acquisition: the registry callbacks always target the calling
+		 *   storer (passed as objectIdRequestor = this); they never attempt to lock another
+		 *   storer's head. The classic A-holds-headA-wants-objectRegistry / B-holds-objectRegistry-
+		 *   wants-headA cycle therefore cannot form, because no thread ever wants a foreign storer's
+		 *   head while holding the registry.
+		 *
+		 * - this.head, not synchronized(this): exposing the storer instance as a monitor would let
+		 *   outside code lock it first and genuinely reverse the order vs. ObjectManager. Using the
+		 *   package-private head field keeps the monitor private to this class hierarchy.
+		 *
+		 * Why this matters for the override shape: each Batching mutator (internalStore,
+		 * store(Object, long), forceRootStore, ...) keeps the closed-check, registration,
+		 * processItems and optFlush inside one synchronized(this.head) block on purpose. Splitting
+		 * the lock around the ensureObjectId* call (as a naive reading of Default's warning would
+		 * suggest) would re-open windows where the background flush, close(), or another mutator
+		 * could observe partially-applied state — and would not eliminate any real deadlock,
+		 * because the conditions above already preclude one.
+		 */
+
+		Batching(
+			final PersistenceObjectManager<Binary>      objectManager     ,
+			final ObjectSwizzling                       objectRetriever   ,
+			final PersistenceTypeHandlerManager<Binary> typeManager       ,
+			final PersistenceTarget<Binary>             target            ,
+			final BufferSizeProviderIncremental         bufferSizeProvider,
+			final int                                   channelCount      ,
+			final boolean                               switchByteOrder   ,
+			final Persister                             persister         ,
+			final BatchStorer.Controller                controller        ,
+			final Duration                              checkInterval
+		)
+		{
+			super(
+				objectManager     ,
+				objectRetriever   ,
+				typeManager       ,
+				target            ,
+				bufferSizeProvider,
+				channelCount      ,
+				switchByteOrder   ,
+				persister
+			);
+			this.controller = notNull(controller);
+
+			final long millis = notNull(checkInterval).toMillis();
+			if(millis <= 0)
+			{
+				throw new IllegalArgumentException(
+					"checkInterval must be > 0ms, was " + checkInterval
+				);
+			}
+
+			// Validate before creating the executor so a bad checkInterval does not
+			// leak a daemon thread (the constructor would throw after start()).
+			this.scheduler = Executors.newSingleThreadScheduledExecutor(r ->
+			{
+				final Thread t = new Thread(r, "batch-storer-flush");
+				t.setDaemon(true);
+				return t;
+			});
+			this.scheduler.scheduleWithFixedDelay(
+				this::backgroundFlush,
+				millis,
+				millis,
+				TimeUnit.MILLISECONDS
+			);
+		}
+
+		@Override
+		protected boolean deduplicateChunkEntities()
+		{
+			return true;
+		}
+
+		@Override
+		public long store(final Object instance, final long objectId)
+		{
+			synchronized(this.head)
+			{
+				if(this.closed)
+				{
+					throw new IllegalStateException("BatchStorer is already closed.");
+				}
+
+				logger.debug(
+					"Store request: {}({}) with ID {}",
+					LazyArg(() -> systemString(instance)),
+					LazyArgInContext(STORER_CONTEXT, instance),
+					objectId
+				);
+
+				/*
+				 * Force re-registration at the explicitly supplied objectId to capture
+				 * the instance's current state. Default.internalStore(root, objectId)
+				 * returns early when the instance is already locally registered, which
+				 * would silently skip the re-serialization and violate the documented
+				 * BatchStorer contract ("always re-serializes explicitly passed root
+				 * instances"). Child graph traversal still uses lazy semantics via apply().
+				 */
+				this.registerGuaranteed(objectId, instance, null);
+
+				if(!this.isProcessingItems)
+				{
+					try
+					{
+						this.isProcessingItems = true;
+						this.processItems();
+					}
+					finally
+					{
+						this.isProcessingItems = false;
+					}
+				}
+
+				// Default.internalStore(root, objectId) does not call optFlush(),
+				// so invoke it here to match the internalStore(Object) path and
+				// ensure size/time-based flush controllers trigger consistently.
+				this.optFlush();
+
+				return objectId;
+			}
+		}
+
+		@Override
+		public void storeAll(final Iterable<?> instances)
+		{
+			synchronized(this.head)
+			{
+				super.storeAll(instances);
+			}
+		}
+
+		@Override
+		public void forceRootStore(final PersistenceRoots pendingStoreRoot)
+		{
+			synchronized(this.head)
+			{
+				if(this.closed)
+				{
+					throw new IllegalStateException("BatchStorer is already closed.");
+				}
+
+				super.forceRootStore(pendingStoreRoot);
+				// Default.forceRootStore does not call optFlush(), so invoke
+				// it here to match the internalStore(Object) path and ensure
+				// forced root updates participate in flush policy consistently.
+				this.optFlush();
+			}
+		}
+
+		@Override
+		public PersistenceStorer reinitialize()
+		{
+			synchronized(this.head)
+			{
+				return super.reinitialize();
+			}
+		}
+
+		@Override
+		public PersistenceStorer reinitialize(final long initialCapacity)
+		{
+			synchronized(this.head)
+			{
+				return super.reinitialize(initialCapacity);
+			}
+		}
+
+		@Override
+		public PersistenceStorer ensureCapacity(final long desiredCapacity)
+		{
+			synchronized(this.head)
+			{
+				return super.ensureCapacity(desiredCapacity);
+			}
+		}
+
+		@Override
+		public void registerCommitListener(final PersistenceCommitListener listener)
+		{
+			synchronized(this.head)
+			{
+				super.registerCommitListener(listener);
+			}
+		}
+
+		@Override
+		public void registerRegistrationListener(final PersistenceObjectRegistrationListener listener)
+		{
+			synchronized(this.head)
+			{
+				super.registerRegistrationListener(listener);
+			}
+		}
+
+		@Override
+		protected long internalStore(final Object root)
+		{
+			synchronized(this.head)
+			{
+				if(this.closed)
+				{
+					throw new IllegalStateException("BatchStorer is already closed.");
+				}
+
+				logger.debug(
+					"Store request: {}({})",
+					LazyArg(() -> systemString(root)),
+					LazyArgInContext(STORER_CONTEXT, root)
+				);
+
+				/*
+				 * Unlike the default lazy storer, a batch storer always re-registers
+				 * explicitly passed root instances to capture their current state.
+				 * Child graph traversal still uses lazy semantics (via apply()) —
+				 * children are only stored if not yet in the global registry.
+				 */
+				long rootOid;
+				if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
+				{
+					this.registerGuaranteed(rootOid, root, null);
+				}
+				else
+				{
+					rootOid = this.registerGuaranteed(notNull(root));
+				}
+
+				if(!this.isProcessingItems)
+				{
+					try
+					{
+						this.isProcessingItems = true;
+						this.processItems();
+					}
+					finally
+					{
+						this.isProcessingItems = false;
+					}
+				}
+
+				this.optFlush();
+
+				return rootOid;
+			}
+		}
+
+		@Override
+		public void clear()
+		{
+			synchronized(this.head)
+			{
+				super.clear();
+				this.pendingSinceNanos = 0L;
+			}
+		}
+
+		@Override
+		public Object commit()
+		{
+			synchronized(this.head)
+			{
+				return super.commit();
+			}
+		}
+
+		@Override
+		public void flush()
+		{
+			synchronized(this.head)
+			{
+				this.internalFlush();
+			}
+		}
+
+		@Override
+		public boolean hasPendingData()
+		{
+			synchronized(this.head)
+			{
+				return !this.isEmpty();
+			}
+		}
+
+		@Override
+		public void close()
+		{
+			synchronized(this.head)
+			{
+				if(this.closed)
+				{
+					return;
+				}
+				this.closed = true;
+			}
+
+			this.scheduler.shutdown();
+			try
+			{
+				if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+				{
+					this.scheduler.shutdownNow();
+					if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+					{
+						logger.warn("Background flush thread did not terminate within timeout");
+					}
+				}
+			}
+			catch(final InterruptedException e)
+			{
+				this.scheduler.shutdownNow();
+				Thread.currentThread().interrupt();
+			}
+
+			synchronized(this.head)
+			{
+				if(!this.isEmpty())
+				{
+					this.internalFlush();
+				}
+			}
+		}
+
+		private void backgroundFlush()
+		{
+			try
+			{
+				this.optFlush();
+			}
+			catch(final Exception e)
+			{
+				logger.error("Background flush failed", e);
+			}
+		}
+
+		private void optFlush()
+		{
+			synchronized(this.head)
+			{
+				if(this.closed || this.isEmpty())
+				{
+					return;
+				}
+
+				final long nowNanos = System.nanoTime();
+				if(this.pendingSinceNanos == 0L)
+				{
+					this.pendingSinceNanos = nowNanos;
+				}
+
+				// Safety: force flush if any channel approaches the 2 GB storage limit
+				final long maxBytes = this.maxChannelByteCount();
+				if(maxBytes >= MAX_CHANNEL_BYTES_BEFORE_FLUSH)
+				{
+					logger.debug(
+						"Forcing flush: channel byte count {} exceeds safety threshold {}",
+						maxBytes,
+						MAX_CHANNEL_BYTES_BEFORE_FLUSH
+					);
+					this.internalFlush();
+					return;
+				}
+
+				if(this.controller.shouldFlush(
+					this.size(),
+					TimeUnit.NANOSECONDS.toMillis(nowNanos - this.pendingSinceNanos)
+				))
+				{
+					this.internalFlush();
+				}
+			}
+		}
+
+		private void internalFlush()
+		{
+			logger.debug("Flushing batch storer with size = {}", this.size());
+
+			this.commit();
+			this.pendingSinceNanos = 0L;
+		}
 	}
 
 	static final class Item
@@ -1035,9 +1484,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			BufferSizeProviderIncremental         bufferSizeProvider,
 			Persister                             persister
 		);
-		
-		
-		
+
 		public abstract class Abstract implements BinaryStorer.Creator
 		{
 			///////////////////////////////////////////////////////////////////////////
@@ -1145,6 +1592,37 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return storer;
 			}
 			
+			@Override
+			public BatchStorer createBatchStorer(
+				final PersistenceTypeHandlerManager<Binary> typeManager       ,
+				final PersistenceObjectManager<Binary>      objectManager     ,
+				final ObjectSwizzling                       objectRetriever   ,
+				final PersistenceTarget<Binary>             target            ,
+				final BufferSizeProviderIncremental         bufferSizeProvider,
+				final Persister                             persister         ,
+				final BatchStorer.Controller                controller        ,
+				final Duration                              checkInterval
+			)
+			{
+				this.validateIsStoring(target);
+
+				final BinaryStorer.Batching storer = new BinaryStorer.Batching(
+					objectManager         ,
+					objectRetriever       ,
+					typeManager           ,
+					target                ,
+					bufferSizeProvider    ,
+					this.channelCount()   ,
+					this.switchByteOrder(),
+					persister             ,
+					controller            ,
+					checkInterval
+				);
+				objectManager.registerLocalRegistry(storer);
+
+				return storer;
+			}
+
 			protected void validateIsStoring(final PersistenceTarget<Binary> target)
 			{
 				// (06.08.2020 TM)TODO: validation should actually be done by a StorerProvider that uses the Creator

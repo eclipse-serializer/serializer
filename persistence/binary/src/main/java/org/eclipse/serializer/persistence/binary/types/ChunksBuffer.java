@@ -17,8 +17,10 @@ package org.eclipse.serializer.persistence.binary.types;
 import static org.eclipse.serializer.util.X.notNull;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
+import org.eclipse.serializer.collections.HashMapIdId;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceExceptionStateInvalidLength;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdAcceptor;
@@ -47,7 +49,21 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	{
 		return new ChunksBuffer(
 			notNull(channelBuffers),
-			notNull(bufferSizeProvider)
+			notNull(bufferSizeProvider),
+			false
+		);
+	}
+
+	public static ChunksBuffer New(
+		final ChunksBuffer[]                channelBuffers        ,
+		final BufferSizeProviderIncremental bufferSizeProvider    ,
+		final boolean                       deduplicationEnabled
+	)
+	{
+		return new ChunksBuffer(
+			notNull(channelBuffers),
+			notNull(bufferSizeProvider),
+			deduplicationEnabled
 		);
 	}
 
@@ -59,7 +75,7 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 
 	private final ChunksBuffer[]                channelBuffers    ;
 	private final BufferSizeProviderIncremental bufferSizeProvider;
-	
+
 	private ByteBuffer[] buffers                  ;
 	private int          currentBuffersIndex      ;
 	private ByteBuffer   currentBuffer            ;
@@ -68,6 +84,11 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	private long         currentBound             ;
 	private long         totalLength              ;
 
+	// entity deduplication (only active when deduplicationEnabled is true)
+	private final boolean      deduplicationEnabled;
+	private       HashMapIdId  entityIndex   ;
+	private       boolean      hasDuplicates ;
+
 
 
 	///////////////////////////////////////////////////////////////////////////
@@ -75,13 +96,16 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	/////////////////
 
 	ChunksBuffer(
-		final ChunksBuffer[]                channelBuffers    ,
-		final BufferSizeProviderIncremental bufferSizeProvider
+		final ChunksBuffer[]                channelBuffers        ,
+		final BufferSizeProviderIncremental bufferSizeProvider    ,
+		final boolean                       deduplicationEnabled
 	)
 	{
 		super();
-		this.channelBuffers     = channelBuffers;
-		this.bufferSizeProvider = bufferSizeProvider;
+		this.channelBuffers        = channelBuffers       ;
+		this.bufferSizeProvider    = bufferSizeProvider    ;
+		this.deduplicationEnabled  = deduplicationEnabled  ;
+		this.entityIndex           = deduplicationEnabled ? HashMapIdId.New() : null;
 		this.setCurrent((this.buffers = new ByteBuffer[DEFAULT_BUFFERS_CAPACITY])[this.currentBuffersIndex = 0] =
 			XMemory.allocateDirectNative(bufferSizeProvider.provideBufferSize()))
 		;
@@ -191,6 +215,12 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 			buffers[i] = null;
 		}
 		this.setCurrent(buffers[this.currentBuffersIndex = 0]);
+
+		if(this.deduplicationEnabled)
+		{
+			this.entityIndex.clear();
+			this.hasDuplicates = false;
+		}
 	}
 
 	/**
@@ -221,12 +251,22 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 				this.currentAddress, entityContentLength, entityTypeId, entityObjectId
 			);
 		}
-		
+
 		final long entityTotalLength = entityTotalLength(entityContentLength);
 		this.ensureFreeStoreCapacity(entityTotalLength);
-		
+
+		if(this.deduplicationEnabled)
+		{
+			final long offsetInBuffer  = this.currentAddress - this.currentBufferStartAddress;
+			final long encodedPosition = ((long)this.currentBuffersIndex << 32) | offsetInBuffer;
+			if(!this.entityIndex.put(entityObjectId, encodedPosition))
+			{
+				this.hasDuplicates = true;
+			}
+		}
+
 		this.storeEntityHeaderToAddress(this.currentAddress, entityTotalLength, entityTypeId, entityObjectId);
-				
+
 		// currentAddress is advanced to next entity, but this entity's content address has to be returned
 		return this.address = (this.currentAddress += entityTotalLength) - entityContentLength;
 	}
@@ -252,15 +292,114 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 		{
 			return this; // already completed
 		}
-		
+
 		this.updateCurrentBufferPosition();
+
+		if(this.hasDuplicates)
+		{
+			this.compactDuplicates();
+		}
+
 		this.currentBuffer             = null;
 		this.currentBufferStartAddress =   0L;
 		this.currentAddress            =   0L;
 		this.address                   =   0L;
 		this.currentBound              =   0L;
-		
+
 		return this;
+	}
+
+	private void compactDuplicates()
+	{
+		final ByteBuffer[] oldBuffers     = this.buffers;
+		final int          oldBufferCount = this.currentBuffersIndex + 1;
+		final HashMapIdId  index          = this.entityIndex;
+
+		// allocate initial compacted buffer
+		ByteBuffer[] newBuffers    = new ByteBuffer[DEFAULT_BUFFERS_CAPACITY];
+		int          newBufIndex   = 0;
+		ByteBuffer   newBuf        = XMemory.allocateDirectNative(this.bufferSizeProvider.provideBufferSize());
+		newBuffers[newBufIndex]    = newBuf;
+		long         newAddr       = XMemory.getDirectByteBufferAddress(newBuf);
+		long         newBufStart   = newAddr;
+		long         newBound      = newAddr + newBuf.capacity();
+		long         newTotalLen   = 0L;
+
+		for(int bi = 0; bi < oldBufferCount; bi++)
+		{
+			final ByteBuffer buf       = oldBuffers[bi];
+			final long       startAddr = XMemory.getDirectByteBufferAddress(buf);
+			final long       boundAddr = startAddr + buf.limit();
+
+			for(long addr = startAddr; addr < boundAddr; )
+			{
+				final long entityLen = this.readEntityTotalLength(addr);
+				final long entityOid = this.readEntityObjectId(addr);
+
+				final long offsetInOldBuf = addr - startAddr;
+				final long encodedPos     = ((long)bi << 32) | offsetInOldBuf;
+
+				if(index.get(entityOid, encodedPos) == encodedPos)
+				{
+					// latest version (or untracked) — copy to compacted output
+					if(newAddr + entityLen > newBound)
+					{
+						// finalize current new buffer
+						final long written = newAddr - newBufStart;
+						newBuf.position(X.checkArrayRange(written)).flip();
+						newTotalLen += written;
+
+						// allocate next buffer
+						final int newCap = X.checkArrayRange(
+							Math.max(entityLen, this.bufferSizeProvider.provideIncrementalBufferSize())
+						);
+						if(++newBufIndex >= newBuffers.length)
+						{
+							newBuffers = Arrays.copyOf(newBuffers, newBuffers.length << 1);
+						}
+						newBuf              = XMemory.allocateDirectNative(newCap);
+						newBuffers[newBufIndex] = newBuf;
+						newBufStart         = XMemory.getDirectByteBufferAddress(newBuf);
+						newAddr             = newBufStart;
+						newBound            = newBufStart + newBuf.capacity();
+					}
+
+					XMemory.copyRange(addr, newAddr, entityLen);
+					newAddr += entityLen;
+				}
+				// else: superseded duplicate — skip
+
+				addr += entityLen;
+			}
+		}
+
+		// finalize last new buffer
+		final long lastWritten = newAddr - newBufStart;
+		newBuf.position(X.checkArrayRange(lastWritten)).flip();
+		newTotalLen += lastWritten;
+
+		// deallocate old buffers
+		for(int i = 0; i < oldBufferCount; i++)
+		{
+			XMemory.deallocateDirectByteBuffer(oldBuffers[i]);
+			oldBuffers[i] = null;
+		}
+
+		// replace with compacted buffers
+		this.buffers             = newBuffers ;
+		this.currentBuffersIndex = newBufIndex;
+		this.totalLength         = newTotalLen;
+	}
+
+	protected long readEntityTotalLength(final long entityAddress)
+	{
+		return XMemory.get_long(entityAddress);
+	}
+
+	protected long readEntityObjectId(final long entityAddress)
+	{
+		// OID offset = 16: after 8-byte LEN + 8-byte TID
+		return XMemory.get_long(entityAddress + Long.BYTES + Long.BYTES);
 	}
 	
 	private void iterateEntityDataLocal(final BinaryEntityDataReader reader)
@@ -309,7 +448,20 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 	{
 		return this.totalLength;
 	}
-	
+
+	/**
+	 * Returns the total accumulated byte count including data in the current
+	 * (not yet completed) buffer. Unlike {@link #totalLength()}, which only
+	 * accounts for completed buffers, this method provides a real-time
+	 * value suitable for size-based flush decisions.
+	 *
+	 * @return total bytes written so far, including the current buffer
+	 */
+	public final long currentTotalLength()
+	{
+		return this.totalLength + (this.currentAddress - this.currentBufferStartAddress);
+	}
+
 	@Override
 	public final void copyToAddress(
 		final long entityContentAddressOffset,

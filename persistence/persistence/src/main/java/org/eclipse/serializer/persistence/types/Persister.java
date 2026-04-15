@@ -16,6 +16,8 @@ package org.eclipse.serializer.persistence.types;
 
 import org.eclipse.serializer.reference.ObjectSwizzling;
 
+import java.time.Duration;
+
 public interface Persister extends ObjectSwizzling, PersistenceStoring
 {
 	/**
@@ -73,5 +75,35 @@ public interface Persister extends ObjectSwizzling, PersistenceStoring
 	 * @return the newly created {@link Storer} instance.
 	 */
 	public Storer createEagerStorer();
-	
+
+	/**
+	 * Creates a new {@link BatchStorer} instance with lazy storing semantics for child objects
+	 * and forced re-serialization for explicitly stored root instances.
+	 *
+	 * @param controller    controls when accumulated data should be flushed
+	 * @param checkInterval the interval at which a background thread checks for pending flushes
+	 * @return the newly created {@link BatchStorer} instance.
+	 */
+	public default BatchStorer createBatchStorer(
+		BatchStorer.Controller controller   ,
+		Duration               checkInterval
+	)
+	{
+		throw new UnsupportedOperationException(
+			this.getClass().getName() + " does not support batch storing."
+		);
+	}
+
+	/**
+	 * Returns a fluent builder for creating a new {@link BatchStorer}. The builder promotes
+	 * {@code maxSize}, {@code flushCycle} and {@code checkInterval} to top-level methods and
+	 * hides the {@link BatchStorer.Controller} abstraction from user code.
+	 *
+	 * @return a new {@link BatchStorer.Builder} bound to this persister.
+	 */
+	public default BatchStorer.Builder batchStorerBuilder()
+	{
+		return BatchStorer.Builder(this);
+	}
+
 }

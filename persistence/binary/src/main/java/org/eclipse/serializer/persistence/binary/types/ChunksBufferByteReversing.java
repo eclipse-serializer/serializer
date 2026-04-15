@@ -32,23 +32,39 @@ public class ChunksBufferByteReversing extends ChunksBuffer
 	{
 		return new ChunksBufferByteReversing(
 			notNull(channelBuffers),
-			notNull(bufferSizeProvider)
+			notNull(bufferSizeProvider),
+			false
 		);
 	}
-	
-	
+
+	public static final ChunksBufferByteReversing New(
+		final ChunksBuffer[]                channelBuffers        ,
+		final BufferSizeProviderIncremental bufferSizeProvider    ,
+		final boolean                       deduplicationEnabled
+	)
+	{
+		return new ChunksBufferByteReversing(
+			notNull(channelBuffers),
+			notNull(bufferSizeProvider),
+			deduplicationEnabled
+		);
+	}
+
+
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
-	
+
 	ChunksBufferByteReversing(
-		final ChunksBuffer[]                channelBuffers    ,
-		final BufferSizeProviderIncremental bufferSizeProvider
+		final ChunksBuffer[]                channelBuffers        ,
+		final BufferSizeProviderIncremental bufferSizeProvider    ,
+		final boolean                       deduplicationEnabled
 	)
 	{
 		super(
-			channelBuffers    ,
-			bufferSizeProvider
+			channelBuffers        ,
+			bufferSizeProvider    ,
+			deduplicationEnabled
 		);
 	}
 	
@@ -246,6 +262,18 @@ public class ChunksBufferByteReversing extends ChunksBuffer
 		}
 	}
 	
+	@Override
+	protected long readEntityTotalLength(final long entityAddress)
+	{
+		return Long.reverseBytes(XMemory.get_long(entityAddress));
+	}
+
+	@Override
+	protected long readEntityObjectId(final long entityAddress)
+	{
+		return Long.reverseBytes(XMemory.get_long(entityAddress + Long.BYTES + Long.BYTES));
+	}
+
 	@Override
 	final void storeEntityHeaderToAddress(
 		final long entityAddress    ,
