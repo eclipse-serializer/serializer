@@ -38,10 +38,9 @@ import static org.eclipse.serializer.util.X.notNull;
  * <p>
  * Usage:
  * <pre>
- * try (BatchStorer storer = storageManager.createBatchStorer(
- *     BatchStorer.Controller(Duration.ofSeconds(1)),
- *     Duration.ofMillis(200)
- * ))
+ * try (BatchStorer storer = storageManager.batchStorerBuilder()
+ *     .maxSize(100)
+ *     .build())
  * {
  *     for (Object item : items)
  *     {
@@ -154,6 +153,128 @@ public interface BatchStorer extends PersistenceStorer, AutoCloseable
 		 * @return {@code true} if a flush should be triggered
 		 */
 		public boolean shouldFlush(long size, long millisSinceLastFlush);
+	}
+
+
+	/**
+	 * Pseudo-constructor method to create a new {@link Builder} bound to the given
+	 * {@link Persister}.
+	 *
+	 * @param persister the persister the builder will create the {@link BatchStorer} from
+	 * @return a new builder
+	 */
+	public static Builder Builder(final Persister persister)
+	{
+		return new Builder.Default(persister);
+	}
+
+	/**
+	 * Fluent builder for {@link BatchStorer} instances. Promotes {@code maxSize},
+	 * {@code flushCycle} and {@code checkInterval} to top-level methods and hides the
+	 * {@link Controller} abstraction from user code.
+	 * <p>
+	 * At least one of {@link #maxSize(long)} and {@link #flushCycle(Duration)} must be
+	 * configured before calling {@link #build()}. If both are set, a flush is
+	 * triggered whenever either threshold is reached.
+	 * <p>
+	 * {@link #checkInterval(Duration)} defaults to {@code Duration.ofSeconds(1)}.
+	 */
+	public static interface Builder
+	{
+		/**
+		 * Configures the maximum batch size that triggers a flush. Must be {@code > 0}.
+		 *
+		 * @param maxSize the maximum batch size that triggers a flush
+		 * @return this builder
+		 */
+		public Builder maxSize(long maxSize);
+
+		/**
+		 * Configures the time interval after which a flush should occur. Must be {@code > 0ms}.
+		 *
+		 * @param flushCycle the time interval after which a flush should occur
+		 * @return this builder
+		 */
+		public Builder flushCycle(Duration flushCycle);
+
+		/**
+		 * Configures the interval at which the background daemon thread checks for pending
+		 * flushes. Must be {@code > 0ms}. Defaults to {@code Duration.ofSeconds(1)}.
+		 *
+		 * @param checkInterval the background flush check interval
+		 * @return this builder
+		 */
+		public Builder checkInterval(Duration checkInterval);
+
+		/**
+		 * Builds the {@link BatchStorer}.
+		 *
+		 * @return the newly created {@link BatchStorer}
+		 * @throws IllegalStateException if neither {@code maxSize} nor {@code flushCycle} was set
+		 */
+		public BatchStorer build();
+
+
+		public static class Default implements Builder
+		{
+			private final Persister persister    ;
+			private       long      maxSize      ; // 0 = not set
+			private       Duration  flushCycle   ; // null = not set
+			private       Duration  checkInterval = Duration.ofSeconds(1);
+
+			Default(final Persister persister)
+			{
+				super();
+				this.persister = notNull(persister);
+			}
+
+			@Override
+			public Builder maxSize(final long maxSize)
+			{
+				this.maxSize = maxSize;
+				return this;
+			}
+
+			@Override
+			public Builder flushCycle(final Duration flushCycle)
+			{
+				this.flushCycle = flushCycle;
+				return this;
+			}
+
+			@Override
+			public Builder checkInterval(final Duration checkInterval)
+			{
+				this.checkInterval = checkInterval;
+				return this;
+			}
+
+			@Override
+			public BatchStorer build()
+			{
+				final Controller controller;
+				if(this.maxSize > 0L && this.flushCycle != null)
+				{
+					controller = BatchStorer.Controller(this.maxSize, this.flushCycle);
+				}
+				else if(this.maxSize > 0L)
+				{
+					controller = BatchStorer.Controller(this.maxSize);
+				}
+				else if(this.flushCycle != null)
+				{
+					controller = BatchStorer.Controller(this.flushCycle);
+				}
+				else
+				{
+					throw new IllegalStateException(
+						"At least one of maxSize or flushCycle must be set."
+					);
+				}
+
+				return this.persister.createBatchStorer(controller, this.checkInterval);
+			}
+		}
 	}
 
 }

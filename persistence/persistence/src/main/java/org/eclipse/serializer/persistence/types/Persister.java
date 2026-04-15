@@ -94,4 +94,16 @@ public interface Persister extends ObjectSwizzling, PersistenceStoring
 		);
 	}
 
+	/**
+	 * Returns a fluent builder for creating a new {@link BatchStorer}. The builder promotes
+	 * {@code maxSize}, {@code flushCycle} and {@code checkInterval} to top-level methods and
+	 * hides the {@link BatchStorer.Controller} abstraction from user code.
+	 *
+	 * @return a new {@link BatchStorer.Builder} bound to this persister.
+	 */
+	public default BatchStorer.Builder batchStorerBuilder()
+	{
+		return BatchStorer.Builder(this);
+	}
+
 }
