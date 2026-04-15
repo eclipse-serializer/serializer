@@ -1049,12 +1049,6 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				persister
 			);
 			this.controller = notNull(controller);
-			this.scheduler  = Executors.newSingleThreadScheduledExecutor(r ->
-			{
-				final Thread t = new Thread(r, "batch-storer-flush");
-				t.setDaemon(true);
-				return t;
-			});
 
 			final long millis = notNull(checkInterval).toMillis();
 			if(millis <= 0)
@@ -1063,6 +1057,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					"checkInterval must be > 0ms, was " + checkInterval
 				);
 			}
+
+			// Validate before creating the executor so a bad checkInterval does not
+			// leak a daemon thread (the constructor would throw after start()).
+			this.scheduler = Executors.newSingleThreadScheduledExecutor(r ->
+			{
+				final Thread t = new Thread(r, "batch-storer-flush");
+				t.setDaemon(true);
+				return t;
+			});
 			this.scheduler.scheduleWithFixedDelay(
 				this::backgroundFlush,
 				millis,
