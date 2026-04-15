@@ -810,6 +810,7 @@ public final class VarString implements CharSequence, Appendable, Serializable
 		return this;
 	}
 
+	@Override
 	public final boolean isEmpty()
 	{
 		return this.size == 0;
@@ -1327,6 +1328,22 @@ public final class VarString implements CharSequence, Appendable, Serializable
 	public final boolean endsWith(final String string)
 	{
 		return this.endsWith(XChars.readChars(string));
+	}
+
+	public final VarString padLeft(final int i, final int totalLength, final char paddingChar)
+	{
+		return this.repeat(calculatePaddingCount(i, totalLength), paddingChar).add(i);
+	}
+
+	private static int calculatePaddingCount(final int i, final int totalLength)
+	{
+		if(i == 0)
+		{
+			return totalLength - 1;
+		}
+
+		final int iLength = XMath.log10discrete(Math.abs(i)) + (i < 0 ? 2 : 1);
+		return max(totalLength - iLength, 0);
 	}
 
 	private static int calculatePaddingCount(final String s, final int totalLength)

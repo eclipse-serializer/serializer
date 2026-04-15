@@ -153,6 +153,86 @@ public final class XArrays
 		}
 	}
 
+	public static boolean hasNoContent(final byte[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasNoContent(final short[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasNoContent(final int[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasNoContent(final long[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasNoContent(final float[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasNoContent(final double[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasNoContent(final boolean[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasNoContent(final char[] array)
+	{
+		return array == null || array.length == 0;
+	}
+
+	public static boolean hasContent(final byte[] array)
+	{
+		return !hasNoContent(array);
+	}
+
+	public static boolean hasContent(final short[] array)
+	{
+		return !hasNoContent(array);
+	}
+
+	public static boolean hasContent(final int[] array)
+	{
+		return !hasNoContent(array);
+	}
+
+	public static boolean hasContent(final long[] array)
+	{
+		return !hasNoContent(array);
+	}
+
+	public static boolean hasContent(final float[] array)
+	{
+		return !hasNoContent(array);
+	}
+
+	public static boolean hasContent(final double[] array)
+	{
+		return !hasNoContent(array);
+	}
+
+	public static boolean hasContent(final boolean[] array)
+	{
+		return !hasNoContent(array);
+	}
+
+	public static boolean hasContent(final char[] array)
+	{
+		return !hasNoContent(array);
+	}
+
 	/**
 	 * Returns if the passed array is either null or has the length 0.
 	 *

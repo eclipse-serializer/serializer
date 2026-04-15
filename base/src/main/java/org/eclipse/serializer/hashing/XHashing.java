@@ -195,14 +195,14 @@ public final class XHashing
 		final HashEqualator<? super K> hashEqualator
 	)
 	{
-		return new HashEqualator<KeyValue<K, V>>()
+		return new HashEqualator<>()
 		{
 			@Override
 			public int hash(final KeyValue<K, V> kv)
 			{
 				return kv == null ? 0 : hashEqualator.hash(kv.key());
 			}
-			
+
 			@Override
 			public boolean equal(final KeyValue<K, V> kv1, final KeyValue<K, V> kv2)
 			{
@@ -217,6 +217,11 @@ public final class XHashing
 			? XHashing.hashEqualityValue()
 			: XHashing.hashEqualityIdentity()
 			;
+	}
+
+	public static int hash(final int hash1, final int hash2)
+	{
+		return 31 * hash1 + hash2;
 	}
 	
 	
