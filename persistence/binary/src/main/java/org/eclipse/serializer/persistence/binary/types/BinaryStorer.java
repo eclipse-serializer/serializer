@@ -1085,12 +1085,47 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			synchronized(this.head)
 			{
-				final long oid = super.store(instance, objectId);
+				if(this.closed)
+				{
+					throw new IllegalStateException("BatchStorer is already closed.");
+				}
+
+				logger.debug(
+					"Store request: {}({}) with ID {}",
+					LazyArg(() -> systemString(instance)),
+					LazyArgInContext(STORER_CONTEXT, instance),
+					objectId
+				);
+
+				/*
+				 * Force re-registration at the explicitly supplied objectId to capture
+				 * the instance's current state. Default.internalStore(root, objectId)
+				 * returns early when the instance is already locally registered, which
+				 * would silently skip the re-serialization and violate the documented
+				 * BatchStorer contract ("always re-serializes explicitly passed root
+				 * instances"). Child graph traversal still uses lazy semantics via apply().
+				 */
+				this.registerGuaranteed(objectId, instance, null);
+
+				if(!this.isProcessingItems)
+				{
+					try
+					{
+						this.isProcessingItems = true;
+						this.processItems();
+					}
+					finally
+					{
+						this.isProcessingItems = false;
+					}
+				}
+
 				// Default.internalStore(root, objectId) does not call optFlush(),
 				// so invoke it here to match the internalStore(Object) path and
 				// ensure size/time-based flush controllers trigger consistently.
 				this.optFlush();
-				return oid;
+
+				return objectId;
 			}
 		}
 
