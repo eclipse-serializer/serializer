@@ -1008,21 +1008,50 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private volatile boolean               closed            ;
 
 		/*
-		 * Concurrency note — why this.head, not synchronized(this):
+		 * Concurrency note — why this.head, and why holding it across ensureObjectId* is safe here.
 		 *
-		 * Default deliberately uses this.head as its internal mutex and warns
-		 * that "outside logic could lock the storer first, reversing the lock
-		 * order" (see Default field comment).  Using synchronized(this) on
-		 * Batching methods exposes the storer instance as a monitor, which is
-		 * exactly the anti-pattern Default's design was built to prevent.
+		 * Background: Default documents the canonical lock order as
+		 *     1) objectRegistry (acquired inside ObjectManager.ensureObjectId*)
+		 *     2) this.head
+		 * and warns at registerGuaranteed(Object) that "ensureObjectId may never be called under
+		 * a storer lock or a deadlock might happen!" — i.e. Default itself never holds this.head
+		 * while calling back into ensureObjectId*, precisely so two threads operating on different
+		 * storers cannot form a head↔objectRegistry cycle.
 		 *
-		 * All Batching overrides therefore synchronize on this.head, which:
-		 * - keeps a single, consistent lock ordering (this.head → objectRegistry)
-		 * - serializes store / flush / close so that only one thread at a time
-		 *   can enter ensureObjectId* or processItems for this storer, avoiding
-		 *   the cross-thread head↔objectRegistry deadlock described in Default
-		 * - prevents external code from inadvertently reversing the lock order
-		 *   by synchronizing on the storer instance
+		 * Batching deliberately inverts that: every public mutator wraps its work in
+		 * synchronized(this.head) and the registration path (registerGuaranteed → ensureObjectId*)
+		 * runs while this.head is already held. This is normally forbidden, but is safe in this
+		 * subclass for the following combined reasons:
+		 *
+		 * - Single-thread-per-storer invariant (Default field comment, lines ~111-113):
+		 *   "A storer instance is never meant to be used in a mutating fashion by more than one
+		 *   thread at any given moment." Batching extends a single-writer storer; its lock is not
+		 *   meant to coordinate concurrent writers but to provide an atomic boundary for the
+		 *   close-check / register / processItems / optFlush sequence and for the background
+		 *   flush thread.
+		 *
+		 * - Reentrancy: synchronized(this.head) is reentrant, so callbacks from
+		 *   ObjectManager.ensureObjectIdGuaranteedRegister(...) that re-enter this storer
+		 *   (registerGuaranteed(long, Object, ...), synchRegisterObjectId, ...) acquire the same
+		 *   monitor without contention.
+		 *
+		 * - No cross-storer head acquisition: the registry callbacks always target the calling
+		 *   storer (passed as objectIdRequestor = this); they never attempt to lock another
+		 *   storer's head. The classic A-holds-headA-wants-objectRegistry / B-holds-objectRegistry-
+		 *   wants-headA cycle therefore cannot form, because no thread ever wants a foreign storer's
+		 *   head while holding the registry.
+		 *
+		 * - this.head, not synchronized(this): exposing the storer instance as a monitor would let
+		 *   outside code lock it first and genuinely reverse the order vs. ObjectManager. Using the
+		 *   package-private head field keeps the monitor private to this class hierarchy.
+		 *
+		 * Why this matters for the override shape: each Batching mutator (internalStore,
+		 * store(Object, long), forceRootStore, ...) keeps the closed-check, registration,
+		 * processItems and optFlush inside one synchronized(this.head) block on purpose. Splitting
+		 * the lock around the ensureObjectId* call (as a naive reading of Default's warning would
+		 * suggest) would re-open windows where the background flush, close(), or another mutator
+		 * could observe partially-applied state — and would not eliminate any real deadlock,
+		 * because the conditions above already preclude one.
 		 */
 
 		Batching(
