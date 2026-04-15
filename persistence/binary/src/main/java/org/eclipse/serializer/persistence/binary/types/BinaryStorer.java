@@ -299,6 +299,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			}
 		}
 		
+		protected boolean deduplicateChunkEntities()
+		{
+			return false;
+		}
+
 		private void synchCreateStoringChunksBuffers()
 		{
 			/* Note:
@@ -308,13 +313,14 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 * The released chunks must be handled by those threads if existing
 			 * or ultimately by the garbage collector (or by some tailored additional logic)
 			 */
-			
+
+			final boolean        dedup  = this.deduplicateChunkEntities();
 			final ChunksBuffer[] chunks = this.chunks = new ChunksBuffer[this.chunksHashRange + 1];
 			for(int i = 0; i < chunks.length; i++)
 			{
 				chunks[i] = this.switchByteOrder
-					? ChunksBufferByteReversing.New(chunks, this.bufferSizeProvider)
-					: ChunksBuffer.New(chunks, this.bufferSizeProvider)
+					? ChunksBufferByteReversing.New(chunks, this.bufferSizeProvider, dedup)
+					: ChunksBuffer.New(chunks, this.bufferSizeProvider, dedup)
 				;
 			}
 		}
@@ -1063,6 +1069,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				millis,
 				TimeUnit.MILLISECONDS
 			);
+		}
+
+		@Override
+		protected boolean deduplicateChunkEntities()
+		{
+			return true;
 		}
 
 		@Override
