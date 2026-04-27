@@ -1,7 +1,5 @@
 package org.eclipse.serializer.persistence.types;
 
-import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
-
 /*-
  * #%L
  * Eclipse Serializer Persistence
@@ -11,57 +9,95 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsist
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
+
 /**
- * A type extending the simple {@link PersistenceStoring} to enable stateful store handling.
- * This can be used to do what is generally called "transactions": preprocess data to be stored and then store
- * either all or nothing.<br>
- * It can also be used to skip certain references. See {@link #skip(Object)}<br>
- * The deviating naming (missing "Persistence" prefix) is intentional to support convenience
- * on the application code level.
+ * A {@link PersistenceStoring} variant with stateful, transaction-like store handling.
+ * <p>
+ * Lifecycle of a {@link Storer} instance:
+ * <ol>
+ *   <li><b>Collect.</b> One or more {@code store(...)} / {@link #skip(Object)} /
+ *       {@link #skipMapped(Object, long)} / {@link #skipNulled(Object)} calls accumulate state
+ *       inside this {@link Storer} <i>without</i> writing anything to the underlying
+ *       {@link PersistenceObjectRegistry} or persistent storage.</li>
+ *   <li><b>Commit.</b> A single {@link #commit()} call atomically persists everything that has
+ *       been accumulated. Either all of it is committed or none of it is.</li>
+ *   <li><b>Reuse or discard.</b> After {@code commit()}, the storer can be reused
+ *       ({@link #clear()} / {@link #reinitialize()}) or simply dropped.</li>
+ * </ol>
+ * The deviating naming (missing "Persistence" prefix) is intentional to support convenience on
+ * the application code level.
  *
- * 
+ * @see PersistenceStoring
  */
 public interface Storer extends PersistenceStoring
 {
 	/**
-	 * Ends the data collection process and causes all collected data to be persisted.
+	 * Ends the data collection process and persists all data accumulated by previous
+	 * {@code store(...)} calls on this {@link Storer}.
 	 * <p>
-	 * This is an atomatic all-or-nothing operation: either all collected data will be persisted successfully,
-	 * or non of it will be persisted. Partially persisted data will be reverted / rolled back in case of a failure.
+	 * This is an atomic all-or-nothing operation: either all collected data is persisted successfully,
+	 * or none of it is. Partially persisted data is reverted on failure, leaving the underlying
+	 * storage and the {@link PersistenceObjectRegistry} unchanged.
+	 * <p>
+	 * After {@code commit()} returns successfully, every instance accumulated by this storer has an
+	 * objectId registered in the {@link PersistenceObjectRegistry}. Subsequent {@code store(...)}
+	 * calls on those same instances by <i>any</i> storer will follow the lazy-default rule and skip
+	 * them unless an eager strategy is used.
+	 * <p>
+	 * The method may be called at most once on a fresh storer state. To reuse the storer, call
+	 * {@link #clear()} or {@link #reinitialize()} afterwards.
 	 *
-	 * @return some kind of status information, potentially null.
+	 * @return implementation-specific status information about the commit, or {@code null} if the
+	 *         implementation does not provide any.
+	 *
+	 * @see #clear()
+	 * @see #reinitialize()
 	 */
 	public Object commit();
 
 	/**
-	 * Clears all internal state regarding collected data and/or registered skips.
+	 * Discards all accumulated state of this {@link Storer}: pending stores collected since the last
+	 * {@code commit()} (or since construction) as well as any registered skips
+	 * ({@link #skip(Object)} / {@link #skipMapped(Object, long)} / {@link #skipNulled(Object)}).
+	 * <p>
+	 * This rolls back uncommitted in-memory state only; data already committed by a previous
+	 * {@link #commit()} call is unaffected. After {@code clear()} the storer is ready to start a new
+	 * collection cycle.
+	 *
+	 * @see #commit()
+	 * @see #reinitialize()
 	 */
 	public void clear();
 
 	/**
-	 * Registers the passed {@literal instance} under the passed {@literal objectId} without persisting its data.
+	 * Registers the passed instance under the passed objectId without collecting its data for
+	 * persistence.
 	 * <p>
-	 * This skip means that if the passed {@literal instance} is encountered while collecting data to be persisted,
-	 * its data will NOT be collected. References to the passed {@literal instance} will be persisted as the
-	 * passed {@literal objectId}.
+	 * If the instance is encountered while traversing references during the collection phase, its
+	 * data is <b>not</b> collected; references to it are persisted using the passed
+	 * {@code objectId} instead. This effectively redirects all references to the passed instance
+	 * to whatever persistent record is associated with {@code objectId}.
 	 * <p>
-	 * <u>Warning</u>:<br>
-	 * This method can be very useful to rearrange object graphs on the persistence level, but it can also cause
-	 * inconsistencies if not used perfectly correctly.<br>
-	 * It is strongly advised to use one of the following alternatives instead:
-	 * {@link #skip(Object)}
-	 * {@link #skipNulled(Object)}
+	 * <b>Warning.</b> This is a low-level mechanism that can be useful for rearranging object graphs
+	 * on the persistence level (e.g. swapping the target of a reference, ID re-mapping during
+	 * migration), but it can also create inconsistencies if the passed {@code objectId} does not
+	 * point to a record of a compatible type. Prefer {@link #skip(Object)} or
+	 * {@link #skipNulled(Object)} unless you specifically need ID-level remapping.
+	 * <p>
+	 * Skips are part of the storer's collection state and are discarded by {@link #clear()} or
+	 * {@link #commit()}.
 	 *
-	 * @param instance the instance / reference to be skipped.
-	 *
+	 * @param instance the instance to be skipped.
 	 * @param objectId the objectId to be used as a reference to the skipped instance.
 	 *
-	 * @return {@literal true} if the instance has been newly registered, {@literal false} if it already was.
+	 * @return {@code true} if the instance was newly registered by this call, {@code false} if it
+	 *         was already registered.
 	 *
 	 * @see #skip(Object)
 	 * @see #skipNulled(Object)
@@ -69,17 +105,24 @@ public interface Storer extends PersistenceStoring
 	public boolean skipMapped(Object instance, long objectId);
 
 	/**
-	 * Registers the passed {@literal instance} to be skipped from the data persisting process.
+	 * Registers the passed instance to be skipped during this storer's data collection.
 	 * <p>
-	 * This skip means that if the passed {@literal instance} is encountered while collecting data to be persisted,
-	 * its data will NOT be collected. If the instance is already registered under a certain object id at the used
-	 * {@link PersistenceObjectRegistry}, then is associated object id will be used. Otherwise, the null-Id will be
-	 * used, effectively "nulling out" all references to this instance on the persistent level.<br>
-	 * The latter behavior is exactly the same as {@link #skipNulled(Object)}.
+	 * A skipped instance encountered while traversing references is <b>not</b> collected for
+	 * persistence. The reference itself is resolved as follows:
+	 * <ul>
+	 *   <li>If the instance is already registered for an objectId in the
+	 *       {@link PersistenceObjectRegistry}, that existing objectId is used (i.e. the reference
+	 *       still points to the previously persisted instance).</li>
+	 *   <li>Otherwise, the null-id is used &mdash; effectively writing the reference as {@code null}
+	 *       in the persistent form. This matches the behavior of {@link #skipNulled(Object)}.</li>
+	 * </ul>
+	 * Skips are part of the storer's collection state and are discarded by {@link #clear()} or
+	 * {@link #commit()}.
 	 *
-	 * @param instance the instance / reference to be skipped.
+	 * @param instance the instance to be skipped.
 	 *
-	 * @return {@literal true} if the instance has been newly registered, {@literal false} if it already was.
+	 * @return {@code true} if the instance was newly registered as skipped by this call, {@code false}
+	 *         if it was already registered.
 	 *
 	 * @see #skipNulled(Object)
 	 * @see #skipMapped(Object, long)
@@ -87,17 +130,21 @@ public interface Storer extends PersistenceStoring
 	public boolean skip(Object instance);
 
 	/**
-	 * Registers the passed {@literal instance} to be skipped from the data persisting process.
+	 * Registers the passed instance to be skipped during this storer's data collection, with all
+	 * references to it persisted as {@code null}.
 	 * <p>
-	 * This skip means that if the passed {@literal instance} is encountered while collecting data to be persisted,
-	 * its data will NOT be collected. References to this instance will always be persisted as null, no matter if
-	 * the instance is already registered for a certain object id at the used {@link PersistenceObjectRegistry}
-	 * or not.<br>
-	 * To make the skipping consider existing object id registrations, use {@link #skip(Object)}.
+	 * Unlike {@link #skip(Object)}, this method <b>ignores</b> any existing registration of the
+	 * instance in the {@link PersistenceObjectRegistry}: references will be written as {@code null}
+	 * unconditionally. Use {@link #skip(Object)} if you want existing object-id registrations to be
+	 * honored.
+	 * <p>
+	 * Skips are part of the storer's collection state and are discarded by {@link #clear()} or
+	 * {@link #commit()}.
 	 *
-	 * @param instance the instance / reference to be skipped by using .
+	 * @param instance the instance to be skipped.
 	 *
-	 * @return {@literal true} if the instance has been newly registered, {@literal false} if it already was.
+	 * @return {@code true} if the instance was newly registered as nulled by this call,
+	 *         {@code false} if it was already registered.
 	 *
 	 * @see #skip(Object)
 	 * @see #skipMapped(Object, long)
@@ -170,22 +217,78 @@ public interface Storer extends PersistenceStoring
 	 */
 	public Storer ensureCapacity(long desiredCapacity);
 
-	
-	public void registerCommitListener(PersistenceCommitListener listener);
-		
-	public void registerRegistrationListener(PersistenceObjectRegistrationListener listener);
-	
 	/**
-	 * Stores the passed instance with the provided id and all referenced instances of persistable references recursively,
-	 * but stores the passed instance and referenced instances only if they are newly encountered (e.g. don't have an id associated with
-	 * them in the object registry, yet and are therefore required to be handled).
-	 * <br><br>
-	 * If the provided instance is allready persisted with an other id an {@link PersistenceExceptionConsistencyObject} exception
-	 * will be thrown on commit.
-	 * 
-	 * @param instance the root instance of the subgraph of required instances to be stored.
-	 * @param objectId the storage object id which shall be assigned to the passed instance.
-	 * @return the object id representing the passed instance.
+	 * Registers a {@link PersistenceCommitListener} that will be notified when this storer's
+	 * {@link #commit()} successfully completes.
+	 * <p>
+	 * Listeners are invoked synchronously on the thread that called {@code commit()} after all data
+	 * has been persisted and the {@link PersistenceObjectRegistry} has been updated. They are
+	 * therefore suitable for hooking post-commit work (cache invalidation, notifications, metrics)
+	 * that must observe the committed state.
+	 * <p>
+	 * Listeners registered on this storer are scoped to this storer instance and are <i>not</i>
+	 * carried over to other storers. They are retained across {@link #clear()} but discarded by
+	 * {@link #reinitialize()}.
+	 *
+	 * @param listener the listener to register.
+	 */
+	public void registerCommitListener(PersistenceCommitListener listener);
+
+	/**
+	 * Registers a {@link PersistenceObjectRegistrationListener} that will be notified for every
+	 * object that this storer registers in the {@link PersistenceObjectRegistry} during the
+	 * collection phase.
+	 * <p>
+	 * The listener's {@code onObjectRegistration(long, Object)} method is called once per object as
+	 * an objectId is assigned to it. This is useful for diagnostics, auditing, or building
+	 * objectId &rarr; instance maps for committed graphs (see the EclipseStore Storage user docs
+	 * &mdash; "Best Practice / Get objects that are persisted by a storer").
+	 * <p>
+	 * <b>Performance.</b> The listener is invoked synchronously inside the storer's hot path; a
+	 * non-trivial implementation will measurably slow down the collection phase. Keep the callback
+	 * cheap and non-blocking.
+	 * <p>
+	 * Listeners registered on this storer are scoped to this storer instance and are <i>not</i>
+	 * carried over to other storers.
+	 *
+	 * @param listener the listener to register.
+	 */
+	public void registerRegistrationListener(PersistenceObjectRegistrationListener listener);
+
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * On a {@link Storer}, this call <b>accumulates</b> the instance and its newly encountered
+	 * references in this storer's internal state without committing anything. The actual persistence
+	 * happens on {@link #commit()}; until then nothing is registered in the
+	 * {@link PersistenceObjectRegistry} and nothing is written to the underlying storage layer.
+	 * Calling {@code store(...)} on the same instance multiple times before {@code commit()} has no
+	 * additional effect.
+	 *
+	 * @see #commit()
+	 * @see #skip(Object)
+	 */
+	@Override
+	public long store(Object instance);
+
+	/**
+	 * Accumulates the passed instance &mdash; together with all newly encountered referenced
+	 * instances reachable from it &mdash; for persistence under the passed {@code objectId}.
+	 * <p>
+	 * Lazy-default semantics apply: only references not yet known to the
+	 * {@link PersistenceObjectRegistry} are traversed; already-known references are skipped.
+	 * <p>
+	 * If the instance is already registered under a <i>different</i> objectId in the
+	 * {@link PersistenceObjectRegistry}, a {@link PersistenceExceptionConsistencyObject} is thrown
+	 * on {@link #commit()}, not from this method.
+	 *
+	 * @param instance the root instance of the sub-graph to be stored.
+	 * @param objectId the objectId to be assigned to the passed instance on commit.
+	 *
+	 * @return the passed {@code objectId} (the same value that will be used on commit).
+	 *
+	 * @see #store(Object)
+	 * @see #commit()
 	 */
 	public long store(Object instance, long objectId);
 
