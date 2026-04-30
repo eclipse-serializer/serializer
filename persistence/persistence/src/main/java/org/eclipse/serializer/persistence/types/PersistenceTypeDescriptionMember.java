@@ -133,7 +133,7 @@ public interface PersistenceTypeDescriptionMember
 	 * @param other the description to compare to
 	 * @return if this and the other description's structure are equal
 	 *
-	 * @see #equalDescription(PersistenceTypeDescriptionMember, PersistenceTypeDescriptionMember)
+	 * @see #equalStructure(PersistenceTypeDescriptionMember, PersistenceTypeDescriptionMember)
 	 */
 	public default boolean equalsStructure(final PersistenceTypeDescriptionMember other)
 	{
