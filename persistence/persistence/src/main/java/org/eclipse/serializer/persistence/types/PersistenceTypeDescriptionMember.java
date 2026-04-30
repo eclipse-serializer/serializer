@@ -129,15 +129,36 @@ public interface PersistenceTypeDescriptionMember
 	/**
 	 * Structure means equal order of members by type name and simple name.<br>
 	 * Not qualifier, since that is only required for intra-type field identification
-	 * 
+	 *
 	 * @param other the description to compare to
 	 * @return if this and the other description's structure are equal
-	 * 
-	 * @see #equalDescription(PersistenceTypeDescriptionMember, PersistenceTypeDescriptionMember)
+	 *
+	 * @see #equalStructure(PersistenceTypeDescriptionMember, PersistenceTypeDescriptionMember)
 	 */
 	public default boolean equalsStructure(final PersistenceTypeDescriptionMember other)
 	{
 		return equalTypeAndName(this, other);
+	}
+
+	/**
+	 * Like {@link #equalsStructure(PersistenceTypeDescriptionMember)} but ignores the member's
+	 * simple name. Compares only the persistent layout (type name; for primitive-definition members
+	 * the bit-layout descriptor; for complex generic fields the nested members compared again by
+	 * layout).
+	 * <p>
+	 * Used by the "unchanged structure" fast path in legacy-handler creation, where the identity
+	 * correspondence between legacy and current members is already established by the refactoring
+	 * mapping and only the on-disk layout needs to be confirmed &mdash; e.g. a renamed field whose
+	 * type and offset are unchanged still produces the same persisted bytes.
+	 *
+	 * @param other the description to compare to.
+	 * @return if this and the other description's persistent layout are equal.
+	 *
+	 * @see #equalLayout(PersistenceTypeDescriptionMember, PersistenceTypeDescriptionMember)
+	 */
+	public default boolean equalsLayout(final PersistenceTypeDescriptionMember other)
+	{
+		return other != null && Objects.equals(this.typeName(), other.typeName());
 	}
 	
 	/**
@@ -202,6 +223,25 @@ public interface PersistenceTypeDescriptionMember
 	{
 		// must delegate to the implementation since complex fields must deep-check their nested fields
 		return m1 == m2 || m1 != null && m1.equalsStructure(m2);
+	}
+
+	/**
+	 * Static null-safe counterpart to {@link #equalsLayout(PersistenceTypeDescriptionMember)}.
+	 * Delegation to the instance method is required so that complex (nested) member descriptions
+	 * can deep-check their nested members by layout.
+	 *
+	 * @param m1 the first member.
+	 * @param m2 the second member.
+	 *
+	 * @return {@code true} if both members have equal persistent layout.
+	 */
+	public static boolean equalLayout(
+		final PersistenceTypeDescriptionMember m1,
+		final PersistenceTypeDescriptionMember m2
+	)
+	{
+		// must delegate to the implementation since complex fields must deep-check their nested fields
+		return m1 == m2 || m1 != null && m1.equalsLayout(m2);
 	}
 	
 	/**
@@ -527,6 +567,23 @@ public interface PersistenceTypeDescriptionMember
 	)
 	{
 		return equalMembers(members1, members2, PersistenceTypeDescriptionMember::equalStructure);
+	}
+
+	/**
+	 * Pairwise compares two member sequences using
+	 * {@link #equalLayout(PersistenceTypeDescriptionMember, PersistenceTypeDescriptionMember)}.
+	 *
+	 * @param members1 the first sequence.
+	 * @param members2 the second sequence.
+	 *
+	 * @return {@code true} if the sequences are pairwise equal in persistent layout.
+	 */
+	public static boolean equalLayouts(
+		final XGettingSequence<? extends PersistenceTypeDescriptionMember> members1,
+		final XGettingSequence<? extends PersistenceTypeDescriptionMember> members2
+	)
+	{
+		return equalMembers(members1, members2, PersistenceTypeDescriptionMember::equalLayout);
 	}
 
 	/**

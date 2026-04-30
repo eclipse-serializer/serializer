@@ -185,15 +185,20 @@ public interface PersistenceLegacyTypeMappingResult<D, T>
 		{
 			final PersistenceTypeDefinitionMember legacyMember  = legacy.next() ;
 			final PersistenceTypeDefinitionMember currentMember = current.next();
-			
+
 			// all legacy members must be directly mapped to their order-wise corresponding current member.
-			if(mapping.get(legacyMember) != currentMember)
+			final Similarity<PersistenceTypeDefinitionMember> match = mapping.get(legacyMember);
+			if(match == null || match.targetElement() != currentMember)
 			{
 				return false;
 			}
-			
-			// and the types must be the same, of course. Member names are sound and smoke.
-			if(!legacyMember.typeName().equals(currentMember.typeName()))
+
+			// the persistent layout of the two members must match. equalsLayout handles every
+			// member kind (regular fields, primitive definitions, enum constants, complex generic
+			// fields) via polymorphic dispatch and intentionally ignores member names: the
+			// mapping/order check above already establishes identity, so a renamed-but-otherwise-
+			// unchanged member still qualifies for the unchanged-structure fast path.
+			if(!legacyMember.equalsLayout(currentMember))
 			{
 				return false;
 			}

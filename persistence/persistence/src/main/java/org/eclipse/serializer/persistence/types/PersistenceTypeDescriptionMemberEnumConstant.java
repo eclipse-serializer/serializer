@@ -49,6 +49,15 @@ public interface PersistenceTypeDescriptionMemberEnumConstant extends Persistenc
 			&& equalName(this, (PersistenceTypeDescriptionMemberEnumConstant)other)
 		;
 	}
+
+	@Override
+	public default boolean equalsLayout(final PersistenceTypeDescriptionMember other)
+	{
+		// enum-constant entries have no layout footprint (length 0); identity lives in name().
+		// Callers that pair members by mapping/order already establish identity correspondence,
+		// so layout equality here only confirms both members are enum-constant entries.
+		return other instanceof PersistenceTypeDescriptionMemberEnumConstant;
+	}
 	
 	@Override
 	public default boolean equalsDescription(final PersistenceTypeDescriptionMember member)
