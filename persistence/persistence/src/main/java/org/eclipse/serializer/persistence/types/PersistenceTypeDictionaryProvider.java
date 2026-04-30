@@ -17,12 +17,36 @@ package org.eclipse.serializer.persistence.types;
 import static org.eclipse.serializer.util.X.notNull;
 
 
+/**
+ * Source of a {@link PersistenceTypeDictionary}. Combines a {@link PersistenceTypeDictionaryLoader} (which
+ * supplies the textual on-disk form) with a {@link PersistenceTypeDictionaryCompiler} (which parses and
+ * builds the live dictionary). Optional {@link Caching} decoration retains the compiled dictionary between
+ * calls.
+ *
+ * @see PersistenceTypeDictionaryLoader
+ * @see PersistenceTypeDictionaryCompiler
+ * @see PersistenceTypeDictionaryManager
+ */
 public interface PersistenceTypeDictionaryProvider
 {
+	/**
+	 * Loads, parses and builds the type dictionary, returning the live result.
+	 *
+	 * @return the type dictionary.
+	 */
 	public PersistenceTypeDictionary provideTypeDictionary();
 
-	
-	
+
+
+	/**
+	 * Creates a {@link Default} provider that loads via {@code loader} and compiles via {@code compiler} on
+	 * every call.
+	 *
+	 * @param loader   the loader supplying the textual dictionary; must not be {@code null}.
+	 * @param compiler the compiler turning the textual form into a live dictionary; must not be {@code null}.
+	 *
+	 * @return the new provider.
+	 */
 	public static PersistenceTypeDictionaryProvider.Default New(
 		final PersistenceTypeDictionaryLoader   loader  ,
 		final PersistenceTypeDictionaryCompiler compiler
@@ -34,6 +58,10 @@ public interface PersistenceTypeDictionaryProvider
 		);
 	}
 
+	/**
+	 * Default non-caching {@link PersistenceTypeDictionaryProvider}: every call to
+	 * {@link #provideTypeDictionary()} re-loads the textual form and re-compiles it.
+	 */
 	public final class Default implements PersistenceTypeDictionaryProvider
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -78,6 +106,14 @@ public interface PersistenceTypeDictionaryProvider
 	
 	
 	
+	/**
+	 * Wraps the passed provider in a {@link Caching} decorator that compiles the dictionary on first access
+	 * and returns the same instance on every subsequent call until {@link Caching#clear()} is invoked.
+	 *
+	 * @param typeDictionaryImporter the underlying provider; must not be {@code null}.
+	 *
+	 * @return the caching decorator.
+	 */
 	public static PersistenceTypeDictionaryProvider.Caching Caching(
 		final PersistenceTypeDictionaryProvider typeDictionaryImporter
 	)
@@ -86,7 +122,12 @@ public interface PersistenceTypeDictionaryProvider
 			notNull(typeDictionaryImporter)
 		);
 	}
-	
+
+	/**
+	 * Caching {@link PersistenceTypeDictionaryProvider} decorator: compiles its delegate on first call and
+	 * returns the same instance until {@link #clear()} discards the cached dictionary. Synchronizes on the
+	 * delegate.
+	 */
 	public final class Caching implements PersistenceTypeDictionaryProvider
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -127,6 +168,10 @@ public interface PersistenceTypeDictionaryProvider
 			}
 		}
 		
+		/**
+		 * Discards the cached dictionary so that the next {@link #provideTypeDictionary()} call re-invokes the
+		 * delegate.
+		 */
 		public final void clear()
 		{
 			synchronized(this.delegate)

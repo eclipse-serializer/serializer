@@ -22,18 +22,18 @@ import org.eclipse.serializer.collections.types.XGettingTable;
 
 
 /**
- * A read-only ("view") type of a {@link PersistenceTypeDictionary} where all mutating methods throw an
- * {@link UnsupportedOperationException}.<p>
- * Conceptual note:<br>
- * The natural concept would be to design the reading type as the base type with an immutable implementation
- * and extend a mutating type from that base type. The intial concept was exactely that. But it turned out that the
- * the way type dictionaries are used contradicts that and could better incorporate the described reversed hierarchy.
- * <br>
- * That way is:<br>
- * Mutating operations are encaspulated by ~Manager types and are rejected with an exception for immutable usage.
- * Reading operations work seamless in both concepts, anyway.
- * 
- * 
+ * Read-only "view" of a {@link PersistenceTypeDictionary}: every mutating method inherited from
+ * {@link PersistenceTypeDictionary} throws {@link UnsupportedOperationException}, and the lineages exposed by
+ * {@link #typeLineages()} are themselves {@link PersistenceTypeLineageView}s.
+ * <p>
+ * <b>Conceptual note.</b> The natural design would have a read-only base type with a mutating subtype, but
+ * the way type dictionaries are used in this codebase &mdash; mutating operations are encapsulated by
+ * {@link PersistenceTypeDictionaryManager}-style types &mdash; works better with the reversed hierarchy:
+ * the full mutating interface is the base type, and the view rejects the mutators while reading operations
+ * remain transparent.
+ *
+ * @see PersistenceTypeDictionary
+ * @see PersistenceTypeDictionaryViewProvider
  */
 public interface PersistenceTypeDictionaryView extends PersistenceTypeDictionary
 {
@@ -101,6 +101,14 @@ public interface PersistenceTypeDictionaryView extends PersistenceTypeDictionary
 	
 	
 
+	/**
+	 * Creates an immutable view by snapshotting the lineages and type definitions of {@code typeDictionary};
+	 * later mutations of the source dictionary are not reflected in the returned view.
+	 *
+	 * @param typeDictionary the source dictionary to snapshot.
+	 *
+	 * @return the new view.
+	 */
 	public static PersistenceTypeDictionaryView New(final PersistenceTypeDictionary typeDictionary)
 	{
 		synchronized(typeDictionary)
@@ -111,7 +119,11 @@ public interface PersistenceTypeDictionaryView extends PersistenceTypeDictionary
 			);
 		}
 	}
-	
+
+	/**
+	 * Default {@link PersistenceTypeDictionaryView} backed by immutable hash tables for both the lineage and
+	 * typeId indexes captured at construction time.
+	 */
 	public final class Default implements PersistenceTypeDictionaryView
 	{
 		///////////////////////////////////////////////////////////////////////////

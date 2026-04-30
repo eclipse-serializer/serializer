@@ -18,10 +18,17 @@ import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 
 /**
- * Data that ties a {@link PersistenceTypeDescription} to a biunique type id, aka a {@link PersistenceTypeIdentity}.
- * 
- * 
+ * One parsed line of the textual type dictionary &mdash; a {@link PersistenceTypeDescription} bound to its
+ * biunique {@link #typeId()} and {@link #typeName()} (i.e. a full {@link PersistenceTypeIdentity}) before any
+ * runtime resolution or refactoring mapping has been applied.
+ * <p>
+ * Entries are produced by {@link PersistenceTypeDictionaryParser} and consumed by
+ * {@link PersistenceTypeDictionaryBuilder}, which validates them, resolves their runtime types and turns
+ * them into the {@link PersistenceTypeDefinition}s held by a {@link PersistenceTypeDictionary}.
  *
+ * @see PersistenceTypeDictionaryParser
+ * @see PersistenceTypeDictionaryBuilder
+ * @see PersistenceTypeIdentity
  */
 public interface PersistenceTypeDictionaryEntry extends PersistenceTypeDescription
 {
@@ -34,8 +41,12 @@ public interface PersistenceTypeDictionaryEntry extends PersistenceTypeDescripti
 	@Override
 	public XGettingSequence<? extends PersistenceTypeDescriptionMember> instanceMembers();
 
-	
-	
+
+
+	/**
+	 * Skeleton implementation supplying a {@link #toString()} that renders the entry through
+	 * {@link PersistenceTypeDictionaryAssembler}, i.e. produces the same textual form an entry has on disk.
+	 */
 	public abstract class Abstract implements PersistenceTypeDictionaryEntry
 	{
 		///////////////////////////////////////////////////////////////////////////

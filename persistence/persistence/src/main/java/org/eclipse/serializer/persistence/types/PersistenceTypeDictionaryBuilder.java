@@ -26,13 +26,46 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import static org.eclipse.serializer.util.X.notNull;
 
 
+/**
+ * Forms a live {@link PersistenceTypeDictionary} out of the unvalidated
+ * {@link PersistenceTypeDictionaryEntry entries} produced by {@link PersistenceTypeDictionaryParser}.
+ * <p>
+ * This is the validation and resolution stage of the load pipeline: each entry is checked for unique type ID,
+ * its members are translated into {@link PersistenceTypeDefinitionMember definition members} via a
+ * {@link PersistenceTypeDefinitionMemberCreator}, and the original (possibly deprecated) type name is mapped to
+ * a current runtime type using a {@link PersistenceTypeDescriptionResolver} that internally applies the
+ * configured refactoring mappings.
+ *
+ * @see PersistenceTypeDictionaryParser
+ * @see PersistenceTypeDictionaryCompiler
+ * @see PersistenceTypeDescriptionResolver
+ */
 @FunctionalInterface
 public interface PersistenceTypeDictionaryBuilder
 {
+	/**
+	 * Builds a {@link PersistenceTypeDictionary} from parsed entries, performing the validation and
+	 * runtime-type resolution described in the {@linkplain PersistenceTypeDictionaryBuilder type-level
+	 * Javadoc}.
+	 *
+	 * @param entries the parsed entries; may be {@code null} (treated as empty).
+	 *
+	 * @return the resulting type dictionary.
+	 */
 	public PersistenceTypeDictionary buildTypeDictionary(XGettingSequence<? extends PersistenceTypeDictionaryEntry> entries);
-		
-	
-	
+
+
+
+	/**
+	 * Indexes the passed entries by their {@link PersistenceTypeDictionaryEntry#typeId() typeId}, sorted
+	 * ascending, and rejects duplicates.
+	 *
+	 * @param entries the entries to index; may be {@code null} (treated as empty).
+	 *
+	 * @return a {@link XGettingTable} mapping typeId to entry.
+	 *
+	 * @throws PersistenceException if two entries share the same typeId.
+	 */
 	public static XGettingTable<Long, PersistenceTypeDictionaryEntry> ensureUniqueTypeIds(
 		final XGettingSequence<? extends PersistenceTypeDictionaryEntry> entries
 	)
@@ -55,6 +88,20 @@ public interface PersistenceTypeDictionaryBuilder
 		return uniqueTypeIdEntries;
 	}
 		
+	/**
+	 * Reusable static implementation of the build pipeline used by {@link Default}: deduplicates by typeId,
+	 * resolves each entry's runtime type via the resolver (applying any configured refactoring mappings),
+	 * builds and validates {@link PersistenceTypeDefinitionMember definition members}, and bulk-registers the
+	 * resulting definitions into a freshly created dictionary.
+	 *
+	 * @param typeDictionaryCreator factory for the empty target dictionary.
+	 * @param typeDefinitionCreator factory for individual type definitions.
+	 * @param typeResolver          resolver that maps original type names to current runtime types and applies
+	 *                              the configured refactoring mappings.
+	 * @param entries               the parsed entries; may be {@code null} (treated as empty).
+	 *
+	 * @return the populated type dictionary.
+	 */
 	public static PersistenceTypeDictionary buildTypeDictionary(
 		final PersistenceTypeDictionaryCreator                           typeDictionaryCreator,
 		final PersistenceTypeDefinitionCreator                           typeDefinitionCreator,
@@ -124,6 +171,21 @@ public interface PersistenceTypeDictionaryBuilder
 		return typeDictionary;
 	}
 	
+	/**
+	 * Translates the {@linkplain PersistenceTypeDescription#allMembers() all-members sequence} of the passed
+	 * description into {@link PersistenceTypeDefinitionMember} instances and partitions them into
+	 * {@code allMembers} and {@code instanceMembers} (the latter receiving only those members for which
+	 * {@link PersistenceTypeDescriptionMember#isInstanceMember()} is {@code true}).
+	 *
+	 * @param memberCreator   factory for the resulting definition members.
+	 * @param typeDescription the source description whose members shall be translated.
+	 * @param allMembers      sink that receives every translated member.
+	 * @param instanceMembers sink that receives only the {@linkplain PersistenceTypeDescriptionMember#isInstanceMember()
+	 *                        instance members}.
+	 *
+	 * @throws PersistenceException if {@code typeDescription} contains two members with identical
+	 *                              {@link PersistenceTypeDescriptionMember#identifier() identifier}.
+	 */
 	public static void buildDefinitionMembers(
 		final PersistenceTypeDefinitionMemberCreator             memberCreator  ,
 		final PersistenceTypeDescription                         typeDescription,
@@ -147,6 +209,16 @@ public interface PersistenceTypeDictionaryBuilder
 	
 	
 	
+	/**
+	 * Creates a {@link Default} builder bound to the given creators and resolver provider.
+	 *
+	 * @param typeDictionaryCreator factory for the empty target dictionary; must not be {@code null}.
+	 * @param typeDefinitionCreator factory for individual type definitions; must not be {@code null}.
+	 * @param typeResolverProvider  provider of the resolver applied during the build; must not be
+	 *                              {@code null}.
+	 *
+	 * @return the new builder.
+	 */
 	public static PersistenceTypeDictionaryBuilder.Default New(
 		final PersistenceTypeDictionaryCreator typeDictionaryCreator,
 		final PersistenceTypeDefinitionCreator typeDefinitionCreator,
@@ -160,6 +232,12 @@ public interface PersistenceTypeDictionaryBuilder
 		);
 	}
 	
+	/**
+	 * Default {@link PersistenceTypeDictionaryBuilder} implementation. Holds the creators and the
+	 * {@link PersistenceTypeDescriptionResolverProvider}; delegates the actual build to the static
+	 * {@link #buildTypeDictionary(PersistenceTypeDictionaryCreator, PersistenceTypeDefinitionCreator,
+	 * PersistenceTypeDescriptionResolver, XGettingSequence)} pipeline.
+	 */
 	public class Default implements PersistenceTypeDictionaryBuilder
 	{
 		///////////////////////////////////////////////////////////////////////////

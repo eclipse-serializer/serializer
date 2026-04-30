@@ -35,12 +35,46 @@ import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.Substituter;
 import org.eclipse.serializer.util.UtilStackTrace;
 
+/**
+ * Tokenizes the textual on-disk type dictionary form into a sequence of unvalidated
+ * {@link PersistenceTypeDictionaryEntry} objects &mdash; the inverse of {@link PersistenceTypeDictionaryAssembler}.
+ * <p>
+ * The textual form is a concatenation of type blocks of the shape
+ * {@code <19-char zero-padded typeId> <typeName> '{' <members> '}'}, with members separated by commas; the
+ * exact grammar is documented by the parser implementation itself. Validation, deduplication and runtime-type
+ * resolution are deliberately not the parser's concern &mdash; that happens in
+ * {@link PersistenceTypeDictionaryBuilder}.
+ *
+ * @see PersistenceTypeDictionaryAssembler
+ * @see PersistenceTypeDictionaryBuilder
+ * @see PersistenceTypeDictionaryCompiler
+ */
 public interface PersistenceTypeDictionaryParser
 {
+	/**
+	 * Parses the passed textual dictionary into entries.
+	 *
+	 * @param input the textual dictionary; an empty input yields an empty sequence.
+	 *
+	 * @return the parsed entries in input order.
+	 *
+	 * @throws PersistenceExceptionParser if the input does not satisfy the dictionary grammar.
+	 */
 	public XGettingSequence<? extends PersistenceTypeDictionaryEntry> parseTypeDictionaryEntries(String input)
 		throws PersistenceExceptionParser
 	;
 
+	/**
+	 * Creates a {@link Default} parser using a default {@link Substituter} for string interning.
+	 *
+	 * @param typeResolver        resolver applied to entry type names; must not be {@code null}.
+	 * @param fieldLengthResolver supplier of persistent length information for parsed members; must not be
+	 *                            {@code null}.
+	 * @param typeNameMapper      mapper applied to type names found in member declarations; must not be
+	 *                            {@code null}.
+	 *
+	 * @return the new parser.
+	 */
 	public static PersistenceTypeDictionaryParser.Default New(
 		final PersistenceTypeResolver        typeResolver       ,
 		final PersistenceFieldLengthResolver fieldLengthResolver,
@@ -54,7 +88,20 @@ public interface PersistenceTypeDictionaryParser
 			typeNameMapper
 		);
 	}
-	
+
+	/**
+	 * Creates a {@link Default} parser using the passed {@link Substituter} for string interning.
+	 *
+	 * @param typeResolver        resolver applied to entry type names; must not be {@code null}.
+	 * @param fieldLengthResolver supplier of persistent length information for parsed members; must not be
+	 *                            {@code null}.
+	 * @param stringSubstitutor   string interner used to deduplicate identifiers across the parsed entries;
+	 *                            must not be {@code null}.
+	 * @param typeNameMapper      mapper applied to type names found in member declarations; must not be
+	 *                            {@code null}.
+	 *
+	 * @return the new parser.
+	 */
 	public static PersistenceTypeDictionaryParser.Default New(
 		final PersistenceTypeResolver        typeResolver       ,
 		final PersistenceFieldLengthResolver fieldLengthResolver,
@@ -70,6 +117,11 @@ public interface PersistenceTypeDictionaryParser
 		);
 	}
 
+	/**
+	 * Default {@link PersistenceTypeDictionaryParser} implementation: a hand-written state machine over a
+	 * {@code char[]}. The internal parsing helpers are intentionally undocumented &mdash; refer to the code
+	 * for grammar details. Public surface is {@link #parseTypeDictionaryEntries(String)}.
+	 */
 	public final class Default
 	extends PersistenceTypeDictionary.Symbols
 	implements PersistenceTypeDictionaryParser

@@ -19,14 +19,40 @@ import static org.eclipse.serializer.util.X.notNull;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionParser;
 
+/**
+ * Composes a {@link PersistenceTypeDictionaryParser} and a {@link PersistenceTypeDictionaryBuilder} into a
+ * single step that turns the textual on-disk dictionary form into a live {@link PersistenceTypeDictionary}.
+ *
+ * @see PersistenceTypeDictionaryParser
+ * @see PersistenceTypeDictionaryBuilder
+ * @see PersistenceTypeDictionaryProvider
+ */
 public interface PersistenceTypeDictionaryCompiler
 {
+	/**
+	 * Parses the passed textual dictionary and builds a {@link PersistenceTypeDictionary} from the resulting
+	 * entries.
+	 *
+	 * @param input the textual dictionary; an empty input yields an empty dictionary.
+	 *
+	 * @return the compiled type dictionary.
+	 *
+	 * @throws PersistenceExceptionParser if {@code input} is not a syntactically valid dictionary.
+	 */
 	public PersistenceTypeDictionary compileTypeDictionary(String input)
 		throws PersistenceExceptionParser
 	;
-	
-	
-	
+
+
+
+	/**
+	 * Creates a {@link Default} compiler that uses the passed parser and builder.
+	 *
+	 * @param parser  the parser to use; must not be {@code null}.
+	 * @param builder the builder to use; must not be {@code null}.
+	 *
+	 * @return the new compiler.
+	 */
 	public static PersistenceTypeDictionaryCompiler.Default New(
 		final PersistenceTypeDictionaryParser  parser ,
 		final PersistenceTypeDictionaryBuilder builder
@@ -37,7 +63,12 @@ public interface PersistenceTypeDictionaryCompiler
 			notNull(builder)
 		);
 	}
-	
+
+	/**
+	 * Default {@link PersistenceTypeDictionaryCompiler}: simply chains
+	 * {@link PersistenceTypeDictionaryParser#parseTypeDictionaryEntries(String)} into
+	 * {@link PersistenceTypeDictionaryBuilder#buildTypeDictionary(XGettingSequence)}.
+	 */
 	public final class Default implements PersistenceTypeDictionaryCompiler
 	{
 		///////////////////////////////////////////////////////////////////////////

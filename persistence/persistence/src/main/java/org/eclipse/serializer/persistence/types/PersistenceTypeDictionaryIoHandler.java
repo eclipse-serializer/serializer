@@ -16,23 +16,59 @@ package org.eclipse.serializer.persistence.types;
 
 import org.eclipse.serializer.afs.types.AFile;
 
+/**
+ * Bidirectional handle for the persisted type dictionary &mdash; reads it via
+ * {@link PersistenceTypeDictionaryLoader} and writes it via {@link PersistenceTypeDictionaryStorer}.
+ * <p>
+ * Currently a pure typing interface combining both halves: implementations supply both reading and writing for
+ * the same underlying dictionary location (typically a file).
+ *
+ * @see PersistenceTypeDictionaryLoader
+ * @see PersistenceTypeDictionaryStorer
+ * @see PersistenceTypeDictionaryFileHandler
+ */
 public interface PersistenceTypeDictionaryIoHandler
 extends PersistenceTypeDictionaryLoader, PersistenceTypeDictionaryStorer
 {
 	// just a typing interface so far
-		
+
+	/**
+	 * Factory for {@link PersistenceTypeDictionaryIoHandler} instances. Indirection so that the underlying
+	 * dictionary location (e.g. the {@link AFile} to use) can be resolved lazily, after the surrounding
+	 * persistence foundation has finished bootstrapping.
+	 */
 	public interface Provider
 	{
+		/**
+		 * Provides an I/O handler with no additional write listener; equivalent to
+		 * {@link #provideTypeDictionaryIoHandler(PersistenceTypeDictionaryStorer) provideTypeDictionaryIoHandler(null)}.
+		 *
+		 * @return the I/O handler.
+		 */
 		public default PersistenceTypeDictionaryIoHandler provideTypeDictionaryIoHandler()
 		{
 			return this.provideTypeDictionaryIoHandler(null);
 		}
-		
+
+		/**
+		 * Provides an I/O handler that additionally forwards every successful
+		 * {@link #storeTypeDictionary(String) store} to the passed listener, e.g. for backup or replication
+		 * scenarios.
+		 *
+		 * @param writeListener an optional listener notified after every successful write, or {@code null}.
+		 *
+		 * @return the I/O handler.
+		 */
 		public PersistenceTypeDictionaryIoHandler provideTypeDictionaryIoHandler(
 			PersistenceTypeDictionaryStorer writeListener
 		);
-		
-		
+
+
+		/**
+		 * Skeleton {@link Provider} that delegates the choice of dictionary file to subclasses
+		 * (via {@link #defineTypeDictionaryFile()}) and constructs file-backed I/O handlers through a
+		 * supplied {@link PersistenceTypeDictionaryFileHandler.Creator}.
+		 */
 		public abstract class Abstract implements PersistenceTypeDictionaryIoHandler.Provider
 		{
 			///////////////////////////////////////////////////////////////////////////

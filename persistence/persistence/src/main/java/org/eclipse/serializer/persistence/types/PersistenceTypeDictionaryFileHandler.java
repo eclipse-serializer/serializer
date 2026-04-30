@@ -29,17 +29,48 @@ import org.eclipse.serializer.io.XIO;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionSource;
 
+/**
+ * File-backed {@link PersistenceTypeDictionaryIoHandler} reading and writing the textual type dictionary
+ * to a single {@link AFile} (typically located in the same directory as the persistent storage and named
+ * after {@link Persistence#defaultFilenameTypeDictionary()}).
+ * <p>
+ * Optionally forwards every successful write to a delegate {@link PersistenceTypeDictionaryStorer} for backup
+ * or replication purposes.
+ *
+ * @see PersistenceTypeDictionaryIoHandler
+ * @see Persistence#defaultFilenameTypeDictionary()
+ */
 public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDictionaryIoHandler
 {
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
 	///////////////////
 
+	/**
+	 * Reads the textual type dictionary from {@code file}, returning {@code null} if the file does not exist.
+	 *
+	 * @param file the dictionary file.
+	 *
+	 * @return the dictionary text, or {@code null} if the file does not exist.
+	 *
+	 * @throws PersistenceExceptionSource if reading fails.
+	 */
 	public static final String readTypeDictionary(final AFile file)
 	{
 		return readTypeDictionary(file, null);
 	}
 
+	/**
+	 * Reads the textual type dictionary from {@code file}, returning {@code defaultString} if the file does
+	 * not exist.
+	 *
+	 * @param file          the dictionary file.
+	 * @param defaultString the value to return when the file does not exist.
+	 *
+	 * @return the dictionary text or {@code defaultString}.
+	 *
+	 * @throws PersistenceExceptionSource if reading fails.
+	 */
 	public static final String readTypeDictionary(final AFile file, final String defaultString)
 	{
 		try
@@ -68,6 +99,15 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 		}
 	}
 
+	/**
+	 * Writes the textual type dictionary to {@code file}, truncating any pre-existing content and creating the
+	 * file if it does not exist yet. Bytes are encoded in {@link Persistence#standardCharset()}.
+	 *
+	 * @param file                 the dictionary file.
+	 * @param typeDictionaryString the dictionary text to write.
+	 *
+	 * @throws PersistenceException if writing fails.
+	 */
 	public static final void writeTypeDictionary(final AFile file, final String typeDictionaryString)
 	{
 		try
@@ -99,22 +139,53 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 		}
 	}
 	
+	/**
+	 * @deprecated use {@link #New(ADirectory)} instead.
+	 *
+	 * @param directory the directory to place the default-named dictionary file in.
+	 *
+	 * @return the new handler.
+	 */
 	@Deprecated
 	public static PersistenceTypeDictionaryFileHandler NewInDirectory(final ADirectory directory)
 	{
 		return New(directory);
 	}
-	
+
+	/**
+	 * Creates a handler bound to the
+	 * {@linkplain Persistence#defaultFilenameTypeDictionary() default-named} dictionary file in
+	 * {@code directory}.
+	 *
+	 * @param directory the directory to place the dictionary file in.
+	 *
+	 * @return the new handler.
+	 */
 	public static PersistenceTypeDictionaryFileHandler New(final ADirectory directory)
 	{
 		return New(directory, null);
 	}
-	
+
+	/**
+	 * Creates a handler bound to the passed dictionary file.
+	 *
+	 * @param file the dictionary file; must not be {@code null}.
+	 *
+	 * @return the new handler.
+	 */
 	public static PersistenceTypeDictionaryFileHandler New(final AFile file)
 	{
 		return New(file, null);
 	}
-	
+
+	/**
+	 * @deprecated use {@link #New(ADirectory, PersistenceTypeDictionaryStorer)} instead.
+	 *
+	 * @param directory     the directory to place the default-named dictionary file in.
+	 * @param writeListener optional listener notified after every successful write, or {@code null}.
+	 *
+	 * @return the new handler.
+	 */
 	@Deprecated
 	public static PersistenceTypeDictionaryFileHandler NewInDirectory(
 		final ADirectory                      directory    ,
@@ -123,8 +194,18 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 	{
 		return New(directory, writeListener);
 	}
-	
-		
+
+
+	/**
+	 * Creates a handler bound to the
+	 * {@linkplain Persistence#defaultFilenameTypeDictionary() default-named} dictionary file in
+	 * {@code directory} and an optional write listener.
+	 *
+	 * @param directory     the directory to place the dictionary file in.
+	 * @param writeListener optional listener notified after every successful write, or {@code null}.
+	 *
+	 * @return the new handler.
+	 */
 	public static PersistenceTypeDictionaryFileHandler New(
 		final ADirectory                      directory    ,
 		final PersistenceTypeDictionaryStorer writeListener
@@ -135,7 +216,15 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 			mayNull(writeListener)
 		);
 	}
-	
+
+	/**
+	 * Creates a handler bound to the passed dictionary file and an optional write listener.
+	 *
+	 * @param file          the dictionary file; must not be {@code null}.
+	 * @param writeListener optional listener notified after every successful write, or {@code null}.
+	 *
+	 * @return the new handler.
+	 */
 	public static PersistenceTypeDictionaryFileHandler New(
 		final AFile                           file         ,
 		final PersistenceTypeDictionaryStorer writeListener
@@ -205,31 +294,61 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 	}
 	
 	
+	/**
+	 * Functional factory used by {@link PersistenceTypeDictionaryIoHandler.Provider.Abstract} to construct
+	 * the handler given a resolved {@link AFile} and an optional write listener.
+	 */
 	@FunctionalInterface
 	public interface Creator
 	{
+		/**
+		 * Creates a {@link PersistenceTypeDictionaryIoHandler} bound to {@code file} and {@code writeListener}.
+		 *
+		 * @param file          the dictionary file.
+		 * @param writeListener optional listener forwarded each successful write, or {@code null}.
+		 *
+		 * @return the new I/O handler.
+		 */
 		public PersistenceTypeDictionaryIoHandler createTypeDictionaryIoHandler(
 			AFile                           file         ,
 			PersistenceTypeDictionaryStorer writeListener
 		);
-		
+
 	}
-	
-	
+
+
+	/**
+	 * Creates a {@link Provider} for the default-named dictionary file in {@code directory}.
+	 *
+	 * @param directory the directory to place the dictionary file in.
+	 *
+	 * @return the new provider.
+	 */
 	public static PersistenceTypeDictionaryFileHandler.Provider ProviderInDirectory(final ADirectory directory)
 	{
 		return new PersistenceTypeDictionaryFileHandler.Provider(
 			directory.ensureFile(Persistence.defaultFilenameTypeDictionary())
 		);
 	}
-	
+
+	/**
+	 * Creates a {@link Provider} bound to the passed dictionary file.
+	 *
+	 * @param file the dictionary file; must not be {@code null}.
+	 *
+	 * @return the new provider.
+	 */
 	public static PersistenceTypeDictionaryFileHandler.Provider Provider(final AFile file)
 	{
 		return new PersistenceTypeDictionaryFileHandler.Provider(
 			notNull(file)
 		);
 	}
-	
+
+	/**
+	 * {@link PersistenceTypeDictionaryIoHandler.Provider} that hands out file-backed handlers bound to a
+	 * fixed {@link AFile}.
+	 */
 	public static final class Provider implements PersistenceTypeDictionaryIoHandler.Provider
 	{
 		///////////////////////////////////////////////////////////////////////////

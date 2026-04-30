@@ -19,23 +19,103 @@ import static org.eclipse.serializer.util.X.notNull;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.util.X;
 
+/**
+ * Mutating-side facade over a {@link PersistenceTypeDictionaryProvider}: extends the read-only provider with
+ * validation and registration of new type definitions discovered at runtime.
+ * <p>
+ * Three concrete flavors are bundled with this interface:
+ * <ul>
+ * <li>{@link Transient} &mdash; in-memory only, never writes back; discards changes when discarded.</li>
+ * <li>{@link Exporting} &mdash; mirrors every successful registration to a
+ *     {@link PersistenceTypeDictionaryExporter}, keeping the persistent textual form in sync.</li>
+ * <li>{@link Immutable} &mdash; rejects every registration that would change the underlying
+ *     {@link PersistenceTypeDictionaryView}, while still allowing structurally identical re-registrations
+ *     (e.g. a custom type handler replacing a parsed definition).</li>
+ * </ul>
+ *
+ * @see PersistenceTypeDictionary
+ * @see PersistenceTypeDictionaryProvider
+ */
 public interface PersistenceTypeDictionaryManager extends PersistenceTypeDictionaryProvider
 {
+	/**
+	 * Verifies that {@code typeDefinition} is consistent with what is currently registered in this manager's
+	 * dictionary, throwing if not.
+	 *
+	 * @param typeDefinition the definition to validate.
+	 *
+	 * @return this manager, for fluent chaining.
+	 *
+	 * @throws PersistenceException if the definition's typeId is uninitialized or its structure conflicts
+	 *                              with an already-registered definition for the same typeId.
+	 */
 	public PersistenceTypeDictionaryManager validateTypeDefinition(PersistenceTypeDefinition typeDefinition);
-	
+
+	/**
+	 * Bulk variant of {@link #validateTypeDefinition(PersistenceTypeDefinition)}.
+	 *
+	 * @param typeDefinitions the definitions to validate.
+	 *
+	 * @return this manager, for fluent chaining.
+	 *
+	 * @throws PersistenceException if any definition fails validation.
+	 */
 	public PersistenceTypeDictionaryManager validateTypeDefinitions(
 		Iterable<? extends PersistenceTypeDefinition> typeDefinitions
 	);
 
+	/**
+	 * Validates and registers {@code typeDefinition}; mirrors
+	 * {@link PersistenceTypeDictionary#registerTypeDefinition(PersistenceTypeDefinition)} on the underlying
+	 * dictionary.
+	 *
+	 * @param typeDefinition the definition to register.
+	 *
+	 * @return {@code true} if registration changed dictionary state.
+	 */
 	public boolean registerTypeDefinition(PersistenceTypeDefinition typeDefinition);
 
+	/**
+	 * Bulk variant of {@link #registerTypeDefinition(PersistenceTypeDefinition)}.
+	 *
+	 * @param typeDefinitions the definitions to register.
+	 *
+	 * @return {@code true} if registration changed dictionary state.
+	 */
 	public boolean registerTypeDefinitions(Iterable<? extends PersistenceTypeDefinition> typeDefinitions);
 
+	/**
+	 * Validates and registers {@code typeDefinition} as the runtime definition of its lineage; mirrors
+	 * {@link PersistenceTypeDictionary#registerRuntimeTypeDefinition(PersistenceTypeDefinition)} on the
+	 * underlying dictionary.
+	 *
+	 * @param typeDefinition the definition to register.
+	 *
+	 * @return {@code true} if registration changed dictionary state.
+	 */
 	public boolean registerRuntimeTypeDefinition(PersistenceTypeDefinition typeDefinition);
 
+	/**
+	 * Bulk variant of {@link #registerRuntimeTypeDefinition(PersistenceTypeDefinition)}.
+	 *
+	 * @param typeDefinitions the definitions to register.
+	 *
+	 * @return {@code true} if registration changed dictionary state.
+	 */
 	public boolean registerRuntimeTypeDefinitions(Iterable<? extends PersistenceTypeDefinition> typeDefinitions);
-			
-	
+
+
+	/**
+	 * Reusable static validation that is called by every {@link #validateTypeDefinition(PersistenceTypeDefinition)}
+	 * implementation: ensures a valid typeId and rejects any structural mismatch with a previously registered
+	 * definition for the same typeId.
+	 *
+	 * @param dictionary     the dictionary to check against.
+	 * @param typeDefinition the candidate definition.
+	 *
+	 * @throws PersistenceException if the typeId is uninitialized or the structure conflicts with an
+	 *                              existing entry.
+	 */
 	public static void validateTypeDefinition(
 		final PersistenceTypeDictionary dictionary    ,
 		final PersistenceTypeDefinition typeDefinition
@@ -56,6 +136,16 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 
 	
 	
+	/**
+	 * Creates an {@link Exporting} manager that mirrors every successful registration through
+	 * {@code typeDictionaryExporter}.
+	 *
+	 * @param typeDictionaryProvider source of the underlying dictionary; must not be {@code null}.
+	 * @param typeDictionaryExporter sink that receives the textual form after every change; must not be
+	 *                               {@code null}.
+	 *
+	 * @return the new manager.
+	 */
 	public static PersistenceTypeDictionaryManager Exporting(
 		final PersistenceTypeDictionaryProvider typeDictionaryProvider,
 		final PersistenceTypeDictionaryExporter typeDictionaryExporter
@@ -66,7 +156,15 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			notNull(typeDictionaryExporter)
 		);
 	}
-	
+
+	/**
+	 * Skeleton {@link PersistenceTypeDictionaryManager} that lazily provides its underlying dictionary via
+	 * {@link #internalProvideTypeDictionary()}, caches it, and routes every register/validate call through
+	 * the cached instance. Mutation methods are {@code synchronized} on the manager to serialize concurrent
+	 * registrations.
+	 *
+	 * @param <D> the concrete dictionary subtype provided by this manager.
+	 */
 	public abstract class Abstract<D extends PersistenceTypeDictionary>
 	implements PersistenceTypeDictionaryManager
 	{
@@ -188,6 +286,12 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 
 	
 	
+	/**
+	 * {@link PersistenceTypeDictionaryManager} that, on top of the underlying dictionary, mirrors every
+	 * successful registration through a {@link PersistenceTypeDictionaryExporter} so that the persistent
+	 * textual form stays in sync. A {@code changed} flag is used to coalesce export work to one call per
+	 * batch.
+	 */
 	public final class Exporting extends PersistenceTypeDictionaryManager.Abstract<PersistenceTypeDictionary>
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -245,6 +349,12 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			return typeDictionary;
 		}
 
+		/**
+		 * Exports the dictionary if and only if a change has been recorded since the last export, then clears
+		 * the change flag.
+		 *
+		 * @return this manager, for fluent chaining.
+		 */
 		public final PersistenceTypeDictionaryManager.Exporting synchUpdateExport()
 		{
 			if(this.hasChanged())
@@ -252,10 +362,15 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 				this.exportTypeDictionary();
 				this.resetChangeMark();
 			}
-			
+
 			return this;
 		}
 
+		/**
+		 * Forces an immediate export of the underlying dictionary regardless of the change flag.
+		 *
+		 * @return this manager, for fluent chaining.
+		 */
 		public final synchronized PersistenceTypeDictionaryManager.Exporting exportTypeDictionary()
 		{
 			this.typeDictionaryExporter.exportTypeDictionary(this.ensureTypeDictionary());
@@ -325,6 +440,14 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 	
 	
 	
+	/**
+	 * Creates a {@link Transient} manager that holds new registrations only in memory and never writes them
+	 * back to a persistent dictionary location.
+	 *
+	 * @param typeDictionaryProvider source of the underlying dictionary; must not be {@code null}.
+	 *
+	 * @return the new manager.
+	 */
 	public static PersistenceTypeDictionaryManager Transient(
 		final PersistenceTypeDictionaryProvider typeDictionaryProvider
 	)
@@ -334,6 +457,10 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 		);
 	}
 
+	/**
+	 * In-memory-only {@link PersistenceTypeDictionaryManager}: validates and registers definitions but never
+	 * exports them. Suited to one-off serialization scenarios where the dictionary is rebuilt on demand.
+	 */
 	public final class Transient extends PersistenceTypeDictionaryManager.Abstract<PersistenceTypeDictionary>
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -370,6 +497,14 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 
 	
 	
+	/**
+	 * Creates an {@link Immutable} manager that wraps a read-only
+	 * {@link PersistenceTypeDictionaryViewProvider} and rejects any registration that would change the view.
+	 *
+	 * @param typeDictionaryProvider source of the underlying view; must not be {@code null}.
+	 *
+	 * @return the new manager.
+	 */
 	public static PersistenceTypeDictionaryManager Immutable(
 		final PersistenceTypeDictionaryViewProvider typeDictionaryProvider
 	)
@@ -378,7 +513,13 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			notNull(typeDictionaryProvider)
 		);
 	}
-	
+
+	/**
+	 * Read-only {@link PersistenceTypeDictionaryManager}: re-registrations are accepted only when the
+	 * passed definition's description is {@linkplain PersistenceTypeDescription#equalDescription(
+	 * PersistenceTypeDescription, PersistenceTypeDescription) structurally identical} to what is already
+	 * stored. Any other change throws {@link UnsupportedOperationException}.
+	 */
 	public final class Immutable extends PersistenceTypeDictionaryManager.Abstract<PersistenceTypeDictionaryView>
 	{
 		///////////////////////////////////////////////////////////////////////////
