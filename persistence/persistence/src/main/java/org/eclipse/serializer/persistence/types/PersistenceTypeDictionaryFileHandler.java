@@ -380,7 +380,7 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 			final PersistenceTypeDictionaryStorer writeListener
 		)
 		{
-			return PersistenceTypeDictionaryFileHandler.New(this.file);
+			return PersistenceTypeDictionaryFileHandler.New(this.file, writeListener);
 		}
 		
 	}
