@@ -109,13 +109,14 @@ public interface PersistenceLegacyTypeMappingResult<D, T>
 		{
 			final PersistenceTypeDefinitionMember legacyMember  = legacy.next() ;
 			final PersistenceTypeDefinitionMember currentMember = current.next();
-			
+
 			// all legacy members must be directly mapped to their order-wise corresponding current member.
-			if(mapping.get(legacyMember) != currentMember)
+			final Similarity<PersistenceTypeDefinitionMember> match = mapping.get(legacyMember);
+			if(match == null || match.targetElement() != currentMember)
 			{
 				return false;
 			}
-			
+
 			// and the types must be the same, of course. Member names are sound and smoke.
 			if(!legacyMember.typeName().equals(currentMember.typeName()))
 			{
