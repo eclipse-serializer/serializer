@@ -24,22 +24,87 @@ import org.eclipse.serializer.util.logging.Logging;
 import org.eclipse.serializer.util.similarity.Similarity;
 import org.slf4j.Logger;
 
+/**
+ * Factory that synthesizes a {@link PersistenceLegacyTypeHandler} from a finalized
+ * {@link PersistenceLegacyTypeMappingResult}.
+ * <p>
+ * The {@link Abstract} base implements a fixed dispatch:
+ * <ol>
+ * <li>If the mapping result represents an unchanged instance structure (only renamings, e.g. of
+ *     fields or the type itself), the current handler is wrapped via
+ *     {@link PersistenceLegacyTypeHandlerWrapper} (or {@link PersistenceLegacyTypeHandlerWrapperEnum}
+ *     for enums whose constants got reordered).</li>
+ * <li>If the current handler is reflective, the data-format-specific subclass synthesizes a
+ *     reflective translating handler via {@code deriveReflectiveHandler}.</li>
+ * <li>Otherwise the subclass synthesizes a custom-wrapping handler via
+ *     {@code deriveCustomWrappingHandler}.</li>
+ * </ol>
+ * <p>
+ * <b>Enum-ordinal mapping.</b> When enum constants get reordered (or some get deleted), this class's
+ * static {@link Abstract#deriveEnumOrdinalMapping(PersistenceLegacyTypeMappingResult)} computes the
+ * legacy-ordinal-to-current-ordinal table used by {@link PersistenceLegacyTypeHandlerWrapperEnum} to
+ * remap persisted ordinals at load time. Non-explicit ordinal changes throw
+ * {@link PersistenceExceptionTypeConsistencyEnum} &mdash; only explicit refactoring entries can change
+ * an ordinal.
+ *
+ * @param <D> the data target type.
+ *
+ * @see PersistenceLegacyTypeHandler
+ * @see PersistenceLegacyTypeMappingResult
+ */
 public interface PersistenceLegacyTypeHandlerCreator<D>
 {
+	/**
+	 * Synthesizes a legacy handler for the passed mapping result.
+	 *
+	 * @param <T>           the runtime type.
+	 * @param mappingResult the finalized mapping result.
+	 *
+	 * @return a new legacy type handler.
+	 */
 	public <T> PersistenceLegacyTypeHandler<D, T> createLegacyTypeHandler(
 		PersistenceLegacyTypeMappingResult<D, T> mappingResult
 	);
-		
-	
-	
+
+
+
+	/**
+	 * Abstract base implementing the unchanged-structure / reflective / custom dispatch and the static
+	 * enum-ordinal mapping derivation. Concrete subclasses (e.g. binary) implement the
+	 * {@code deriveReflectiveHandler} and {@code deriveCustomWrappingHandler} hooks.
+	 *
+	 * @param <D> the data target type.
+	 */
 	public abstract class Abstract<D> implements PersistenceLegacyTypeHandlerCreator<D>
 	{
 		private final static Logger logger = Logging.getLogger(PersistenceLegacyTypeHandlerCreator.class);
-		
+
 		///////////////////////////////////////////////////////////////////////////
 		// static methods //
 		///////////////////
-		
+
+		/**
+		 * Builds the legacy-ordinal-to-current-ordinal map used by
+		 * {@link PersistenceLegacyTypeHandlerWrapperEnum} from the enum-constant entries in the legacy
+		 * and current type definitions.
+		 * <p>
+		 * For each legacy constant the mapping result is consulted: an explicit / similar match
+		 * yields the current ordinal; an explicitly discarded legacy constant produces a {@code null}
+		 * entry (signalling deletion); an unmapped legacy constant or an inconsistent target throws.
+		 * Implicit (non-explicit) ordinal changes are also rejected via
+		 * {@link PersistenceExceptionTypeConsistencyEnum}, since silently shifting ordinals would
+		 * corrupt persisted data.
+		 *
+		 * @param result the mapping result.
+		 *
+		 * @return an array indexed by legacy ordinal, valued by mapped current ordinal (or
+		 *         {@code null} for deleted constants).
+		 *
+		 * @throws PersistenceException                  if a legacy constant is unmapped or maps to an
+		 *                                               unknown target.
+		 * @throws PersistenceExceptionTypeConsistencyEnum if an ordinal change was not explicitly
+		 *                                               authorized via the refactoring mapping.
+		 */
 		public static Integer[] deriveEnumOrdinalMapping(final PersistenceLegacyTypeMappingResult<?, ?> result)
 		{
 			final PersistenceTypeDefinition legacyTypeDef = result.legacyTypeDefinition();
@@ -210,10 +275,27 @@ public interface PersistenceLegacyTypeHandlerCreator<D>
 			);
 		}
 							
+		/**
+		 * Subclass hook: synthesize a legacy handler for a non-reflective ("custom") current handler.
+		 *
+		 * @param <T>           the runtime type.
+		 * @param mappingResult the finalized mapping result.
+		 *
+		 * @return the legacy handler.
+		 */
 		protected abstract <T> PersistenceLegacyTypeHandler<D, T> deriveCustomWrappingHandler(
 			PersistenceLegacyTypeMappingResult<D, T> mappingResult
 		);
-		
+
+		/**
+		 * Subclass hook: synthesize a translating legacy handler around a reflective current handler.
+		 *
+		 * @param <T>                the runtime type.
+		 * @param mappingResult      the finalized mapping result.
+		 * @param currentTypeHandler the reflective current handler.
+		 *
+		 * @return the legacy handler.
+		 */
 		protected abstract <T> PersistenceLegacyTypeHandler<D, T> deriveReflectiveHandler(
 			PersistenceLegacyTypeMappingResult<D, T> mappingResult,
 			PersistenceTypeHandlerReflective<D, T>   currentTypeHandler
