@@ -17,6 +17,7 @@ package org.eclipse.serializer.persistence.types;
 import static org.eclipse.serializer.util.X.notNull;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 import org.eclipse.serializer.collections.EqHashEnum;
 import org.eclipse.serializer.collections.XUtilsCollection;
@@ -118,7 +119,18 @@ public interface PersistenceLegacyTypeMappingResult<D, T>
 			}
 
 			// and the types must be the same, of course. Member names are sound and smoke.
-			if(!legacyMember.typeName().equals(currentMember.typeName()))
+			// workaround: primitive-definition members carry a null typeName; compare their bit-layout definition instead.
+			// TODO: find cleaner solution
+			if(legacyMember.isPrimitiveDefinition() && currentMember.isPrimitiveDefinition())
+			{
+				if(!((PersistenceTypeDescriptionMemberPrimitiveDefinition)legacyMember).primitiveDefinition().equals(
+					((PersistenceTypeDescriptionMemberPrimitiveDefinition)currentMember).primitiveDefinition()
+				))
+				{
+					return false;
+				}
+			}
+			else if(!Objects.equals(legacyMember.typeName(), currentMember.typeName()))
 			{
 				return false;
 			}
