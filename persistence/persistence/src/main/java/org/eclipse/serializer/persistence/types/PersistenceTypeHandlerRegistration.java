@@ -14,15 +14,39 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Pluggable hook used by foundations to register custom {@link PersistenceTypeHandler}s into a
+ * {@link PersistenceCustomTypeHandlerRegistry} during setup. The registration is invoked once per
+ * foundation initialization with the registry and a {@link PersistenceSizedArrayLengthController}
+ * (so that handlers can apply the configured sized-array length policy).
+ *
+ * @param <D> the data target type.
+ *
+ * @see Executor
+ */
 @FunctionalInterface
 public interface PersistenceTypeHandlerRegistration<D>
 {
+	/**
+	 * Adds custom type handlers to the passed registry, configuring them with the given
+	 * {@link PersistenceSizedArrayLengthController} where applicable.
+	 *
+	 * @param customTypeHandlerRegistry  the target registry.
+	 * @param sizedArrayLengthController the length controller to pass to length-aware handlers.
+	 */
 	public void registerTypeHandlers(
 		PersistenceCustomTypeHandlerRegistry<D> customTypeHandlerRegistry ,
 		PersistenceSizedArrayLengthController   sizedArrayLengthController
 	);
-	
-	
+
+
+	/**
+	 * Executes a {@link PersistenceTypeHandlerRegistration} against an executor-owned registry and
+	 * length controller. Implementations of this interface bridge "I have a registration to run" with
+	 * "I own the registry and the length controller" without forcing the caller to know about either.
+	 *
+	 * @param <D> the data target type.
+	 */
 	@FunctionalInterface
 	public static interface Executor<D>
 	{
@@ -30,11 +54,11 @@ public interface PersistenceTypeHandlerRegistration<D>
 		 * Executes the passed {@link PersistenceTypeHandlerRegistration} logic while supplying this instance's
 		 * {@link PersistenceCustomTypeHandlerRegistry} and {@link PersistenceSizedArrayLengthController} instances.
 		 * The passed instance itself will not be referenced after the method exits.
-		 * 
+		 *
 		 * @param typeHandlerRegistration the {@link PersistenceTypeHandlerRegistration} to be executed.
 		 */
 		public void executeTypeHandlerRegistration(PersistenceTypeHandlerRegistration<D> typeHandlerRegistration);
-		
+
 	}
-	
+
 }

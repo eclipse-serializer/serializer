@@ -26,20 +26,84 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHan
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistencyConflictedTypeId;
 import org.eclipse.serializer.reflect.XReflect;
 
+/**
+ * Mutable registry of {@link PersistenceTypeHandler}s, keyed by both Java {@link Class} and typeId, plus
+ * by typeId for {@link PersistenceLegacyTypeHandler}s.
+ * <p>
+ * Combines:
+ * <ul>
+ * <li>{@link PersistenceTypeHandlerLookup} for read-only by-instance / by-class / by-typeId lookup,</li>
+ * <li>{@link PersistenceTypeRegistry} for the underlying type-{@literal <-->}-typeId mapping,</li>
+ * <li>{@link PersistenceTypeHandlerIterable} for iterating all current and legacy handlers.</li>
+ * </ul>
+ * <p>
+ * Registration enforces consistency &mdash; attempting to register a different handler for an already
+ * mapped type or typeId raises a {@link PersistenceExceptionTypeHandlerConsistencyConflictedType} or
+ * {@link PersistenceExceptionTypeHandlerConsistencyConflictedTypeId}.
+ *
+ * @param <D> the data target type.
+ */
 public interface PersistenceTypeHandlerRegistry<D>
 extends PersistenceTypeHandlerLookup<D>, PersistenceTypeRegistry, PersistenceTypeHandlerIterable<D>
 {
+	/**
+	 * Registers the passed handler under its own {@link PersistenceTypeHandler#type()} and
+	 * {@link PersistenceTypeHandler#typeId()}.
+	 *
+	 * @param <T>         the handled type.
+	 * @param typeHandler the handler to register.
+	 *
+	 * @return {@code true} if the registration changed registry state.
+	 *
+	 * @throws PersistenceExceptionConsistency if a different handler is already registered for the
+	 *                                         same type or typeId.
+	 */
 	public <T> boolean registerTypeHandler(PersistenceTypeHandler<D, T> typeHandler);
-	
-	public long registerTypeHandlers(Iterable<? extends PersistenceTypeHandler<D, ?>> typeHandlers);
-	
-	public <T> boolean registerTypeHandler(Class<T> type, PersistenceTypeHandler<D, ? super T> typeHandler);
-	
-	public boolean registerLegacyTypeHandler(PersistenceLegacyTypeHandler<D, ?> legacyTypeHandler);
-	
-	
-	
 
+	/**
+	 * Bulk-registers the passed handlers; equivalent to invoking
+	 * {@link #registerTypeHandler(PersistenceTypeHandler)} for each entry.
+	 *
+	 * @param typeHandlers the handlers to register.
+	 *
+	 * @return the number of handlers that changed registry state.
+	 */
+	public long registerTypeHandlers(Iterable<? extends PersistenceTypeHandler<D, ?>> typeHandlers);
+
+	/**
+	 * Registers the passed handler under the explicitly supplied {@code type}, which may be a sub-type
+	 * of the handler's own {@link PersistenceTypeHandler#type()} (e.g. for handlers that handle
+	 * multiple sub-types via the same logic).
+	 *
+	 * @param <T>         the type to register the handler under.
+	 * @param type        the registration key.
+	 * @param typeHandler the handler.
+	 *
+	 * @return {@code true} if the registration changed registry state.
+	 */
+	public <T> boolean registerTypeHandler(Class<T> type, PersistenceTypeHandler<D, ? super T> typeHandler);
+
+	/**
+	 * Registers a {@link PersistenceLegacyTypeHandler} for reading older persisted data whose layout
+	 * no longer matches the current handler.
+	 *
+	 * @param legacyTypeHandler the legacy handler.
+	 *
+	 * @return {@code true} if the registration changed registry state.
+	 */
+	public boolean registerLegacyTypeHandler(PersistenceLegacyTypeHandler<D, ?> legacyTypeHandler);
+
+
+
+	/**
+	 * Creates a new {@link PersistenceTypeHandlerRegistry} that delegates type-{@literal <-->}-typeId
+	 * lookups to the passed {@link PersistenceTypeRegistry}.
+	 *
+	 * @param <D>          the data target type.
+	 * @param typeRegistry the underlying type registry; must not be {@code null}.
+	 *
+	 * @return a new registry.
+	 */
 	public static <D> PersistenceTypeHandlerRegistry.Default<D> New(
 		final PersistenceTypeRegistry typeRegistry
 	)

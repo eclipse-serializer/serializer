@@ -24,27 +24,142 @@ import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
 import org.eclipse.serializer.reflect.XReflect;
+import org.eclipse.serializer.typing.LambdaTypeRecognizer;
 
+/**
+ * Factory for {@link PersistenceTypeHandler}s, dispatched by category by the surrounding
+ * {@link PersistenceTypeHandlerEnsurer}. Each {@code createTypeHandlerX} method handles one specific
+ * shape of type:
+ * <ul>
+ * <li>{@link #createTypeHandlerArray} &mdash; reference-typed arrays; primitive-typed arrays must be
+ *     handled by special-tailored custom handlers.</li>
+ * <li>{@link #createTypeHandlerProxy} / {@link #createTypeHandlerLambda} &mdash; default
+ *     implementation rejects both as unsupported.</li>
+ * <li>{@link #createTypeHandlerEnum} &mdash; enum types (using the bug-tolerant
+ *     {@code XReflect.isEnum} check rather than {@link Class#isEnum()}).</li>
+ * <li>{@link #createTypeHandlerEntity} &mdash; types implementing the framework's
+ *     {@link org.eclipse.serializer.entity.Entity} interface.</li>
+ * <li>{@link #createTypeHandlerAbstract} &mdash; abstract classes (rejected for storing by default).</li>
+ * <li>{@link #createTypeHandlerUnpersistable} &mdash; explicit unpersistable handlers (e.g. for
+ *     {@link java.lang.Thread}).</li>
+ * <li>{@link #createTypeHandlerGeneric} &mdash; the catch-all for ordinary classes; consults
+ *     {@link PersistenceTypeAnalyzer} to validate that no field is structurally problematic.</li>
+ * </ul>
+ *
+ * @param <D> the data target type.
+ *
+ * @see PersistenceTypeHandlerEnsurer
+ */
 public interface PersistenceTypeHandlerCreator<D>
 {
+	/**
+	 * @param <T>  the array type.
+	 * @param type a reference-typed array class.
+	 *
+	 * @return a handler for the array type.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if the array's component type is primitive.
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerArray(Class<T> type) throws PersistenceExceptionTypeNotPersistable;
-	
+
+	/**
+	 * Creates a handler for a JDK dynamic proxy class. Default implementation always throws.
+	 *
+	 * @param <T>  the proxy type.
+	 * @param type a JDK proxy class.
+	 *
+	 * @return a handler for the proxy type.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable always (default behavior).
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerProxy(Class<T> type) throws PersistenceExceptionTypeNotPersistable;
-	
+
+	/**
+	 * Creates a handler for a lambda class. Default implementation always throws because lambdas
+	 * cannot be reliably resolved during loading on the current JVM.
+	 *
+	 * @param <T>  the lambda type.
+	 * @param type a class identified as a lambda by {@link LambdaTypeRecognizer}.
+	 *
+	 * @return a handler for the lambda type.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable always (default behavior).
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerLambda(Class<T> type) throws PersistenceExceptionTypeNotPersistable;
-	
+
+	/**
+	 * Creates a handler for an enum type.
+	 *
+	 * @param <T>  the enum type.
+	 * @param type the enum class.
+	 *
+	 * @return a handler for the enum type.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if the enum has problematic fields.
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerEnum(Class<T> type) throws PersistenceExceptionTypeNotPersistable;
-	
+
+	/**
+	 * Creates a handler for a framework-{@link org.eclipse.serializer.entity.Entity}-based type.
+	 *
+	 * @param <T>  the entity type.
+	 * @param type the entity class.
+	 *
+	 * @return a handler for the entity type.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if the type cannot be persisted.
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerEntity(Class<T> type) throws PersistenceExceptionTypeNotPersistable;
-	
+
+	/**
+	 * Creates a handler for an abstract class. Default behavior is the same as
+	 * {@link #createTypeHandlerUnpersistable(Class)}.
+	 *
+	 * @param <T>  the abstract type.
+	 * @param type an abstract class.
+	 *
+	 * @return a handler for the abstract type.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if the type cannot be persisted.
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerAbstract(Class<T> type) throws PersistenceExceptionTypeNotPersistable;
 
+	/**
+	 * Creates an explicit unpersistable handler &mdash; used for types that can be referenced but
+	 * never persisted (e.g. {@link java.lang.Thread}). The returned handler throws on any actual
+	 * storing or loading attempt.
+	 *
+	 * @param <T>  the type.
+	 * @param type the unpersistable class.
+	 *
+	 * @return an unpersistable handler.
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerUnpersistable(Class<T> type);
 
+	/**
+	 * The catch-all factory for ordinary classes. Consults the {@link PersistenceTypeAnalyzer} to
+	 * collect the persistable fields and reject types with structurally problematic fields. Has
+	 * special logic for {@link java.util.Collection}/{@link java.util.Map} types to avoid generating
+	 * dramatically inefficient generic structures.
+	 *
+	 * @param <T>  the type.
+	 * @param type the runtime class.
+	 *
+	 * @return a generic handler for {@code type}.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if {@code type} has problematic fields.
+	 */
 	public <T> PersistenceTypeHandler<D, T> createTypeHandlerGeneric(Class<T> type) throws PersistenceExceptionTypeNotPersistable;
-	
-	
-	
+
+
+
+	/**
+	 * Abstract base implementation of {@link PersistenceTypeHandlerCreator} that pre-implements the
+	 * dispatch logic common to all data target formats and defers the actual handler construction to
+	 * {@code internalCreateTypeHandler*} hooks the concrete subclass implements.
+	 *
+	 * @param <D> the data target type.
+	 */
 	public abstract class Abstract<D> implements PersistenceTypeHandlerCreator<D>
 	{
 		///////////////////////////////////////////////////////////////////////////

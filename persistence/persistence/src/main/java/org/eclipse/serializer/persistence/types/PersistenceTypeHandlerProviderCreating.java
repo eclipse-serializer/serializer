@@ -22,6 +22,19 @@ import java.util.function.Consumer;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
 
+/**
+ * Default {@link PersistenceTypeHandlerProvider} implementation that delegates to a
+ * {@link PersistenceTypeManager} for type-id allocation and a {@link PersistenceTypeHandlerEnsurer} for
+ * handler creation.
+ * <p>
+ * The order matters: {@link #provideTypeHandler(Class)} first asks the ensurer for a handler, then
+ * &mdash; only if the ensurer returned a handler whose own {@link PersistenceTypeHandler#type()}
+ * actually matches the requested type &mdash; allocates a typeId and initializes the handler. For
+ * "abstract type" handler mappings (where multiple runtime types are channeled through one shared
+ * super-type handler) no new typeId is allocated for the requesting sub-type.
+ *
+ * @param <D> the data target type.
+ */
 public final class PersistenceTypeHandlerProviderCreating<D>
 extends PersistenceDataTypeHolder.Default<D>
 implements PersistenceTypeHandlerProvider<D>
@@ -30,6 +43,16 @@ implements PersistenceTypeHandlerProvider<D>
 	// static methods //
 	///////////////////
 	
+	/**
+	 * Creates a new {@link PersistenceTypeHandlerProviderCreating}.
+	 *
+	 * @param <D>                the data target type.
+	 * @param dataType           the data class; must not be {@code null}.
+	 * @param typeManager        the underlying {@link PersistenceTypeManager}.
+	 * @param typeHandlerEnsurer the ensurer providing handlers; must not be {@code null}.
+	 *
+	 * @return a new provider.
+	 */
 	public static <D> PersistenceTypeHandlerProviderCreating<D> New(
 		final Class<D>                         dataType          ,
 		final PersistenceTypeManager           typeManager       ,

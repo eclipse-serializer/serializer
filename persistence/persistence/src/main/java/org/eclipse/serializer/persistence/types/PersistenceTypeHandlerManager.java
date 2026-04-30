@@ -38,6 +38,27 @@ import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
 
+/**
+ * The full-fledged top of the type-handler stack: combines {@link PersistenceTypeManager} (typeId
+ * allocation and type {@literal <-->} typeId mapping) with {@link PersistenceTypeHandlerRegistry}
+ * (handler storage and lookup), and adds:
+ * <ul>
+ * <li><b>Ensure semantics</b> &mdash; {@code ensureTypeHandler(...)} variants that look up a handler
+ *     and create / register / initialize one if missing, rather than returning {@code null}.</li>
+ * <li><b>Legacy handler synthesis</b> &mdash; {@link #ensureLegacyTypeHandler} creates a
+ *     {@link PersistenceLegacyTypeHandler} that bridges an outdated {@link PersistenceTypeDefinition}
+ *     to a current handler, applying refactoring mappings.</li>
+ * <li><b>Dictionary integration</b> &mdash; {@link #update(PersistenceTypeDictionary, long)} merges a
+ *     loaded dictionary into the handler population, and {@link #typeDictionary()} exposes the
+ *     authoritative dictionary view.</li>
+ * <li><b>Pending root coordination</b> &mdash; the {@code *PendingRoot*} methods support the lazy
+ *     bookkeeping of root instances that are reachable but not yet stored.</li>
+ * <li><b>Enum-root identifier helpers</b> &mdash; standardized identifier scheme for persisting enums
+ *     as roots.</li>
+ * </ul>
+ *
+ * @param <D> the data target type.
+ */
 public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager, PersistenceTypeHandlerRegistry<D>
 {
 	@Override
@@ -49,41 +70,124 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 	@Override
 	public PersistenceTypeHandler<D, ?> lookupTypeHandler(long typeId);
 
+	/**
+	 * Like {@link #lookupTypeHandler(Object)} but creates and registers a handler if none is currently
+	 * registered for the instance's runtime class.
+	 *
+	 * @param <T>      the static type of the instance.
+	 * @param instance the instance.
+	 *
+	 * @return a handler suitable for the instance's runtime class.
+	 */
 	public <T> PersistenceTypeHandler<D, ? super T> ensureTypeHandler(T instance);
 
+	/**
+	 * Like {@link #lookupTypeHandler(Class)} but creates and registers a handler if none is currently
+	 * registered for the passed class.
+	 *
+	 * @param <T>  the type to ensure a handler for.
+	 * @param type the runtime class.
+	 *
+	 * @return a handler for {@code type}.
+	 */
 	public <T> PersistenceTypeHandler<D, ? super T> ensureTypeHandler(Class<T> type);
-	
+
+	/**
+	 * Ensures the runtime handler matching the passed {@link PersistenceTypeDefinition} is registered.
+	 *
+	 * @param <T>            the handled type.
+	 * @param typeDefinition the type definition.
+	 *
+	 * @return a handler for {@code typeDefinition}'s type.
+	 */
 	public <T> PersistenceTypeHandler<D, ? super T> ensureTypeHandler(PersistenceTypeDefinition typeDefinition);
-	
+
+	/**
+	 * Creates and registers a {@link PersistenceLegacyTypeHandler} bridging a legacy
+	 * {@link PersistenceTypeDefinition} (loaded from the dictionary) to the current handler,
+	 * translating field names and types via the configured refactoring mapping.
+	 *
+	 * @param <T>                  the handled type.
+	 * @param legacyTypeDefinition the outdated type definition from the dictionary.
+	 * @param currentTypeHandler   the current handler the legacy data should be mapped onto.
+	 *
+	 * @return a legacy handler for the bridge.
+	 */
 	public <T> PersistenceLegacyTypeHandler<D, ? super T> ensureLegacyTypeHandler
 	(
 		final PersistenceTypeDefinition    legacyTypeDefinition,
 		final PersistenceTypeHandler<D, ? super T> currentTypeHandler
 	);
-	
+
+	/**
+	 * Bulk variant of {@link #ensureTypeHandler(PersistenceTypeDefinition)} for an entire batch of
+	 * type definitions.
+	 *
+	 * @param typeDefinitions the type definitions.
+	 */
 	public void ensureTypeHandlers(XGettingEnum<PersistenceTypeDefinition> typeDefinitions);
 
+	/**
+	 * Bulk-ensures handlers for the types identified by the passed typeIds, resolving each typeId via
+	 * the dictionary first.
+	 *
+	 * @param typeIds the typeIds.
+	 */
 	public void ensureTypeHandlersByTypeIds(XGettingEnum<Long> typeIds);
 
+	/**
+	 * Performs one-shot post-construction initialization (e.g. populating runtime handlers for all
+	 * statically known custom handlers).
+	 *
+	 * @return this manager, for fluent chaining.
+	 */
 	public PersistenceTypeHandlerManager<D> initialize();
 
+	/**
+	 * Updates this manager from the passed {@link PersistenceTypeDictionary}, ensuring legacy and
+	 * current handlers for every dictionary entry and bumping the type-id counter to the maximum of
+	 * its current value and {@code highestTypeId}.
+	 *
+	 * @param typeDictionary the dictionary to merge in.
+	 * @param highestTypeId  a lower-bound floor for the current type-id counter.
+	 */
 	public void update(PersistenceTypeDictionary typeDictionary, long highestTypeId);
 
+	/**
+	 * Convenience overload of {@link #update(PersistenceTypeDictionary, long)} with a floor of
+	 * {@code 0}.
+	 *
+	 * @param typeDictionary the dictionary to merge in.
+	 */
 	public default void update(final PersistenceTypeDictionary typeDictionary)
 	{
 		this.update(typeDictionary, 0);
 	}
-	
+
+	/**
+	 * @return the authoritative {@link PersistenceTypeDictionary} this manager mirrors.
+	 */
 	public PersistenceTypeDictionary typeDictionary();
-	
+
 	@Override
 	public long ensureTypeId(Class<?> type);
 
 	@Override
 	public Class<?> ensureType(long typeId);
-	
+
+	/**
+	 * Verifies that the passed handler is internally consistent &mdash; in particular that its members
+	 * are unique and that its declared persistent layout matches what the dictionary expects.
+	 *
+	 * @param typeHandler the handler to validate.
+	 */
 	public void validateTypeHandler(PersistenceTypeHandler<D, ?> typeHandler);
-	
+
+	/**
+	 * Bulk variant of {@link #validateTypeHandler(PersistenceTypeHandler)}.
+	 *
+	 * @param typeHandlers the handlers to validate.
+	 */
 	public default void validateTypeHandlers(final Iterable<? extends PersistenceTypeHandler<D, ?>> typeHandlers)
 	{
 		for(final PersistenceTypeHandler<D, ?> typeHandler : typeHandlers)
@@ -91,13 +195,28 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 			this.validateTypeHandler(typeHandler);
 		}
 	}
-	
+
+	/**
+	 * Validates that no root instances are pending (i.e. reachable but not yet stored). Throws if
+	 * pending roots exist.
+	 */
 	public void checkForPendingRootInstances();
-	
+
+	/**
+	 * If pending root instances exist, invokes {@code storingCallback} so they can be stored.
+	 *
+	 * @param storingCallback receives the pending-roots-store request.
+	 */
 	public void checkForPendingRootsStoring(PersistenceStoringCallback storingCallback);
-	
+
+	/**
+	 * Clears the pending-roots store queue without storing anything.
+	 */
 	public void clearStorePendingRoots();
-	
+
+	/**
+	 * @return a read-only view of the currently registered roots.
+	 */
 	public PersistenceRootsView viewRoots();
 	
 	public default String deriveEnumRootIdentifier(final PersistenceTypeHandler<?, ?> typeHandler)
