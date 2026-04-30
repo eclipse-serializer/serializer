@@ -18,6 +18,16 @@ import org.eclipse.serializer.chars.ObjectStringAssembler;
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 
+/**
+ * Renders a {@link PersistenceTypeDictionary} (or a single {@link PersistenceTypeDescription}) back to its
+ * textual on-disk form &mdash; the inverse of {@link PersistenceTypeDictionaryParser}.
+ * <p>
+ * The textual form is one block per type definition, written in ascending typeId order:
+ * {@code <19-char zero-padded typeId> <typeName> '{' <members> '}'}, followed by a newline.
+ *
+ * @see PersistenceTypeDictionaryParser
+ * @see PersistenceTypeDictionaryStorer
+ */
 public interface PersistenceTypeDictionaryAssembler extends ObjectStringAssembler<PersistenceTypeDictionary>
 {
 	@Override
@@ -28,18 +38,34 @@ public interface PersistenceTypeDictionaryAssembler extends ObjectStringAssemble
 	{
 		return ObjectStringAssembler.super.assemble(typeDictionary);
 	}
-	
 
+
+	/**
+	 * Renders a single type description (one block of the textual dictionary form) into the passed buffer.
+	 *
+	 * @param vc              the buffer to append into.
+	 * @param typeDescription the type description to render.
+	 *
+	 * @return {@code vc}, for fluent chaining.
+	 */
 	public VarString assembleTypeDescription(VarString vc, PersistenceTypeDescription typeDescription);
 
 
-	
-	
+
+	/**
+	 * Creates a default {@link PersistenceTypeDictionaryAssembler}.
+	 *
+	 * @return the new assembler.
+	 */
 	public static PersistenceTypeDictionaryAssembler New()
 	{
 		return new PersistenceTypeDictionaryAssembler.Default();
 	}
 
+	/**
+	 * Default {@link PersistenceTypeDictionaryAssembler} implementation: zero-pads each typeId to 19 chars and
+	 * delegates per-member rendering to a {@link TypeDictionaryAppenderBuilder}.
+	 */
 	public class Default
 	extends PersistenceTypeDictionary.Symbols
 	implements PersistenceTypeDictionaryAssembler

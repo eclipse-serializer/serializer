@@ -14,7 +14,22 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Sink for the textual type dictionary produced by
+ * {@link PersistenceTypeDictionaryAssembler}. Paired with {@link PersistenceTypeDictionaryLoader} to read/write
+ * the dictionary, and combined into {@link PersistenceTypeDictionaryIoHandler}.
+ *
+ * @see PersistenceTypeDictionaryLoader
+ * @see PersistenceTypeDictionaryIoHandler
+ * @see PersistenceTypeDictionaryAssembler
+ */
 public interface PersistenceTypeDictionaryStorer
 {
+	/**
+	 * Writes the passed textual type dictionary to its persistent form, replacing any previously stored
+	 * content.
+	 *
+	 * @param typeDictionaryString the textual type dictionary to persist.
+	 */
 	public void storeTypeDictionary(final String typeDictionaryString);
 }

@@ -14,7 +14,22 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Source of the textual on-disk type dictionary, returned as a single string. Paired with
+ * {@link PersistenceTypeDictionaryStorer} to read/write the dictionary, and combined into
+ * {@link PersistenceTypeDictionaryIoHandler}.
+ *
+ * @see PersistenceTypeDictionaryStorer
+ * @see PersistenceTypeDictionaryIoHandler
+ * @see PersistenceTypeDictionaryParser
+ */
 public interface PersistenceTypeDictionaryLoader
 {
+	/**
+	 * Reads the persisted type dictionary and returns its textual form, or {@code null} if no dictionary
+	 * has been written yet.
+	 *
+	 * @return the textual type dictionary, or {@code null} if none has been persisted.
+	 */
 	public String loadTypeDictionary();
 }

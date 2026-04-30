@@ -16,14 +16,30 @@ package org.eclipse.serializer.persistence.types;
 
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * {@link PersistenceTypeDictionaryProvider} variant that narrows the produced dictionary to a read-only
+ * {@link PersistenceTypeDictionaryView}, i.e. one whose mutating methods reject calls. Used wherever consumers
+ * must be prevented from registering further type definitions.
+ *
+ * @see PersistenceTypeDictionaryView
+ * @see PersistenceTypeDictionaryProvider
+ */
 @FunctionalInterface
 public interface PersistenceTypeDictionaryViewProvider extends PersistenceTypeDictionaryProvider
 {
 	@Override
 	public PersistenceTypeDictionaryView provideTypeDictionary();
-	
-	
-	
+
+
+
+	/**
+	 * Wraps an already-loaded {@link PersistenceTypeDictionaryView} as a provider that returns the same
+	 * view on every call.
+	 *
+	 * @param typeDictionary the view to expose; must not be {@code null}.
+	 *
+	 * @return the wrapper provider.
+	 */
 	public static PersistenceTypeDictionaryViewProvider Wrapper(
 		final PersistenceTypeDictionaryView typeDictionary
 	)
@@ -32,7 +48,11 @@ public interface PersistenceTypeDictionaryViewProvider extends PersistenceTypeDi
 			notNull(typeDictionary)
 		);
 	}
-	
+
+	/**
+	 * Trivial {@link PersistenceTypeDictionaryViewProvider} that always returns the same view passed at
+	 * construction time.
+	 */
 	public final class Wrapper implements PersistenceTypeDictionaryViewProvider
 	{
 		///////////////////////////////////////////////////////////////////////////
