@@ -65,6 +65,18 @@ public interface PersistenceTypeDescriptionMemberPrimitiveDefinition extends Per
 			&& equalDescription(this, (PersistenceTypeDescriptionMemberPrimitiveDefinition)member)
 		;
 	}
+
+	@Override
+	public default boolean equalsLayout(final PersistenceTypeDescriptionMember other)
+	{
+		// primitive-definition members carry a null typeName; identity lives in primitiveDefinition().
+		return other instanceof PersistenceTypeDescriptionMemberPrimitiveDefinition
+			&& Objects.equals(
+				this.primitiveDefinition(),
+				((PersistenceTypeDescriptionMemberPrimitiveDefinition)other).primitiveDefinition()
+			)
+		;
+	}
 	
 	/**
 	 * Tests whether two primitive-definition entries record the same {@link #primitiveDefinition()}

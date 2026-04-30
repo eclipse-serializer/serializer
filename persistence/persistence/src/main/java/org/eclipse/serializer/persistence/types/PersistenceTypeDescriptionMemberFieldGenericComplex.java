@@ -71,6 +71,18 @@ extends PersistenceTypeDescriptionMemberFieldGenericVariableLength
 			)
 		;
 	}
+
+	@Override
+	public default boolean equalsLayout(final PersistenceTypeDescriptionMember other)
+	{
+		return PersistenceTypeDescriptionMemberFieldGenericVariableLength.super.equalsLayout(other)
+			&& other instanceof PersistenceTypeDescriptionMemberFieldGenericComplex
+			&& PersistenceTypeDescriptionMember.equalLayouts(
+				this.members(),
+				((PersistenceTypeDescriptionMemberFieldGenericComplex)other).members()
+			)
+		;
+	}
 	
 	/**
 	 * Type-specific overload of

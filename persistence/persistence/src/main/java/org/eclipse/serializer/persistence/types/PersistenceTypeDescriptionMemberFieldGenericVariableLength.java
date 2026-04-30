@@ -47,6 +47,15 @@ extends PersistenceTypeDescriptionMemberFieldGeneric
 			&& PersistenceTypeDescriptionMemberFieldGeneric.super.equalsStructure(other)
 		;
 	}
+
+	@Override
+	public default boolean equalsLayout(final PersistenceTypeDescriptionMember other)
+	{
+		// the type check is the only specific thing here.
+		return other instanceof PersistenceTypeDescriptionMemberFieldGenericVariableLength
+			&& PersistenceTypeDescriptionMemberFieldGeneric.super.equalsLayout(other)
+		;
+	}
 	
 	/**
 	 * Type-specific overload of

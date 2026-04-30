@@ -117,10 +117,12 @@ public interface PersistenceLegacyTypeMappingResult<D, T>
 				return false;
 			}
 
-			// the persistent structure of the two members must match; equalsStructure handles
-			// every member kind (regular fields, primitive definitions, enum constants, complex
-			// generic fields) via polymorphic dispatch.
-			if(!legacyMember.equalsStructure(currentMember))
+			// the persistent layout of the two members must match. equalsLayout handles every
+			// member kind (regular fields, primitive definitions, enum constants, complex generic
+			// fields) via polymorphic dispatch and intentionally ignores member names: the
+			// mapping/order check above already establishes identity, so a renamed-but-otherwise-
+			// unchanged member still qualifies for the unchanged-structure fast path.
+			if(!legacyMember.equalsLayout(currentMember))
 			{
 				return false;
 			}
