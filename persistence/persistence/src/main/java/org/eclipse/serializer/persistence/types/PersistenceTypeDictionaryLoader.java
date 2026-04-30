@@ -26,10 +26,10 @@ package org.eclipse.serializer.persistence.types;
 public interface PersistenceTypeDictionaryLoader
 {
 	/**
-	 * Reads the persisted type dictionary and returns its textual form, or an empty string if no dictionary
+	 * Reads the persisted type dictionary and returns its textual form, or {@code null} if no dictionary
 	 * has been written yet.
 	 *
-	 * @return the textual type dictionary.
+	 * @return the textual type dictionary, or {@code null} if none has been persisted.
 	 */
 	public String loadTypeDictionary();
 }

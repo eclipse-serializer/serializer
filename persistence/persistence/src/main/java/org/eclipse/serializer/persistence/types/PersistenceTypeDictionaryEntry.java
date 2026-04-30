@@ -18,7 +18,7 @@ import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 
 /**
- * One parsed line of the textual type dictionary &mdash; a {@link PersistenceTypeDescription} bound to its
+ * One parsed type block of the textual type dictionary &mdash; a {@link PersistenceTypeDescription} bound to its
  * biunique {@link #typeId()} and {@link #typeName()} (i.e. a full {@link PersistenceTypeIdentity}) before any
  * runtime resolution or refactoring mapping has been applied.
  * <p>
