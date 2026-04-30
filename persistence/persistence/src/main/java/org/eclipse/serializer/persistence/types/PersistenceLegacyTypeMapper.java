@@ -97,7 +97,7 @@ public interface PersistenceLegacyTypeMapper<D>
 		 */
 		public static double defaultExplicitMappingSimilarity()
 		{
-			// to indicate "super similarity", something beyond a similiary match: an explicit mapping.
+			// to indicate "super similarity", something beyond a similarity match: an explicit mapping.
 			return 2.0;
 		}
 

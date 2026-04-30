@@ -72,7 +72,7 @@ public interface PersistenceLegacyTypeHandler<D, T> extends PersistenceTypeHandl
 		// (01.06.2018 TM)NOTE: /!\ copied from PersistenceTypeHandler#initializeTypeId
 		throw new PersistenceException(
 			"Specified type ID " + typeId
-			+ " conflicts with already initalized type ID "
+			+ " conflicts with already initialized type ID "
 			+ this.typeId()
 		);
 	}
