@@ -24,7 +24,6 @@ import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
 import org.eclipse.serializer.reflect.XReflect;
-import org.eclipse.serializer.typing.LambdaTypeRecognizer;
 
 /**
  * Factory for {@link PersistenceTypeHandler}s, dispatched by category by the surrounding
@@ -79,7 +78,7 @@ public interface PersistenceTypeHandlerCreator<D>
 	 * cannot be reliably resolved during loading on the current JVM.
 	 *
 	 * @param <T>  the lambda type.
-	 * @param type a class identified as a lambda by {@link LambdaTypeRecognizer}.
+	 * @param type a class identified as a lambda by {@link org.eclipse.serializer.typing.LambdaTypeRecognizer}.
 	 *
 	 * @return a handler for the lambda type.
 	 *
