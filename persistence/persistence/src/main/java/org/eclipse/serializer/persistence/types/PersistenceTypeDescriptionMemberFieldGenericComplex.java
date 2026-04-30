@@ -21,9 +21,28 @@ import static org.eclipse.serializer.math.XMath.positive;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.collections.types.XImmutableSequence;
 
+/**
+ * A {@linkplain PersistenceTypeDescriptionMemberFieldGenericVariableLength variable-length} generic field
+ * whose elements are themselves described by a nested sequence of generic field members. This is used to
+ * describe persistent forms like a list of structured records (e.g. a {@code [list]} of
+ * {@code [key, value]} pairs).
+ * <p>
+ * Two complex fields are equal in description only when they share type, name and qualifier <i>and</i>
+ * their nested {@link #members()} sequence is element-wise equal in description. The nested members are
+ * rendered into the dictionary inside a bracketed block, indented one level deeper than the parent.
+ *
+ * @see PersistenceTypeDescriptionMemberFieldGenericVariableLength
+ * @see PersistenceTypeDescriptionMemberFieldGenericSimple
+ */
 public interface PersistenceTypeDescriptionMemberFieldGenericComplex
 extends PersistenceTypeDescriptionMemberFieldGenericVariableLength
 {
+	/**
+	 * The ordered sequence of nested members that describes the layout of a single element of this
+	 * complex field.
+	 *
+	 * @return the nested members.
+	 */
 	public XGettingSequence<PersistenceTypeDescriptionMemberFieldGeneric> members();
 
 	
@@ -53,6 +72,16 @@ extends PersistenceTypeDescriptionMemberFieldGenericVariableLength
 		;
 	}
 	
+	/**
+	 * Type-specific overload of
+	 * {@link PersistenceTypeDescriptionMember#equalDescription(PersistenceTypeDescriptionMember,
+	 * PersistenceTypeDescriptionMember)}.
+	 *
+	 * @param m1 the first complex field.
+	 * @param m2 the second complex field.
+	 *
+	 * @return {@code true} if both have equal description.
+	 */
 	public static boolean equalDescription(
 		final PersistenceTypeDescriptionMemberFieldGenericComplex m1,
 		final PersistenceTypeDescriptionMemberFieldGenericComplex m2
@@ -60,7 +89,17 @@ extends PersistenceTypeDescriptionMemberFieldGenericVariableLength
 	{
 		return PersistenceTypeDescriptionMember.equalDescription(m1, m2);
 	}
-	
+
+	/**
+	 * Type-specific overload of
+	 * {@link PersistenceTypeDescriptionMember#equalStructure(PersistenceTypeDescriptionMember,
+	 * PersistenceTypeDescriptionMember)}.
+	 *
+	 * @param m1 the first complex field.
+	 * @param m2 the second complex field.
+	 *
+	 * @return {@code true} if both have equal structure.
+	 */
 	public static boolean equalStructure(
 		final PersistenceTypeDescriptionMemberFieldGenericComplex m1,
 		final PersistenceTypeDescriptionMemberFieldGenericComplex m2
@@ -77,6 +116,17 @@ extends PersistenceTypeDescriptionMemberFieldGenericVariableLength
 		return creator.createDefinitionMember(this);
 	}
 	
+	/**
+	 * Convenience overload of
+	 * {@link #New(String, String, XGettingSequence, long, long)} that omits the qualifier.
+	 *
+	 * @param name                    the field's simple name; must not be {@code null}.
+	 * @param members                 the nested members describing one element; must not be {@code null}.
+	 * @param persistentMinimumLength the lower bound of the field's persistent length; must be positive.
+	 * @param persistentMaximumLength the upper bound of the field's persistent length; must be positive.
+	 *
+	 * @return a new complex field description.
+	 */
 	public static PersistenceTypeDescriptionMemberFieldGenericComplex New(
 		final String                                                         name                   ,
 		final XGettingSequence<PersistenceTypeDescriptionMemberFieldGeneric> members                ,
@@ -86,7 +136,18 @@ extends PersistenceTypeDescriptionMemberFieldGenericVariableLength
 	{
 		return New(null, name, members, persistentMinimumLength, persistentMaximumLength);
 	}
-	
+
+	/**
+	 * Creates a complex generic field description.
+	 *
+	 * @param qualifier               the optional qualifier; may be {@code null}.
+	 * @param name                    the field's simple name; must not be {@code null}.
+	 * @param members                 the nested members describing one element; must not be {@code null}.
+	 * @param persistentMinimumLength the lower bound of the field's persistent length; must be positive.
+	 * @param persistentMaximumLength the upper bound of the field's persistent length; must be positive.
+	 *
+	 * @return a new complex field description.
+	 */
 	public static PersistenceTypeDescriptionMemberFieldGenericComplex New(
 		final String                                                         qualifier              ,
 		final String                                                         name                   ,
