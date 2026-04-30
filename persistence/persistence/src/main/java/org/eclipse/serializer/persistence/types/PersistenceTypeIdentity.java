@@ -48,9 +48,9 @@ public interface PersistenceTypeIdentity extends PersistenceTypeIdOwner
 
 
 	/**
-	 * Combined hash of {@code typeId} and {@code typeName} suitable for keying identities in hash
-	 * collections. Note: the implementation uses bitwise AND between the two component hashes, which is
-	 * intentionally cheap rather than collision-optimal.
+	 * Returns a hash code derived from {@code typeId} and {@code typeName}. The current implementation
+	 * combines {@link Long#hashCode(long)} for {@code typeId} with {@link String#hashCode()} for
+	 * {@code typeName} using bitwise AND.
 	 *
 	 * @param typeIdentity the identity to hash.
 	 *

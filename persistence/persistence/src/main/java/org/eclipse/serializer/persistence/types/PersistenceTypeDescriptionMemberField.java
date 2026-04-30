@@ -41,8 +41,10 @@ public interface PersistenceTypeDescriptionMemberField extends PersistenceTypeDe
 	 * A type-internal qualifier to distinct different members with equal "primary" name. E.g. reflection-based
 	 * type handling where field names are only unique in combination with their declaring class.
 	 * <p>
-	 * May never be {@code null}.
-	 * 
+	 * Always non-{@code null} for {@link PersistenceTypeDescriptionMemberFieldReflective reflective} fields
+	 * (set to the declaring class name); may be {@code null} for
+	 * {@link PersistenceTypeDescriptionMemberFieldGeneric generic} fields when no qualification is required.
+	 *
 	 * @return the member's qualifier string to ensure a unique {@link #identifier()} in a group of member fields.
 	 */
 	@Override

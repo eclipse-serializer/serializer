@@ -27,8 +27,8 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceException;
  * In the type dictionary every Java primitive ({@code byte}, {@code short}, {@code int}, {@code long},
  * {@code float}, {@code double}, {@code char}, {@code boolean}) is represented as a type whose <i>only</i>
  * member is a primitive-definition entry like {@code primitive 32}, {@code primitive 64}, etc. The fixed
- * persistent length captured here is what tells legacy reading code how many bytes to consume for that
- * primitive on this platform / persister.
+ * persistent length captured here is what tells legacy reading code how many units to consume for that
+ * primitive on this platform / persister (typically bytes for the binary persister).
  * <p>
  * Because primitive definitions do not have a name or qualifier, {@link #typeName()}, {@link #qualifier()}
  * and {@link #name()} return {@code null}, and {@link #identifier()} falls back to

@@ -371,7 +371,7 @@ public interface PersistenceTypeDescriptionMember
 	 *
 	 * @throws PersistenceException if the length is invalid.
 	 */
-	public void validatePersistentLength(long persistentLength);
+	public void validatePersistentLength(long persistentLength) throws PersistenceException;
 
 	/**
 	 * Tests whether this member has the same {@link #identifier()} as the passed member &mdash; the
