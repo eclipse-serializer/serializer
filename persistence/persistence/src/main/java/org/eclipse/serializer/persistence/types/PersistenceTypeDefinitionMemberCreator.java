@@ -30,13 +30,16 @@ import org.eclipse.serializer.collections.types.XGettingSequence;
  * Each overload here handles one description-member flavor and produces the matching definition flavor.
  * <p>
  * The {@link Default} implementation additionally consults a {@link PersistenceTypeDescriptionResolver}
- * and a list of latest-typeId dictionary entries to apply renames before binding to the runtime: for a
- * reflective field this means resolving the current declaring class via the refactoring mapping and
- * looking the {@link java.lang.reflect.Field} up there, falling back to {@code null} if either the
- * declaring class or the field name can no longer be resolved. If the dictionary's declaring-type name
- * does not match the current runtime declaring-type name (i.e. the declaring class was renamed and a
- * new class with the old name exists), the field is intentionally left unresolved &mdash; binding the
- * legacy member to a coincidentally same-named field on a different class would be a logical error.
+ * and a list of latest-typeId dictionary entries to apply the refactoring mapping when computing the
+ * runtime declaring-type name and the runtime field-value type. The underlying
+ * {@link java.lang.reflect.Field}, however, is bound only when the dictionary's declaring-type name
+ * coincides with the resolved runtime declaring-type name &mdash; that is, when no rename was applied
+ * to the declaring class. If the declaring class was renamed (or otherwise mapped to a different
+ * runtime type), the field is intentionally left {@code null}: a class with the dictionary's original
+ * name might still exist in the new design with a coincidentally same-named but semantically different
+ * field, and binding the legacy member to it would be a logical error. When no rename applies and the
+ * declaring class is resolvable, the field is looked up by name on that class and falls back to
+ * {@code null} if either the declaring class or the field name can no longer be resolved.
  *
  * @see PersistenceTypeDescriptionMember#createDefinitionMember(PersistenceTypeDefinitionMemberCreator)
  * @see PersistenceTypeDescriptionResolver
@@ -69,8 +72,9 @@ public interface PersistenceTypeDefinitionMemberCreator
 
 	/**
 	 * Lifts a {@linkplain PersistenceTypeDescriptionMemberFieldReflective reflective field} into its
-	 * definition counterpart, applying refactoring-mapping renames when resolving the runtime
-	 * declaring class and {@link java.lang.reflect.Field}.
+	 * definition counterpart. The runtime declaring-type name is computed by applying the refactoring
+	 * mapping to the dictionary's declaring-type name; the {@link java.lang.reflect.Field} itself is
+	 * only bound when no rename was applied (see the type-level documentation for the rationale).
 	 *
 	 * @param description the description to lift.
 	 *

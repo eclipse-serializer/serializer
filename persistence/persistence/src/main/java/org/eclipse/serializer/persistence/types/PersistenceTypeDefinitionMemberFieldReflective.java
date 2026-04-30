@@ -73,12 +73,14 @@ extends PersistenceTypeDefinitionMemberField, PersistenceTypeDescriptionMemberFi
 
 
 	/**
-	 * Iterates the passed members and forwards each non-{@code null} {@link #field()} to the collector.
-	 * Useful for handing a list of reflective members to a Field-consuming API in one step.
+	 * Iterates the passed members and forwards each member's {@link #field()} to the collector,
+	 * including {@code null} entries for unresolved members. Useful for handing a list of reflective
+	 * members to a {@link Field}-consuming API in one step; callers that cannot accept {@code null}
+	 * fields must filter beforehand.
 	 *
 	 * @param <C>       the collector type.
 	 * @param members   the members to unbox.
-	 * @param collector the collector receiving each member's underlying field.
+	 * @param collector the collector receiving each member's underlying field, possibly {@code null}.
 	 *
 	 * @return the same collector, for fluent chaining.
 	 */
