@@ -20,6 +20,20 @@ import java.util.Objects;
 
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 
+/**
+ * Member entry that records the persistent name of a single enum constant inside an enum's type description.
+ * <p>
+ * Enum constants are not instance fields &mdash; they do not enlarge a persisted instance's binary form, so
+ * both {@link #persistentMinimumLength()} and {@link #persistentMaximumLength()} are zero. Their purpose is
+ * to capture, in the type dictionary, which constant names exist (and in which order) for an enum so that
+ * legacy data can be re-bound to the correct constant after enum constants are added, removed or reordered.
+ * <p>
+ * Equality of two enum-constant members is decided by name only ({@link #equalName}); structure equality
+ * therefore implies description equality. The textual form rendered into the dictionary is
+ * {@code enum <name>}.
+ *
+ * @see PersistenceTypeDescriptionMember
+ */
 public interface PersistenceTypeDescriptionMemberEnumConstant extends PersistenceTypeDescriptionMember
 {
 	@Override
@@ -42,6 +56,14 @@ public interface PersistenceTypeDescriptionMemberEnumConstant extends Persistenc
 		return this.equalsStructure(member);
 	}
 	
+	/**
+	 * Tests whether two enum-constant members have equal {@link #name()}. The comparison is null-safe.
+	 *
+	 * @param m1 the first member.
+	 * @param m2 the second member.
+	 *
+	 * @return {@code true} if both have the same name.
+	 */
 	public static boolean equalName(
 		final PersistenceTypeDescriptionMemberEnumConstant m1,
 		final PersistenceTypeDescriptionMemberEnumConstant m2
@@ -62,6 +84,13 @@ public interface PersistenceTypeDescriptionMemberEnumConstant extends Persistenc
 	}
 
 	
+	/**
+	 * Creates an enum-constant entry for the passed persistent name.
+	 *
+	 * @param enumPersistentName the persistent name of the enum constant; must not be {@code null}.
+	 *
+	 * @return a new {@link PersistenceTypeDescriptionMemberEnumConstant}.
+	 */
 	public static PersistenceTypeDescriptionMemberEnumConstant New(
 		final String enumPersistentName
 	)

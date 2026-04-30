@@ -21,8 +21,28 @@ import java.util.Objects;
 
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 
+/**
+ * A non-instance member entry that records the persistent bit-layout of a Java primitive type.
+ * <p>
+ * In the type dictionary every Java primitive ({@code byte}, {@code short}, {@code int}, {@code long},
+ * {@code float}, {@code double}, {@code char}, {@code boolean}) is represented as a type whose <i>only</i>
+ * member is a primitive-definition entry like {@code primitive 32}, {@code primitive 64}, etc. The fixed
+ * persistent length captured here is what tells legacy reading code how many bytes to consume for that
+ * primitive on this platform / persister.
+ * <p>
+ * Because primitive definitions do not have a name or qualifier, {@link #typeName()}, {@link #qualifier()}
+ * and {@link #name()} return {@code null}, and {@link #identifier()} falls back to
+ * {@link #primitiveDefinition()}.
+ *
+ * @see PersistenceTypeDescriptionMember
+ */
 public interface PersistenceTypeDescriptionMemberPrimitiveDefinition extends PersistenceTypeDescriptionMember
 {
+	/**
+	 * The textual primitive-definition string (e.g. {@code "primitive 32"}) recorded for this entry.
+	 *
+	 * @return the primitive-definition string.
+	 */
 	public String primitiveDefinition();
 	
 	@Override
@@ -46,6 +66,15 @@ public interface PersistenceTypeDescriptionMemberPrimitiveDefinition extends Per
 		;
 	}
 	
+	/**
+	 * Tests whether two primitive-definition entries record the same {@link #primitiveDefinition()}
+	 * string.
+	 *
+	 * @param m1 the first primitive-definition entry.
+	 * @param m2 the second primitive-definition entry.
+	 *
+	 * @return {@code true} if both record the same primitive definition.
+	 */
 	public static boolean equalDescription(
 		final PersistenceTypeDescriptionMemberPrimitiveDefinition m1,
 		final PersistenceTypeDescriptionMemberPrimitiveDefinition m2
@@ -63,6 +92,14 @@ public interface PersistenceTypeDescriptionMemberPrimitiveDefinition extends Per
 	}
 
 	
+	/**
+	 * Creates a primitive-definition entry.
+	 *
+	 * @param primitiveDefinition the textual definition (e.g. {@code "primitive 32"}); must not be {@code null}.
+	 * @param persistentLength    the fixed persistent length in this persister's unit; must be positive.
+	 *
+	 * @return a new primitive-definition entry.
+	 */
 	public static PersistenceTypeDescriptionMemberPrimitiveDefinition New(
 		final String primitiveDefinition,
 		final long   persistentLength

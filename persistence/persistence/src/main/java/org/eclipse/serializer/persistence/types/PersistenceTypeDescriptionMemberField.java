@@ -16,6 +16,22 @@ package org.eclipse.serializer.persistence.types;
 
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 
+/**
+ * Field-style member: an actual instance field of a persisted object.
+ * <p>
+ * Two flavors exist: {@link PersistenceTypeDescriptionMemberFieldReflective} (derived from a Java
+ * {@link java.lang.reflect.Field} and qualified by the declaring class name) and
+ * {@link PersistenceTypeDescriptionMemberFieldGeneric} (custom-defined in the dictionary, e.g. for
+ * collections or other handcrafted handlers). Both share the same identifier scheme of {@code qualifier}
+ * + {@code name}, but in the generic case the qualifier may be omitted.
+ * <p>
+ * All instances are {@linkplain #isInstanceMember() instance members} and the abstract base class
+ * {@link Abstract} stores the persistence-relevant attributes (type name, reference flag, primitive flag,
+ * fixed length range, qualified field name) computed at construction time.
+ *
+ * @see PersistenceTypeDescriptionMemberFieldReflective
+ * @see PersistenceTypeDescriptionMemberFieldGeneric
+ */
 public interface PersistenceTypeDescriptionMemberField extends PersistenceTypeDescriptionMember
 {
 	@Override
@@ -23,7 +39,7 @@ public interface PersistenceTypeDescriptionMemberField extends PersistenceTypeDe
 	
 	/**
 	 * A type-internal qualifier to distinct different members with equal "primary" name. E.g. reflection-based
-	 * type handling where fields names are only unique in combination with their declaring class.
+	 * type handling where field names are only unique in combination with their declaring class.
 	 * <p>
 	 * May never be {@code null}.
 	 * 
@@ -51,6 +67,12 @@ public interface PersistenceTypeDescriptionMemberField extends PersistenceTypeDe
 			
 	
 	
+	/**
+	 * Abstract base class for field-style members. Captures the immutable per-instance attributes
+	 * (type name, qualifier, simple name, reference / primitive / hasReferences flags, fixed persistent
+	 * length range) at construction time and pre-computes the {@link #identifier()} as the qualified
+	 * field name.
+	 */
 	public abstract class Abstract
 //	extends PersistenceTypeDescriptionMember.Abstract
 	implements PersistenceTypeDescriptionMemberField
