@@ -30,17 +30,58 @@ import org.slf4j.Logger;
 /**
  * Named "ensurer" because depending on the case, it creates a new type handler or it just returns
  * already existing, pre-registered ones. So "ensuring" is the most fitting common denominator.
- * 
- * 
+ * <p>
+ * The {@link Default} implementation walks a fixed precedence chain when ensuring a handler for a
+ * requested {@link Class}:
+ * <ol>
+ * <li><b>Provided handler</b> &mdash; static {@code provided} handler discovery via
+ *     {@link Persistence#searchProvidedTypeHandler}.</li>
+ * <li><b>Custom handler</b> &mdash; lookup in the {@link PersistenceCustomTypeHandlerRegistry} (covers
+ *     primitives and explicitly registered handlers).</li>
+ * <li><b>Special type cases</b> &mdash; rejection paths for {@link Class}-meta and JDK proxies; lambda
+ *     handling via {@link LambdaTypeRecognizer}.</li>
+ * <li><b>Generic creation</b> &mdash; arrays, enums, abstract types, entity types, "abstract type"
+ *     mappings (e.g. {@link java.nio.file.Path} implementations), and finally a generic reflective
+ *     handler for ordinary classes &mdash; produced via the {@link PersistenceTypeHandlerCreator}.</li>
+ * </ol>
+ *
+ * @param <D> the data target type.
+ *
+ * @see PersistenceTypeHandlerProvider
+ * @see PersistenceTypeHandlerCreator
  */
 public interface PersistenceTypeHandlerEnsurer<D>
 extends PersistenceTypeHandlerIterable<D>, PersistenceDataTypeHolder<D>
 {
+	/**
+	 * Returns a handler suitable for the passed type, creating one if none is currently registered.
+	 *
+	 * @param <T>  the type to ensure a handler for.
+	 * @param type the runtime class.
+	 *
+	 * @return a handler for {@code type}.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if {@code type} cannot be persisted.
+	 */
 	public <T> PersistenceTypeHandler<D, ? super T> ensureTypeHandler(Class<T> type)
 		throws PersistenceExceptionTypeNotPersistable;
-	
-	
-	
+
+
+
+	/**
+	 * Creates the default {@link PersistenceTypeHandlerEnsurer}.
+	 *
+	 * @param <D>                         the data target type.
+	 * @param dataType                    the data class.
+	 * @param customTypeHandlerRegistry   registry consulted for predefined / custom handlers.
+	 * @param typeAnalyzer                identifies unpersistable types and collects persistable fields.
+	 * @param lambdaTypeRecognizer        identifies lambda classes.
+	 * @param abstractTypeHandlerSearcher resolves "abstract type" mappings (e.g. for
+	 *                                    {@link java.nio.file.Path} implementations).
+	 * @param typeHandlerCreator          falls back here for constructed handlers.
+	 *
+	 * @return a new ensurer.
+	 */
 	public static <D> PersistenceTypeHandlerEnsurer.Default<D> New(
 		final Class<D>                                  dataType                   ,
 		final PersistenceCustomTypeHandlerRegistry<D>   customTypeHandlerRegistry  ,
