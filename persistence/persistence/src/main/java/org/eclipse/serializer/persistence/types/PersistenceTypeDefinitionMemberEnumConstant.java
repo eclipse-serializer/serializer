@@ -16,10 +16,22 @@ package org.eclipse.serializer.persistence.types;
 
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * Runtime-bound counterpart to {@link PersistenceTypeDescriptionMemberEnumConstant}. Since enum
+ * constants validate field names rather than carry a runtime field type, {@link #type()} always returns
+ * {@code null}.
+ */
 public interface PersistenceTypeDefinitionMemberEnumConstant
 extends PersistenceTypeDescriptionMemberEnumConstant, PersistenceTypeDefinitionMember
 {
-	
+
+	/**
+	 * Creates a new {@link PersistenceTypeDefinitionMemberEnumConstant} for the given persistent name.
+	 *
+	 * @param name the persistent enum constant name; must not be {@code null}.
+	 *
+	 * @return a new definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberEnumConstant New(
 		final String name
 	)
