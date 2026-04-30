@@ -14,23 +14,11 @@ package org.eclipse.serializer.collections.lazy;
  * #L%
  */
 
-import java.util.AbstractSet;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.function.Consumer;
+import org.eclipse.serializer.branching.*;
+import org.eclipse.serializer.reference.*;
 
-import org.eclipse.serializer.branching.ThrowBreak;
-import org.eclipse.serializer.reference.ControlledLazyReference;
-import org.eclipse.serializer.reference.Lazy;
-import org.eclipse.serializer.reference.LazyClearController;
-import org.eclipse.serializer.reference.ObjectSwizzling;
+import java.util.*;
+import java.util.function.*;
 
 
 /**
@@ -101,7 +89,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 	 * The desired maximum segment size is not a hard limit. The map may exceed that
 	 * limit.
 	 * 
-	 * @param maxSegmentSize maximum desired segment size, must be non negative.
+	 * @param maxSegmentSize maximum desired segment size, must be non-negative.
 	 */
 	public LazyHashMap(final int maxSegmentSize)
 	{
@@ -121,7 +109,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 	 * The desired maximum segment size is not a hard limit. The map may exceed that
 	 * limit.
 	 * 
-	 * @param maxSegmentSize maximum desired segment size, must be non negative.
+	 * @param maxSegmentSize maximum desired segment size, must be non-negative.
 	 * @param lazySegmentUnloader LazySegmentUnloader instance
 	 */
 	public LazyHashMap(final int maxSegmentSize, final LazySegmentUnloader lazySegmentUnloader)
@@ -196,7 +184,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 	 */
 	protected int hash(final Object key)
 	{
-		int h;
+		final int h;
 		return key == null ? 0 : (h = key.hashCode()) ^ h >>> 16;
 	}
 		
@@ -463,9 +451,18 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 	@Override
 	public void clear()
 	{
+		this.modCount++;
+		for(final LazyHashMap<K, V>.Segment<Entry<K, V>> segment : this.segments)
+		{
+			final LazyHashMapSegmentEntryList<K, V> data;
+			if((data = segment.data.peek()) != null)
+			{
+				data.clear();
+			}
+			this.unloader.remove(segment);
+		}
 		this.segments.clear();
 		this.size = 0;
-		this.modCount++;
 	}
 
 	@Override
@@ -1522,7 +1519,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 				final int dist_hi = sIndex.segmentStartIndex + sIndex.segmentSize - mid;
 
 				// put midSegment to left or right?
-				int splitIndex;
+				final int splitIndex;
 				if (dist_lo < dist_hi)
 				{
 					splitIndex = sIndex.segmentStartIndex;
@@ -1637,7 +1634,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 				final int dist_hi = sIndex.segmentStartIndex + sIndex.segmentSize - mid;
 
 				// put midSegment to left or right?
-				int splitIndex;
+				final int splitIndex;
 				if (dist_lo < dist_hi)
 				{
 					splitIndex = sIndex.segmentStartIndex;
@@ -1752,7 +1749,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 				final int dist_hi = sIndex.segmentStartIndex + sIndex.segmentSize - mid;
 
 				// put midSegment to left or right?
-				int splitIndex;
+				final int splitIndex;
 				if (dist_lo < dist_hi)
 				{
 					splitIndex = sIndex.segmentStartIndex;
