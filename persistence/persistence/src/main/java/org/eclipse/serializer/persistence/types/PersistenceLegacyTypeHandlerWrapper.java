@@ -21,12 +21,41 @@ import java.util.function.Consumer;
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeNotPersistable;
 
+/**
+ * The simplest kind of {@link PersistenceLegacyTypeHandler}: a thin wrapper around a current
+ * {@link PersistenceTypeHandler} that forwards every read operation while reporting the <i>legacy</i>
+ * type definition through the dictionary-relevant accessors (typeId, members, etc.) inherited from
+ * {@link PersistenceLegacyTypeHandler.Abstract}.
+ * <p>
+ * Used when the legacy and current types are structurally identical and only metadata differs
+ * (e.g. a class rename) &mdash; no field translation is needed, the current handler already knows how
+ * to read the persisted bytes correctly.
+ * <p>
+ * <b>Wrapper completeness.</b> Every default method on {@link PersistenceTypeHandler} that is not
+ * overridden here would otherwise inherit its parent default and thereby change behavior; the
+ * wrapper therefore explicitly forwards <i>every</i> default method (e.g.
+ * {@link #membersInDeclaredOrder()}, {@link #storingMembers()}, the viability guards, the enum
+ * helpers) to the wrapped handler.
+ *
+ * @param <D> the data target type.
+ * @param <T> the runtime type.
+ */
 public class PersistenceLegacyTypeHandlerWrapper<D, T> extends PersistenceLegacyTypeHandler.Abstract<D, T>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
 	///////////////////
-	
+
+	/**
+	 * Creates a new {@link PersistenceLegacyTypeHandlerWrapper}.
+	 *
+	 * @param <D>                  the data target type.
+	 * @param <T>                  the runtime type.
+	 * @param legacyTypeDefinition the bound legacy type definition.
+	 * @param currentTypeHandler   the current handler to forward to.
+	 *
+	 * @return a new wrapper.
+	 */
 	public static <D, T> PersistenceLegacyTypeHandler<D, T> New(
 		final PersistenceTypeDefinition    legacyTypeDefinition,
 		final PersistenceTypeHandler<D, T> currentTypeHandler

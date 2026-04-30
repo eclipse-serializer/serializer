@@ -16,13 +16,42 @@ package org.eclipse.serializer.persistence.types;
 
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * Specialized {@link PersistenceLegacyTypeHandlerWrapper} for legacy <b>enum</b> types whose constants
+ * have been added, removed, or reordered relative to the current type.
+ * <p>
+ * Overrides {@link #create} to consult the {@code ordinalMapping} array (built by
+ * {@link PersistenceLegacyTypeHandlerCreator.Abstract#deriveEnumOrdinalMapping}) instead of the
+ * forwarded current handler's {@code create} &mdash; the persisted ordinal is translated to the
+ * current ordinal before the constant is resolved on the runtime enum class. A {@code null} entry in
+ * the mapping signals an intentionally deleted constant; in that case loading yields {@code null}.
+ * <p>
+ * Storing remains forbidden as for any legacy handler.
+ *
+ * @param <D> the data target type.
+ * @param <T> the enum type.
+ *
+ * @see PersistenceLegacyTypeHandler#resolveEnumConstant
+ */
 public class PersistenceLegacyTypeHandlerWrapperEnum<D, T>
 extends PersistenceLegacyTypeHandlerWrapper<D, T>
 {
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
 	///////////////////
-	
+
+	/**
+	 * Creates a new {@link PersistenceLegacyTypeHandlerWrapperEnum}.
+	 *
+	 * @param <D>                  the data target type.
+	 * @param <T>                  the enum type.
+	 * @param legacyTypeDefinition the bound legacy type definition.
+	 * @param currentTypeHandler   the current enum handler.
+	 * @param ordinalMapping       legacy-ordinal-to-current-ordinal map; {@code null} entries mean
+	 *                             "constant deleted".
+	 *
+	 * @return a new wrapper.
+	 */
 	public static <D, T> PersistenceLegacyTypeHandlerWrapperEnum<D, T> New(
 		final PersistenceTypeDefinition    legacyTypeDefinition,
 		final PersistenceTypeHandler<D, T> currentTypeHandler  ,

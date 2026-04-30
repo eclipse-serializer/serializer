@@ -26,7 +26,21 @@ import org.eclipse.serializer.util.similarity.MultiMatch;
 import org.eclipse.serializer.util.similarity.Similarity;
 
 
-//@FunctionalInterface - well, lol.
+/**
+ * Pluggable hook that turns the raw inputs of legacy-to-current member mapping (explicit refactoring
+ * mappings, explicit new members, and the {@link MultiMatch} of similarity-matched remaining members)
+ * into a finalized {@link PersistenceLegacyTypeMappingResult}.
+ * <p>
+ * Override {@link #createMappingResult} to interpose validation, user prompts, modification, logging,
+ * or persistence on top of the default result-construction logic. The default delegates to the static
+ * {@link #createLegacyTypeMappingResult} which performs the canonical bookkeeping (combining the
+ * three input groups into the four output collections).
+ *
+ * @param <D> the data target type.
+ *
+ * @see PersistenceLegacyTypeMapper
+ * @see PersistenceLegacyTypeMappingResult
+ */
 public interface PersistenceLegacyTypeMappingResultor<D>
 {
 	/**
@@ -39,7 +53,7 @@ public interface PersistenceLegacyTypeMappingResultor<D>
 	 * <li>persisting</li>
 	 * </ul>
 	 * ... the created mapping.
-	 * 
+	 *
 	 * @param <T> the handled type
 	 * @param legacyTypeDefinition the type definition
 	 * @param currentTypeHandler the type handler
@@ -47,7 +61,7 @@ public interface PersistenceLegacyTypeMappingResultor<D>
 	 * @param explicitNewMembers given explicit new members
 	 * @param matchedMembers given matched members
 	 * @return the calculated result
-	 * 
+	 *
 	 */
 	public default <T> PersistenceLegacyTypeMappingResult<D, T> createMappingResult(
 		final PersistenceTypeDefinition                                                     legacyTypeDefinition,
@@ -68,6 +82,23 @@ public interface PersistenceLegacyTypeMappingResultor<D>
 	
 	
 	
+	/**
+	 * Static workhorse used by the default {@link #createMappingResult} implementation: combines the
+	 * three input groups (explicit mappings, explicit new members, similarity-matched members) into
+	 * the four output collections expected by {@link PersistenceLegacyTypeMappingResult}, then
+	 * constructs the result.
+	 *
+	 * @param <D>                  the data target type.
+	 * @param <T>                  the runtime type.
+	 * @param legacyTypeDefinition the legacy type definition.
+	 * @param currentTypeHandler   the current handler.
+	 * @param explicitMappings     legacy-to-current pairs from the refactoring mapping.
+	 * @param explicitNewMembers   current members marked new in the refactoring mapping.
+	 * @param matchedMembers       similarity-matched remaining members (may be {@code null} if all
+	 *                             members were explicitly mapped or one side has no remaining members).
+	 *
+	 * @return the constructed mapping result.
+	 */
 	public static <D, T> PersistenceLegacyTypeMappingResult<D, T> createLegacyTypeMappingResult(
 		final PersistenceTypeDefinition                                                     legacyTypeDefinition,
 		final PersistenceTypeHandler<D, T>                                                  currentTypeHandler  ,

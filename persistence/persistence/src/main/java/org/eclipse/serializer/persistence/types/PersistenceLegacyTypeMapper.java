@@ -31,49 +31,127 @@ import org.eclipse.serializer.util.similarity.MultiMatcher;
 import org.eclipse.serializer.util.similarity.Similarity;
 import org.eclipse.serializer.util.similarity.Similator;
 
+/**
+ * Top-level orchestrator that turns "I have an outdated {@link PersistenceTypeDefinition} from the
+ * dictionary and a current {@link PersistenceTypeHandler}" into a working
+ * {@link PersistenceLegacyTypeHandler}.
+ * <p>
+ * The {@link Default} implementation walks a fixed precedence chain in
+ * {@link #ensureLegacyTypeHandler}:
+ * <ol>
+ * <li><b>Supplier</b> &mdash; if the current handler implements
+ *     {@link PersistenceLegacyTypeHandlerSupplier}, its supplied legacy handler is used after
+ *     structural validation.</li>
+ * <li><b>Custom by typeId</b> &mdash; a custom legacy handler matching the legacy typeId in the
+ *     {@link PersistenceCustomTypeHandlerRegistry} is preferred (and validated against the legacy
+ *     definition's structure).</li>
+ * <li><b>Custom by structure</b> &mdash; otherwise a custom legacy handler matching only by structure
+ *     is searched.</li>
+ * <li><b>Synthesized</b> &mdash; finally, a legacy handler is built from scratch by:
+ *     applying explicit refactoring mappings, similarity-matching the remaining unmapped members via
+ *     a {@link MultiMatcher}, bundling everything into a {@link PersistenceLegacyTypeMappingResult}
+ *     via the configured {@link PersistenceLegacyTypeMappingResultor}, and creating the actual
+ *     handler via the {@link PersistenceLegacyTypeHandlerCreator}.</li>
+ * </ol>
+ * <p>
+ * <b>Similarity model.</b> The similarity score uses {@link Float} type-similarity for non-name parts
+ * and a member-matching {@link Similator} for member matching. An {@code explicit} match
+ * (refactoring-mapping derived) carries the synthetic similarity {@code 2.0}, signalling
+ * "stronger than any heuristic match" so it always wins.
+ *
+ * @param <D> the data target type.
+ *
+ * @see PersistenceLegacyTypeHandler
+ * @see PersistenceLegacyTypeMappingResult
+ * @see PersistenceLegacyTypeHandlerCreator
+ */
 public interface PersistenceLegacyTypeMapper<D>
 {
+	/**
+	 * Returns a legacy handler that bridges {@code legacyTypeDefinition}'s persisted form onto
+	 * {@code currentTypeHandler}'s runtime type. See the class-level docs for the resolution chain.
+	 *
+	 * @param <T>                  the runtime type.
+	 * @param legacyTypeDefinition the legacy type definition from the dictionary.
+	 * @param currentTypeHandler   the current handler the legacy data should be re-bound to.
+	 *
+	 * @return a legacy handler.
+	 */
 	public <T> PersistenceLegacyTypeHandler<D, T> ensureLegacyTypeHandler(
 		PersistenceTypeDefinition    legacyTypeDefinition,
 		PersistenceTypeHandler<D, T> currentTypeHandler
 	);
-	
-	
-	
+
+
+
+	/**
+	 * Default constants used when rendering legacy-mapping diagnostics.
+	 */
 	public interface Defaults
 	{
+		/**
+		 * The synthetic similarity score that flags a match as resulting from an explicit refactoring
+		 * mapping rather than from heuristic similarity.
+		 *
+		 * @return {@code 2.0} (intentionally above any heuristic value).
+		 */
 		public static double defaultExplicitMappingSimilarity()
 		{
 			// to indicate "super similarity", something beyond a similiary match: an explicit mapping.
 			return 2.0;
 		}
-		
+
+		/**
+		 * @return the base character width used to format a similarity-token cell in diagnostic
+		 *         output (3 characters for {@code -...->} plus 3 for the embedded number / keyword).
+		 */
 		public static int defaultMappingTokenBaseLength()
 		{
 			// The 3 characters "-"..."->" are mapping indicators. The special cases below don't have/need them.
 			return 6;
 		}
-		
+
+		/**
+		 * @return the diagnostic token used for an explicitly mapped member ({@code "mapped"},
+		 *         rendered as {@code "-mapped->"}).
+		 */
 		public static String defaultExplicitMappingString()
 		{
 			// yields "-mapped->" (9 characters)
 			return "mapped";
 		}
-		
+
+		/**
+		 * @return the diagnostic token used for a member that exists in the current type but not in
+		 *         the legacy type ({@code " NEW    >"}).
+		 */
 		public static String defaultNewMemberString()
 		{
 			// yields " NEW    >" (9 characters)
 			return " NEW    >";
 		}
-		
+
+		/**
+		 * @return the diagnostic token used for a legacy member that no longer has a current
+		 *         counterpart ({@code " REMOVED "}).
+		 */
 		public static String defaultDiscardedMemberString()
 		{
 			// yields " REMOVED " (9 characters)
 			return " REMOVED ";
 		}
-		
+
 	}
-	
+
+	/**
+	 * Renders a {@link Similarity} as a textual cell for diagnostic output. Explicit-mapping matches
+	 * are rendered with {@link Defaults#defaultExplicitMappingString()}, all others via the default
+	 * similarity formatter.
+	 *
+	 * @param match the match to render.
+	 *
+	 * @return the textual cell.
+	 */
 	public static String similarityToString(final Similarity<PersistenceTypeDefinitionMember> match)
 	{
 		return match.similarity() == Defaults.defaultExplicitMappingSimilarity()
@@ -81,7 +159,16 @@ public interface PersistenceLegacyTypeMapper<D>
 			: MultiMatchAssembler.Defaults.defaultSimilarityFormatter().format(match.similarity())
 		;
 	}
-	
+
+	/**
+	 * Builds an explicit-mapping {@link Similarity} between the passed source and target members,
+	 * carrying the synthetic similarity {@link Defaults#defaultExplicitMappingSimilarity()}.
+	 *
+	 * @param sourceMember the legacy member.
+	 * @param targetMember the current member it maps to.
+	 *
+	 * @return an explicit-mapping similarity.
+	 */
 	public static Similarity<PersistenceTypeDefinitionMember> ExplicitMatch(
 		final PersistenceTypeDefinitionMember sourceMember,
 		final PersistenceTypeDefinitionMember targetMember
@@ -95,6 +182,23 @@ public interface PersistenceLegacyTypeMapper<D>
 	}
 	
 	
+	/**
+	 * Creates the default {@link PersistenceLegacyTypeMapper}.
+	 *
+	 * @param <D>                             the data target type.
+	 * @param typeDescriptionResolverProvider provides the resolver for refactoring rename lookups.
+	 * @param typeSimilarity                  pre-computed type similarities used by the member
+	 *                                        similator.
+	 * @param customTypeHandlerRegistry       searched for hand-written legacy handlers before
+	 *                                        synthesis.
+	 * @param memberMatchingProvider          supplies the equalator / similator / validator used by
+	 *                                        the {@link MultiMatcher}.
+	 * @param resultor                        bundles the final mapping into a result, possibly with
+	 *                                        user callbacks / logging.
+	 * @param legacyTypeHandlerCreator        synthesizes the actual handler from the result.
+	 *
+	 * @return a new mapper.
+	 */
 	public static <D> PersistenceLegacyTypeMapper<D> New(
 		final PersistenceTypeDescriptionResolverProvider  typeDescriptionResolverProvider,
 		final TypeMappingLookup<Float>                    typeSimilarity             ,
