@@ -21,34 +21,114 @@ import java.lang.reflect.Field;
 import org.eclipse.serializer.collections.XUtilsCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 
+/**
+ * Visitor that lifts a {@link PersistenceTypeDescriptionMember} into its runtime-bound
+ * {@link PersistenceTypeDefinitionMember} counterpart.
+ * <p>
+ * The visitor is the per-member half of dictionary-to-runtime resolution and is invoked from
+ * {@link PersistenceTypeDescriptionMember#createDefinitionMember(PersistenceTypeDefinitionMemberCreator)}.
+ * Each overload here handles one description-member flavor and produces the matching definition flavor.
+ * <p>
+ * The {@link Default} implementation additionally consults a {@link PersistenceTypeDescriptionResolver}
+ * and a list of latest-typeId dictionary entries to apply renames before binding to the runtime: for a
+ * reflective field this means resolving the current declaring class via the refactoring mapping and
+ * looking the {@link java.lang.reflect.Field} up there, falling back to {@code null} if either the
+ * declaring class or the field name can no longer be resolved. If the dictionary's declaring-type name
+ * does not match the current runtime declaring-type name (i.e. the declaring class was renamed and a
+ * new class with the old name exists), the field is intentionally left unresolved &mdash; binding the
+ * legacy member to a coincidentally same-named field on a different class would be a logical error.
+ *
+ * @see PersistenceTypeDescriptionMember#createDefinitionMember(PersistenceTypeDefinitionMemberCreator)
+ * @see PersistenceTypeDescriptionResolver
+ */
 public interface PersistenceTypeDefinitionMemberCreator
 {
+	/**
+	 * Lifts a {@linkplain PersistenceTypeDescriptionMemberPrimitiveDefinition primitive bit-layout entry}
+	 * into its definition counterpart.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return the runtime-bound definition member.
+	 */
 	public PersistenceTypeDefinitionMemberPrimitiveDefinition createDefinitionMember(
 		PersistenceTypeDescriptionMemberPrimitiveDefinition description
 	);
-	
+
+	/**
+	 * Lifts an {@linkplain PersistenceTypeDescriptionMemberEnumConstant enum constant entry} into its
+	 * definition counterpart.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return the runtime-bound definition member.
+	 */
 	public PersistenceTypeDefinitionMemberEnumConstant createDefinitionMember(
 		PersistenceTypeDescriptionMemberEnumConstant description
 	);
-	
+
+	/**
+	 * Lifts a {@linkplain PersistenceTypeDescriptionMemberFieldReflective reflective field} into its
+	 * definition counterpart, applying refactoring-mapping renames when resolving the runtime
+	 * declaring class and {@link java.lang.reflect.Field}.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return the runtime-bound definition member.
+	 */
 	public PersistenceTypeDefinitionMemberFieldReflective createDefinitionMember(
 		PersistenceTypeDescriptionMemberFieldReflective description
 	);
-	
+
+	/**
+	 * Lifts a {@linkplain PersistenceTypeDescriptionMemberFieldGenericSimple simple generic field} into
+	 * its definition counterpart, attempting to resolve the runtime type for diagnostic purposes.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return the runtime-bound definition member.
+	 */
 	public PersistenceTypeDefinitionMemberFieldGenericSimple createDefinitionMember(
 		PersistenceTypeDescriptionMemberFieldGenericSimple description
 	);
-	
+
+	/**
+	 * Lifts a {@linkplain PersistenceTypeDescriptionMemberFieldGenericVariableLength variable-length
+	 * generic field} into its definition counterpart.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return the runtime-bound definition member.
+	 */
 	public PersistenceTypeDefinitionMemberFieldGenericVariableLength createDefinitionMember(
 		PersistenceTypeDescriptionMemberFieldGenericVariableLength description
 	);
-	
+
+	/**
+	 * Lifts a {@linkplain PersistenceTypeDescriptionMemberFieldGenericComplex complex generic field} into
+	 * its definition counterpart.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return the runtime-bound definition member.
+	 */
 	public PersistenceTypeDefinitionMemberFieldGenericComplex createDefinitionMember(
 		PersistenceTypeDescriptionMemberFieldGenericComplex description
 	);
-	
-	
-	
+
+
+
+	/**
+	 * Creates the default member creator.
+	 *
+	 * @param ascendingOrderTypeIdEntries dictionary entries ordered by ascending typeId. Used to find
+	 *                                    the latest entry for a given source-type name when applying
+	 *                                    refactoring renames.
+	 * @param resolver                    the resolver consulted for refactoring mappings and class
+	 *                                    loading; must not be {@code null}.
+	 *
+	 * @return a new {@link PersistenceTypeDefinitionMemberCreator}.
+	 */
 	public static PersistenceTypeDefinitionMemberCreator.Default New(
 		final XGettingSequence<? extends PersistenceTypeDescription> ascendingOrderTypeIdEntries,
 		final PersistenceTypeDescriptionResolver                         resolver

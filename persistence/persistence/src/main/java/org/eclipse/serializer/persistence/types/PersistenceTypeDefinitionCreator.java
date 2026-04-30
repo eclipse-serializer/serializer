@@ -16,9 +16,31 @@ package org.eclipse.serializer.persistence.types;
 
 import org.eclipse.serializer.collections.types.XGettingEnum;
 
+/**
+ * Factory for {@link PersistenceTypeDefinition} instances.
+ * <p>
+ * The indirection over {@link PersistenceTypeDefinition#New} exists so that foundation configuration
+ * can swap the concrete definition class &mdash; e.g. for instrumentation, alternative caching, or
+ * test doubles &mdash; without callers needing to know about it. The default implementation simply
+ * delegates to the standard factory.
+ *
+ * @see PersistenceTypeDefinition
+ */
 @FunctionalInterface
 public interface PersistenceTypeDefinitionCreator
 {
+	/**
+	 * Creates a new {@link PersistenceTypeDefinition} from the passed attributes.
+	 *
+	 * @param typeId          the type id.
+	 * @param typeName        the dictionary-stable type name.
+	 * @param runtimeTypeName the current runtime type name; may be {@code null}.
+	 * @param runtimeType     the runtime {@link Class}; may be {@code null} if no runtime counterpart.
+	 * @param allMembers      the full member sequence in dictionary order.
+	 * @param instanceMembers the subset of {@code allMembers} that contributes to a persisted instance.
+	 *
+	 * @return a new {@link PersistenceTypeDefinition}.
+	 */
 	public PersistenceTypeDefinition createTypeDefinition(
 		long                                                    typeId         ,
 		String                                                  typeName       ,
@@ -27,14 +49,22 @@ public interface PersistenceTypeDefinitionCreator
 		XGettingEnum<? extends PersistenceTypeDefinitionMember> allMembers     ,
 		XGettingEnum<? extends PersistenceTypeDefinitionMember> instanceMembers
 	);
-	
-	
-	
+
+
+
+	/**
+	 * Creates the default creator that delegates to {@link PersistenceTypeDefinition#New}.
+	 *
+	 * @return a new default {@link PersistenceTypeDefinitionCreator}.
+	 */
 	public static PersistenceTypeDefinitionCreator.Default New()
 	{
 		return new PersistenceTypeDefinitionCreator.Default();
 	}
-			
+
+	/**
+	 * Default creator that delegates straight to {@link PersistenceTypeDefinition#New}.
+	 */
 	public final class Default implements PersistenceTypeDefinitionCreator
 	{
 		///////////////////////////////////////////////////////////////////////////

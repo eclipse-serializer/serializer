@@ -18,6 +18,11 @@ import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.math.XMath.positive;
 
+/**
+ * Runtime-bound counterpart to {@link PersistenceTypeDescriptionMemberFieldGenericSimple}. Carries an
+ * optional {@link #type()} binding (for primitives, the primitive class; for references, the referenced
+ * type if resolvable) for diagnostic and validation purposes.
+ */
 public interface PersistenceTypeDefinitionMemberFieldGenericSimple
 extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionMemberFieldGenericSimple
 {
@@ -26,12 +31,25 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 	{
 		return this.copyForName(this.qualifier(), name);
 	}
-	
+
 	@Override
 	public PersistenceTypeDefinitionMemberFieldGenericSimple copyForName(String qualifier, String name);
-	
-	
-	
+
+
+
+	/**
+	 * Creates a runtime-bound simple generic field definition.
+	 *
+	 * @param typeName                the textual type name.
+	 * @param qualifier               the optional qualifier; may be {@code null}.
+	 * @param name                    the simple name.
+	 * @param type                    the runtime type, or {@code null} if not resolvable.
+	 * @param isReference             whether the field holds a reference (otherwise primitive).
+	 * @param persistentMinimumLength the persistent length lower bound; must be positive.
+	 * @param persistentMaximumLength the persistent length upper bound; must be positive.
+	 *
+	 * @return a new definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericSimple New(
 		final String   typeName               ,
 		final String   qualifier              ,

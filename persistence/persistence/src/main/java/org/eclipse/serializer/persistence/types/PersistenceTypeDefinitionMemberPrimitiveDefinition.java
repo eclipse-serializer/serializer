@@ -20,6 +20,16 @@ import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 
 
+/**
+ * Runtime-bound counterpart to {@link PersistenceTypeDescriptionMemberPrimitiveDefinition}.
+ * <p>
+ * Primitive definitions describe the bit-layout of a primitive type at the type level &mdash; the
+ * Java primitive class itself is recorded on the owning {@link PersistenceTypeDefinition}, not on
+ * this member &mdash; so {@link #type()} always returns {@code null}. The {@link Default} inner class
+ * additionally provides the canonical textual encodings used in the dictionary
+ * ({@link Default#assemblePrimitiveDefinition(Class)}) and the inverse parser
+ * ({@link Default#resolvePrimitiveDefinition(String)}).
+ */
 public interface PersistenceTypeDefinitionMemberPrimitiveDefinition
 extends PersistenceTypeDescriptionMemberPrimitiveDefinition, PersistenceTypeDefinitionMember
 {
@@ -28,8 +38,16 @@ extends PersistenceTypeDescriptionMemberPrimitiveDefinition, PersistenceTypeDefi
 	{
 		return this.primitiveDefinition();
 	}
-	
-	
+
+
+	/**
+	 * Lifts an existing description into a definition. Verifies that the description's minimum and
+	 * maximum persistent lengths agree (primitive definitions are fixed-length).
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return a new definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberPrimitiveDefinition New(
 		final PersistenceTypeDescriptionMemberPrimitiveDefinition description
 	)
@@ -45,6 +63,15 @@ extends PersistenceTypeDescriptionMemberPrimitiveDefinition, PersistenceTypeDefi
 		);
 	}
 	
+	/**
+	 * Creates a definition member for the passed Java primitive type. The textual primitive definition
+	 * is produced by {@link Default#assemblePrimitiveDefinition(Class)}.
+	 *
+	 * @param primitiveType    the primitive {@link Class} (e.g. {@code int.class}).
+	 * @param persistentLength the fixed persistent length.
+	 *
+	 * @return a new definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberPrimitiveDefinition New(
 		final Class<?> primitiveType   ,
 		final long     persistentLength
@@ -94,6 +121,16 @@ extends PersistenceTypeDescriptionMemberPrimitiveDefinition, PersistenceTypeDefi
 		// static methods //
 		///////////////////
 
+		/**
+		 * Appends the canonical textual primitive definition for the passed primitive class to
+		 * {@code vc}, e.g. {@code "32 bit integer signed"} for {@code int.class}. Used during type
+		 * dictionary assembly. Throws {@link IllegalArgumentException} for non-primitive classes.
+		 *
+		 * @param vc            the {@link VarString} to append to.
+		 * @param primitiveType the primitive class.
+		 *
+		 * @return the same {@link VarString}, for fluent chaining.
+		 */
 		public static final VarString assemblePrimitiveDefinition(final VarString vc, final Class<?> primitiveType)
 		{
 			if(primitiveType == byte.class)
@@ -135,11 +172,29 @@ extends PersistenceTypeDescriptionMemberPrimitiveDefinition, PersistenceTypeDefi
 			throw new IllegalArgumentException();
 		}
 		
+		/**
+		 * Returns the canonical textual primitive definition for the passed primitive class as a
+		 * {@link String}. See {@link #assemblePrimitiveDefinition(VarString, Class)}.
+		 *
+		 * @param primitiveType the primitive class.
+		 *
+		 * @return the canonical textual definition.
+		 */
 		public static final String assemblePrimitiveDefinition(final Class<?> primitiveType)
 		{
 			return assemblePrimitiveDefinition(VarString.New(), primitiveType).toString();
 		}
 
+		/**
+		 * Inverse of {@link #assemblePrimitiveDefinition(Class)}: parses a canonical textual primitive
+		 * definition back to its primitive {@link Class}. Whitespace around the input is trimmed.
+		 *
+		 * @param primitiveDefinition the textual definition.
+		 *
+		 * @return the matching primitive class.
+		 *
+		 * @throws PersistenceException if the input is not a known canonical primitive definition.
+		 */
 		public static final Class<?> resolvePrimitiveDefinition(final String primitiveDefinition)
 		{
 			// trim string just in case, will be very fast / won't create a new instance if unnecessary

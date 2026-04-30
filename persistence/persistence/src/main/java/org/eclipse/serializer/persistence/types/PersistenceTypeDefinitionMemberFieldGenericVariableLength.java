@@ -18,6 +18,12 @@ import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 import static org.eclipse.serializer.math.XMath.positive;
 
+/**
+ * Runtime-bound counterpart to {@link PersistenceTypeDescriptionMemberFieldGenericVariableLength}.
+ * Variable-length generic fields have no Java {@link Class} counterpart, so {@link #type()} always
+ * returns {@code null}. Two convenience factory shortcuts &mdash; {@link #Bytes} and {@link #Chars}
+ * &mdash; produce the typical {@code [byte]} and {@code [char]} entries used by binary handlers.
+ */
 public interface PersistenceTypeDefinitionMemberFieldGenericVariableLength
 extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionMemberFieldGenericVariableLength
 {
@@ -26,12 +32,19 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 	{
 		return this.copyForName(this.qualifier(), name);
 	}
-	
+
 	@Override
 	public PersistenceTypeDefinitionMemberFieldGenericVariableLength copyForName(String qualifier, String name);
-	
-	
 
+
+
+	/**
+	 * Lifts an existing description into a definition by re-using its attributes verbatim.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return a new definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericVariableLength.Default New(
 		final PersistenceTypeDescriptionMemberFieldGenericVariableLength description
 	)
@@ -44,6 +57,16 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 		);
 	}
 	
+	/**
+	 * Convenience overload of {@link #New(String, String, String, long, long)} without qualifier.
+	 *
+	 * @param typeName                the textual type name.
+	 * @param name                    the simple name.
+	 * @param persistentMinimumLength the persistent length lower bound; must be positive.
+	 * @param persistentMaximumLength the persistent length upper bound; must be positive.
+	 *
+	 * @return a new definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericVariableLength.Default New(
 		final String typeName               ,
 		final String name                   ,
@@ -53,7 +76,18 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 	{
 		return New(typeName, null, name, persistentMinimumLength, persistentMaximumLength);
 	}
-	
+
+	/**
+	 * Creates a runtime-bound variable-length generic field definition (non-reference, non-primitive).
+	 *
+	 * @param typeName                the textual type name.
+	 * @param qualifier               the optional qualifier; may be {@code null}.
+	 * @param name                    the simple name.
+	 * @param persistentMinimumLength the persistent length lower bound; must be positive.
+	 * @param persistentMaximumLength the persistent length upper bound; must be positive.
+	 *
+	 * @return a new definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericVariableLength.Default New(
 		final String typeName               ,
 		final String qualifier              ,
@@ -72,6 +106,16 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 		);
 	}
 
+	/**
+	 * Shortcut for a {@code [byte]} variable-length entry without qualifier. See {@link #Bytes(String,
+	 * String, long, long)}.
+	 *
+	 * @param name                    the simple name.
+	 * @param persistentMinimumLength the persistent length lower bound; must be positive.
+	 * @param persistentMaximumLength the persistent length upper bound; must be positive.
+	 *
+	 * @return a new {@code [byte]} definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericVariableLength.Default Bytes(
 		final String name                   ,
 		final long   persistentMinimumLength,
@@ -85,7 +129,18 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 			persistentMaximumLength
 		);
 	}
-	
+
+	/**
+	 * Shortcut for a {@code [byte]} variable-length entry &mdash; sets {@code typeName} to
+	 * {@link PersistenceTypeDictionary.Symbols#TYPE_BYTES}.
+	 *
+	 * @param qualifier               the optional qualifier; may be {@code null}.
+	 * @param name                    the simple name.
+	 * @param persistentMinimumLength the persistent length lower bound; must be positive.
+	 * @param persistentMaximumLength the persistent length upper bound; must be positive.
+	 *
+	 * @return a new {@code [byte]} definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericVariableLength.Default Bytes(
 		final String qualifier              ,
 		final String name                   ,
@@ -102,6 +157,16 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 		);
 	}
 
+	/**
+	 * Shortcut for a {@code [char]} variable-length entry without qualifier. See {@link #Chars(String,
+	 * String, long, long)}.
+	 *
+	 * @param name                    the simple name.
+	 * @param persistentMinimumLength the persistent length lower bound; must be positive.
+	 * @param persistentMaximumLength the persistent length upper bound; must be positive.
+	 *
+	 * @return a new {@code [char]} definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericVariableLength.Default Chars(
 		final String name                   ,
 		final long   persistentMinimumLength,
@@ -110,7 +175,18 @@ extends PersistenceTypeDefinitionMemberFieldGeneric, PersistenceTypeDescriptionM
 	{
 		return Chars(null, name, persistentMinimumLength, persistentMaximumLength);
 	}
-	
+
+	/**
+	 * Shortcut for a {@code [char]} variable-length entry &mdash; sets {@code typeName} to
+	 * {@link PersistenceTypeDictionary.Symbols#TYPE_CHARS}.
+	 *
+	 * @param qualifier               the optional qualifier; may be {@code null}.
+	 * @param name                    the simple name.
+	 * @param persistentMinimumLength the persistent length lower bound; must be positive.
+	 * @param persistentMaximumLength the persistent length upper bound; must be positive.
+	 *
+	 * @return a new {@code [char]} definition member.
+	 */
 	public static PersistenceTypeDefinitionMemberFieldGenericVariableLength.Default Chars(
 		final String qualifier              ,
 		final String name                   ,
