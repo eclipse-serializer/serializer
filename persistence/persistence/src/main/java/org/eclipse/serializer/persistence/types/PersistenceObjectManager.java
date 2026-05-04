@@ -25,23 +25,89 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.Cloneable;
 
+/**
+ * Central object-id allocator: combines a {@link PersistenceObjectRegistry} with a
+ * {@link PersistenceObjectIdProvider} and orchestrates the multi-storer assignment protocol that lets
+ * concurrent storers agree on the id of a freshly encountered instance without committing it to the
+ * registry until the surrounding store actually succeeds.
+ * <p>
+ * Each in-flight storer attaches its own {@link PersistenceLocalObjectIdRegistry} via
+ * {@link #registerLocalRegistry(PersistenceLocalObjectIdRegistry)}. {@link #ensureObjectId} then walks the
+ * three-step lookup &mdash; global registry, peer local registries, fresh allocation &mdash; under the
+ * registry's monitor, so concurrent storers see consistent ids. On commit, the storer hands its accumulated
+ * entries back via {@link #mergeEntries(PersistenceLocalObjectIdRegistry)} and they are validated and
+ * folded into the global registry.
+ * <p>
+ * The {@link #Clone()} default produces a fully independent manager (cloning both the registry and the id
+ * provider), used by {@link PersistenceContextDispatcher.LocalObjectRegistration} to give each channel its
+ * own private id-assignment context.
+ *
+ * @param <D> the persistence data type passed through to the {@link PersistenceTypeHandler}.
+ *
+ * @see PersistenceObjectRegistry
+ * @see PersistenceObjectIdProvider
+ * @see PersistenceLocalObjectIdRegistry
+ * @see PersistenceTypeManager
+ */
 public interface PersistenceObjectManager<D>
 extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<PersistenceObjectManager<D>>
 {
+	/**
+	 * Returns the object id associated with {@code object}, allocating a new one if the instance is not
+	 * yet known. Convenience overload that uses a {@link PersistenceObjectIdRequestor#NoOp() no-op}
+	 * requestor and no preferred type handler.
+	 *
+	 * @param object the instance to look up or register.
+	 *
+	 * @return the (possibly newly assigned) object id.
+	 */
 	public long ensureObjectId(Object object);
-	
+
+	/**
+	 * Lazy-registration variant of {@link #ensureObjectId(Object)}: dispatches the
+	 * {@link PersistenceObjectIdRequestor#registerLazyOptional registerLazyOptional} hook only when the
+	 * instance is newly known, and the eager hook unconditionally. Use this from storers that should not
+	 * re-process already-stored instances.
+	 *
+	 * @param <T>               the instance type.
+	 * @param object            the instance to look up or register.
+	 * @param objectIdRequestor the requestor receiving the registration hooks.
+	 * @param optionalHandler   the type handler responsible for {@code object}, or {@code null} if not yet
+	 *                          known.
+	 *
+	 * @return the (possibly newly assigned) object id.
+	 */
 	public <T> long ensureObjectId(
 		T                               object           ,
 		PersistenceObjectIdRequestor<D> objectIdRequestor,
 		PersistenceTypeHandler<D, T>    optionalHandler
 	);
-	
+
+	/**
+	 * Eager-registration variant of {@link #ensureObjectId(Object)}: dispatches the
+	 * {@link PersistenceObjectIdRequestor#registerGuaranteed registerGuaranteed} hook unconditionally,
+	 * even when the instance is already globally known. Used by storers that must process every visited
+	 * instance regardless.
+	 *
+	 * @param <T>               the instance type.
+	 * @param object            the instance to look up or register.
+	 * @param objectIdRequestor the requestor receiving the registration hook.
+	 * @param optionalHandler   the type handler responsible for {@code object}, or {@code null} if not yet
+	 *                          known.
+	 *
+	 * @return the (possibly newly assigned) object id.
+	 */
 	public <T> long ensureObjectIdGuaranteedRegister(
 		T                               object           ,
 		PersistenceObjectIdRequestor<D> objectIdRequestor,
 		PersistenceTypeHandler<D, T>    optionalHandler
 	);
 
+	/**
+	 * Triggers consolidation of the underlying object registry &mdash; e.g. removing orphan entries whose
+	 * weak reference has been cleared. Delegates to {@link PersistenceObjectRegistry#consolidate()} under
+	 * the registry's monitor.
+	 */
 	public void consolidate();
 
 	@Override
@@ -49,7 +115,7 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 
 	@Override
 	public PersistenceObjectManager<D> updateCurrentObjectId(long currentObjectId);
-	
+
 	/**
 	 * Useful for {@link PersistenceContextDispatcher}.
 	 * @return A Clone of this instance as described in {@link Cloneable}.
@@ -59,14 +125,40 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 	{
 		return Cloneable.super.Clone();
 	}
-	
+
+	/**
+	 * Registers a per-storer {@link PersistenceLocalObjectIdRegistry} so subsequent
+	 * {@link #ensureObjectId} calls from peer storers can see (and reuse) the local id assignments.
+	 *
+	 * @param localRegistry the local registry to attach.
+	 *
+	 * @return {@code true} if the registry was newly attached, {@code false} if it was already attached.
+	 *
+	 * @throws PersistenceException if {@code localRegistry} does not declare this manager as its parent.
+	 */
 	public boolean registerLocalRegistry(PersistenceLocalObjectIdRegistry<D> localRegistry);
-	
+
+	/**
+	 * Folds the entries of {@code localRegistry} into the global registry on storer commit. Entries are
+	 * first validated against the registry and then registered.
+	 *
+	 * @param localRegistry the local registry whose entries to merge.
+	 *
+	 * @throws PersistenceException if {@code localRegistry} is not currently attached.
+	 */
 	public void mergeEntries(PersistenceLocalObjectIdRegistry<D> localRegistry);
 
 
-	
-	
+
+	/**
+	 * Creates a new {@link Default} manager combining {@code objectRegistry} and {@code oidProvider}.
+	 *
+	 * @param <D>            the persistence data type.
+	 * @param objectRegistry the object registry; must not be {@code null}.
+	 * @param oidProvider    the object id provider; must not be {@code null}.
+	 *
+	 * @return the newly created manager.
+	 */
 	public static <D> PersistenceObjectManager.Default<D> New(
 		final PersistenceObjectRegistry   objectRegistry,
 		final PersistenceObjectIdProvider oidProvider
@@ -78,6 +170,14 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 		);
 	}
 
+	/**
+	 * Default {@link PersistenceObjectManager}. Synchronizes every public method on the underlying
+	 * {@link PersistenceObjectRegistry} so concurrent storers serialize their id assignments consistently;
+	 * tracks attached {@link PersistenceLocalObjectIdRegistry} instances through weak references so a
+	 * forgotten storer does not pin its registry.
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public final class Default<D> implements PersistenceObjectManager<D>
 	{
 		///////////////////////////////////////////////////////////////////////////

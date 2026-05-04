@@ -20,6 +20,16 @@ import org.eclipse.serializer.collections.interfaces._longCollector;
 import org.eclipse.serializer.functional._longIterable;
 import org.eclipse.serializer.functional._longProcedure;
 
+/**
+ * Append-only set of object ids backed by a primitive {@code long[]}. The persistence layer accumulates the
+ * ids of instances that need to be loaded or stored into one of these and then iterates the result via
+ * {@link #iterate(_longProcedure)} once the collection phase is done.
+ * <p>
+ * Despite the name, the {@link Default} implementation does not actually deduplicate: it appends every
+ * accepted id to its backing array. Callers that need uniqueness must enforce it themselves.
+ *
+ * @see _longIterable
+ */
 public interface PersistenceIdSet extends _longIterable, Sized
 {
 	@Override
@@ -30,6 +40,10 @@ public interface PersistenceIdSet extends _longIterable, Sized
 
 
 
+	/**
+	 * Default {@link PersistenceIdSet} backed by a {@code long[]} that grows by powers of two when full.
+	 * Implements {@link _longCollector#accept(long)} for collector-style population. Not thread-safe.
+	 */
 	final class Default implements PersistenceIdSet, _longCollector
 	{
 		///////////////////////////////////////////////////////////////////////////

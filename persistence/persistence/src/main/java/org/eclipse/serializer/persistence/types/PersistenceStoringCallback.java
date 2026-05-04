@@ -15,7 +15,12 @@ package org.eclipse.serializer.persistence.types;
  */
 
 /**
- *  This interface defines storer callbacks that shoud not be exposed to the top level Storer API.
+ * Internal callback surface a storer offers to the surrounding persistence layer. Defined as a separate
+ * type from {@link Storer} so the methods stay out of the top-level public API: only the persistence
+ * layer should be able to trigger them.
+ *
+ * @see Storer
+ * @see PersistenceRoots
  */
 public interface PersistenceStoringCallback
 {

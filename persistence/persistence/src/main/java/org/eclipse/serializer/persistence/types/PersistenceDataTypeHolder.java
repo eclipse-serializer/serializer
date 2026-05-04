@@ -14,11 +14,29 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Carries the {@link Class} literal for the persistence data type {@code D} used by a foundation or
+ * subsystem. Foundations need this to bridge the gap between Java's erased generics and runtime decisions
+ * that depend on the concrete data type (e.g. byte[] vs. some structured payload type).
+ *
+ * @param <D> the persistence data type.
+ */
 public interface PersistenceDataTypeHolder<D>
 {
+	/**
+	 * The {@link Class} literal of the persistence data type {@code D}.
+	 *
+	 * @return the data type class.
+	 */
 	public Class<D> dataType();
-	
-	
+
+
+	/**
+	 * Default {@link PersistenceDataTypeHolder} that simply stores the supplied class literal and returns
+	 * it from {@link #dataType()}.
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public class Default<D> implements PersistenceDataTypeHolder<D>
 	{
 		///////////////////////////////////////////////////////////////////////////

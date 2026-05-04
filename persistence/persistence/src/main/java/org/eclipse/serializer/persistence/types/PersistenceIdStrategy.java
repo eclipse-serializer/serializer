@@ -16,10 +16,30 @@ package org.eclipse.serializer.persistence.types;
 
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * Combined object-id and type-id strategy: pairs a {@link PersistenceObjectIdStrategy} with a
+ * {@link PersistenceTypeIdStrategy} into the single artifact stored in a persisted id-strategy string.
+ * Defers every interface method to the corresponding sub-strategy, so callers can hand a
+ * {@link PersistenceIdStrategy} wherever either single-strategy interface is expected.
+ *
+ * @see PersistenceObjectIdStrategy
+ * @see PersistenceTypeIdStrategy
+ * @see PersistenceIdStrategyStringConverter
+ */
 public interface PersistenceIdStrategy extends PersistenceObjectIdStrategy, PersistenceTypeIdStrategy
 {
+	/**
+	 * The underlying object-id strategy.
+	 *
+	 * @return the object-id strategy.
+	 */
 	public PersistenceObjectIdStrategy objectIdStragegy();
-	
+
+	/**
+	 * The underlying type-id strategy.
+	 *
+	 * @return the type-id strategy.
+	 */
 	public PersistenceTypeIdStrategy typeIdStragegy();
 	
 	@Override
@@ -46,6 +66,15 @@ public interface PersistenceIdStrategy extends PersistenceObjectIdStrategy, Pers
 		return this.typeIdStragegy().createTypeIdProvider();
 	}
 				
+	/**
+	 * Creates a new {@link Default} combined strategy from the passed sub-strategies. Both must be
+	 * non-{@code null}.
+	 *
+	 * @param objectIdStrategy the object-id strategy.
+	 * @param typeIdStrategy   the type-id strategy.
+	 *
+	 * @return the newly created combined strategy.
+	 */
 	public static PersistenceIdStrategy New(
 		final PersistenceObjectIdStrategy objectIdStrategy,
 		final PersistenceTypeIdStrategy   typeIdStrategy
@@ -56,7 +85,11 @@ public interface PersistenceIdStrategy extends PersistenceObjectIdStrategy, Pers
 			notNull(typeIdStrategy)
 		);
 	}
-	
+
+	/**
+	 * Default {@link PersistenceIdStrategy}: stores both sub-strategies as final fields and exposes them
+	 * via the corresponding accessors.
+	 */
 	public class Default implements PersistenceIdStrategy
 	{
 		///////////////////////////////////////////////////////////////////////////
