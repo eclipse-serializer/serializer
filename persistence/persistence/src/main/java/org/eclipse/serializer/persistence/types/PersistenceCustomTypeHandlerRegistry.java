@@ -25,35 +25,131 @@ import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+/**
+ * Registry of user- and platform-supplied {@link PersistenceTypeHandler}s and
+ * {@link PersistenceLegacyTypeHandler}s. These are the handlers consulted before the generic reflection-
+ * based handler discovery kicks in: a custom registration wins over the auto-derived handler for the same
+ * type, allowing callers to override or replace the default serialization for selected types.
+ * <p>
+ * Live (current) handlers are stored by exact runtime {@link Class}; legacy handlers are stored as a flat
+ * list because the same type may have multiple historical structures, only one of which matches a given
+ * dictionary entry.
+ *
+ * @param <D> the persistence data type passed through to the handlers.
+ *
+ * @see PersistenceTypeHandler
+ * @see PersistenceLegacyTypeHandler
+ * @see PersistenceTypeHandlerIterable
+ */
 public interface PersistenceCustomTypeHandlerRegistry<D> extends PersistenceTypeHandlerIterable<D>
 {
+	/**
+	 * Registers the passed handler under its own {@link PersistenceTypeHandler#type()}. Existing
+	 * registrations for the same type are replaced (returning {@code false}); fresh registrations return
+	 * {@code true}.
+	 *
+	 * @param <T>         the handler's type.
+	 * @param typeHandler the handler to register.
+	 *
+	 * @return {@code true} if the registration is new, {@code false} if it replaced an existing one.
+	 */
 	public <T> boolean registerTypeHandler(PersistenceTypeHandler<D, T> typeHandler);
 
+	/**
+	 * Registers the passed handler under {@code type}, validating that the handler's declared entity type
+	 * is compatible with {@code type}. Useful when registering a handler bound to a super-type as the
+	 * handler for a more specific type.
+	 *
+	 * @param <T>         the registration type.
+	 * @param type        the type to register under.
+	 * @param typeHandler the handler to register.
+	 *
+	 * @return {@code true} if the registration is new, {@code false} if it replaced an existing one.
+	 */
 	public <T> boolean registerTypeHandler(Class<T> type, PersistenceTypeHandler<D, ? super T> typeHandler);
-	
+
+	/**
+	 * Registers the passed legacy handler. Legacy handlers are kept as a flat list because the same type
+	 * may have multiple historical structures.
+	 *
+	 * @param <T>               the handler's type.
+	 * @param legacyTypeHandler the legacy handler to register.
+	 *
+	 * @return {@code true} if the handler is a new entry.
+	 */
 	public <T> boolean registerLegacyTypeHandler(PersistenceLegacyTypeHandler<D, T> legacyTypeHandler);
-	
+
+	/**
+	 * Bulk variant of {@link #registerLegacyTypeHandler(PersistenceLegacyTypeHandler)}.
+	 *
+	 * @param legacyTypeHandlers the legacy handlers to register.
+	 *
+	 * @return this registry, for fluent chaining.
+	 */
 	public PersistenceCustomTypeHandlerRegistry<D> registerLegacyTypeHandlers(
 		XGettingCollection<? extends PersistenceLegacyTypeHandler<D, ?>> legacyTypeHandlers
 	);
 
+	/**
+	 * Bulk variant of {@link #registerTypeHandler(PersistenceTypeHandler)}.
+	 *
+	 * @param typeHandlers the handlers to register.
+	 *
+	 * @return this registry, for fluent chaining.
+	 */
 	public PersistenceCustomTypeHandlerRegistry<D> registerTypeHandlers(
 		XGettingCollection<? extends PersistenceTypeHandler<D, ?>> typeHandlers
 	);
-	
+
+	/**
+	 * Looks up the live handler registered for the exact runtime type {@code type}, returning {@code null}
+	 * if none is registered. Does not walk super-types &mdash; for super-type fallback see
+	 * {@link PersistenceAbstractTypeHandlerSearcher}.
+	 *
+	 * @param <T>  the searched type.
+	 * @param type the runtime type.
+	 *
+	 * @return the registered handler, or {@code null} if none.
+	 */
 	public <T> PersistenceTypeHandler<D, ? super T> lookupTypeHandler(Class<T> type);
-		
+
+	/**
+	 * The flat list of registered legacy handlers, in registration order.
+	 *
+	 * @return the registered legacy handlers.
+	 */
 	public XGettingEnum<PersistenceLegacyTypeHandler<D, ?>> legacyTypeHandlers();
 
+	/**
+	 * Whether a live handler is registered for the exact runtime type {@code type}.
+	 *
+	 * @param type the runtime type.
+	 *
+	 * @return {@code true} if a handler is registered for {@code type}.
+	 */
 	public boolean knowsType(Class<?> type);
-		
-	
-	
+
+
+
+	/**
+	 * Creates a new empty {@link Default} registry.
+	 *
+	 * @param <D> the persistence data type.
+	 *
+	 * @return the newly created registry.
+	 */
 	public static <D> PersistenceCustomTypeHandlerRegistry.Default<D> New()
 	{
 		return new PersistenceCustomTypeHandlerRegistry.Default<>();
 	}
 
+	/**
+	 * Default {@link PersistenceCustomTypeHandlerRegistry}: live handlers in a class-keyed hash table,
+	 * legacy handlers in a flat hash enum (instance equality, since legacy handlers may differ only by
+	 * the structural definition they carry). All public methods synchronize on the registry instance.
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public final class Default<D> implements PersistenceCustomTypeHandlerRegistry<D>
 	{
 		///////////////////////////////////////////////////////////////////////////

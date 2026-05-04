@@ -22,24 +22,85 @@ import java.lang.reflect.Field;
 
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * Walks a {@link Class}'s declared instance fields (including inherited ones) and partitions them into
+ * persistable, persister-special, and problematic buckets according to a configured pipeline of
+ * {@link PersistenceFieldEvaluator}s and a {@link PersistenceTypeEvaluator}. The result drives type-handler
+ * generation: only the persistable fields end up in the on-disk member sequence.
+ * <p>
+ * Three collection variants exist because three categories of types need distinct rules: regular entities,
+ * reflectively-handled collections, and enums (which must skip their compiler-synthesized fields).
+ *
+ * @see PersistenceTypeEvaluator
+ * @see PersistenceFieldEvaluator
+ */
 public interface PersistenceTypeAnalyzer
 {
+	/**
+	 * Whether the passed type is rejected by the configured {@link PersistenceTypeEvaluator} and thus
+	 * cannot be persisted.
+	 *
+	 * @param type the type to check.
+	 *
+	 * @return {@code true} if the type is not persistable.
+	 */
 	public boolean isUnpersistable(Class<?> type);
-	
+
+	/**
+	 * Walks the instance fields of an entity type and routes each field into one of the three passed
+	 * collections: persistable (the default bucket), persister-special (matching the persister field
+	 * evaluator), or problematic (matching the problematic-field evaluator). Inherited fields are included.
+	 *
+	 * @param <C>               the persistable-fields collection type, returned for fluent chaining.
+	 * @param type              the entity type to analyze.
+	 * @param persistableFields the destination for persistable fields.
+	 * @param persisterFields   the destination for persister-special fields.
+	 * @param problematicFields the destination for problematic fields.
+	 *
+	 * @return the {@code persistableFields} collection.
+	 */
 	public <C extends XEnum<Field>> C collectPersistableFieldsEntity(
 		Class<?>               type             ,
 		C                      persistableFields,
 		XEnum<Field> persisterFields  ,
 		XEnum<Field>     problematicFields
 	);
-	
+
+	/**
+	 * Variant of
+	 * {@link #collectPersistableFieldsEntity(Class, XEnum, XEnum, XEnum) collectPersistableFieldsEntity}
+	 * for reflectively-handled collection types: applies the additional reflective-collection field selector
+	 * to flag fields that violate the collection's expected layout as problematic.
+	 *
+	 * @param <C>               the persistable-fields collection type, returned for fluent chaining.
+	 * @param type              the collection type to analyze.
+	 * @param persistableFields the destination for persistable fields.
+	 * @param persisterFields   the destination for persister-special fields.
+	 * @param problematicFields the destination for problematic fields.
+	 *
+	 * @return the {@code persistableFields} collection.
+	 */
 	public <C extends XEnum<Field>> C collectPersistableFieldsCollection(
 		Class<?>               type             ,
 		C                      persistableFields,
 		XEnum<Field> persisterFields  ,
 		XEnum<Field>     problematicFields
 	);
-	
+
+	/**
+	 * Variant of
+	 * {@link #collectPersistableFieldsEntity(Class, XEnum, XEnum, XEnum) collectPersistableFieldsEntity}
+	 * for enum types: applies the enum field selector to flag fields that should not be part of an enum's
+	 * persistent layout (e.g. the compiler-synthesized {@code $VALUES} array) as problematic.
+	 *
+	 * @param <C>               the persistable-fields collection type, returned for fluent chaining.
+	 * @param type              the enum type to analyze.
+	 * @param persistableFields the destination for persistable fields.
+	 * @param persisterFields   the destination for persister-special fields.
+	 * @param problematicFields the destination for problematic fields.
+	 *
+	 * @return the {@code persistableFields} collection.
+	 */
 	public <C extends XEnum<Field>> C collectPersistableFieldsEnum(
 		Class<?>               type             ,
 		C                      persistableFields,
@@ -48,7 +109,21 @@ public interface PersistenceTypeAnalyzer
 	);
 
 
-	
+
+	/**
+	 * Creates a new {@link Default} analyzer wired up with the passed evaluators. None of the arguments may
+	 * be {@code null}.
+	 *
+	 * @param isPersistable                     decides per type whether instances can be persisted.
+	 * @param fieldSelectorPersistable          decides per field whether it is persistable.
+	 * @param fieldSelectorPersister            decides per field whether it is the special "persister" field.
+	 * @param fieldSelectorEnum                 decides per field whether it is part of an enum's persistent
+	 *                                          layout.
+	 * @param fieldSelectorReflectiveCollection decides per field whether it is part of a reflectively-handled
+	 *                                          collection's persistent layout.
+	 *
+	 * @return the newly created analyzer.
+	 */
 	public static PersistenceTypeAnalyzer New(
 		final PersistenceTypeEvaluator  isPersistable                    ,
 		final PersistenceFieldEvaluator fieldSelectorPersistable         ,
@@ -66,12 +141,34 @@ public interface PersistenceTypeAnalyzer
 		);
 	}
 
+	/**
+	 * Default {@link PersistenceTypeAnalyzer}. Iterates declared instance fields up the class hierarchy
+	 * via {@link XReflect#iterateDeclaredFieldsUpwards(Class, java.util.function.Consumer)} and applies the
+	 * configured evaluator pipeline.
+	 */
 	public final class Default implements PersistenceTypeAnalyzer
 	{
 		///////////////////////////////////////////////////////////////////////////
 		// static methods //
 		///////////////////
 
+		/**
+		 * Iterates the instance fields of {@code entityType} (including inherited ones) and routes each
+		 * field into one of the three passed collections according to the supplied evaluators. Static and
+		 * other non-instance fields are skipped silently. Persister fields are only considered when
+		 * {@code isPersisterField} is non-{@code null}; problematic fields likewise only when
+		 * {@code isProblematic} is non-{@code null}.
+		 *
+		 * @param entityType        the type whose fields are being iterated.
+		 * @param isPersistable     decides per field whether it is persistable.
+		 * @param isPersisterField  decides per (rejected) field whether it is a persister field; may be
+		 *                          {@code null}.
+		 * @param persistableFields destination for persistable fields.
+		 * @param persisterFields   destination for persister fields.
+		 * @param isProblematic     decides per (persistable) field whether it is problematic; may be
+		 *                          {@code null}.
+		 * @param problematicFields destination for problematic fields.
+		 */
 		public static void iterateInstanceFields(
 			final Class<?>                   entityType       ,
 			final PersistenceFieldEvaluator  isPersistable    ,

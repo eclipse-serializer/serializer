@@ -20,15 +20,38 @@ import org.eclipse.serializer.chars.Levenshtein;
 import org.eclipse.serializer.typing.TypeMappingLookup;
 import org.eclipse.serializer.util.similarity.Similator;
 
+/**
+ * Computes a similarity score in {@code [0.0, 1.0]} for a pair of {@link PersistenceTypeDefinitionMember}s,
+ * combining name similarity ({@link Levenshtein}-based) with type similarity from a configured
+ * {@link TypeMappingLookup}. Used by the legacy-mapping algorithm to identify the best target member for
+ * each obsolete one when no explicit refactoring rule is present.
+ * <p>
+ * Members that differ in their {@code isEnumConstant()} flag are never matched (score {@code 0.0}). The
+ * final score is the average of the name-similarity factor (which is itself scaled by a qualifier match
+ * factor) and the type-similarity factor.
+ *
+ * @see PersistenceMemberMatchingProvider
+ */
 public interface PersistenceMemberSimilator extends Similator<PersistenceTypeDefinitionMember>
 {
+	/**
+	 * Creates a new {@link Default} similator that uses {@code typeSimilarity} to score type pairs.
+	 *
+	 * @param typeSimilarity the type-similarity lookup; must not be {@code null}.
+	 *
+	 * @return the newly created similator.
+	 */
 	public static PersistenceMemberSimilator New(final TypeMappingLookup<Float>  typeSimilarity)
 	{
 		return new PersistenceMemberSimilator.Default(
 			notNull(typeSimilarity)
 		);
 	}
-	
+
+	/**
+	 * Default {@link PersistenceMemberSimilator}. Combines name similarity (Levenshtein, scaled by a
+	 * qualifier-match factor) with type similarity from the configured {@link TypeMappingLookup}.
+	 */
 	public final class Default implements PersistenceMemberSimilator
 	{
 		///////////////////////////////////////////////////////////////////////////
