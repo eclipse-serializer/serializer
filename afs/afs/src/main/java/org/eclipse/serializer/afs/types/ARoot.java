@@ -17,24 +17,58 @@ package org.eclipse.serializer.afs.types;
 import static org.eclipse.serializer.util.X.coalesce;
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * A root directory: an {@link ADirectory} with no {@link #parent() parent}, identified within an
+ * {@link AFileSystem} by its {@link #identifier() identifier} and tagged with a {@link #protocol()
+ * protocol} (e.g. {@code "file://"}, {@code "https://"}). Every path in a file system starts from
+ * one of its registered roots.
+ *
+ * @see AFileSystem#ensureRoot(String)
+ * @see AFileSystem#addRoot(ADirectory)
+ */
 public interface ARoot extends ADirectory
 {
 	/**
 	 * E.g.
 	 * https://
 	 * file://
-	 * 
+	 *
 	 * @return the protocol
 	 */
 	public String protocol();
-	
-	
-	
+
+
+
+	/**
+	 * Factory abstraction for creating {@link ARoot} instances. Allows file system implementations
+	 * (or callers of {@link AFileSystem#ensureRoot(Creator, String)}) to plug in a custom root
+	 * type while still routing through the file system's lifecycle.
+	 */
 	@FunctionalInterface
 	public interface Creator
 	{
+		/**
+		 * Creates a new root directory with the passed protocol and identifier in the given file
+		 * system.
+		 *
+		 * @param fileSystem the file system the root will belong to.
+		 * @param protocol   the protocol tag.
+		 * @param identifier the root's identifier.
+		 *
+		 * @return the newly created root directory.
+		 */
 		public ARoot createRootDirectory(AFileSystem fileSystem, String protocol, String identifier);
-		
+
+		/**
+		 * Convenience overload that picks the protocol from {@link #protocol()} or, if that
+		 * returns {@code null}, from the file system's {@link AFileSystem#defaultProtocol() default
+		 * protocol}.
+		 *
+		 * @param fileSystem the file system the root will belong to.
+		 * @param identifier the root's identifier.
+		 *
+		 * @return the newly created root directory.
+		 */
 		public default ARoot createRootDirectory(final AFileSystem fileSystem, final String identifier)
 		{
 			return this.createRootDirectory(
@@ -43,7 +77,13 @@ public interface ARoot extends ADirectory
 				identifier
 			);
 		}
-		
+
+		/**
+		 * The protocol this creator wants newly created roots tagged with, or {@code null} to fall
+		 * back to the file system's default protocol.
+		 *
+		 * @return the creator-specific protocol, or {@code null}.
+		 */
 		public default String protocol()
 		{
 			return null;
@@ -73,6 +113,10 @@ public interface ARoot extends ADirectory
 		);
 	}
 	
+	/**
+	 * Default {@link ARoot} implementation. Holds the file system and protocol tag and reports
+	 * {@code null} as its parent.
+	 */
 	public final class Default extends ADirectory.Abstract implements ARoot
 	{
 		///////////////////////////////////////////////////////////////////////////
