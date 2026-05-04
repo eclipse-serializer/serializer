@@ -25,24 +25,70 @@ import org.eclipse.serializer.reference.Reference;
 import org.eclipse.serializer.typing.KeyValue;
 
 
+/**
+ * Builder/factory for {@link PersistenceRootResolver}s. Lets the application register named root entries,
+ * configure refactoring rules, and supply the type handler manager that the resolver will fall back to for
+ * enum-constants resolution. Calling {@link #provideRootResolver()} produces (and then caches) the
+ * configured resolver.
+ * <p>
+ * The user-defined root reference must already be supplied at construction time, since the system constants
+ * registered during initialization include a supplier wrapping it. After
+ * {@link #provideRootResolver()} has been called once, every subsequent call returns the cached resolver
+ * &mdash; further mutations to the provider are not reflected.
+ *
+ * @see PersistenceRootResolver
+ * @see PersistenceRootReference
+ */
 public interface PersistenceRootResolverProvider
 {
+	/**
+	 * The {@link PersistenceRootReference} that the produced resolver will expose as the user-defined root.
+	 *
+	 * @return the root reference.
+	 */
 	public PersistenceRootReference rootReference();
-	
+
+	/**
+	 * The identifier under which the user-defined root will be registered. Defaults to
+	 * {@link Persistence#rootIdentifier()}.
+	 *
+	 * @return the root identifier.
+	 */
 	public default String rootIdentifier()
 	{
 		return Persistence.rootIdentifier();
 	}
-	
+
+	/**
+	 * Whether a non-{@code null} root has already been set on the {@link #rootReference()}.
+	 *
+	 * @return {@code true} if a root is registered.
+	 */
 	public default boolean hasRootRegistered()
 	{
 		final PersistenceRootReference rootReference = this.rootReference();
-		
+
 		return rootReference != null && rootReference.get() != null;
 	}
 
+	/**
+	 * Sets the user-defined root instance on the {@link #rootReference()}.
+	 *
+	 * @param root the new root instance; may be {@code null}.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public PersistenceRootResolverProvider setRoot(Object root);
-	
+
+	/**
+	 * Registers a named root entry that returns {@code instance} on lookup. Convenience wrapper around
+	 * {@link #registerRootSupplier(String, Supplier)} for eager-construction roots.
+	 *
+	 * @param identifier the identifier to register the entry under.
+	 * @param instance   the root instance.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public default PersistenceRootResolverProvider registerRoot(
 		final String identifier,
 		final Object instance
@@ -50,15 +96,40 @@ public interface PersistenceRootResolverProvider
 	{
 		return this.registerRootSupplier(identifier, () -> instance);
 	}
-	
 
+
+	/**
+	 * Registers a supplier for the user-defined root under {@link #rootIdentifier()}. Fails if an entry is
+	 * already registered for that identifier.
+	 *
+	 * @param instanceSupplier the supplier producing the root instance on demand.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public default PersistenceRootResolverProvider registerRootSupplier(final Supplier<?> instanceSupplier)
 	{
 		return this.registerRootSupplier(this.rootIdentifier(), instanceSupplier);
 	}
-	
+
+	/**
+	 * Registers a named root entry whose instance is resolved lazily by the passed supplier. Fails if an
+	 * entry is already registered for {@code identifier}.
+	 *
+	 * @param identifier       the identifier to register the entry under.
+	 * @param instanceSupplier the supplier producing the root instance on demand.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public PersistenceRootResolverProvider registerRootSupplier(String identifier, Supplier<?> instanceSupplier);
-	
+
+	/**
+	 * Bulk variant of {@link #registerRootSupplier(String, Supplier)}: registers every entry from the
+	 * passed table.
+	 *
+	 * @param roots the {@code identifier → supplier} table to register.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public default PersistenceRootResolverProvider registerRootSuppliers(
 		final XGettingTable<String, Supplier<?>> roots
 	)
@@ -69,24 +140,61 @@ public interface PersistenceRootResolverProvider
 				this.registerRootSupplier(kv.key(), kv.value())
 			);
 		}
-		
+
 		return this;
 	}
-	
+
+	/**
+	 * Configures the {@link PersistenceTypeDescriptionResolverProvider} used to wrap the produced resolver
+	 * in a {@link PersistenceRootResolver.MappingWrapper}. Takes precedence over a refactoring mapping
+	 * supplied via {@link #setRefactoring(PersistenceRefactoringMappingProvider)}.
+	 *
+	 * @param typeDescriptionResolverProvider the type description resolver provider.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public PersistenceRootResolverProvider setTypeDescriptionResolverProvider(
 		PersistenceTypeDescriptionResolverProvider typeDescriptionResolverProvider
 	);
-	
+
+	/**
+	 * Configures a refactoring mapping that will be turned into a
+	 * {@link PersistenceTypeDescriptionResolverProvider} (when no explicit one is set via
+	 * {@link #setTypeDescriptionResolverProvider}) and used to wrap the produced resolver.
+	 *
+	 * @param refactoringMapping the refactoring mapping provider.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public PersistenceRootResolverProvider setRefactoring(PersistenceRefactoringMappingProvider refactoringMapping);
-	
-	
+
+
+	/**
+	 * The forward reference to the {@link PersistenceTypeHandlerManager} that the produced resolver will
+	 * consult for enum-constants resolution.
+	 *
+	 * @return the type handler manager reference, or {@code null} if none has been set.
+	 */
 	public Reference<? extends PersistenceTypeHandlerManager<?>> typeHandlerManager();
-	
+
+	/**
+	 * Sets the forward reference to the {@link PersistenceTypeHandlerManager}. The reference is consulted
+	 * lazily by the produced resolver, so it may still be uninitialized when this setter is called.
+	 *
+	 * @param typeHandlerManager the type handler manager reference.
+	 *
+	 * @return this provider, for fluent chaining.
+	 */
 	public PersistenceRootResolverProvider setTypeHandlerManager(
 		Reference<? extends PersistenceTypeHandlerManager<?>> typeHandlerManager
 	);
-	
-			
+
+
+	/**
+	 * Builds and caches the {@link PersistenceRootResolver}. Subsequent calls return the cached instance.
+	 *
+	 * @return the produced resolver.
+	 */
 	public PersistenceRootResolver provideRootResolver();
 	
 	
@@ -96,6 +204,16 @@ public interface PersistenceRootResolverProvider
 //		return New(rootReference, PersistenceTypeResolver.Default());
 //	}
 	
+	/**
+	 * Creates a new {@link Default} provider using {@link PersistenceRootEntry#New(String, Supplier)} as
+	 * the entry factory.
+	 *
+	 * @param <D>           the persistence data type (unused, kept for API symmetry).
+	 * @param rootReference the user-defined root reference; must not be {@code null}.
+	 * @param typeResolver  the type resolver used by the refactoring layer; must not be {@code null}.
+	 *
+	 * @return the newly created provider.
+	 */
 	public static <D> PersistenceRootResolverProvider New(
 		final PersistenceRootReference rootReference,
 		final PersistenceTypeResolver  typeResolver
@@ -103,7 +221,16 @@ public interface PersistenceRootResolverProvider
 	{
 		return New(rootReference, typeResolver, PersistenceRootEntry::New);
 	}
-	
+
+	/**
+	 * Creates a new {@link Default} provider with a custom {@link PersistenceRootEntry.Provider}.
+	 *
+	 * @param rootReference the user-defined root reference; must not be {@code null}.
+	 * @param typeResolver  the type resolver used by the refactoring layer; must not be {@code null}.
+	 * @param entryProvider the entry factory; must not be {@code null}.
+	 *
+	 * @return the newly created provider.
+	 */
 	public static PersistenceRootResolverProvider New(
 		final PersistenceRootReference      rootReference,
 		final PersistenceTypeResolver       typeResolver ,
@@ -115,11 +242,16 @@ public interface PersistenceRootResolverProvider
 			notNull(typeResolver) ,
 			notNull(entryProvider)
 		);
-		
+
 		return builder;
 	}
-	
-	
+
+
+	/**
+	 * Default {@link PersistenceRootResolverProvider}: collects root entries in an ordered hash table,
+	 * caches the produced resolver between {@link #provideRootResolver()} calls, and synchronizes mutating
+	 * operations on the instance.
+	 */
 	public class Default implements PersistenceRootResolverProvider
 	{
 		///////////////////////////////////////////////////////////////////////////
