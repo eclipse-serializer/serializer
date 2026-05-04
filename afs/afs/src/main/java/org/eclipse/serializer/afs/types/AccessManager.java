@@ -24,94 +24,313 @@ import java.util.function.Function;
 
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * Arbitrates concurrent access to the {@link AFile}s and {@link ADirectory directories} of an
+ * {@link AFileSystem}. The manager tracks which user holds which kind of usage claim and rejects
+ * incompatible requests with a matching {@link AfsExceptionConflict} subtype.
+ * <p>
+ * Two kinds of usage claims exist:
+ * <ul>
+ *   <li><em>Shared (reading)</em>: any number of users may simultaneously hold a shared claim on
+ *       a file as long as no exclusive claim is in place.</li>
+ *   <li><em>Exclusive (writing)</em>: at most one user may hold an exclusive claim on a file, and
+ *       only when no other user holds a shared claim on it.</li>
+ * </ul>
+ * The {@code use*} methods throw on conflict; the {@code tryUse*} variants return {@code null} on
+ * conflict instead. {@link #downgrade(AWritableFile)} converts an exclusive claim into a shared
+ * one; {@link #unregister(AReadableFile)} releases a claim (typically called from
+ * {@link AReadableFile#release()}).
+ * <p>
+ * Structural mutations on a directory are coordinated through {@link
+ * #executeMutating(ADirectory, Function)}, which acquires a directory-level mutation lock and
+ * rejects concurrent file usage claims under that subtree with {@link AfsExceptionMutation} or
+ * {@link AfsExceptionMutationInUse}.
+ * <p>
+ * The {@link #defaultUser() default user} is the current thread, which is what the no-argument
+ * convenience overloads use.
+ *
+ * @see AFileSystem#accessManager()
+ * @see AfsExceptionConflict
+ */
 public interface AccessManager
 {
+	/**
+	 * The {@link AFileSystem} this access manager belongs to.
+	 *
+	 * @return the owning file system.
+	 */
 	public AFileSystem fileSystem();
-	
-	public boolean isUsed(ADirectory directory);
-	
-	public boolean isMutating(ADirectory directory);
-	
-	public boolean isUsed(AFile file);
-	
-	public boolean isUsedReading(AFile file);
-	
-	public boolean isUsedWriting(AFile file);
-	
-	
 
+	/**
+	 * Whether the passed directory or any of its descendants currently holds a usage claim.
+	 *
+	 * @param directory the directory to check.
+	 *
+	 * @return {@code true} if the directory subtree is in use.
+	 */
+	public boolean isUsed(ADirectory directory);
+
+	/**
+	 * Whether the passed directory is currently in a structural mutation (see
+	 * {@link #executeMutating(ADirectory, Function)}).
+	 *
+	 * @param directory the directory to check.
+	 *
+	 * @return {@code true} if the directory is being mutated.
+	 */
+	public boolean isMutating(ADirectory directory);
+
+	/**
+	 * Whether any user currently holds a usage claim on the passed file.
+	 *
+	 * @param file the file to check.
+	 *
+	 * @return {@code true} if at least one shared or exclusive claim exists for the file.
+	 */
+	public boolean isUsed(AFile file);
+
+	/**
+	 * Whether any user currently holds a reading-capable claim (shared or exclusive) on the
+	 * passed file.
+	 *
+	 * @param file the file to check.
+	 *
+	 * @return {@code true} if a reading-capable claim exists for the file.
+	 */
+	public boolean isUsedReading(AFile file);
+
+	/**
+	 * Whether any user currently holds an exclusive (writing) claim on the passed file.
+	 *
+	 * @param file the file to check.
+	 *
+	 * @return {@code true} if an exclusive claim exists for the file.
+	 */
+	public boolean isUsedWriting(AFile file);
+
+
+
+	/**
+	 * Whether the passed user currently holds a reading-capable claim on the file.
+	 *
+	 * @param file the file to check.
+	 * @param user the user identity.
+	 *
+	 * @return {@code true} if {@code user} has a reading-capable claim on the file.
+	 */
 	public boolean isUsedReading(AFile file, Object user);
-	
+
+	/**
+	 * Whether the passed user currently holds the exclusive (writing) claim on the file.
+	 *
+	 * @param file the file to check.
+	 * @param user the user identity.
+	 *
+	 * @return {@code true} if {@code user} holds the exclusive claim on the file.
+	 */
 	public boolean isUsedWriting(AFile file, Object user);
-	
-	
+
+
+	/**
+	 * Acquires a shared (reading) claim on the file for the passed user, returning a usage handle.
+	 *
+	 * @param file the file to access.
+	 * @param user the user identity to register the claim under.
+	 *
+	 * @return a readable handle.
+	 *
+	 * @throws AfsExceptionSharedAttemptExclusiveUserConflict if the file is already exclusively held by a different user.
+	 */
 	public AReadableFile useReading(AFile file, Object user);
-	
+
+	/**
+	 * Acquires an exclusive (writing) claim on the file for the passed user, returning a usage handle.
+	 *
+	 * @param file the file to access.
+	 * @param user the user identity to register the claim under.
+	 *
+	 * @return a writable handle.
+	 *
+	 * @throws AfsExceptionExclusiveAttemptConflict           if the file is already exclusively held by a different user.
+	 * @throws AfsExceptionExclusiveAttemptSharedUserConflict if the file is currently held by other shared users.
+	 */
 	public AWritableFile useWriting(AFile file, Object user);
-	
+
+	/**
+	 * Tries to acquire a shared (reading) claim, returning {@code null} on conflict instead of
+	 * throwing.
+	 *
+	 * @param file the file to access.
+	 * @param user the user identity to register the claim under.
+	 *
+	 * @return a readable handle, or {@code null} if the claim cannot currently be granted.
+	 */
 	public AReadableFile tryUseReading(AFile file, Object user);
-	
+
+	/**
+	 * Tries to acquire an exclusive (writing) claim, returning {@code null} on conflict instead
+	 * of throwing.
+	 *
+	 * @param file the file to access.
+	 * @param user the user identity to register the claim under.
+	 *
+	 * @return a writable handle, or {@code null} if the claim cannot currently be granted.
+	 */
 	public AWritableFile tryUseWriting(AFile file, Object user);
-	
+
+	/**
+	 * Downgrades an exclusive claim into a shared one, returning a readable handle for the same
+	 * file and user. The exclusive handle is retired in the process.
+	 *
+	 * @param file the writable handle to downgrade.
+	 *
+	 * @return a readable handle on the same file.
+	 */
 	public AReadableFile downgrade(AWritableFile file);
-	
-	
+
+
+	/**
+	 * Releases the claim represented by the passed handle and retires it.
+	 * <p>
+	 * Normal client code uses {@link AReadableFile#release()} which routes here.
+	 *
+	 * @param file the readable handle to unregister.
+	 *
+	 * @return {@code true} if a claim was unregistered, {@code false} if the handle was already retired.
+	 */
 	public boolean unregister(AReadableFile file);
-	
+
+	/**
+	 * Releases the exclusive claim represented by the passed handle and retires it.
+	 *
+	 * @param file the writable handle to unregister.
+	 *
+	 * @return {@code true} if a claim was unregistered, {@code false} if the handle was already retired.
+	 */
 	public boolean unregister(AWritableFile file);
-	
-	
-	
-	
-	
-	
+
+
+
+
+	/**
+	 * The default user identity used by no-argument {@code useReading}/{@code useWriting}
+	 * overloads. Defaults to {@link Thread#currentThread() the current thread}.
+	 *
+	 * @return the default user identity.
+	 */
 	public default Object defaultUser()
 	{
 		return Thread.currentThread();
 	}
-		
+
+	/**
+	 * Acquires a shared (reading) claim for the {@link #defaultUser() default user}.
+	 *
+	 * @param file the file to access.
+	 *
+	 * @return a readable handle.
+	 */
 	public default AReadableFile useReading(final AFile file)
 	{
 		return this.useReading(file, this.defaultUser());
 	}
-	
+
+	/**
+	 * Acquires an exclusive (writing) claim for the {@link #defaultUser() default user}.
+	 *
+	 * @param file the file to access.
+	 *
+	 * @return a writable handle.
+	 */
 	public default AWritableFile useWriting(final AFile file)
 	{
 		return this.useWriting(file, this.defaultUser());
 	}
-	
+
+	/**
+	 * Tries to acquire a shared (reading) claim for the {@link #defaultUser() default user}.
+	 *
+	 * @param file the file to access.
+	 *
+	 * @return a readable handle, or {@code null} if the claim cannot currently be granted.
+	 */
 	public default AReadableFile tryUseReading(final AFile file)
 	{
 		return this.useReading(file, this.defaultUser());
 	}
-	
+
+	/**
+	 * Tries to acquire an exclusive (writing) claim for the {@link #defaultUser() default user}.
+	 *
+	 * @param file the file to access.
+	 *
+	 * @return a writable handle, or {@code null} if the claim cannot currently be granted.
+	 */
 	public default AWritableFile tryUseWriting(final AFile file)
 	{
 		return this.useWriting(file, this.defaultUser());
 	}
-	
+
+	/**
+	 * Executes a structural mutation under an exclusive directory-level mutation lock.
+	 * <p>
+	 * While the lock is held by the current thread, no other user may acquire a usage claim under
+	 * the directory subtree (such requests fail with {@link AfsExceptionMutation}), and concurrent
+	 * mutation attempts on the same directory fail with {@link AfsExceptionMutationInUse}. Calls
+	 * are reentrant from the same thread.
+	 *
+	 * @param <R>       the result type.
+	 * @param directory the directory to mutate.
+	 * @param logic     the mutation function.
+	 *
+	 * @return the value returned by {@code logic}.
+	 */
 	public <R> R executeMutating(
 		ADirectory                      directory,
 		Function<? super ADirectory, R> logic
 	);
-	
-	
-	
+
+
+
+	/**
+	 * Factory abstraction for instantiating an {@link AccessManager} for a given {@link AFileSystem}.
+	 */
 	@FunctionalInterface
 	public interface Creator
 	{
+		/**
+		 * Creates an {@link AccessManager} instance for the passed file system.
+		 *
+		 * @param parent the file system the manager belongs to.
+		 *
+		 * @return a new access manager.
+		 */
 		public AccessManager createAccessManager(AFileSystem parent);
 	}
-	
-	
-	
+
+
+
+	/**
+	 * Creates the {@linkplain Default default} access manager implementation for the passed file system.
+	 *
+	 * @param fileSystem the owning file system.
+	 *
+	 * @return a new {@link AccessManager}.
+	 */
 	public static AccessManager New(final AFileSystem fileSystem)
 	{
 		return new AccessManager.Default<>(
 			notNull(fileSystem)
 		);
 	}
-	
+
+	/**
+	 * Default {@link AccessManager} implementation. Tracks usage claims through per-file entries
+	 * (shared user list plus optional exclusive user) and per-directory entries (in-use child
+	 * counter and mutating thread). All bookkeeping is synchronized on the file system.
+	 *
+	 * @param <S> the concrete {@link AFileSystem} type.
+	 */
 	public class Default<S extends AFileSystem> implements AccessManager
 	{
 		///////////////////////////////////////////////////////////////////////////

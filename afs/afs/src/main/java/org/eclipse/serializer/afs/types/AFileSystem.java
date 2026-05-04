@@ -25,49 +25,209 @@ import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.collections.XArrays;
 import org.eclipse.serializer.collections.types.XGettingTable;
 
+/**
+ * Top-level abstraction representing an entire abstract file system. An {@link AFileSystem} owns
+ * the registered {@link ARoot root directories}, the {@link AccessManager} that arbitrates
+ * concurrent file usage, the {@link ACreator} that instantiates new items, and the
+ * {@link AIoHandler} that performs the actual I/O against the underlying storage layer.
+ * <p>
+ * The interface combines item-resolution ({@link AResolving}) with a writability gate
+ * ({@link WriteController}), so a file system implementation also decides whether write operations
+ * are allowed at all.
+ * <p>
+ * Typical entry points are {@link #ensureDirectoryPath(String...)} / {@link
+ * #ensureFilePath(String...)} for path-based access, and {@link #ensureRoot(String)} for direct
+ * root management. {@link #wrapForReading(AFile, Object)} / {@link #wrapForWriting(AFile, Object)}
+ * are used by the {@link AccessManager} to materialize usage handles.
+ *
+ * @see ARoot
+ * @see AccessManager
+ * @see AIoHandler
+ * @see ACreator
+ */
 public interface AFileSystem extends AResolving, WriteController
 {
+	/**
+	 * The default protocol used for newly created roots when no explicit protocol is supplied.
+	 *
+	 * @return the default protocol (e.g. {@code "file://"}).
+	 */
 	public String defaultProtocol();
-	
+
+	/**
+	 * Ensures the directory chain corresponding to the passed path elements exists, creating any
+	 * missing intermediate directories.
+	 *
+	 * @param pathElements the path elements from root to leaf.
+	 *
+	 * @return the leaf directory.
+	 *
+	 * @see #ensureDirectoryPath(String[], int, int)
+	 */
 	public default ADirectory ensureDirectoryPath(final String... pathElements)
 	{
 		return this.ensureDirectoryPath(pathElements, 0, pathElements.length);
 	}
 
+	/**
+	 * Ensures the directory chain corresponding to the slice {@code [offset, offset+length)} of
+	 * the passed path-element array exists, creating any missing intermediate directories.
+	 * If {@code length} is {@code 0}, the {@link #ensureDefaultRoot() default root} is returned.
+	 *
+	 * @param pathElements the array of path elements.
+	 * @param offset       the start index of the slice.
+	 * @param length       the length of the slice.
+	 *
+	 * @return the leaf directory.
+	 */
 	public ADirectory ensureDirectoryPath(String[] pathElements, int offset, int length);
-		
+
+	/**
+	 * Ensures the file at the passed path exists in the directory hierarchy. The last element is
+	 * treated as the file identifier; preceding elements form the directory path.
+	 *
+	 * @param pathElements the directory path followed by the file identifier.
+	 *
+	 * @return the file at the path.
+	 */
 	public default AFile ensureFilePath(final String... pathElements)
 	{
 		return this.ensureFilePath(pathElements, 0, pathElements.length - 1, pathElements[pathElements.length - 1]);
 	}
-	
+
+	/**
+	 * Ensures the file with the passed identifier exists in the directory described by
+	 * {@code directoryPathElements}.
+	 *
+	 * @param directoryPathElements the directory path elements.
+	 * @param fileIdentifier        the file's identifier.
+	 *
+	 * @return the file at the path.
+	 */
 	public default AFile ensureFilePath(final String[] directoryPathElements, final String fileIdentifier)
 	{
 		return this.ensureFilePath(directoryPathElements, 0, directoryPathElements.length, fileIdentifier);
 	}
-	
+
+	/**
+	 * Ensures the file with the passed identifier exists in the directory described by the slice
+	 * {@code [offset, offset+length)} of {@code directoryPathElements}.
+	 *
+	 * @param directoryPathElements the array of directory path elements.
+	 * @param offset                the start index of the directory-path slice.
+	 * @param length                the length of the directory-path slice.
+	 * @param fileIdentifier        the file's identifier.
+	 *
+	 * @return the file at the path.
+	 */
 	public AFile ensureFilePath(String[] directoryPathElements, int offset, int length, String fileIdentifier);
-	
+
+	/**
+	 * The {@link AccessManager} that arbitrates concurrent reading and writing access on the
+	 * files of this file system.
+	 *
+	 * @return the access manager.
+	 */
 	public AccessManager accessManager();
-	
+
+	/**
+	 * The {@link ACreator} used to instantiate new {@link ADirectory} and {@link AFile} items in
+	 * this file system.
+	 *
+	 * @return the creator.
+	 */
 	public ACreator creator();
-	
+
+	/**
+	 * The {@link AIoHandler} that performs actual I/O against the underlying storage layer.
+	 *
+	 * @return the I/O handler.
+	 */
 	public AIoHandler ioHandler();
-	
+
+	/**
+	 * Wraps the passed file in an {@link AReadableFile} usage handle for the given user.
+	 * <p>
+	 * Called by the {@link AccessManager}; clients should normally use {@link AFile#useReading()}.
+	 *
+	 * @param file the file to wrap.
+	 * @param user the user the usage is registered under.
+	 *
+	 * @return a new readable handle.
+	 */
 	public AReadableFile wrapForReading(AFile file, Object user);
 
+	/**
+	 * Wraps the passed file in an {@link AWritableFile} usage handle for the given user.
+	 * <p>
+	 * Called by the {@link AccessManager}; clients should normally use {@link AFile#useWriting()}.
+	 *
+	 * @param file the file to wrap.
+	 * @param user the user the usage is registered under.
+	 *
+	 * @return a new writable handle.
+	 */
 	public AWritableFile wrapForWriting(AFile file, Object user);
-	
+
+	/**
+	 * Converts an existing writable handle into a readable one for the same file and user,
+	 * downgrading the access claim.
+	 *
+	 * @param file the writable handle to convert.
+	 *
+	 * @return a readable handle.
+	 */
 	public AReadableFile convertToReading(AWritableFile file);
-	
+
+	/**
+	 * Converts an existing readable handle into a writable one for the same file and user,
+	 * upgrading the access claim if it can be granted.
+	 *
+	 * @param file the readable handle to convert.
+	 *
+	 * @return a writable handle.
+	 */
 	public AWritableFile convertToWriting(AReadableFile file);
 
+	/**
+	 * Looks up a registered root directory by identifier without creating it.
+	 *
+	 * @param identifier the root's identifier.
+	 *
+	 * @return the registered root, or {@code null} if no root with that identifier exists.
+	 */
 	public ADirectory lookupRoot(String identifier);
-	
+
+	/**
+	 * Returns the registered root directory with the passed identifier.
+	 *
+	 * @param identifier the root's identifier.
+	 *
+	 * @return the registered root.
+	 *
+	 * @throws org.eclipse.serializer.afs.exceptions.AfsExceptionUnresolvableRoot if no root with that identifier is registered.
+	 */
 	public ADirectory getRoot(String identifier);
 
+	/**
+	 * Returns the registered root directory with the passed identifier, creating and registering
+	 * it via the file system's {@link #creator() creator} if it does not yet exist.
+	 *
+	 * @param identifier the root's identifier.
+	 *
+	 * @return the existing or newly created root.
+	 */
 	public ADirectory ensureRoot(String identifier);
-	
+
+	/**
+	 * Returns the registered root directory with the passed identifier, creating and registering
+	 * it via the supplied {@link ARoot.Creator} if it does not yet exist.
+	 *
+	 * @param rootCreator the creator to use for instantiating a new root, if needed.
+	 * @param identifier  the root's identifier.
+	 *
+	 * @return the existing or newly created root.
+	 */
 	public ADirectory ensureRoot(ARoot.Creator rootCreator, String identifier);
 	
 	/**
@@ -77,66 +237,223 @@ public interface AFileSystem extends AResolving, WriteController
 	 */
 	public ADirectory ensureDefaultRoot();
 	
+	/**
+	 * Removes the root directory with the passed identifier from the file system.
+	 *
+	 * @param identifier the root's identifier.
+	 *
+	 * @return the removed root directory.
+	 *
+	 * @throws org.eclipse.serializer.afs.exceptions.AfsExceptionUnresolvableRoot if no root with that identifier is registered.
+	 * @throws org.eclipse.serializer.afs.exceptions.AfsExceptionMutationInUse    if the root is currently in use.
+	 */
 	public ADirectory removeRoot(String identifier);
-	
+
+	/**
+	 * Registers the passed externally created root directory with this file system. Has no effect
+	 * if the same root is already registered.
+	 *
+	 * @param rootDirectory the root to register.
+	 *
+	 * @return {@code true} if the root was newly registered, {@code false} if it was already present.
+	 */
 	public boolean addRoot(ADirectory rootDirectory);
-	
+
+	/**
+	 * Removes the passed root directory from the file system.
+	 *
+	 * @param rootDirectory the root to remove.
+	 *
+	 * @return {@code true} if the root was registered and got removed, {@code false} otherwise.
+	 *
+	 * @throws org.eclipse.serializer.afs.exceptions.AfsExceptionMutationInUse if the root is currently in use.
+	 */
 	public boolean removeRoot(ADirectory rootDirectory);
-	
+
+	/**
+	 * Provides synchronized access to the live root-directory table. The table is held under the
+	 * file system's lock while {@code logic} runs; the consumer must not retain a reference to it.
+	 *
+	 * @param <R>   the result type.
+	 * @param logic the function to apply to the root-directory table.
+	 *
+	 * @return the value returned by {@code logic}.
+	 */
 	public <R> R accessRoots(Function<? super XGettingTable<String, ADirectory>, R> logic);
-		
+
+	/**
+	 * Validates that the passed item belongs to this file system and returns it for chaining.
+	 *
+	 * @param <I>  the item type.
+	 * @param item the item to validate.
+	 *
+	 * @return the validated item.
+	 *
+	 * @throws org.eclipse.serializer.afs.exceptions.AfsExceptionConsistency if the item belongs to a different file system.
+	 */
 	public <I extends AItem> I validateMember(I item);
-	
+
+	/**
+	 * Assembles the path string of the passed file using this file system's path conventions.
+	 *
+	 * @param file the file whose path to assemble.
+	 *
+	 * @return the assembled path string.
+	 */
 	public default String assemblePath(final AFile file)
 	{
 		return this.assemblePath(file, VarString.New()).toString();
 	}
-	
+
+	/**
+	 * Assembles the path string of the passed directory using this file system's path conventions.
+	 *
+	 * @param directory the directory whose path to assemble.
+	 *
+	 * @return the assembled path string.
+	 */
 	public default String assemblePath(final ADirectory directory)
 	{
 		return this.assemblePath(directory, VarString.New()).toString();
 	}
-	
-	public String deriveFileIdentifier(String fileName, String fileType);
-	
-	public String deriveFileName(String fileIdentifier);
-	
-	public String deriveFileType(String fileIdentifier);
-	
 
+	/**
+	 * Derives a file identifier from the passed name and (optional) type according to the file
+	 * system's naming conventions.
+	 *
+	 * @param fileName the file's name.
+	 * @param fileType the file's type, or {@code null}.
+	 *
+	 * @return the derived identifier.
+	 */
+	public String deriveFileIdentifier(String fileName, String fileType);
+
+	/**
+	 * Derives the file name from the passed identifier according to the file system's naming
+	 * conventions.
+	 *
+	 * @param fileIdentifier the file's identifier.
+	 *
+	 * @return the derived name.
+	 */
+	public String deriveFileName(String fileIdentifier);
+
+	/**
+	 * Derives the file type from the passed identifier according to the file system's naming
+	 * conventions, or {@code null} if no type can be derived.
+	 *
+	 * @param fileIdentifier the file's identifier.
+	 *
+	 * @return the derived type, or {@code null}.
+	 */
+	public String deriveFileType(String fileIdentifier);
+
+
+	/**
+	 * Appends the path of the passed file to the supplied {@link VarString}.
+	 *
+	 * @param file the file whose path to append.
+	 * @param vs   the {@link VarString} to append to.
+	 *
+	 * @return the passed {@link VarString} for chaining.
+	 */
 	public VarString assemblePath(AFile file, VarString vs);
-	
+
+	/**
+	 * Appends the path of the passed directory to the supplied {@link VarString}.
+	 *
+	 * @param directory the directory whose path to append.
+	 * @param vs        the {@link VarString} to append to.
+	 *
+	 * @return the passed {@link VarString} for chaining.
+	 */
 	public VarString assemblePath(ADirectory directory, VarString vs);
-	
-	
+
+
+	/**
+	 * Builds the path of the passed item as an array of identifiers from root to leaf.
+	 *
+	 * @param item the item whose path to build.
+	 *
+	 * @return the path as an array of identifiers.
+	 */
 	public String[] buildPath(AItem item);
 
 	/*
 	 * Default implementation assumes items can be handled in a unified way.
 	 * If not, the interface allows for switching it around.
 	 */
+	/**
+	 * Builds the path of the passed file. Default implementation delegates to
+	 * {@link #buildPath(AItem)}.
+	 *
+	 * @param file the file whose path to build.
+	 *
+	 * @return the path as an array of identifiers.
+	 */
 	public default String[] buildPath(final AFile file)
 	{
 		return this.buildPath((AItem)file);
 	}
-	
+
+	/**
+	 * Builds the path of the passed directory. Default implementation delegates to
+	 * {@link #buildPath(AItem)}.
+	 *
+	 * @param directory the directory whose path to build.
+	 *
+	 * @return the path as an array of identifiers.
+	 */
 	public default String[] buildPath(final ADirectory directory)
 	{
 		return this.buildPath((AItem)directory);
 	}
-	
+
+	/**
+	 * Splits the passed full path string into individual path elements. The default implementation
+	 * splits on {@code '/'} and {@code '\\'}.
+	 *
+	 * @param fullPath the full path string.
+	 *
+	 * @return the path elements.
+	 */
 	public default String[] resolvePath(final String fullPath)
 	{
 		return fullPath.split("[/\\\\]");
 	}
-	
-	
+
+
+	/**
+	 * Returns the file's {@link AFile#name() name} according to this file system's naming
+	 * conventions.
+	 *
+	 * @param file the file whose name to return.
+	 *
+	 * @return the file's name.
+	 */
 	public String getFileName(AFile file);
-	
+
+	/**
+	 * Returns the file's {@link AFile#type() type} according to this file system's naming
+	 * conventions, or {@code null} if no type applies.
+	 *
+	 * @param file the file whose type to return.
+	 *
+	 * @return the file's type, or {@code null}.
+	 */
 	public String getFileType(AFile file);
 
 	
 	
+	/**
+	 * Skeletal {@link AFileSystem} implementation that maintains the registered root directories,
+	 * the {@link ACreator}, the {@link AccessManager} and the typed {@link AIoHandler}, and that
+	 * also acts as its own {@link AResolver} and {@link ACreator}.
+	 *
+	 * @param <H> the concrete {@link AIoHandler} type.
+	 * @param <D> the directory type used for resolution.
+	 * @param <F> the file type used for resolution.
+	 */
 	public abstract class Abstract<H extends AIoHandler, D, F> implements AFileSystem, AResolver<D, F>, ACreator
 	{
 		///////////////////////////////////////////////////////////////////////////
