@@ -19,14 +19,47 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import org.eclipse.serializer.math.XMath;
 
+/**
+ * Walks an object graph and registers every reachable instance with the {@link PersistenceObjectManager}
+ * <em>without</em> writing any data. Used to assign object ids ahead of time, e.g. when a graph must be
+ * known to the persistence layer before the actual store is triggered.
+ * <p>
+ * As a {@link PersistenceFunction}, the registerer also serves as the iteration callback used by
+ * {@link PersistenceTypeHandler#iterateInstanceReferences} during the walk; a small identity-hash table
+ * suppresses repeated visits within a single registration call.
+ *
+ * @see PersistenceObjectManager
+ * @see PersistenceTypeHandlerManager
+ */
 public interface PersistenceRegisterer extends PersistenceFunction
 {
+	/**
+	 * Registers {@code instance} and recursively every instance reachable from it, assigning object ids
+	 * along the way.
+	 *
+	 * @param instance the root of the sub-graph to register.
+	 *
+	 * @return always {@code 0L} &mdash; the registerer does not return the assigned id.
+	 */
 	public long register(Object instance);
 
+	/**
+	 * Bulk variant of {@link #register(Object)} for an array of root instances. Returns an array of the
+	 * same length filled with zeros (mirroring {@code register}'s return convention).
+	 *
+	 * @param instances the roots to register.
+	 *
+	 * @return a zero-filled array of the same length.
+	 */
 	public long[] registerAll(Object... instances);
 
 
 
+	/**
+	 * Default {@link PersistenceRegisterer}. Maintains a small identity-hash registry of instances seen
+	 * during the current walk so the same instance is not registered twice within one call. The hash
+	 * table size is configurable through the constructor for graphs of known shape.
+	 */
 	public class Default implements PersistenceRegisterer
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -217,8 +250,21 @@ public interface PersistenceRegisterer extends PersistenceFunction
 
 	}
 
+	/**
+	 * Pluggable factory for {@link PersistenceRegisterer} instances. Stored on the foundation so callers
+	 * needing a custom registerer subtype can swap in their own implementation.
+	 */
 	public interface Creator
 	{
+		/**
+		 * Creates a new registerer wired up against the passed {@link PersistenceObjectManager} and
+		 * {@link PersistenceTypeHandlerManager}.
+		 *
+		 * @param objectManager the object manager that will assign object ids.
+		 * @param typeManager   the type handler manager that will resolve handlers per type.
+		 *
+		 * @return the newly created registerer.
+		 */
 		public PersistenceRegisterer createRegisterer(
 			PersistenceObjectManager<?>      objectManager,
 			PersistenceTypeHandlerManager<?> typeManager

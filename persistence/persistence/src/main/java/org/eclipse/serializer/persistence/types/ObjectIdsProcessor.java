@@ -17,11 +17,29 @@ package org.eclipse.serializer.persistence.types;
 import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.functional._longPredicate;
 
+/**
+ * Visitor handed to {@link PersistenceObjectRegistry#processLiveObjectIds(ObjectIdsProcessor)} so the
+ * registry can either stream object ids one-by-one through a predicate (embedded mode) or hand the visitor a
+ * bulk {@link Set_long} for batched processing (server mode). Each call site picks whichever variant fits
+ * its workload &mdash; the comments reflect the rule of thumb.
+ *
+ * @see PersistenceObjectRegistry#processLiveObjectIds(ObjectIdsProcessor)
+ * @see ObjectIdsSelector
+ */
 public interface ObjectIdsProcessor
 {
-	// one-by-one processing of objectIds. Efficient for embedded mode, horribly inefficient for server mode.
+	/**
+	 * One-by-one processing of object ids. Efficient for embedded mode, horribly inefficient for server
+	 * mode.
+	 *
+	 * @param objectIdsSelector predicate the registry calls for each live id.
+	 */
 	public void processObjectIdsByFilter(_longPredicate objectIdsSelector);
 
-	// for bulk processing of objectIds. Most efficient way for server mode, inefficient for embedded mode.
+	/**
+	 * Bulk processing of object ids. Most efficient way for server mode, inefficient for embedded mode.
+	 *
+	 * @return the set the registry should populate with live object ids.
+	 */
 	public Set_long provideObjectIdsBaseSet();
 }

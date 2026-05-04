@@ -21,6 +21,19 @@ import java.time.Duration;
 
 import static org.eclipse.serializer.util.X.notNull;
 
+/**
+ * Per-operation storing workhorse: produced by a {@link Creator} for one logical store and consumed by the
+ * surrounding {@link PersistenceManager}. Specializes the application-facing {@link Storer} contract with
+ * persistence-layer-typed return values on the lifecycle methods so callers can chain them fluently.
+ * <p>
+ * Counterpart of {@link PersistenceLoader} on the write side. Storers are short-lived (one per operation),
+ * traverse the entity graph according to a configurable lazy/eager strategy, and emit binary records to the
+ * configured {@link PersistenceTarget} on commit.
+ *
+ * @see Storer
+ * @see PersistenceLoader
+ * @see PersistenceManager
+ */
 public interface PersistenceStorer extends Storer
 {
 //	/**
@@ -53,6 +66,14 @@ public interface PersistenceStorer extends Storer
 	@Override
 	public PersistenceStorer ensureCapacity(long desiredCapacity);
 
+	/**
+	 * Pluggable factory for {@link PersistenceStorer} instances. Stored on the foundation so each binding
+	 * (e.g. the binary layer) can wire its own storer implementation, and exposes one factory method per
+	 * supported traversal strategy: lazy (default), eager (store every reachable instance unconditionally),
+	 * and batch (an opt-in extension that not every implementation supports).
+	 *
+	 * @param <D> the persistence data type produced by the storers.
+	 */
 	public interface Creator<D>
 	{
 		/**
@@ -129,6 +150,25 @@ public interface PersistenceStorer extends Storer
 			Persister                        persister
 		);
 
+		/**
+		 * Optional factory hook for {@link BatchStorer}s. The default implementation throws
+		 * {@link UnsupportedOperationException}; bindings that support batch storage override it. Batch
+		 * storers commit on a schedule defined by {@code controller} and {@code checkInterval} rather
+		 * than per explicit commit call.
+		 *
+		 * @param typeManager        the provided type manager.
+		 * @param objectManager      the provided object manager.
+		 * @param objectRetriever    the provided object retriever.
+		 * @param target             the provided persistence target.
+		 * @param bufferSizeProvider the provided buffer size provider.
+		 * @param persister          the provided storage context.
+		 * @param controller         the batch controller deciding when to commit.
+		 * @param checkInterval      the polling interval at which the controller is consulted.
+		 *
+		 * @return a new batch storer.
+		 *
+		 * @throws UnsupportedOperationException if this creator does not support batch storers.
+		 */
 		public default BatchStorer createBatchStorer(
 			final PersistenceTypeHandlerManager<D> typeManager       ,
 			final PersistenceObjectManager<D>      objectManager     ,
@@ -148,17 +188,42 @@ public interface PersistenceStorer extends Storer
 	
 	
 	
+	/**
+	 * Observer notified whenever a new {@link PersistenceStorer} is produced by a {@link Creator}. Wired
+	 * into the storer creator pipeline by the surrounding persistence layer; used e.g. by
+	 * {@link PersistenceLiveStorerRegistry} to track in-flight storers per logical batch.
+	 */
 	@FunctionalInterface
 	public interface CreationObserver
 	{
+		/**
+		 * No-op implementation suitable as a method reference where a non-{@code null} observer is
+		 * required but no work needs to be done.
+		 *
+		 * @param storer ignored.
+		 */
 		public static void noOp(final PersistenceStorer storer)
 		{
 			// no-op
 		}
 
+		/**
+		 * Called once for every freshly created {@link PersistenceStorer}.
+		 *
+		 * @param storer the newly created storer.
+		 */
 		public void observeCreatedStorer(PersistenceStorer storer);
 
 
+		/**
+		 * Combines the two passed observers into one that invokes {@code first} and then {@code second}.
+		 * Both arguments must be non-{@code null}.
+		 *
+		 * @param first  the first observer to invoke.
+		 * @param second the second observer to invoke.
+		 *
+		 * @return the chained observer.
+		 */
 		public static PersistenceStorer.CreationObserver Chain(
 			final CreationObserver first ,
 			final CreationObserver second
@@ -170,6 +235,9 @@ public interface PersistenceStorer extends Storer
 			);
 		}
 
+		/**
+		 * {@link CreationObserver} that delegates each notification to two underlying observers in order.
+		 */
 		public final class Chaining implements PersistenceStorer.CreationObserver
 		{
 			///////////////////////////////////////////////////////////////////////////

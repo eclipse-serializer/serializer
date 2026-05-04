@@ -26,6 +26,31 @@ import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 
 
+/**
+ * Central runtime façade of the persistence layer. Combines every per-operation responsibility &mdash;
+ * loading ({@link PersistenceRetrieving}), storing ({@link Persister}), id allocation
+ * ({@link PersistenceObjectManager}), source/target wiring ({@link PersistenceSourceSupplier} +
+ * {@link #target()}), and byte-order targeting ({@link ByteOrderTargeting}) &mdash; into a single,
+ * application-facing handle that fronts a single backing storage.
+ * <p>
+ * Per logical operation, the manager hands out fresh {@link PersistenceLoader}s,
+ * {@link PersistenceStorer}s, and {@link PersistenceRegisterer}s built from the configured creators; the
+ * implicit storers used by the {@link Persister#store(Object)} family share an internal monitor so concurrent
+ * callers serialize automatically. Long-running setups should usually create explicit storers via
+ * {@link #createStorer()} (and friends) and manage their lifecycle themselves.
+ * <p>
+ * Maintains a set of {@link PersistenceLocalObjectIdRegistry} instances by delegating
+ * {@link #registerLocalRegistry(PersistenceLocalObjectIdRegistry)} and
+ * {@link #mergeEntries(PersistenceLocalObjectIdRegistry)} to the underlying object manager, so storers see
+ * each other's pending id assignments before commit.
+ *
+ * @param <D> the persistence data type passed through to the loader/storer/source/target layer.
+ *
+ * @see Persister
+ * @see PersistenceRetrieving
+ * @see PersistenceObjectManager
+ * @see PersistenceFoundation
+ */
 public interface PersistenceManager<D>
 extends
 PersistenceObjectManager<D>,
@@ -36,52 +61,131 @@ ByteOrderTargeting<PersistenceManager<D>>
 {
 	@Override
 	public PersistenceStorer createLazyStorer();
-	
+
 	@Override
 	public PersistenceStorer createStorer();
 
 	@Override
 	public PersistenceStorer createEagerStorer();
 
+	/**
+	 * Creates a fresh {@link PersistenceStorer} using the passed creator instead of the manager's
+	 * configured one. The new storer is wired against this manager's components and reported to the
+	 * registered {@link PersistenceStorer.CreationObserver}.
+	 *
+	 * @param storerCreator the creator to use.
+	 *
+	 * @return the newly created storer.
+	 */
 	public PersistenceStorer createStorer(PersistenceStorer.Creator<D> storerCreator);
-	
+
 	// manager methods //
-	
+
+	/**
+	 * Creates a fresh {@link PersistenceLoader} for one logical load operation, wired against this
+	 * manager's components.
+	 *
+	 * @return the newly created loader.
+	 */
 	public PersistenceLoader createLoader();
-	
+
+	/**
+	 * Creates a fresh {@link PersistenceRegisterer} for one ahead-of-time id-assignment walk, wired against
+	 * this manager's object manager and type handler manager.
+	 *
+	 * @return the newly created registerer.
+	 */
 	public PersistenceRegisterer createRegisterer();
 
+	/**
+	 * Updates the manager's metadata: applies the passed type dictionary, advances the highest assigned
+	 * type id, and advances the highest assigned object id. Used at startup or whenever persistent
+	 * metadata has been re-read from disk.
+	 *
+	 * @param typeDictionary  the type dictionary to install.
+	 * @param highestTypeId   the new highest assigned type id.
+	 * @param highestObjectId the new highest assigned object id.
+	 */
 	public void updateMetadata(PersistenceTypeDictionary typeDictionary, long highestTypeId, long highestObjectId);
 
+	/**
+	 * Convenience overload of {@link #updateMetadata(PersistenceTypeDictionary, long, long)} that leaves
+	 * both id watermarks untouched (passed as {@code 0}, treated as "do not advance").
+	 *
+	 * @param typeDictionary the type dictionary to install.
+	 */
 	public default void updateMetadata(final PersistenceTypeDictionary typeDictionary)
 	{
 		this.updateMetadata(typeDictionary, 0, 0);
 	}
-	
+
+	/**
+	 * The underlying {@link PersistenceObjectRegistry}.
+	 *
+	 * @return the object registry.
+	 */
 	public PersistenceObjectRegistry objectRegistry();
-	
+
+	/**
+	 * The currently installed {@link PersistenceTypeDictionary} as exposed by the type handler manager.
+	 *
+	 * @return the type dictionary.
+	 */
 	public PersistenceTypeDictionary typeDictionary();
-	
+
+	/**
+	 * Read-only view on the persistent root set as currently known to the type handler manager.
+	 *
+	 * @return the roots view.
+	 */
 	public PersistenceRootsView viewRoots();
-	
+
 	@Override
 	public long currentObjectId();
 
 	@Override
 	public PersistenceManager<D> updateCurrentObjectId(long currentObjectId);
-	
+
 	@Override
 	public PersistenceSource<D> source();
-	
-	public PersistenceTarget<D> target();
-	
+
 	/**
-	 * Closes all ties to outside resources, if applicable. Typ
+	 * The {@link PersistenceTarget} this manager writes to.
+	 *
+	 * @return the target.
+	 */
+	public PersistenceTarget<D> target();
+
+	/**
+	 * Closes all ties to outside resources, if applicable. Typically used on shutdown to release the
+	 * underlying source and target (e.g. file channels, network connections).
 	 */
 	public void close();
-	
 
-	
+
+
+	/**
+	 * Creates a fully wired {@link Default} manager. None of the arguments may be {@code null} except
+	 * {@code persister}, which falls back to the manager itself when omitted.
+	 *
+	 * @param <D>                the persistence data type.
+	 * @param objectRegistering  the object registry.
+	 * @param objectManager      the object manager.
+	 * @param typeHandlerManager the type handler manager.
+	 * @param contextDispatcher  the context dispatcher.
+	 * @param storerCreator      the storer creator.
+	 * @param loaderCreator      the loader creator.
+	 * @param registererCreator  the registerer creator.
+	 * @param persister          the persister facade to expose to created storers and loaders, or
+	 *                           {@code null} to expose the manager itself.
+	 * @param target             the persistence target.
+	 * @param source             the persistence source.
+	 * @param storerObserver     the observer notified of every created storer.
+	 * @param bufferSizeProvider the buffer size provider passed to created storers.
+	 * @param targetByteOrder    the byte order produced and consumed by the manager.
+	 *
+	 * @return the newly created manager.
+	 */
 	public static <D> PersistenceManager<D> New(
 		final PersistenceObjectRegistry          objectRegistering ,
 		final PersistenceObjectManager<D>        objectManager     ,
@@ -115,6 +219,16 @@ ByteOrderTargeting<PersistenceManager<D>>
 		);
 	}
 
+	/**
+	 * Default {@link PersistenceManager}. Wires the configured object/type/source/target components together
+	 * and serializes the implicit storers used by the {@link Persister#store(Object)} family on an internal
+	 * monitor &mdash; explicit storers obtained via {@link #createStorer()} are caller-managed.
+	 * <p>
+	 * Implements {@link Unpersistable} because the manager itself must never be written to the persistent
+	 * graph (it would re-create the entire persistence layer on read).
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public final class Default<D> implements PersistenceManager<D>, Unpersistable
 	{
 		///////////////////////////////////////////////////////////////////////////
