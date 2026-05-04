@@ -19,15 +19,56 @@ import static org.eclipse.serializer.util.X.notNull;
 import org.eclipse.serializer.collections.ConstHashTable;
 import org.eclipse.serializer.collections.types.XGettingMap;
 
+/**
+ * Supplies a {@link PersistenceTypeInstantiator} for any requested {@link Class}. Type handlers consult their
+ * provider once at construction time to obtain the per-type instantiator they will use during loading.
+ * <p>
+ * Two implementations are bundled:
+ * <ul>
+ * <li>{@link Default} &mdash; falls back to a single universal {@link PersistenceInstantiator} for every
+ * type.</li>
+ * <li>{@link Mapped} &mdash; consults a class-keyed map first and only falls back to the universal
+ * instantiator when no entry exists. Use this to register custom construction strategies for specific types.</li>
+ * </ul>
+ *
+ * @param <D> the persistence data type passed through to the {@link PersistenceTypeInstantiator}.
+ *
+ * @see PersistenceTypeInstantiator
+ * @see PersistenceInstantiator
+ */
 public interface PersistenceTypeInstantiatorProvider<D>
 {
+	/**
+	 * Returns the instantiator that should be used to create instances of the passed type.
+	 *
+	 * @param <T>  the requested type.
+	 * @param type the runtime type.
+	 *
+	 * @return the instantiator for {@code type}.
+	 */
 	public <T> PersistenceTypeInstantiator<D, T> provideTypeInstantiator(Class<T> type);
-	
+
+	/**
+	 * Returns the default provider, which delegates to a fresh {@link PersistenceInstantiator.Default} for
+	 * every request.
+	 *
+	 * @param <D> the persistence data type.
+	 *
+	 * @return the default provider.
+	 */
 	public static <D> PersistenceTypeInstantiatorProvider<D> Provider()
 	{
 		return new PersistenceInstantiator.Default<>();
 	}
-	
+
+	/**
+	 * Creates a new {@link Default} provider that uses the passed universal instantiator for every type.
+	 *
+	 * @param <D>          the persistence data type.
+	 * @param instantiator the universal instantiator; must not be {@code null}.
+	 *
+	 * @return the newly created provider.
+	 */
 	public static <D> PersistenceTypeInstantiatorProvider<D> New(
 		final PersistenceInstantiator<D> instantiator
 	)
@@ -36,7 +77,17 @@ public interface PersistenceTypeInstantiatorProvider<D>
 			notNull(instantiator)
 		);
 	}
-	
+
+	/**
+	 * Creates a new provider that consults {@code instantiatorMapping} first and falls back to
+	 * {@code instantiator} for unmapped types. Returns a plain {@link Default} when the mapping is empty.
+	 *
+	 * @param <D>                 the persistence data type.
+	 * @param instantiatorMapping the per-type override mapping.
+	 * @param instantiator        the universal fallback instantiator; must not be {@code null}.
+	 *
+	 * @return the newly created provider.
+	 */
 	public static <D> PersistenceTypeInstantiatorProvider<D> New(
 		final XGettingMap<Class<?>, PersistenceTypeInstantiator<D, ?>> instantiatorMapping,
 		final PersistenceInstantiator<D>                               instantiator
@@ -51,8 +102,15 @@ public interface PersistenceTypeInstantiatorProvider<D>
 			)
 		;
 	}
-	
 
+
+	/**
+	 * Default {@link PersistenceTypeInstantiatorProvider}: returns a fresh
+	 * {@link PersistenceTypeInstantiator} backed by the configured universal
+	 * {@link PersistenceInstantiator} for every requested type.
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public class Default<D> implements PersistenceTypeInstantiatorProvider<D>
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -87,6 +145,12 @@ public interface PersistenceTypeInstantiatorProvider<D>
 		
 	}
 	
+	/**
+	 * Mapping-aware {@link PersistenceTypeInstantiatorProvider}: consults an immutable class-keyed map of
+	 * per-type overrides and falls back to {@link Default}'s universal instantiator when no entry matches.
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public final class Mapped<D> extends Default<D>
 	{
 		///////////////////////////////////////////////////////////////////////////
