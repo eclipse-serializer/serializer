@@ -24,20 +24,71 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsist
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyWrongTypeId;
 import org.eclipse.serializer.reference.Swizzling;
 
+/**
+ * Writable {@link PersistenceTypeLookup}: stores biunique {@code (typeId, Class<?>)} mappings and accepts new
+ * registrations. Used as the runtime backing of {@link PersistenceTypeManager}, which adds id allocation on
+ * top of a registry instance.
+ * <p>
+ * Registrations must be consistent &mdash; once a type id is bound to a class, it cannot later be bound to a
+ * different class, and vice versa. The mutating methods report consistency violations through
+ * {@link PersistenceExceptionConsistency} subclasses.
+ *
+ * @see PersistenceTypeLookup
+ * @see PersistenceTypeManager
+ */
 public interface PersistenceTypeRegistry extends PersistenceTypeLookup
 {
+	/**
+	 * Registers the passed mapping. Returns {@code false} if the mapping was already present (a no-op),
+	 * {@code true} if it was newly added.
+	 *
+	 * @param typeId the type id.
+	 * @param type   the class to bind to {@code typeId}.
+	 *
+	 * @return {@code true} if the mapping was newly registered, {@code false} if it was already present.
+	 *
+	 * @throws PersistenceExceptionConsistency if either side of the mapping is already bound to a different
+	 *                                         counterpart.
+	 */
 	public boolean registerType(long typeId, Class<?> type) throws PersistenceExceptionConsistency;
-	
+
+	/**
+	 * Bulk variant of {@link #registerType(long, Class)}: validates the entire batch first and only then
+	 * registers any new mappings, so a conflict in any one entry leaves the registry untouched.
+	 *
+	 * @param types the mappings to register.
+	 *
+	 * @return {@code true} if all passed mappings were already registered (no work was done), {@code false}
+	 *         if at least one was newly added.
+	 *
+	 * @throws PersistenceExceptionConsistency if any mapping conflicts with an existing registration.
+	 */
 	public boolean registerTypes(final Iterable<? extends PersistenceTypeLink> types)
 		throws PersistenceExceptionConsistency;
-	
+
+	/**
+	 * Iterates every registered mapping in the order the registry chooses, invoking the consumer with
+	 * {@code (typeId, type)}.
+	 *
+	 * @param consumer the consumer to invoke for each entry.
+	 */
 	public void iteratePerIds(final BiConsumer<Long, ? super Class<?>> consumer);
-	
+
+	/**
+	 * Creates a new empty {@link Default} registry backed by an in-memory hash map.
+	 *
+	 * @return the newly created registry.
+	 */
 	public static PersistenceTypeRegistry.Default New()
 	{
 		return new PersistenceTypeRegistry.Default();
 	}
-	
+
+	/**
+	 * Default in-memory {@link PersistenceTypeRegistry}. Maintains two synchronized hash maps for the
+	 * forward and inverse direction; all public methods synchronize on the registry instance for thread
+	 * safety.
+	 */
 	public final class Default implements PersistenceTypeRegistry
 	{
 		///////////////////////////////////////////////////////////////////////////

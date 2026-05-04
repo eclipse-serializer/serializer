@@ -14,6 +14,19 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Bidirectional swizzling lookup: combines the {@code Object}&rarr;{@code objectId} direction
+ * ({@link PersistenceObjectIdLookup}) with the {@code objectId}&rarr;{@code Object} direction
+ * ({@link PersistenceObjectLookup}) into the single capability that runtime registries (notably
+ * {@link PersistenceObjectRegistry}) need in order to "swizzle" between persisted ids and live instances
+ * during loading and storing.
+ * <p>
+ * Pure typing interface; it adds no new methods on top of the two parents.
+ *
+ * @see PersistenceObjectIdLookup
+ * @see PersistenceObjectLookup
+ * @see PersistenceObjectRegistry
+ */
 public interface PersistenceSwizzlingLookup extends PersistenceObjectIdLookup, PersistenceObjectLookup
 {
 	// only typing interface so far

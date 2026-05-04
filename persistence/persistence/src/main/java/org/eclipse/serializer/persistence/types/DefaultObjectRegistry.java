@@ -38,6 +38,24 @@ import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+/**
+ * Default {@link PersistenceObjectRegistry} implementation: stores {@code (objectId, object)} entries in two
+ * symmetric hash tables (one keyed by object id, one keyed by identity hash code), holding the registered
+ * instances through {@link java.lang.ref.WeakReference}s so that registration does not pin them in memory.
+ * <p>
+ * The registry self-rebuilds when the configured {@link #hashDensity()} threshold is exceeded;
+ * {@link #consolidate()} additionally drains the JVM's reference queue and removes orphan entries whose
+ * weak reference has been cleared. A separate constants registry keeps a strong reference to a small set of
+ * essential instances so they survive {@link #clear()} / {@link #truncate()} but not
+ * {@link #clearAll()} / {@link #truncateAll()}.
+ * <p>
+ * All public methods are thread-safe; mutating operations synchronize on an internal mutex. The
+ * {@link #processLiveObjectIds(ObjectIdsProcessor)} and {@link #selectLiveObjectIds(org.eclipse.serializer.collections.Set_long)}
+ * methods are intentionally non-blocking and may decline a request rather than wait for a long-running
+ * mutation, to avoid deadlocks with concurrent loaders.
+ *
+ * @see PersistenceObjectRegistry
+ */
 public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 {
 	/* Notes on byte size per entry (+/- COOPS):
@@ -71,39 +89,73 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	// constants //
 	//////////////
 
+	/**
+	 * The default hash density used when no explicit value is supplied.
+	 *
+	 * @return the default hash density ({@code 1.0f}).
+	 */
 	public static final float defaultHashDensity()
 	{
 		return 1.0f;
 	}
-	
-	
+
+
 
 	///////////////////////////////////////////////////////////////////////////
 	// static methods //
 	///////////////////
-	
+
+	/**
+	 * Whether the passed value is a permissible hash density.
+	 *
+	 * @param desiredHashDensity the value to check.
+	 *
+	 * @return {@code true} if the value is valid.
+	 */
 	public static final boolean isValidHashDensity(final float desiredHashDensity)
 	{
 		return XHashing.isValidHashDensity(desiredHashDensity);
 	}
 
+	/**
+	 * Validates the passed hash density and returns it unchanged. Throws if the value is invalid.
+	 *
+	 * @param desiredHashDensity the value to validate.
+	 *
+	 * @return the validated value.
+	 */
 	public static final float validateHashDensity(final float desiredHashDensity)
 	{
 		return XHashing.validateHashDensity(desiredHashDensity);
 	}
-	
+
+	/**
+	 * Whether the passed value is a permissible registry capacity (i.e. strictly positive).
+	 *
+	 * @param desiredCapacity the value to check.
+	 *
+	 * @return {@code true} if the value is valid.
+	 */
 	public static final boolean isValidCapacity(final long desiredCapacity)
 	{
 		return desiredCapacity > 0;
 	}
 
+	/**
+	 * Validates the passed capacity and returns it unchanged. Throws
+	 * {@link PersistenceExceptionInvalidObjectRegistryCapacity} if the value is invalid.
+	 *
+	 * @param desiredCapacity the value to validate.
+	 *
+	 * @return the validated value.
+	 */
 	public static final long validateCapacity(final long desiredCapacity)
 	{
 		if(!isValidCapacity(desiredCapacity))
 		{
 			throw new PersistenceExceptionInvalidObjectRegistryCapacity(desiredCapacity);
 		}
-		
+
 		return desiredCapacity;
 	}
 	
@@ -126,16 +178,35 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	// static constructors //
 	////////////////////////
 	
+	/**
+	 * Creates a new empty registry with default hash density and minimum capacity.
+	 *
+	 * @return the newly created registry.
+	 */
 	public static DefaultObjectRegistry New()
 	{
 		return New(defaultHashDensity());
 	}
 
+	/**
+	 * Creates a new empty registry with the default hash density and the passed minimum capacity.
+	 *
+	 * @param minimumCapacity the initial minimum capacity.
+	 *
+	 * @return the newly created registry.
+	 */
 	public static DefaultObjectRegistry New(final long minimumCapacity)
 	{
 		return New(defaultHashDensity(), minimumCapacity);
 	}
 
+	/**
+	 * Creates a new empty registry with the passed hash density and a minimal initial capacity.
+	 *
+	 * @param hashDensity reasonable values are within {@code [0.75; 2.00]}.
+	 *
+	 * @return the newly created registry.
+	 */
 	public static DefaultObjectRegistry New(final float hashDensity)
 	{
 		return New(hashDensity, 1);

@@ -23,18 +23,71 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsist
 import org.eclipse.serializer.reference.Swizzling;
 
 
+/**
+ * Central type-id allocator: adds id-generating semantics on top of a {@link PersistenceTypeRegistry} by
+ * pairing it with a {@link PersistenceTypeIdProvider}. {@code ensureTypeId} returns the existing id for an
+ * already-registered type or atomically assigns and registers a new one; {@code ensureType} performs the
+ * inverse lookup and throws if the id is unknown.
+ * <p>
+ * Registering a type id additionally walks the class's superclass chain, so the entire ancestry is recorded
+ * &mdash; subsequent persistence operations can rely on every ancestor being registered as well.
+ *
+ * @see PersistenceTypeRegistry
+ * @see PersistenceTypeIdProvider
+ * @see PersistenceObjectManager
+ */
 public interface PersistenceTypeManager extends PersistenceTypeRegistry
 {
+	/**
+	 * Returns the type id associated with {@code type}, assigning and registering a new id if the type is
+	 * not yet known. The superclass chain of {@code type} is registered as a side effect.
+	 *
+	 * @param type the type to look up or register.
+	 *
+	 * @return the (possibly newly assigned) type id.
+	 */
 	public long ensureTypeId(Class<?> type);
 
+	/**
+	 * Returns the {@link Class} associated with the passed type id, or throws if the id is not registered.
+	 *
+	 * @param typeId the type id to resolve.
+	 *
+	 * @return the registered class.
+	 *
+	 * @throws org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyUnknownTid if the
+	 *         id is not registered.
+	 */
 	public Class<?> ensureType(long typeId);
 
+	/**
+	 * The current highest assigned type id, as reported by the underlying provider.
+	 *
+	 * @return the current highest assigned type id.
+	 */
 	public long currentTypeId();
 
+	/**
+	 * Advances the underlying provider's highest assigned type id to {@code highestTypeId}. Refuses to move
+	 * the value backwards: passing a value below the current id is rejected.
+	 *
+	 * @param highestTypeId the new highest assigned type id.
+	 *
+	 * @throws IllegalArgumentException if the current id is already above {@code highestTypeId}.
+	 */
 	public void updateCurrentHighestTypeId(long highestTypeId);
 
-	
-	
+
+
+	/**
+	 * Creates a new {@link Default} manager that delegates lookups and registrations to {@code registry} and
+	 * obtains new ids from {@code tidProvider}.
+	 *
+	 * @param registry    the type registry; must not be {@code null}.
+	 * @param tidProvider the id provider; must not be {@code null}.
+	 *
+	 * @return the newly created manager.
+	 */
 	public static PersistenceTypeManager.Default New(
 		final PersistenceTypeRegistry   registry   ,
 		final PersistenceTypeIdProvider tidProvider
@@ -46,6 +99,11 @@ public interface PersistenceTypeManager extends PersistenceTypeRegistry
 		);
 	}
 
+	/**
+	 * Default {@link PersistenceTypeManager} composing a {@link PersistenceTypeRegistry} with a
+	 * {@link PersistenceTypeIdProvider}. All registry-mutating operations synchronize on the registry
+	 * instance.
+	 */
 	public final class Default implements PersistenceTypeManager
 	{
 		///////////////////////////////////////////////////////////////////////////

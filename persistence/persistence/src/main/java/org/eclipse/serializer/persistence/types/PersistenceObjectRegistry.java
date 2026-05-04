@@ -21,9 +21,21 @@ import org.eclipse.serializer.hashing.HashStatistics;
 import org.eclipse.serializer.util.Cloneable;
 
 /**
- * A registry type for biunique associations of arbitrary objects with ids.
+ * A registry type for biunique associations of arbitrary objects with object ids. Implements
+ * {@link PersistenceSwizzlingLookup}, so it serves as the runtime structure that translates between persisted
+ * object ids and live instances during loading and storing. Implementations typically hold instances by
+ * {@link java.lang.ref.WeakReference} so that registered objects do not prevent garbage collection.
+ * <p>
+ * In addition to plain {@code (objectId, object)} entries, the registry has a separate notion of
+ * <em>constants</em>: instances that must survive {@link #clear()} and {@link #truncate()} because they are
+ * structurally part of the persistent graph (e.g. JDK constants). Use {@link #registerConstant(long, Object)}
+ * to add them; {@link #clearAll()} and {@link #truncateAll()} remove them too.
+ * <p>
+ * The default implementation is {@link DefaultObjectRegistry}; the {@link #New()} factory returns it.
  *
- * 
+ * @see PersistenceSwizzlingLookup
+ * @see PersistenceObjectManager
+ * @see DefaultObjectRegistry
  */
 public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, Cloneable<PersistenceObjectRegistry>
 {
@@ -46,29 +58,104 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 
 	@Override
 	public Object lookupObject(long objectId);
-	
+
+	/**
+	 * Checks whether the passed {@code (objectId, object)} pair is consistent with what is registered.
+	 * Returns {@code true} if the mapping matches an existing entry, {@code false} if neither side is
+	 * registered.
+	 *
+	 * @param objectId the candidate object id.
+	 * @param object   the candidate instance.
+	 *
+	 * @return {@code true} if the mapping is registered, {@code false} if it is unknown.
+	 */
 	public boolean isValid(long objectId, Object object);
-	
+
+	/**
+	 * Throws if the passed {@code (objectId, object)} pair conflicts with a registered entry. Returns
+	 * normally if the pair is either registered exactly as passed or completely absent.
+	 *
+	 * @param objectId the candidate object id.
+	 * @param object   the candidate instance.
+	 */
 	public void validate(long objectId, Object object);
 
+	/**
+	 * Whether any entry &mdash; live or cleared &mdash; exists for the passed object id.
+	 *
+	 * @param objectId the object id to check.
+	 *
+	 * @return {@code true} if some entry is registered for {@code objectId}.
+	 */
 	public boolean containsObjectId(long objectId);
 
+	/**
+	 * Whether the passed object id has a live (non-{@code null}) registered instance. Returns {@code false}
+	 * if the entry exists but its weak reference has been cleared.
+	 *
+	 * @param objectId the object id to check.
+	 *
+	 * @return {@code true} if a live instance is registered for {@code objectId}.
+	 */
     public boolean containsLiveObject(long objectId);
 
+	/**
+	 * Whether the passed object id has an entry whose weak reference has already been cleared by the GC.
+	 *
+	 * @param objectId the object id to check.
+	 *
+	 * @return {@code true} if the entry exists but its instance has been collected.
+	 */
     public boolean containsClearedObject(long objectId);
 
+	/**
+	 * Iterates every live registered entry, invoking {@code acceptor} once per {@code (objectId, instance)}
+	 * pair.
+	 *
+	 * @param <A>      the acceptor type, returned for fluent chaining.
+	 * @param acceptor the acceptor to invoke for each entry.
+	 *
+	 * @return the same acceptor that was passed in.
+	 */
 	public <A extends PersistenceAcceptor> A iterateEntries(A acceptor);
 
 	// general querying //
 
+	/**
+	 * The current number of registered entries, including those whose weak reference has been cleared but
+	 * not yet purged.
+	 *
+	 * @return the registry size.
+	 */
 	public long size();
 
+	/**
+	 * Whether the registry currently has no entries.
+	 *
+	 * @return {@code true} if {@link #size()} is zero.
+	 */
 	public boolean isEmpty();
 
+	/**
+	 * The hash range used for the internal hash tables (a bit mask, i.e. {@code hashLength - 1}).
+	 *
+	 * @return the hash range.
+	 */
 	public int hashRange();
 
+	/**
+	 * The configured hash density &mdash; the average number of entries per hash table slot at which a
+	 * rebuild is triggered.
+	 *
+	 * @return the hash density.
+	 */
 	public float hashDensity();
-	
+
+	/**
+	 * The configured minimum capacity below which the registry will not shrink.
+	 *
+	 * @return the minimum capacity.
+	 */
 	public long minimumCapacity();
 
 	/**
@@ -76,10 +163,32 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 	 */
 	public long capacity();
 	
+	/**
+	 * Sets the hash density, possibly triggering a rebuild of the internal hash tables.
+	 *
+	 * @param hashDensity the new hash density (reasonable values are within {@code [0.75; 2.00]}).
+	 *
+	 * @return {@code true} if a rebuild of internal storage structures was performed.
+	 */
 	public boolean setHashDensity(float hashDensity);
-	
+
+	/**
+	 * Sets the minimum capacity, possibly triggering a rebuild of the internal hash tables.
+	 *
+	 * @param minimumCapacity the new minimum capacity.
+	 *
+	 * @return {@code true} if a rebuild of internal storage structures was performed.
+	 */
 	public boolean setMinimumCapacity(long minimumCapacity);
-	
+
+	/**
+	 * Sets hash density and minimum capacity in one operation, performing at most one rebuild.
+	 *
+	 * @param hashDensity     the new hash density.
+	 * @param minimumCapacity the new minimum capacity.
+	 *
+	 * @return {@code true} if a rebuild of internal storage structures was performed.
+	 */
 	public boolean setConfiguration(float hashDensity, long  minimumCapacity);
 	
 	/**
@@ -92,11 +201,43 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 	public boolean ensureCapacity(long capacity);
 		
 	// registering //
-	
+
+	/**
+	 * Registers the passed mapping. Returns {@code true} if it was newly added, {@code false} if the same
+	 * mapping was already present.
+	 *
+	 * @param objectId the object id.
+	 * @param object   the instance to bind to {@code objectId}.
+	 *
+	 * @return {@code true} if the mapping was newly registered, {@code false} if it was already present.
+	 *
+	 * @throws org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistency if either side
+	 *         is already bound to a different counterpart.
+	 */
 	public boolean registerObject(long objectId, Object object);
 
+	/**
+	 * Optional variant of {@link #registerObject(long, Object)}: if some other live instance is already
+	 * registered for {@code objectId}, that instance is returned and the passed {@code object} is not
+	 * registered. Otherwise {@code object} is registered and returned.
+	 *
+	 * @param objectId the object id.
+	 * @param object   the candidate instance.
+	 *
+	 * @return the instance now associated with {@code objectId} (either the previously registered one or
+	 *         the passed candidate).
+	 */
 	public Object optionalRegisterObject(long objectId, Object object);
-	
+
+	/**
+	 * Registers the passed mapping as a <em>constant</em> &mdash; an entry that survives {@link #clear()}
+	 * and {@link #truncate()} (but not {@link #clearAll()} / {@link #truncateAll()}).
+	 *
+	 * @param objectId the object id.
+	 * @param constant the constant instance to bind to {@code objectId}.
+	 *
+	 * @return {@code true} if the mapping was newly registered, {@code false} if it was already present.
+	 */
 	public boolean registerConstant(long objectId, Object constant);
 
 	/**
@@ -152,7 +293,13 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 	public void truncateAll();
 	
 	// removing logic is not viable except for testing purposes, which can be done implementation-specific.
-	
+
+	/**
+	 * Returns hash statistics for the internal storage structures, keyed by an implementation-specific name
+	 * (e.g. one entry per internal hash table). Useful for diagnostics.
+	 *
+	 * @return the hash statistics by table name.
+	 */
 	public XGettingTable<String, ? extends HashStatistics> createHashStatistics();
 	
 	/**
@@ -179,6 +326,11 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 		return;
 	}
 	
+	/**
+	 * Creates a new empty {@link DefaultObjectRegistry} with default hash density and capacity.
+	 *
+	 * @return the newly created registry.
+	 */
 	public static DefaultObjectRegistry New()
 	{
 		return DefaultObjectRegistry.New();
