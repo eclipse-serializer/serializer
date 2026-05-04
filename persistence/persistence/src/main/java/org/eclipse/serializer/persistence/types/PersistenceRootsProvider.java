@@ -14,14 +14,44 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Supplies the {@link PersistenceRoots} instance and the type handler that knows how to read and write it.
+ * The provider also retains the runtime roots between calls so subsequent {@link #provideRoots()} requests
+ * return the same instance until {@link #updateRuntimeRoots(PersistenceRoots)} replaces it.
+ * <p>
+ * The handler-registration step is delegated to the provider because only the implementation knows which
+ * {@code PersistenceRoots} subtype it produces, so only it can supply a matching custom type handler.
+ *
+ * @param <D> the persistence data type passed through to the registered handler.
+ *
+ * @see PersistenceRoots
+ * @see PersistenceCustomTypeHandlerRegistry
+ */
 public interface PersistenceRootsProvider<D>
 {
+	/**
+	 * Returns the current runtime roots, creating them on first access.
+	 *
+	 * @return the runtime roots.
+	 */
 	public PersistenceRoots provideRoots();
-	
+
+	/**
+	 * Returns the current runtime roots without triggering creation. Returns {@code null} if no roots have
+	 * been provided yet.
+	 *
+	 * @return the runtime roots, or {@code null} if none have been provided.
+	 */
 	public PersistenceRoots peekRoots();
-	
+
+	/**
+	 * Replaces the cached runtime roots with the passed instance. Used by the loading code to install the
+	 * roots reconstructed from disk.
+	 *
+	 * @param runtimeRoots the new runtime roots.
+	 */
 	public void updateRuntimeRoots(PersistenceRoots runtimeRoots);
-	
+
 	/**
 	 * Only the {@link PersistenceRootsProvider} implementation can ensure that the handler fits the instance,
 	 * so it has to do the registering as well.
@@ -33,14 +63,30 @@ public interface PersistenceRootsProvider<D>
 		PersistenceCustomTypeHandlerRegistry<D> typeHandlerRegistry,
 		PersistenceObjectRegistry               objectRegistry
 	);
-	
-	
+
+
+	/**
+	 * Returns an {@link Empty} provider that contributes nothing &mdash; useful for setups that do not use
+	 * named roots.
+	 *
+	 * @param <D> the persistence data type.
+	 *
+	 * @return the empty provider.
+	 */
 	public static <D> PersistenceRootsProvider<D> Empty()
 	{
 		return new Empty<>();
 	}
-	
-	
+
+
+	/**
+	 * No-op {@link PersistenceRootsProvider}: returns {@code null} for both
+	 * {@link #provideRoots()} and {@link #peekRoots()}, and does nothing in
+	 * {@link #updateRuntimeRoots(PersistenceRoots)} or
+	 * {@link #registerRootsTypeHandlerCreator(PersistenceCustomTypeHandlerRegistry, PersistenceObjectRegistry)}.
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public final class Empty<D> implements PersistenceRootsProvider<D>
 	{
 		Empty()
