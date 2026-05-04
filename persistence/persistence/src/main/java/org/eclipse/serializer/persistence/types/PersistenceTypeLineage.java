@@ -22,30 +22,116 @@ import org.eclipse.serializer.collections.types.XGettingTable;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 
 
+/**
+ * Sequence of {@link PersistenceTypeDefinition}s belonging to one logical type as it evolved over time. Every
+ * type encountered in the persistent dictionary has exactly one lineage; each entry in the lineage is one
+ * historical structural definition keyed by its {@code typeId}, with at most one of them flagged as the
+ * <em>runtime definition</em> (i.e. the structure that matches the currently loaded {@link Class}).
+ * <p>
+ * Lineages are what makes legacy mapping possible: the {@link PersistenceLegacyTypeMapper} compares the
+ * runtime definition against the older entries and produces a mapping from the obsolete fields to the current
+ * ones. A lineage may also have no runtime definition (when the type has been removed from the codebase) or
+ * no runtime class (when the type was explicitly registered without a Java counterpart).
+ *
+ * @see PersistenceTypeDefinition
+ * @see PersistenceTypeLineageView
+ * @see PersistenceTypeLineageCreator
+ */
 public interface PersistenceTypeLineage
 {
+	/**
+	 * The textual type name shared by every entry in this lineage. May be {@code null} only for types
+	 * explicitly mapped as having no runtime counterpart.
+	 *
+	 * @return the type name.
+	 */
 	public String typeName();
-	
+
+	/**
+	 * The runtime {@link Class} matching this lineage's {@link #typeName()}, or {@code null} if the name
+	 * could not be resolved (e.g. the class has been removed from the codebase).
+	 *
+	 * @return the runtime class, or {@code null}.
+	 */
 	public Class<?> type();
-	
+
+	/**
+	 * The historical entries by {@code typeId}, kept ordered ascending so that the latest definition is
+	 * always at the tail.
+	 *
+	 * @return the entries by type id.
+	 */
 	public XGettingTable<Long, PersistenceTypeDefinition> entries();
-	
+
+	/**
+	 * The most recently registered {@link PersistenceTypeDefinition}, i.e. the entry with the highest
+	 * {@code typeId} &mdash; not necessarily the runtime one.
+	 *
+	 * @return the latest entry, or {@code null} if the lineage is empty.
+	 */
 	public PersistenceTypeDefinition latest();
-	
+
+	/**
+	 * The entry flagged as the runtime definition (the structure that matches the currently loaded
+	 * {@link Class}), or {@code null} if none has been set.
+	 *
+	 * @return the runtime definition, or {@code null}.
+	 */
 	public PersistenceTypeDefinition runtimeDefinition();
-	
+
+	/**
+	 * Returns an immutable {@link PersistenceTypeLineageView snapshot} of this lineage's current state.
+	 *
+	 * @return a snapshot view.
+	 */
 	public PersistenceTypeLineageView view();
-	
-	
+
+
 
 	// mutating logic //
-	
+
+	/**
+	 * Registers an additional {@link PersistenceTypeDefinition} for this lineage. The passed definition must
+	 * agree with the existing entries on {@link #typeName()} and, if an entry already exists for its
+	 * {@code typeId}, on its member structure.
+	 *
+	 * @param typeDefinition the definition to register.
+	 *
+	 * @return {@code true} if the definition is a new entry, {@code false} if an equivalent entry was
+	 *         already present (only the instance was replaced).
+	 *
+	 * @throws org.eclipse.serializer.persistence.exceptions.PersistenceException if {@code typeDefinition}
+	 *         is incompatible with the lineage.
+	 */
 	public boolean registerTypeDefinition(PersistenceTypeDefinition typeDefinition);
 
+	/**
+	 * Flags the passed definition as this lineage's runtime definition. May only be called once unless the
+	 * exact same instance is passed again, in which case the call is a no-op.
+	 *
+	 * @param runtimeDefinition the definition to mark as runtime definition.
+	 *
+	 * @return {@code true} if the runtime definition was set, {@code false} if the same instance was
+	 *         already registered as runtime definition.
+	 *
+	 * @throws org.eclipse.serializer.persistence.exceptions.PersistenceException if a different runtime
+	 *         definition is already registered, or {@code runtimeDefinition} is incompatible with the
+	 *         lineage.
+	 */
 	public boolean setRuntimeTypeDefinition(PersistenceTypeDefinition runtimeDefinition);
-	
-	
-	
+
+
+
+	/**
+	 * Creates a new empty {@link Default} lineage for the passed type name and class. Both arguments may be
+	 * {@code null}: a {@code null} type name is allowed for types explicitly mapped as having no runtime
+	 * counterpart, a {@code null} class for type names that cannot be resolved to a runtime class.
+	 *
+	 * @param runtimeTypeName the textual type name; may be {@code null}.
+	 * @param runtimeType     the runtime class; may be {@code null}.
+	 *
+	 * @return the newly created lineage.
+	 */
 	public static PersistenceTypeLineage.Default New(
 		final String   runtimeTypeName,
 		final Class<?> runtimeType
@@ -56,7 +142,11 @@ public interface PersistenceTypeLineage
 			mayNull(runtimeType)      // can be null if the type name cannot be resolved to a runtime class.
 		);
 	}
-		
+
+	/**
+	 * Default mutable {@link PersistenceTypeLineage}. Stores entries in an ordered hash table; mutating
+	 * operations synchronize on the instance.
+	 */
 	public final class Default implements PersistenceTypeLineage
 	{
 		////////////////////////////////////////////////////////////////////////////
