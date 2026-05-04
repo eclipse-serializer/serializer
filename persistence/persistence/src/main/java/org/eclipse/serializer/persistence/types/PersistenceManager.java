@@ -415,6 +415,12 @@ ByteOrderTargeting<PersistenceManager<D>>
 		}
 
 		@Override
+		public final Object objectRegistryMonitor()
+		{
+			return this.objectManager.objectRegistryMonitor();
+		}
+
+		@Override
 		public final Object get()
 		{
 			return this.createLoader().get();

@@ -61,8 +61,22 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 	}
 	
 	public boolean registerLocalRegistry(PersistenceLocalObjectIdRegistry<D> localRegistry);
-	
+
 	public void mergeEntries(PersistenceLocalObjectIdRegistry<D> localRegistry);
+
+	/**
+	 * Returns the monitor used by this object manager for synchronization on the object registry.
+	 * <p>
+	 * Storer implementations may use this monitor as their own internal lock to make the canonical
+	 * lock order ({@code objectRegistry -> storer-state}) structural rather than convention-based:
+	 * any storer state mutation is always performed inside the registry monitor, so peer threads in
+	 * {@code synchCheckLocalRegistries} (which already hold the registry) cannot face a lock-order
+	 * inversion when reading a foreign storer's state.
+	 * <p>
+	 * Java synchronization is reentrant, so nested calls into {@link #ensureObjectId(Object)} and
+	 * related methods do not self-deadlock.
+	 */
+	public Object objectRegistryMonitor();
 
 
 	
@@ -137,6 +151,12 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 			{
 				this.objectRegistry.consolidate();
 			}
+		}
+
+		@Override
+		public Object objectRegistryMonitor()
+		{
+			return this.objectRegistry;
 		}
 
 		@Override
