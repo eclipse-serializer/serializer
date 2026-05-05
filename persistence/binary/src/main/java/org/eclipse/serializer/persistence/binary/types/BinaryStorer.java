@@ -38,6 +38,25 @@ import static org.eclipse.serializer.util.logging.Logging.LazyArg;
 import static org.eclipse.serializer.util.logging.Logging.LazyArgInContext;
 
 
+/**
+ * Binary-specific specialization of {@link PersistenceStorer}: collects entities into per-channel
+ * {@link ChunksBuffer}s, assigns object ids via the surrounding {@link PersistenceObjectManager}, and
+ * flushes the assembled data to a {@link PersistenceTarget} on {@code commit()}. Three flavors are
+ * shipped:
+ * <ul>
+ *   <li>{@link Default} &mdash; lazy: child references are stored only when not yet known to the
+ *       persistence context.</li>
+ *   <li>{@link Eager} &mdash; force-stores every reference reachable from a stored root.</li>
+ *   <li>{@link Batching} &mdash; lazy with explicit-root re-storage and time/size-driven background
+ *       flushing for write-heavy workloads.</li>
+ * </ul>
+ * For finer-grained control, {@link PersistenceEagerStoringFieldEvaluator} can decide eagerness on a
+ * per-field basis.
+ *
+ * @see PersistenceStorer
+ * @see BinaryLoader
+ * @see Creator
+ */
 public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallback
 {
 	@Override
@@ -1439,6 +1458,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 
 	}
 		
+	/**
+	 * Creates a new default {@link BinaryStorer.Creator}.
+	 *
+	 * @param channelCountProvider supplies the number of channels each created storer will partition its
+	 *                             chunk buffers across.
+	 * @param switchByteOrder      whether persisted values should use a non-native byte order.
+	 *
+	 * @return the newly created storer creator.
+	 */
 	public static BinaryStorer.Creator Creator(
 		final BinaryChannelCountProvider channelCountProvider,
 		final boolean                    switchByteOrder
@@ -1449,7 +1477,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			        switchByteOrder
 		);
 	}
-		
+
+	/**
+	 * Pluggable factory for {@link BinaryStorer} instances. Stored on the foundation so each persistence
+	 * binding can wire its own storer creation strategy. Default implementations are provided for the
+	 * lazy, eager, and batching flavors.
+	 */
 	public interface Creator extends PersistenceStorer.Creator<Binary>
 	{
 		@Override
@@ -1485,6 +1518,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			Persister                             persister
 		);
 
+		/**
+		 * Skeletal {@link Creator} base holding the channel-count provider and byte-order flag shared by
+		 * all created storers. Subclasses override the per-flavor {@code createXxxStorer} methods.
+		 */
 		public abstract class Abstract implements BinaryStorer.Creator
 		{
 			///////////////////////////////////////////////////////////////////////////
@@ -1529,6 +1566,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 
 		}
 		
+		/**
+		 * Default {@link Creator} implementation. Wires the channel count and byte-order flag through to
+		 * a {@link BinaryStorer.Default}, {@link BinaryStorer.Eager}, or {@link BinaryStorer.Batching}
+		 * instance and registers each created storer as a local registry on its
+		 * {@link PersistenceObjectManager}.
+		 */
 		public final class Default extends Abstract
 		{
 			Default(
