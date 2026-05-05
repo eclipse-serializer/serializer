@@ -22,6 +22,22 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerReflective;
 
+/**
+ * Skeletal base for reflective legacy type handlers: applies value translators directly into the in-memory
+ * field offsets of an already-instantiated object. Unlike the rerouting branch (which rewrites the persisted
+ * binary into the current layout before delegating to the current handler), reflective handlers create an
+ * instance via the wrapped {@link PersistenceTypeHandlerReflective} and update its fields one by one using
+ * the translators and target field offsets.
+ * <p>
+ * Because instance creation does not relayout the persisted bytes, reference traversal must follow the
+ * <em>old</em> binary layout described by the legacy type definition.
+ *
+ * @param <T> the runtime type produced by this handler.
+ *
+ * @see AbstractBinaryLegacyTypeHandlerTranslating
+ * @see BinaryLegacyTypeHandlerGenericType
+ * @see BinaryLegacyTypeHandlerGenericEnum
+ */
 public abstract class AbstractBinaryLegacyTypeHandlerReflective<T>
 extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 {
@@ -81,6 +97,17 @@ extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 		return this.typeHandler().create(rawData, handler);
 	}
 	
+	/**
+	 * Guards against memory corruption when a custom root resolver returns an instance whose runtime type
+	 * does not match the type id this handler is bound to: the field offsets would otherwise write into
+	 * unrelated memory locations.
+	 *
+	 * @param data     the persisted entity data (unused in the default check, present for subclass extension).
+	 * @param instance the instance about to be updated.
+	 * @param handler  the load handler driving the current load operation.
+	 *
+	 * @throws TypeCastException if {@code instance} is not assignable to {@link #type()}.
+	 */
 	protected void validateForUpdate(
 		final Binary                 data    ,
 		final T                      instance,

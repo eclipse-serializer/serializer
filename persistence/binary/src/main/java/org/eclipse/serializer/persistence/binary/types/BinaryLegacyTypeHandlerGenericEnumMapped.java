@@ -26,6 +26,16 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.typing.KeyValue;
 
 
+/**
+ * Reflective legacy handler for enum classes whose <em>static</em> structure (the set or order of enum
+ * constants) has changed since the legacy version. Translates each persisted ordinal through an
+ * {@code ordinalMapping} array before resolving the matching constant on the current type, allowing
+ * removed, renamed, or reordered constants to be migrated.
+ *
+ * @param <T> the enum runtime type produced by this handler.
+ *
+ * @see BinaryLegacyTypeHandlerGenericEnum
+ */
 public class BinaryLegacyTypeHandlerGenericEnumMapped<T>
 extends BinaryLegacyTypeHandlerGenericEnum<T>
 {
@@ -33,6 +43,20 @@ extends BinaryLegacyTypeHandlerGenericEnum<T>
 	// static methods //
 	///////////////////
 
+	/**
+	 * Creates a new {@link BinaryLegacyTypeHandlerGenericEnumMapped} for the given legacy/current type pairing.
+	 *
+	 * @param typeDefinition               the legacy type definition describing the persisted layout.
+	 * @param typeHandler                  the current type handler that owns the enum constants.
+	 * @param translatorsWithTargetOffsets ordered offset/translator pairs derived from the legacy mapping.
+	 * @param ordinalMapping               array indexed by legacy ordinal yielding the current ordinal, or {@code null} for discarded constants.
+	 * @param listener                     optional listener invoked on each legacy creation, may be {@code null}.
+	 * @param switchByteOrder              whether persisted values use a non-native byte order.
+	 *
+	 * @param <T> the enum runtime type produced by the handler.
+	 *
+	 * @return the newly created legacy handler.
+	 */
 	public static <T> BinaryLegacyTypeHandlerGenericEnumMapped<T> New(
 		final PersistenceTypeDefinition                       typeDefinition              ,
 		final PersistenceTypeHandler<Binary, T>               typeHandler                 ,
