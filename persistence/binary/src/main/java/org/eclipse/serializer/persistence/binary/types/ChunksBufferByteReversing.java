@@ -19,6 +19,14 @@ import static org.eclipse.serializer.util.X.notNull;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 
+/**
+ * {@link ChunksBuffer} variant that stores all primitive values in a non-native byte order. Reverses bytes
+ * on every primitive read/write so the persisted form is consistently swapped for consumers that expect
+ * the opposite endianness.
+ *
+ * @see ChunksBuffer
+ * @see ChunksWrapperByteReversing
+ */
 public class ChunksBufferByteReversing extends ChunksBuffer
 {
 	///////////////////////////////////////////////////////////////////////////

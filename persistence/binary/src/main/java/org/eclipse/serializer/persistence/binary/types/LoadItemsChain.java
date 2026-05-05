@@ -19,16 +19,44 @@ import static org.eclipse.serializer.collections.XArrays.copy;
 import org.eclipse.serializer.functional._longProcedure;
 import org.eclipse.serializer.persistence.types.PersistenceIdSet;
 
+/**
+ * Internal data structure used by the binary loader to gather the set of object ids whose data still needs
+ * to be fetched from the source. Combines a hash-based dedup set (so the same object id is queued only
+ * once) with a linked list to preserve insertion order, and exposes the collected ids partitioned into
+ * per-channel {@link PersistenceIdSet}s.
+ *
+ * @see Simple
+ * @see ChannelHashing
+ */
 public interface LoadItemsChain
 {
+	/**
+	 * @param objectId the object id to test.
+	 *
+	 * @return {@code true} if the chain already contains a load item for {@code objectId}.
+	 */
 	public boolean containsLoadItem(long objectId);
 
+	/**
+	 * Adds a load item for {@code objectId} unless one is already present.
+	 *
+	 * @param objectId the object id to enqueue.
+	 */
 	public void addLoadItem(long objectId);
 
+	/**
+	 * @return {@code true} if no load items are currently queued.
+	 */
 	public boolean isEmpty();
 
+	/**
+	 * @return the queued ids partitioned into one {@link PersistenceIdSet} per channel.
+	 */
 	public PersistenceIdSet[] getObjectIdSets();
 
+	/**
+	 * Resets the chain to empty.
+	 */
 	public void clear();
 
 	final class Entry
@@ -55,6 +83,10 @@ public interface LoadItemsChain
 		}
 	}
 
+	/**
+	 * Skeletal base providing the dedup hash table; subclasses supply the linked-list bookkeeping that
+	 * decides how queued ids are partitioned for {@link #getObjectIdSets()}.
+	 */
 	public abstract class Abstract implements LoadItemsChain
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -169,6 +201,10 @@ public interface LoadItemsChain
 
 	}
 
+	/**
+	 * Single-channel {@link LoadItemsChain}: yields one {@link PersistenceIdSet} containing all queued ids
+	 * in insertion order. Used when there is no per-channel partitioning to perform.
+	 */
 	public final class Simple extends LoadItemsChain.Abstract implements PersistenceIdSet
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -217,6 +253,11 @@ public interface LoadItemsChain
 
 	}
 
+	/**
+	 * Multi-channel {@link LoadItemsChain}: distributes queued ids across {@code channelCount} chains via
+	 * the low bits of the object id, yielding one {@link PersistenceIdSet} per channel for parallel
+	 * fetching from a channel-partitioned source.
+	 */
 	public final class ChannelHashing extends LoadItemsChain.Abstract
 	{
 		///////////////////////////////////////////////////////////////////////////

@@ -14,8 +14,17 @@ package org.eclipse.serializer.persistence.binary.types;
  * #L%
  */
 
+/**
+ * Functional callback that reads a contiguous range of native memory starting at a raw address. Used by
+ * the binary persistence layer to feed previously-written buffers (or memory-mapped storage regions) to
+ * the read pipeline without intermediate copying.
+ */
 @FunctionalInterface
 public interface MemoryRangeReader
 {
+	/**
+	 * @param address the start address of the memory range.
+	 * @param length  the length of the range in bytes.
+	 */
 	public void readMemory(long address, long length);
 }
