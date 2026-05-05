@@ -18,6 +18,13 @@ import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 
 
+/**
+ * Specialization of {@link AbstractBinaryHandlerCustomNonReferential} for non-referencing types whose
+ * persisted form has a fixed length (e.g. {@link java.util.Date}, {@link java.util.Currency}). Pins
+ * {@link #hasVaryingPersistedLengthInstances()} to {@code false}.
+ *
+ * @param <T> the runtime type handled.
+ */
 public abstract class AbstractBinaryHandlerCustomNonReferentialFixedLength<T>
 extends AbstractBinaryHandlerCustomNonReferential<T>
 {

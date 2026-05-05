@@ -18,6 +18,14 @@ import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
 
 
+/**
+ * Specialization of {@link AbstractBinaryHandlerCustomValue} for value types whose persisted form has a
+ * variable length (e.g. {@link String}, {@link java.math.BigInteger}, byte arrays). Pins
+ * {@link #hasPersistedVariableLength()} and {@link #hasVaryingPersistedLengthInstances()} to {@code true}.
+ *
+ * @param <T> the runtime value type handled.
+ * @param <S> the validation-state representation.
+ */
 public abstract class AbstractBinaryHandlerCustomValueVariableLength<T, S>
 extends AbstractBinaryHandlerCustomValue<T, S>
 {

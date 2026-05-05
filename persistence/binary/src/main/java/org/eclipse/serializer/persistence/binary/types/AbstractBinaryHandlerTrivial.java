@@ -23,6 +23,15 @@ import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 
+/**
+ * Skeletal base for handlers of types that have neither persistable state nor any references &mdash; e.g.
+ * {@link BinaryHandlerStateless}, {@link BinaryHandlerStatelessConstant}, {@link BinaryHandlerPrimitive},
+ * {@link BinaryHandlerAbstractType}, {@link BinaryHandlerUnpersistable}. Default-implements all
+ * member-iteration, length-bookkeeping and reference-traversal hooks as no-ops or empty results, leaving
+ * subclasses to override only {@link #store} and {@link #create}.
+ *
+ * @param <T> the runtime type handled.
+ */
 public abstract class AbstractBinaryHandlerTrivial<T> extends BinaryTypeHandler.Abstract<T>
 {
 	///////////////////////////////////////////////////////////////////////////

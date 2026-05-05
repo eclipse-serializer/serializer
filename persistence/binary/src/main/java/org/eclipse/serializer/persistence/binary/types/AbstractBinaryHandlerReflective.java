@@ -41,6 +41,24 @@ import org.eclipse.serializer.persistence.types.Persister;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.UtilStackTrace;
 
+/**
+ * Skeletal base for binary type handlers that derive their persistent layout reflectively from the fields
+ * of the handled class. Builds per-member {@link BinaryValueStorer}s and {@link BinaryValueSetter}s
+ * (consulting the {@link BinaryFieldHandlerProvider} for custom-field overrides), tracks storing vs.
+ * setting members, evaluates eager-storing rules via the supplied
+ * {@link PersistenceEagerStoringFieldEvaluator}, and provides default {@link #store}, {@link #updateState},
+ * and reference-iteration logic on top of these arrays.
+ * <p>
+ * Concrete subclasses are {@link BinaryHandlerGenericType} (regular classes) and
+ * {@link BinaryHandlerGenericEnum} (enums). The base class is also reused by reflective legacy handlers
+ * via {@link AbstractBinaryLegacyTypeHandlerReflective}.
+ *
+ * @param <T> the runtime type handled.
+ *
+ * @see PersistenceTypeHandlerReflective
+ * @see BinaryHandlerGenericType
+ * @see BinaryHandlerGenericEnum
+ */
 public abstract class AbstractBinaryHandlerReflective<T>
 extends BinaryTypeHandler.Abstract<T>
 implements PersistenceTypeHandlerReflective<Binary, T>

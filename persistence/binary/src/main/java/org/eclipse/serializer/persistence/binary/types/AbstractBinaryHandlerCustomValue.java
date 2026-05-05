@@ -20,6 +20,20 @@ import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 
 
+/**
+ * Skeletal base for handlers of immutable value types (e.g. {@link String}, {@link Integer},
+ * {@link java.math.BigInteger}). Such instances are fully initialized at creation time, so
+ * {@link #initializeState} is a no-op and {@link #updateState} only validates that the persisted state
+ * still matches the live instance via the {@link ValidatingBinaryHandler} mix-in. By definition value
+ * types carry no references and thus implement {@link #hasPersistedReferences()} as {@code false}.
+ *
+ * @param <T> the runtime value type handled.
+ * @param <S> the validation-state representation used by {@link ValidatingBinaryHandler}.
+ *
+ * @see ValidatingBinaryHandler
+ * @see AbstractBinaryHandlerCustomValueFixedLength
+ * @see AbstractBinaryHandlerCustomValueVariableLength
+ */
 public abstract class AbstractBinaryHandlerCustomValue<T, S>
 extends AbstractBinaryHandlerCustom<T>
 implements ValidatingBinaryHandler<T, S>

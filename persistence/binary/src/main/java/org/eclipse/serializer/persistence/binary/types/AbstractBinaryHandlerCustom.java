@@ -41,9 +41,20 @@ import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.X;
 
 /**
- * 
+ * Skeletal base for hand-written (&ldquo;custom&rdquo;) binary type handlers. Subclasses describe their
+ * persistent layout via an explicit list of {@link PersistenceTypeDefinitionMember}s passed to the
+ * constructor (or initialized lazily, e.g. by {@link CustomBinaryHandler} via reflective
+ * {@link BinaryField} discovery), and supply their own {@link #store} and {@link #create} logic.
+ * <p>
+ * Provides a small library of static helpers ({@link #CustomField}, {@link #Complex},
+ * {@link #SimpleArrayFields}, {@link #SizedArrayFields}, {@link #keyValuesFields}, etc.) for declaring the
+ * common member shapes used by built-in handlers, plus precomputed binary-length bookkeeping derived from
+ * the declared members.
  *
- * @param <T> the handled type
+ * @param <T> the runtime type handled.
+ *
+ * @see CustomBinaryHandler
+ * @see AbstractBinaryHandlerReflective
  */
 public abstract class AbstractBinaryHandlerCustom<T>
 extends BinaryTypeHandler.Abstract<T>
