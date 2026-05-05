@@ -40,8 +40,28 @@ import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.similarity.Similarity;
 
+/**
+ * Binary-specific specialization of {@link PersistenceLegacyTypeHandlerCreator}. For each legacy/current
+ * type mapping result, decides between the rerouting and reflective branches and assembles the matching
+ * {@link BinaryLegacyTypeHandler}: a {@link BinaryLegacyTypeHandlerRerouting} for custom handlers, a
+ * {@link BinaryLegacyTypeHandlerGenericType} for reflective non-enum types, and one of the
+ * {@link BinaryLegacyTypeHandlerGenericEnum} variants for enum types depending on whether the static
+ * (constant) structure has changed.
+ *
+ * @see PersistenceLegacyTypeHandlerCreator
+ * @see BinaryLegacyTypeHandler
+ */
 public interface BinaryLegacyTypeHandlerCreator extends PersistenceLegacyTypeHandlerCreator<Binary>
 {
+	/**
+	 * Creates a new default {@link BinaryLegacyTypeHandlerCreator}.
+	 *
+	 * @param valueTranslatorProvider    provides per-member {@link BinaryValueSetter} translators for the legacy mapping.
+	 * @param legacyTypeHandlingListener optional listener notified about every legacy-type instantiation, may be {@code null}.
+	 * @param switchByteOrder            whether persisted values use a non-native byte order.
+	 *
+	 * @return the newly created legacy handler creator.
+	 */
 	public static BinaryLegacyTypeHandlerCreator New(
 		final BinaryValueTranslatorProvider                 valueTranslatorProvider   ,
 		final PersistenceLegacyTypeHandlingListener<Binary> legacyTypeHandlingListener,
@@ -55,6 +75,10 @@ public interface BinaryLegacyTypeHandlerCreator extends PersistenceLegacyTypeHan
 		);
 	}
 
+	/**
+	 * Default {@link BinaryLegacyTypeHandlerCreator} implementation. Wires the value translator provider,
+	 * the optional legacy-handling listener, and the byte-order flag through to every produced handler.
+	 */
 	public final class Default
 	extends PersistenceLegacyTypeHandlerCreator.Abstract<Binary>
 	implements BinaryLegacyTypeHandlerCreator
@@ -203,6 +227,17 @@ public interface BinaryLegacyTypeHandlerCreator extends PersistenceLegacyTypeHan
 			return reroutingTypeHandler;
 		}
 
+		/**
+		 * Wraps a rerouting handler for an enum type: returns it unchanged when the static (constant)
+		 * structure has not changed, or wraps it in an ordinal-mapping enum wrapper otherwise.
+		 *
+		 * @param mappingResult        the legacy/current mapping result.
+		 * @param reroutingTypeHandler the rerouting handler already built for the structural mapping.
+		 *
+		 * @param <T> the enum runtime type.
+		 *
+		 * @return the legacy type handler to use for the enum.
+		 */
 		protected <T> PersistenceLegacyTypeHandler<Binary, T> deriveCustomWrappingHandlerEnum(
 			final PersistenceLegacyTypeMappingResult<Binary, T> mappingResult       ,
 			final BinaryLegacyTypeHandlerRerouting<T>           reroutingTypeHandler

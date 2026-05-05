@@ -28,6 +28,22 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.typing.KeyValue;
 
+/**
+ * Legacy type handler that, for each persisted entity, allocates a fresh native buffer, copies translated
+ * values from the legacy layout into the offsets of the current layout, and reroutes the load item to
+ * point at the new buffer before delegating instance creation, state update, and completion to the wrapped
+ * current {@link PersistenceTypeHandler}. This is the strategy used for custom (non-reflective) handlers
+ * that cannot be updated field-by-field.
+ * <p>
+ * Because rerouting rewrites the persisted bytes into the current layout before any of the wrapped
+ * handler's methods see them, reference traversal must follow the <em>new</em> binary layout described by
+ * the current type handler.
+ *
+ * @param <T> the runtime type produced by this handler.
+ *
+ * @see AbstractBinaryLegacyTypeHandlerTranslating
+ * @see AbstractBinaryLegacyTypeHandlerReflective
+ */
 public final class BinaryLegacyTypeHandlerRerouting<T>
 extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 {
@@ -35,6 +51,19 @@ extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 	// static methods //
 	///////////////////
 
+	/**
+	 * Creates a new {@link BinaryLegacyTypeHandlerRerouting} for the given legacy/current type pairing.
+	 *
+	 * @param typeDefinition               the legacy type definition describing the persisted layout.
+	 * @param typeHandler                  the current type handler whose layout is the rerouting target.
+	 * @param translatorsWithTargetOffsets ordered offset/translator pairs derived from the legacy mapping.
+	 * @param listener                     optional listener invoked on each legacy creation, may be {@code null}.
+	 * @param switchByteOrder              whether persisted values use a non-native byte order.
+	 *
+	 * @param <T> the runtime type produced by the handler.
+	 *
+	 * @return the newly created legacy handler.
+	 */
 	public static <T> BinaryLegacyTypeHandlerRerouting<T> New(
 		final PersistenceTypeDefinition                       typeDefinition              ,
 		final PersistenceTypeHandler<Binary, T>               typeHandler                 ,

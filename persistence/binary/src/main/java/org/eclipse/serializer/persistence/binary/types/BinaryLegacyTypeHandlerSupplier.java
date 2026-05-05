@@ -16,6 +16,15 @@ package org.eclipse.serializer.persistence.binary.types;
 
 import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandlerSupplier;
 
+/**
+ * Binary-specific specialization of {@link PersistenceLegacyTypeHandlerSupplier} that supplies
+ * {@link BinaryLegacyTypeHandler} instances for outdated type definitions encountered during loading.
+ *
+ * @param <T> the runtime type the supplied legacy handler reads into.
+ *
+ * @see PersistenceLegacyTypeHandlerSupplier
+ * @see BinaryLegacyTypeHandler
+ */
 public interface BinaryLegacyTypeHandlerSupplier<T> extends PersistenceLegacyTypeHandlerSupplier<Binary, T>
 {
 

@@ -23,6 +23,17 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerReflective;
 import org.eclipse.serializer.typing.KeyValue;
 
+/**
+ * Generic reflective legacy handler for non-enum classes: applies the per-member value translators directly
+ * into the in-memory field offsets of an instance produced by the wrapped current
+ * {@link PersistenceTypeHandlerReflective}. This is the default reflective legacy handler picked by the
+ * binary {@link BinaryLegacyTypeHandlerCreator} for plain (non-enum) classes.
+ *
+ * @param <T> the runtime type produced by this handler.
+ *
+ * @see AbstractBinaryLegacyTypeHandlerReflective
+ * @see BinaryLegacyTypeHandlerGenericEnum
+ */
 public class BinaryLegacyTypeHandlerGenericType<T>
 extends AbstractBinaryLegacyTypeHandlerReflective<T>
 {
@@ -30,6 +41,19 @@ extends AbstractBinaryLegacyTypeHandlerReflective<T>
 	// static methods //
 	///////////////////
 
+	/**
+	 * Creates a new {@link BinaryLegacyTypeHandlerGenericType} for the given legacy/current type pairing.
+	 *
+	 * @param typeDefinition               the legacy type definition describing the persisted layout.
+	 * @param typeHandler                  the current reflective type handler that produces instances.
+	 * @param translatorsWithTargetOffsets ordered offset/translator pairs derived from the legacy mapping.
+	 * @param listener                     optional listener invoked on each legacy creation, may be {@code null}.
+	 * @param switchByteOrder              whether persisted values use a non-native byte order.
+	 *
+	 * @param <T> the runtime type produced by the handler.
+	 *
+	 * @return the newly created legacy handler.
+	 */
 	public static <T> BinaryLegacyTypeHandlerGenericType<T> New(
 		final PersistenceTypeDefinition                       typeDefinition              ,
 		final PersistenceTypeHandlerReflective<Binary, T>     typeHandler                 ,
