@@ -30,8 +30,19 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerCreator;
 
 
 /**
- * Factory and master instance type for assembling and binary persistence layer.
+ * Factory and master configuration type for assembling a binary persistence layer. Extends the generic
+ * {@link PersistenceFoundation} with binary-specific component slots: custom value-translator lookup,
+ * translator key builders, value-translator mapping/provider, and the {@link BinaryFieldHandlerProvider}.
+ * Each slot is lazily ensured on first access and can be overridden via the matching setter.
+ * <p>
+ * The default implementation also wires the binary-specific storer/loader creators, type-handler creator,
+ * legacy-type-handler creator, custom-type-handler registry, and roots/root-reference providers so a
+ * caller only has to supply application-specific overrides.
  *
+ * @param <F> the concrete foundation type (self-bound for fluent setters).
+ *
+ * @see PersistenceFoundation
+ * @see BinaryPersistence
  */
 public interface BinaryPersistenceFoundation<F extends BinaryPersistenceFoundation<?>>
 extends PersistenceFoundation<Binary, F>
@@ -39,48 +50,99 @@ extends PersistenceFoundation<Binary, F>
 
 	@Override
 	public BinaryPersistenceFoundation<F> Clone();
-	
+
+	/**
+	 * @return the table of registered custom value translators keyed by lookup key.
+	 */
 	public XTable<String, BinaryValueSetter> getCustomTranslatorLookup();
-	
+
+	/**
+	 * @return the registered {@link BinaryValueTranslatorKeyBuilder}s consulted in order during legacy mapping.
+	 */
 	public XEnum<BinaryValueTranslatorKeyBuilder> getTranslatorKeyBuilders();
-	
+
+	/**
+	 * @return the {@link BinaryValueTranslatorMappingProvider} backing the translator lookup table.
+	 */
 	public BinaryValueTranslatorMappingProvider getValueTranslatorMappingProvider();
-	
+
+	/**
+	 * @return the {@link BinaryValueTranslatorProvider} used during legacy type mapping.
+	 */
 	public BinaryValueTranslatorProvider getValueTranslatorProvider();
-			
+
+	/**
+	 * @return the {@link BinaryFieldHandlerProvider} consulted by reflective handlers for per-field overrides.
+	 */
 	public BinaryFieldHandlerProvider getFieldHandlerProvider();
-	
-	
+
+
+	/**
+	 * @param customTranslatorLookup the custom translator lookup table to use.
+	 *
+	 * @return this foundation for fluent chaining.
+	 */
 	public F setCustomTranslatorLookup(
 		XTable<String, BinaryValueSetter> customTranslatorLookup
 	);
-	
+
+	/**
+	 * @param translatorKeyBuilders the translator key builders to use.
+	 *
+	 * @return this foundation for fluent chaining.
+	 */
 	public F setTranslatorKeyBuilders(
 		XEnum<BinaryValueTranslatorKeyBuilder> translatorKeyBuilders
 	);
-	
+
+	/**
+	 * @param valueTranslatorProvider the value-translator provider to use.
+	 *
+	 * @return this foundation for fluent chaining.
+	 */
 	public F setValueTranslatorProvider(
 		BinaryValueTranslatorProvider valueTranslatorProvider
 	);
-	
+
+	/**
+	 * @param valueTranslatorMappingProvider the translator mapping provider to use.
+	 *
+	 * @return this foundation for fluent chaining.
+	 */
 	public F setValueTranslatorMappingProvider(
 		BinaryValueTranslatorMappingProvider valueTranslatorMappingProvider
 	);
-	
+
+	/**
+	 * @param fieldHandlerProvider the field-handler provider to use.
+	 *
+	 * @return this foundation for fluent chaining.
+	 */
 	public F setFieldHandlerProvider(
 		BinaryFieldHandlerProvider fieldHandlerProvider
 	);
-	
+
 	@Override
 	public PersistenceManager<Binary> createPersistenceManager();
 
 
-	
+
+	/**
+	 * @return a new default {@link BinaryPersistenceFoundation}.
+	 */
 	public static BinaryPersistenceFoundation<?> New()
 	{
 		return new BinaryPersistenceFoundation.Default<>();
 	}
 
+	/**
+	 * Default {@link BinaryPersistenceFoundation} implementation. Each binary-specific slot is lazily
+	 * ensured on first access via the matching {@code ensureXxx} method and dispatched through the
+	 * configured {@link org.eclipse.serializer.functional.InstanceDispatcherLogic}; the {@code ensureXxx} methods are protected so that
+	 * subclasses can swap in alternate components without losing the lazy/dispatch wiring.
+	 *
+	 * @param <F> the concrete subclass type.
+	 */
 	public class Default<F extends BinaryPersistenceFoundation.Default<?>>
 	extends PersistenceFoundation.Default<Binary, F>
 	implements BinaryPersistenceFoundation<F>

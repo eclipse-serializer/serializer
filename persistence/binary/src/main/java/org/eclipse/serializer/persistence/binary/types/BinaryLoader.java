@@ -31,8 +31,27 @@ import org.eclipse.serializer.persistence.types.*;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+/**
+ * Binary-specific specialization of {@link PersistenceLoader}: drives a single load operation by
+ * collecting required object ids into a {@link LoadItemsChain}, fetching the corresponding entity data
+ * from a {@link PersistenceSourceSupplier}, instantiating each entity via the registered
+ * {@link BinaryTypeHandler}, and finally wiring up references through the registered
+ * {@link PersistenceObjectRegistry}. Two creator flavors are shipped:
+ * <ul>
+ *   <li>{@link CreatorSimple} &mdash; single-channel loader using {@link LoadItemsChain.Simple}.</li>
+ *   <li>{@link CreatorChannelHashing} &mdash; multi-channel loader using
+ *       {@link LoadItemsChain.ChannelHashing} for parallel fetching from a channel-partitioned source.</li>
+ * </ul>
+ *
+ * @see PersistenceLoader
+ * @see BinaryStorer
+ */
 public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 {
+	/**
+	 * Pluggable factory for {@link BinaryLoader} instances. Stored on the foundation so each persistence
+	 * binding can wire its own loader creation strategy.
+	 */
 	public interface Creator extends PersistenceLoader.Creator<Binary>
 	{
 		@Override
@@ -43,13 +62,32 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			final PersistenceSourceSupplier<Binary>    source
 		);
 	}
-	
-	
+
+
+	/**
+	 * Creates a new single-channel {@link BinaryLoader.Creator}.
+	 *
+	 * @param switchByteOrder whether persisted values use a non-native byte order.
+	 *
+	 * @return the newly created loader creator.
+	 */
 	public static BinaryLoader.Creator CreatorSimple(final boolean switchByteOrder)
 	{
 		return new BinaryLoader.CreatorSimple(switchByteOrder);
 	}
 
+	/**
+	 * Creates a new {@link BinaryLoader} ready to drive one load operation.
+	 *
+	 * @param typeLookup      the type-handler lookup used to resolve handlers for persisted type ids.
+	 * @param registry        the object registry the loader will populate with reconstructed instances.
+	 * @param persister       the persister facade the loader is part of.
+	 * @param sourceSupplier  the source the loader reads entity data from.
+	 * @param loadItems       the load-items chain used to gather pending object ids.
+	 * @param switchByteOrder whether persisted values use a non-native byte order.
+	 *
+	 * @return the newly created loader.
+	 */
 	public static BinaryLoader New(
 		final PersistenceTypeHandlerLookup<Binary> typeLookup     ,
 		final PersistenceObjectRegistry            registry       ,
@@ -69,6 +107,12 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 		);
 	}
 
+	/**
+	 * Default {@link BinaryLoader} implementation. Drives the load loop by enqueuing object ids into the
+	 * provided {@link LoadItemsChain}, asking the source for their data via {@link BinaryEntityDataReader},
+	 * and resolving references through the {@link PersistenceReferenceLoader} hook used by every
+	 * registered {@link BinaryTypeHandler}.
+	 */
 	public final class Default implements BinaryLoader, BinaryEntityDataReader, PersistenceReferenceLoader
 	{
 		private final static Logger logger = Logging.getLogger(BinaryLoader.class);
@@ -938,6 +982,10 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 
 
 
+	/**
+	 * Single-channel {@link BinaryLoader.Creator}: produces loaders backed by a {@link LoadItemsChain.Simple},
+	 * suitable for sources that are not channel-partitioned.
+	 */
 	public final class CreatorSimple implements BinaryLoader.Creator
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -986,6 +1034,11 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 
 
 
+	/**
+	 * Multi-channel {@link BinaryLoader.Creator}: produces loaders backed by a
+	 * {@link LoadItemsChain.ChannelHashing}, partitioning queued object ids across the configured number
+	 * of channels for parallel fetching from a channel-partitioned source.
+	 */
 	public final class CreatorChannelHashing implements BinaryLoader.Creator
 	{
 		///////////////////////////////////////////////////////////////////////////
