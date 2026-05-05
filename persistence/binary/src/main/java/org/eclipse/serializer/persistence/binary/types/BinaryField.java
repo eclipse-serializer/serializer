@@ -44,6 +44,23 @@ import org.eclipse.serializer.reflect.Setter_int;
 import org.eclipse.serializer.reflect.Setter_long;
 import org.eclipse.serializer.reflect.Setter_short;
 
+/**
+ * Declarative description of a single persisted field for a {@link CustomBinaryHandler}-based handler.
+ * Each {@link BinaryField} ties together a name, persisted type, getter, and (optionally) setter, and
+ * knows how to {@link #storeFromInstance store} itself from a live instance and {@link #setToInstance
+ * set} itself onto one. Subclasses cover the eight Java primitive types, references, and variable-length
+ * payloads (chars, bytes); at most one variable-length field per handler is allowed and it must be the
+ * last one.
+ * <p>
+ * Use the {@code Binary.Field_xxx(...)} factory methods (or the helpers exposed on {@link CustomBinaryHandler})
+ * to construct instances; instances must be initialized exactly once before they participate in
+ * persistence and become immutable thereafter.
+ *
+ * @param <T> the runtime type the field reads from / writes to.
+ *
+ * @see CustomBinaryHandler
+ * @see Binary
+ */
 public interface BinaryField<T> extends PersistenceTypeDefinitionMemberFieldGeneric
 {
 	@Override

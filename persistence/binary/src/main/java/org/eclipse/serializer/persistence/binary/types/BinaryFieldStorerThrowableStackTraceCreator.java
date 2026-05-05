@@ -20,6 +20,15 @@ import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
+/**
+ * Built-in {@link BinaryFieldStorerCreator} for {@link Throwable#getStackTrace() Throwable.stackTrace}.
+ * Forces stack-trace materialization (by calling {@link Throwable#getStackTrace()}) before storing the
+ * field, ensuring lazily-populated traces are captured. Provides four storer variants covering the
+ * eager/lazy and native/byte-reversed combinations.
+ *
+ * @see BinaryFieldStorerCreator
+ * @see BinaryFieldHandlerProvider
+ */
 public class BinaryFieldStorerThrowableStackTraceCreator implements BinaryFieldStorerCreator<Throwable>
 {
 	private Field field;

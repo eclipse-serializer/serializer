@@ -29,11 +29,19 @@ public interface BinaryValueTranslatorMappingProvider extends BinaryValueTransla
 	
 	
 	
+	/**
+	 * @return a new default {@link BinaryValueTranslatorMappingProvider}.
+	 */
 	public static BinaryValueTranslatorMappingProvider New()
 	{
 		return new BinaryValueTranslatorMappingProvider.Default();
 	}
-	
+
+	/**
+	 * Default {@link BinaryValueTranslatorMappingProvider}. Lazily instantiates the value translator table
+	 * via {@link BinaryValueTranslators#createDefaultValueTranslators(boolean)} on first access and
+	 * caches it for the lifetime of this provider.
+	 */
 	public final class Default implements BinaryValueTranslatorMappingProvider
 	{
 		///////////////////////////////////////////////////////////////////////////

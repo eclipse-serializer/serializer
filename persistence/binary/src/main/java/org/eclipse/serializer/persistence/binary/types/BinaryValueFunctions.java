@@ -18,6 +18,15 @@ import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
+/**
+ * Static catalog of singleton {@link BinaryValueStorer} and {@link BinaryValueSetter} instances for every
+ * built-in primitive and reference value flavor (native and byte-reversed, eager and non-eager,
+ * skipping). Provides the lookup methods used by reflective handlers to resolve the matching value
+ * function for a given member type.
+ *
+ * @see BinaryValueStorer
+ * @see BinaryValueSetter
+ */
 public final class BinaryValueFunctions
 {
 	///////////////////////////////////////////////////////////////////////////
