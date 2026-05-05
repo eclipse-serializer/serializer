@@ -16,6 +16,11 @@ package org.eclipse.serializer.persistence.binary.types;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Reads a buffer of concatenated entity binary data, each entity preceded by its header (length, type id,
+ * object id). Implementations parse the buffer into individual entities and forward them to the
+ * surrounding load pipeline.
+ */
 public interface BinaryEntityDataReader
 {
 	/**

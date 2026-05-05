@@ -15,8 +15,16 @@ package org.eclipse.serializer.persistence.binary.types;
  */
 
 
+/**
+ * Functional callback used by collection-like binary handlers to read a single element entry from a
+ * persisted list at the given offset within the surrounding entity's binary form.
+ */
 @FunctionalInterface
 public interface BinaryElementReader
 {
+	/**
+	 * @param binary the persisted entity data.
+	 * @param offset the offset of the element within the entity's binary content.
+	 */
 	public void readElement(Binary binary, long offset);
 }

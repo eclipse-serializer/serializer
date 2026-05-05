@@ -21,6 +21,19 @@ import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.types.PersistenceObjectIdAcceptor;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 
+/**
+ * Per-entity scratchpad used by the binary loader during a single load operation. Wraps the raw entity
+ * content address and tracks the bound {@link PersistenceTypeHandler}, the existing or freshly-created
+ * instance, and links to other load items in two intersecting chains (insertion-order via {@code next},
+ * hash-bucket via {@code link}).
+ * <p>
+ * Inherits the {@link Binary} reading API so handlers can read field values directly off the load item;
+ * the storing-side methods of {@link Binary} (allocating chunks, writing headers, etc.) are intentionally
+ * unsupported &mdash; load items only consume already-persisted data.
+ *
+ * @see Binary
+ * @see BinaryLoadItemByteReversing
+ */
 public class BinaryLoadItem extends Binary
 {
 	///////////////////////////////////////////////////////////////////////////

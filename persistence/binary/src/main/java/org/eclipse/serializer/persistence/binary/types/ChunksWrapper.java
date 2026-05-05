@@ -22,6 +22,18 @@ import org.eclipse.serializer.persistence.types.PersistenceObjectIdAcceptor;
 import org.eclipse.serializer.typing.XTypes;
 
 
+/**
+ * Loading-side {@link Binary} implementation: wraps an array of already-filled direct {@link ByteBuffer}s
+ * read from a source so they can be iterated as a single logical chunk. Each contained buffer must be a
+ * direct buffer; the constructor validates this and rejects heap buffers.
+ * <p>
+ * Counterpart of {@link ChunksBuffer} on the read side. Storing-side methods inherited from
+ * {@link Binary} are unsupported &mdash; wrapped chunks are read-only.
+ *
+ * @see Chunk
+ * @see ChunksBuffer
+ * @see ChunksWrapperByteReversing
+ */
 public class ChunksWrapper extends Binary
 {
 	///////////////////////////////////////////////////////////////////////////

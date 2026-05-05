@@ -28,9 +28,33 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMember
 import org.eclipse.serializer.reflect.XReflect;
 
 
+/**
+ * Walks the persisted binary form of a member (or a contiguous run of members) and reports any references
+ * it contains to a {@link PersistenceObjectIdAcceptor}. A type's full persisted layout is described as an
+ * ordered array of traversers: each traverser advances the read cursor by either a fixed byte count
+ * (returned by {@link #coveredConstantByteCount()}) or a variable amount derived at runtime from a
+ * length-prefixed list. Skipping traversers cover non-reference primitive payloads without invoking the
+ * acceptor.
+ * <p>
+ * The {@code Static} nested class (defined further down) provides a library of common traversers and the
+ * machinery for deriving a per-type traverser array from a list of
+ * {@link PersistenceTypeDescriptionMember}s, optionally cropping it to traversers that actually contain
+ * references.
+ *
+ * @see PersistenceObjectIdAcceptor
+ */
 @FunctionalInterface
 public interface BinaryReferenceTraverser
 {
+	/**
+	 * Walks the binary content starting at {@code address}, reporting any reference values to
+	 * {@code acceptor}.
+	 *
+	 * @param address  the start address of the content to traverse.
+	 * @param acceptor the callback receiving the visited reference object ids.
+	 *
+	 * @return the address immediately after the traversed range.
+	 */
 	public long apply(long address, PersistenceObjectIdAcceptor acceptor);
 
 	/**
@@ -45,11 +69,19 @@ public interface BinaryReferenceTraverser
 		return 0;
 	}
 
+	/**
+	 * @return {@code true} if this traverser actually visits reference values; {@code false} for skip-only
+	 *         traversers covering primitive payloads.
+	 */
 	public default boolean hasReferences()
 	{
 		return false;
 	}
 
+	/**
+	 * @return {@code true} if the traversed range has a length determined at runtime (e.g. a binary list);
+	 *         {@code false} if its length is constant per type.
+	 */
 	public default boolean isVariableLength()
 	{
 		return false;
