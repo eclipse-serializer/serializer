@@ -18,6 +18,18 @@ import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
 
+/**
+ * Skeletal base for handlers of iterable types that persist their elements as a single simple binary list
+ * at offset 0 (no header fields, no per-element key/value structure). Suitable for &ldquo;flat&rdquo;
+ * collections like {@code ArrayList}, {@code HashSet}, etc., where the entire persisted form is just an
+ * element list.
+ * <p>
+ * The default {@link #store} writes the element list via {@link Binary#storeIterableAsList}; subclasses
+ * only need to implement {@link #getElementCount(Iterable)}}, the {@link #create} logic, and any post-create
+ * loading.
+ *
+ * @param <T> the iterable runtime type handled.
+ */
 public abstract class AbstractBinaryHandlerCustomIterableSimpleListElements<T extends Iterable<?>>
 extends AbstractBinaryHandlerCustomIterable<T>
 {

@@ -20,6 +20,16 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
 
 
+/**
+ * Skeletal base for handlers of types that implement {@link Iterable}. Implements
+ * {@link #iterateInstanceReferences} via {@link Persistence#iterateReferencesIterable}, leaving subclasses
+ * to provide the {@link #store}/{@link #create} logic for the specific iterable shape.
+ *
+ * @param <T> the iterable runtime type handled.
+ *
+ * @see AbstractBinaryHandlerCustomIterableSimpleListElements
+ * @see AbstractBinaryHandlerCustomIterableSizedArray
+ */
 public abstract class AbstractBinaryHandlerCustomIterable<T extends Iterable<?>>
 extends AbstractBinaryHandlerCustomCollection<T>
 {
