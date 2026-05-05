@@ -22,6 +22,17 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMember
 import org.eclipse.serializer.reference.Lazy;
 import org.eclipse.serializer.typing.TypeMapping;
 
+/**
+ * Static factory and registry for {@link BinaryValueSetter}s used during legacy type mapping to translate
+ * a persisted source value into the layout of a current target member. Builds the default
+ * primitive-to-primitive translator table (in both native and byte-reversed flavors), provides skipping
+ * setters for source members that are dropped on the target side, and exposes the few common reference
+ * translators needed for the legacy mapping flow.
+ *
+ * @see BinaryValueSetter
+ * @see BinaryValueTranslatorProvider
+ * @see BinaryValueTranslatorMappingProvider
+ */
 public final class BinaryValueTranslators
 {
 	///////////////////////////////////////////////////////////////////////////

@@ -28,8 +28,25 @@ import org.eclipse.serializer.persistence.types.PersistenceRootsProvider;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 
 
+/**
+ * Binary-specific specialization of {@link PersistenceRootsProvider}. Holds the
+ * {@link PersistenceRootResolverProvider} and {@link PersistenceRootReferenceProvider} needed to assemble
+ * the persistent root set on demand and to register the matching root-related type handlers
+ * ({@code BinaryHandlerPersistenceRootsDefault} and the root-reference handler) with the type-handler
+ * registry.
+ *
+ * @see PersistenceRootsProvider
+ */
 public interface BinaryPersistenceRootsProvider extends PersistenceRootsProvider<Binary>
 {
+	/**
+	 * Creates a new default {@link BinaryPersistenceRootsProvider}.
+	 *
+	 * @param rootResolverProvider  supplies the root resolver.
+	 * @param rootReferenceProvider supplies the root-reference type handler.
+	 *
+	 * @return the newly created provider.
+	 */
 	public static BinaryPersistenceRootsProvider New(
 		final PersistenceRootResolverProvider          rootResolverProvider ,
 		final PersistenceRootReferenceProvider<Binary> rootReferenceProvider
@@ -41,6 +58,11 @@ public interface BinaryPersistenceRootsProvider extends PersistenceRootsProvider
 		);
 	}
 	
+	/**
+	 * Default {@link BinaryPersistenceRootsProvider} implementation. Lazily resolves the root resolver and
+	 * the {@link PersistenceRoots} instance and caches both for the provider's lifetime; supports
+	 * runtime-replacement of the cached roots via {@link #updateRuntimeRoots(PersistenceRoots)}.
+	 */
 	public final class Default implements BinaryPersistenceRootsProvider
 	{
 		///////////////////////////////////////////////////////////////////////////
