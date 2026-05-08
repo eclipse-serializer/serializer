@@ -27,6 +27,35 @@ import org.eclipse.serializer.util.UtilStackTrace;
 import org.eclipse.serializer.util.X;
 
 
+/**
+ * Strategy interface that performs all I/O against the underlying storage layer for an
+ * {@link AFileSystem}. Every operation on an {@link AFile}, {@link ADirectory},
+ * {@link AReadableFile} or {@link AWritableFile} ultimately routes through this handler.
+ * <p>
+ * The interface is split into several concern groups:
+ * <ul>
+ *   <li><em>Type validation</em> ({@code isHandled*} / {@code validateHandled*}): every handler is
+ *       paired with a specific implementation family of {@link AItem}s; non-handled instances are
+ *       rejected with {@link AfsExceptionConsistency}.</li>
+ *   <li><em>Item state</em> ({@link #size(AFile)}, {@link #exists(AFile)},
+ *       {@link #exists(ADirectory)}, {@link #isEmpty(ADirectory)}).</li>
+ *   <li><em>Lifecycle</em> ({@link #create(AWritableFile)}, {@link #ensureExists(AWritableFile)},
+ *       {@link #deleteFile(AWritableFile)}, the corresponding {@link ADirectory} variants and the
+ *       {@link #inventorize(ADirectory)} reload).</li>
+ *   <li><em>Channel I/O</em> ({@link #openReading(AReadableFile)},
+ *       {@link #openWriting(AWritableFile)}, {@link #close(AReadableFile)}).</li>
+ *   <li><em>Bulk transfer</em>: {@code readBytes} / {@code writeBytes} / {@code copyTo} /
+ *       {@code copyFrom} / {@link #truncate(AWritableFile, long)} /
+ *       {@link #moveFile(AWritableFile, AWritableFile)}.</li>
+ *   <li><em>Listing</em> ({@link #listItems(ADirectory)}, {@link #listDirectories(ADirectory)},
+ *       {@link #listFiles(ADirectory)}).</li>
+ * </ul>
+ * Implementations honor the file system's {@link WriteController}: write-side methods invoke
+ * {@link #validateIsWritable()} before performing any mutation.
+ *
+ * @see AFileSystem#ioHandler()
+ * @see Abstract
+ */
 public interface AIoHandler extends WriteController
 {
 	/* (08.06.2020 TM)TODO: priv#49: JavaDoc: guaranteed completeness
@@ -53,104 +82,466 @@ public interface AIoHandler extends WriteController
 	 * Currently, such a trivial functionality is not possible with AFS.
 	 */
 	
+	/**
+	 * Whether this handler can operate on the passed item.
+	 *
+	 * @param item the item to check.
+	 *
+	 * @return {@code true} if this handler accepts the item.
+	 */
 	public boolean isHandledItem(AItem item);
-	
+
+	/**
+	 * Whether this handler can operate on the passed file.
+	 *
+	 * @param file the file to check.
+	 *
+	 * @return {@code true} if this handler accepts the file.
+	 */
 	public boolean isHandledFile(AFile file);
-	
+
+	/**
+	 * Whether this handler can operate on the passed directory.
+	 *
+	 * @param directory the directory to check.
+	 *
+	 * @return {@code true} if this handler accepts the directory.
+	 */
 	public boolean isHandledDirectory(ADirectory directory);
-	
+
+	/**
+	 * Whether this handler can operate on the passed readable handle.
+	 *
+	 * @param file the readable handle to check.
+	 *
+	 * @return {@code true} if this handler accepts the handle.
+	 */
 	public boolean isHandledReadableFile(AReadableFile file);
-	
+
+	/**
+	 * Whether this handler can operate on the passed writable handle.
+	 *
+	 * @param file the writable handle to check.
+	 *
+	 * @return {@code true} if this handler accepts the handle.
+	 */
 	public boolean isHandledWritableFile(AWritableFile file);
-	
+
+	/**
+	 * Throws {@link AfsExceptionConsistency} if this handler cannot operate on the passed file.
+	 *
+	 * @param file the file to validate.
+	 */
 	public void validateHandledFile(AFile file);
-	
+
+	/**
+	 * Throws {@link AfsExceptionConsistency} if this handler cannot operate on the passed directory.
+	 *
+	 * @param directory the directory to validate.
+	 */
 	public void validateHandledDirectory(ADirectory directory);
-	
+
+	/**
+	 * Throws {@link AfsExceptionConsistency} if this handler cannot operate on the passed readable handle.
+	 *
+	 * @param file the readable handle to validate.
+	 */
 	public void validateHandledReadableFile(AReadableFile file);
-	
+
+	/**
+	 * Throws {@link AfsExceptionConsistency} if this handler cannot operate on the passed writable handle.
+	 *
+	 * @param file the writable handle to validate.
+	 */
 	public void validateHandledWritableFile(AWritableFile file);
-	
+
+	/**
+	 * Returns the size in bytes of the underlying physical file.
+	 *
+	 * @param file the file to query.
+	 *
+	 * @return the file's size in bytes.
+	 */
 	public long size(AFile file);
 
+	/**
+	 * Whether the underlying physical file exists.
+	 *
+	 * @param file the file to check.
+	 *
+	 * @return {@code true} if the physical file exists.
+	 */
 	public boolean exists(AFile file);
-	
+
+	/**
+	 * Whether the underlying physical directory exists.
+	 *
+	 * @param directory the directory to check.
+	 *
+	 * @return {@code true} if the physical directory exists.
+	 */
 	public boolean exists(ADirectory directory);
 
+	/**
+	 * Creates the underlying physical directory. The directory must not already exist.
+	 *
+	 * @param directory the directory to create.
+	 */
 	public void create(ADirectory directory);
 
+	/**
+	 * Creates the underlying physical file. The file must not already exist.
+	 *
+	 * @param file the writable handle on the file to create.
+	 */
 	public void create(AWritableFile file);
-	
+
+	/**
+	 * Ensures the underlying physical directory exists, creating it if necessary.
+	 *
+	 * @param directory the directory.
+	 *
+	 * @return {@code true} if the directory was created by this call, {@code false} if it already existed.
+	 */
 	public boolean ensureExists(ADirectory directory);
 
+	/**
+	 * Ensures the underlying physical file exists, creating it if necessary.
+	 *
+	 * @param file the writable handle on the file.
+	 *
+	 * @return {@code true} if the file was created by this call, {@code false} if it already existed.
+	 */
 	public boolean ensureExists(AWritableFile file);
-	
+
+	/**
+	 * Reads the underlying physical directory and registers any of its children that are not yet
+	 * known to the {@link ADirectory} instance.
+	 *
+	 * @param directory the directory to inventorize.
+	 */
 	public void inventorize(ADirectory directory);
-	
+
 
 	// ONLY the IO-Aspect, not the AFS-management-level aspect
+	/**
+	 * Whether the physical channel of the passed handle is currently open.
+	 *
+	 * @param file the readable handle.
+	 *
+	 * @return {@code true} if the channel is open.
+	 */
 	public boolean isOpen(AReadableFile file);
-	
+
 	// ONLY the IO-Aspect, not the AFS-management-level aspect
+	/**
+	 * Opens the physical channel of the passed handle for reading.
+	 *
+	 * @param file the readable handle.
+	 *
+	 * @return {@code true} if the channel was opened by this call, {@code false} if it was already open.
+	 */
 	public boolean openReading(AReadableFile file);
-	
+
+	/**
+	 * Opens the physical channel of the passed handle for writing.
+	 *
+	 * @param file the writable handle.
+	 *
+	 * @return {@code true} if the channel was opened by this call, {@code false} if it was already open.
+	 */
 	public boolean openWriting(AWritableFile file);
-		
+
 	// ONLY the IO-Aspect, not the AFS-management-level aspect
+	/**
+	 * Closes the physical channel of the passed handle.
+	 *
+	 * @param file the readable handle.
+	 *
+	 * @return {@code true} if the channel was closed by this call, {@code false} if it was already closed.
+	 */
 	public boolean close(AReadableFile file);
-	
-	
-	
+
+
+
+	/**
+	 * Reads the entire content of {@code sourceFile} into a newly allocated direct {@link ByteBuffer}.
+	 *
+	 * @param sourceFile the readable source.
+	 *
+	 * @return a buffer containing the file's content.
+	 */
 	public ByteBuffer readBytes(AReadableFile sourceFile);
-	
+
+	/**
+	 * Reads {@code sourceFile}'s content from {@code position} to its end into a newly allocated
+	 * direct {@link ByteBuffer}.
+	 *
+	 * @param sourceFile the readable source.
+	 * @param position   the byte offset to start reading from.
+	 *
+	 * @return a buffer containing the read bytes.
+	 */
 	public ByteBuffer readBytes(AReadableFile sourceFile, long position);
-	
+
+	/**
+	 * Reads {@code length} bytes starting at {@code position} of {@code sourceFile} into a newly
+	 * allocated direct {@link ByteBuffer}.
+	 *
+	 * @param sourceFile the readable source.
+	 * @param position   the byte offset to start reading from.
+	 * @param length     the number of bytes to read.
+	 *
+	 * @return a buffer containing the read bytes.
+	 */
 	public ByteBuffer readBytes(AReadableFile sourceFile, long position, long length);
-	
-	
+
+
+	/**
+	 * Reads as many bytes as fit into {@code targetBuffer} starting at the beginning of
+	 * {@code sourceFile}.
+	 *
+	 * @param sourceFile   the readable source.
+	 * @param targetBuffer the buffer to read into.
+	 *
+	 * @return the number of bytes actually read.
+	 */
 	public long readBytes(AReadableFile sourceFile, ByteBuffer targetBuffer);
-	
+
+	/**
+	 * Reads as many bytes as fit into {@code targetBuffer} starting at {@code position} of
+	 * {@code sourceFile}.
+	 *
+	 * @param sourceFile   the readable source.
+	 * @param targetBuffer the buffer to read into.
+	 * @param position     the byte offset to start reading from.
+	 *
+	 * @return the number of bytes actually read.
+	 */
 	public long readBytes(AReadableFile sourceFile, ByteBuffer targetBuffer, long position);
-	
+
+	/**
+	 * Reads up to {@code length} bytes starting at {@code position} of {@code sourceFile} into
+	 * {@code targetBuffer}.
+	 *
+	 * @param sourceFile   the readable source.
+	 * @param targetBuffer the buffer to read into.
+	 * @param position     the byte offset to start reading from.
+	 * @param length       the maximum number of bytes to read.
+	 *
+	 * @return the number of bytes actually read.
+	 */
 	public long readBytes(AReadableFile sourceFile, ByteBuffer targetBuffer, long position, long length);
-	
-	
+
+
+	/**
+	 * Reads {@code sourceFile}'s content into buffers obtained from {@code bufferProvider}.
+	 *
+	 * @param sourceFile     the readable source.
+	 * @param bufferProvider the provider supplying target buffers.
+	 *
+	 * @return the number of bytes read in total.
+	 */
 	public long readBytes(AReadableFile sourceFile, BufferProvider bufferProvider);
-	
+
+	/**
+	 * Reads {@code sourceFile}'s content from {@code position} into buffers obtained from
+	 * {@code bufferProvider}.
+	 *
+	 * @param sourceFile     the readable source.
+	 * @param bufferProvider the provider supplying target buffers.
+	 * @param position       the byte offset to start reading from.
+	 *
+	 * @return the number of bytes read in total.
+	 */
 	public long readBytes(AReadableFile sourceFile, BufferProvider bufferProvider, long position);
-	
+
+	/**
+	 * Reads up to {@code length} bytes from {@code position} of {@code sourceFile} into buffers
+	 * obtained from {@code bufferProvider}.
+	 *
+	 * @param sourceFile     the readable source.
+	 * @param bufferProvider the provider supplying target buffers.
+	 * @param position       the byte offset to start reading from.
+	 * @param length         the maximum number of bytes to read.
+	 *
+	 * @return the number of bytes read in total.
+	 */
 	public long readBytes(AReadableFile sourceFile, BufferProvider bufferProvider, long position, long length);
-		
-	
+
+
+	/**
+	 * Copies the entire content of {@code sourceSubject} into {@code target}, ensuring the
+	 * target physically exists first.
+	 *
+	 * @param sourceSubject the readable source.
+	 * @param target        the writable destination.
+	 *
+	 * @return the number of bytes copied.
+	 */
 	public long copyTo(AReadableFile sourceSubject, AWritableFile target);
-	
+
+	/**
+	 * Copies the content of {@code sourceSubject} from {@code sourcePosition} to its end into
+	 * {@code target}.
+	 *
+	 * @param sourceSubject  the readable source.
+	 * @param sourcePosition the byte offset to start copying from.
+	 * @param target         the writable destination.
+	 *
+	 * @return the number of bytes copied.
+	 */
 	public long copyTo(AReadableFile sourceSubject, long sourcePosition, AWritableFile target);
-	
+
+	/**
+	 * Copies up to {@code length} bytes from {@code sourcePosition} of {@code sourceSubject} into
+	 * {@code target}.
+	 *
+	 * @param sourceSubject  the readable source.
+	 * @param sourcePosition the byte offset to start copying from.
+	 * @param length         the maximum number of bytes to copy.
+	 * @param target         the writable destination.
+	 *
+	 * @return the number of bytes copied.
+	 */
 	public long copyTo(AReadableFile sourceSubject, long sourcePosition, long length, AWritableFile target);
 
+	/**
+	 * Copies the entire content of {@code source} into {@code targetSubject}.
+	 *
+	 * @param source        the readable source.
+	 * @param targetSubject the writable destination.
+	 *
+	 * @return the number of bytes copied.
+	 */
 	public long copyFrom(AReadableFile source, AWritableFile targetSubject);
-	
+
+	/**
+	 * Copies the content of {@code source} from {@code sourcePosition} to its end into
+	 * {@code targetSubject}.
+	 *
+	 * @param source         the readable source.
+	 * @param sourcePosition the byte offset to start copying from.
+	 * @param targetSubject  the writable destination.
+	 *
+	 * @return the number of bytes copied.
+	 */
 	public long copyFrom(AReadableFile source, long sourcePosition, AWritableFile targetSubject);
-	
+
+	/**
+	 * Copies up to {@code length} bytes from {@code sourcePosition} of {@code source} into
+	 * {@code targetSubject}.
+	 *
+	 * @param source         the readable source.
+	 * @param sourcePosition the byte offset to start copying from.
+	 * @param length         the maximum number of bytes to copy.
+	 * @param targetSubject  the writable destination.
+	 *
+	 * @return the number of bytes copied.
+	 */
 	public long copyFrom(AReadableFile source, long sourcePosition, long length, AWritableFile targetSubject);
-	
+
+	/**
+	 * Writes the remaining bytes of every buffer in {@code sourceBuffers} to {@code targetFile} in
+	 * iteration order.
+	 *
+	 * @param targetFile    the writable destination.
+	 * @param sourceBuffers the buffers holding the bytes to write.
+	 *
+	 * @return the number of bytes written in total.
+	 */
 	public long writeBytes(AWritableFile targetFile, Iterable<? extends ByteBuffer> sourceBuffers);
 
+	/**
+	 * Moves the underlying physical file from {@code sourceFile} to {@code targetFile}, notifying
+	 * the relevant {@link AFile.Observer}s and {@link ADirectory.Observer}s.
+	 *
+	 * @param sourceFile the move source.
+	 * @param targetFile the move destination.
+	 */
 	public void moveFile(AWritableFile sourceFile, AWritableFile targetFile);
-	
+
+	/**
+	 * Deletes the underlying physical file. The {@link AFile} instance remains valid as the
+	 * abstract notion of the file.
+	 *
+	 * @param file the writable handle on the file to delete.
+	 *
+	 * @return {@code true} if the physical file was deleted by this call.
+	 */
 	public boolean deleteFile(AWritableFile file);
-	
+
+	/**
+	 * Truncates the underlying physical file to the passed new size.
+	 *
+	 * @param file    the writable handle.
+	 * @param newSize the new size in bytes.
+	 */
 	public void truncate(AWritableFile file, long newSize);
 
+	/**
+	 * Lists the identifiers of all physical children (files and sub-directories) of the passed
+	 * directory.
+	 *
+	 * @param parent the parent directory.
+	 *
+	 * @return the children's identifiers.
+	 */
 	public XGettingEnum<String> listItems(ADirectory parent);
-	
+
+	/**
+	 * Lists the identifiers of all physical sub-directories of the passed directory.
+	 *
+	 * @param parent the parent directory.
+	 *
+	 * @return the sub-directories' identifiers.
+	 */
 	public XGettingEnum<String> listDirectories(ADirectory parent);
-	
+
+	/**
+	 * Lists the identifiers of all physical files in the passed directory.
+	 *
+	 * @param parent the parent directory.
+	 *
+	 * @return the files' identifiers.
+	 */
 	public XGettingEnum<String> listFiles(ADirectory parent);
-		
+
+	/**
+	 * Whether the underlying physical directory contains no items.
+	 *
+	 * @param directory the directory to check.
+	 *
+	 * @return {@code true} if the physical directory is empty.
+	 */
 	public boolean isEmpty(ADirectory directory);
 	
 	
+	/**
+	 * Skeletal {@link AIoHandler} that handles the dispatch and bookkeeping common to all
+	 * implementations and delegates the storage-specific work to typed {@code specific*} hook
+	 * methods.
+	 * <p>
+	 * Each public interface method validates that the supplied item is an instance of the
+	 * implementation-specific item type ({@code I}/{@code F}/{@code D}/{@code R}/{@code W}),
+	 * casts it, invokes the matching {@code specific*} hook, and triggers the relevant
+	 * {@link AFile.Observer} / {@link ADirectory.Observer} callbacks before and after the work.
+	 * Write-side methods consult the supplied {@link WriteController} via
+	 * {@link #validateIsWritable()}.
+	 * <p>
+	 * The {@code FS}/{@code DS} type parameters represent the storage-layer "subject" types
+	 * (e.g. java.nio.file.Path) used as a fallback for foreign {@link AItem} instances; the
+	 * {@link #toSubjectFile(AFile)} / {@link #toSubjectDirectory(ADirectory)} hooks materialize
+	 * such subjects on demand.
+	 *
+	 * @param <FS> the storage-layer file subject type.
+	 * @param <DS> the storage-layer directory subject type.
+	 * @param <I>  the handled {@link AItem} type.
+	 * @param <F>  the handled {@link AFile} type.
+	 * @param <D>  the handled {@link ADirectory} type.
+	 * @param <R>  the handled {@link AReadableFile} type.
+	 * @param <W>  the handled {@link AWritableFile} type.
+	 */
 	public abstract class Abstract<
 		FS,
 		DS,

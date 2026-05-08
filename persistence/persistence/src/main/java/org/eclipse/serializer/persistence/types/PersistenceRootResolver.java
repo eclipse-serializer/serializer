@@ -33,21 +33,80 @@ import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.X;
 
+/**
+ * Resolves identifier strings (as found in the persistent root set or in refactoring rules) to
+ * {@link PersistenceRootEntry}s. Knows the user-defined root reference, the application-supplied named root
+ * suppliers, and &mdash; for identifiers it cannot resolve directly &mdash; can fall back to looking up
+ * persisted enum constant arrays via the type handler manager.
+ * <p>
+ * Two implementations are bundled:
+ * <ul>
+ * <li>{@link Default} &mdash; the regular resolver, looking up entries first in the locally registered set
+ * and then in the enum-constants index.</li>
+ * <li>{@link MappingWrapper} &mdash; decorates another resolver with a refactoring lookup so identifiers
+ * encountered in the persistent dictionary can be rewritten to their current form before resolution.</li>
+ * </ul>
+ *
+ * @see PersistenceRootEntry
+ * @see PersistenceRootResolverProvider
+ */
 public interface PersistenceRootResolver
 {
+	/**
+	 * The identifier used for the user-defined root reference (typically
+	 * {@link Persistence#rootIdentifier()}).
+	 *
+	 * @return the root identifier.
+	 */
 	public String rootIdentifier();
-	
+
+	/**
+	 * The user-defined root reference itself.
+	 *
+	 * @return the root reference.
+	 */
 	public PersistenceRootReference root();
-	
+
+	/**
+	 * Resolves the passed identifier to a {@link PersistenceRootEntry}, returning {@code null} if no entry
+	 * is registered for it (either directly or as an enum-constants identifier).
+	 *
+	 * @param identifier the identifier to resolve.
+	 *
+	 * @return the resolved entry, or {@code null} if unknown.
+	 */
 	public PersistenceRootEntry resolveRootInstance(String identifier);
-	
+
+	/**
+	 * The directly registered entries by identifier (excluding entries that this resolver can only
+	 * synthesize on demand, such as enum-constants entries).
+	 *
+	 * @return the defined entries.
+	 */
 	public XGettingTable<String, PersistenceRootEntry> definedEntries();
-	
+
+	/**
+	 * Convenience accessor returning the entry registered under {@link #rootIdentifier()}, or {@code null}
+	 * if none.
+	 *
+	 * @return the root entry.
+	 */
 	public default PersistenceRootEntry rootEntry()
 	{
 		return this.definedEntries().get(this.rootIdentifier());
 	}
-	
+
+	/**
+	 * Resolves every identifier in {@code identifiers}, accumulating successful results into
+	 * {@code resolvedEntriesAcceptor}. Identifiers that already exist in the acceptor are not re-resolved;
+	 * identifiers that resolve to {@code null} <em>and</em> are not yet in the acceptor are reported as
+	 * unresolved.
+	 *
+	 * @param resolvedEntriesAcceptor the destination map to populate with resolved entries.
+	 * @param identifiers             the identifiers to resolve.
+	 *
+	 * @throws PersistenceException if any identifier remains unresolved after the iteration.
+	 */
 	public default void resolveRootEntries(
 		final XMap<String, PersistenceRootEntry> resolvedEntriesAcceptor,
 		final XGettingEnum<String>               identifiers
@@ -79,11 +138,27 @@ public interface PersistenceRootResolver
 		}
 	}
 	
+	/**
+	 * Resolves every {@linkplain #definedEntries() defined entry} to its instance and returns the result as
+	 * an {@code identifier → instance} table.
+	 *
+	 * @return the resolved root instances.
+	 */
 	public default XGettingTable<String, Object> resolveDefinedRootInstances()
 	{
 		return this.resolveRootInstances(this.definedEntries());
 	}
-	
+
+	/**
+	 * Resolves every entry in {@code entries} to its instance, skipping {@code null} entries (which can
+	 * arise from automatic refactoring of removed root types). Removed entries (whose
+	 * {@link PersistenceRootEntry#instance()} returns {@code null}) are kept with a {@code null} value so
+	 * the caller can distinguish them from never-registered identifiers.
+	 *
+	 * @param entries the entries to resolve.
+	 *
+	 * @return a fresh {@code identifier → instance} table.
+	 */
 	public default XTable<String, Object> resolveRootInstances(
 		final XGettingTable<String, PersistenceRootEntry> entries
 	)
@@ -109,23 +184,48 @@ public interface PersistenceRootResolver
 
 	
 	
+	/**
+	 * Derives a set of named root suppliers from the static reference fields of the passed types, using
+	 * {@link XReflect#deriveFieldIdentifier(Field)} as the identifier deriver.
+	 *
+	 * @param types the types whose static reference fields shall be exposed as roots.
+	 *
+	 * @return the derived {@code identifier → supplier} table.
+	 */
 	public static XGettingTable<String, Supplier<?>> deriveRoots(final Class<?>... types)
 	{
 		return deriveRoots(XReflect::deriveFieldIdentifier, types);
 	}
-	
+
+	/**
+	 * Derives a set of named root suppliers from the static reference fields of the passed types. The
+	 * passed deriver function is consulted for each field and may return {@code null} to skip the field.
+	 *
+	 * @param rootIdentifierDeriver the function turning a {@link Field} into an identifier or {@code null}
+	 *                              if the field shall be skipped.
+	 * @param types                 the types to scan.
+	 *
+	 * @return the derived {@code identifier → supplier} table.
+	 */
 	public static XGettingTable<String, Supplier<?>> deriveRoots(
 		final Function<Field, String> rootIdentifierDeriver,
 		final Class<?>...             types
 	)
 	{
 		final EqHashTable<String, Supplier<?>> roots = EqHashTable.New();
-		
+
 		addRoots(roots, rootIdentifierDeriver, types);
-		
+
 		return roots;
 	}
-	
+
+	/**
+	 * Bulk variant of {@link #addRoots(EqHashTable, Function, Class)} that scans every passed type.
+	 *
+	 * @param roots                 the destination table.
+	 * @param rootIdentifierDeriver the identifier deriver.
+	 * @param types                 the types to scan.
+	 */
 	public static void addRoots(
 		final EqHashTable<String, Supplier<?>> roots                ,
 		final Function<Field, String>          rootIdentifierDeriver,
@@ -137,7 +237,16 @@ public interface PersistenceRootResolver
 			addRoots(roots, rootIdentifierDeriver, type);
 		}
 	}
-	
+
+	/**
+	 * Scans the static reference fields of {@code type} and adds an {@code identifier → supplier} entry to
+	 * {@code roots} for each one whose derived identifier is non-{@code null}. Static primitives,
+	 * non-static fields, and the synthetic {@code $SWITCH_TABLE} fields are skipped silently.
+	 *
+	 * @param roots                 the destination table.
+	 * @param rootIdentifierDeriver the identifier deriver; returning {@code null} skips the field.
+	 * @param type                  the type to scan.
+	 */
 	public static void addRoots(
 		final EqHashTable<String, Supplier<?>> roots                ,
 		final Function<Field, String>          rootIdentifierDeriver,
@@ -207,6 +316,10 @@ public interface PersistenceRootResolver
 	}
 	
 	
+	/**
+	 * Default {@link PersistenceRootResolver}: resolves identifiers from a fixed set of pre-registered
+	 * entries first, then falls back to enum-constants resolution via the {@link PersistenceTypeHandlerManager}.
+	 */
 	public final class Default implements PersistenceRootResolver
 	{
 		///////////////////////////////////////////////////////////////////////////
@@ -327,6 +440,15 @@ public interface PersistenceRootResolver
 	
 	
 	
+	/**
+	 * Wraps {@code actualRootResolver} in a {@link MappingWrapper} that consults the refactoring mapping
+	 * provided by {@code refactoringMappingProvider} before delegating to the wrapped resolver.
+	 *
+	 * @param actualRootResolver         the resolver to wrap.
+	 * @param refactoringMappingProvider the provider supplying the refactoring mapping.
+	 *
+	 * @return the wrapping resolver.
+	 */
 	public static PersistenceRootResolver Wrap(
 		final PersistenceRootResolver                    actualRootResolver        ,
 		final PersistenceTypeDescriptionResolverProvider refactoringMappingProvider
@@ -334,7 +456,13 @@ public interface PersistenceRootResolver
 	{
 		return new MappingWrapper(actualRootResolver, refactoringMappingProvider);
 	}
-	
+
+	/**
+	 * {@link PersistenceRootResolver} that consults a refactoring mapping before delegating to a wrapped
+	 * resolver, allowing identifiers from the persistent dictionary to be rewritten to their current form
+	 * before resolution. An explicit mapping target of {@code null} marks the source identifier as
+	 * deleted; an unresolvable non-{@code null} target raises a {@link PersistenceException}.
+	 */
 	public final class MappingWrapper implements PersistenceRootResolver
 	{
 		///////////////////////////////////////////////////////////////////////////

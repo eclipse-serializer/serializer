@@ -20,6 +20,18 @@ import java.util.function.Supplier;
 
 import org.eclipse.serializer.reference.Reference;
 
+/**
+ * Mutable reference to the application's user-defined root instance. The reference itself is what the
+ * persistence dictionary stores under the well-known root identifier ({@link Persistence#rootIdentifier()});
+ * its target can be replaced at runtime via {@link #setRoot(Object)} or {@link #setRootSupplier(Supplier)}.
+ * <p>
+ * The {@link Supplier} indirection is what lets the persistence layer register a stable reference object
+ * before the user has supplied (or even constructed) the actual root instance &mdash; useful e.g. when the
+ * root is loaded from disk after the foundation has been built.
+ *
+ * @see PersistenceRootReferencing
+ * @see PersistenceRootReferenceProvider
+ */
 public interface PersistenceRootReference extends PersistenceRootReferencing, Reference<Object>
 {
 	@Override
@@ -27,44 +39,84 @@ public interface PersistenceRootReference extends PersistenceRootReferencing, Re
 
 	@Override
 	public <F extends PersistenceFunction> F iterate(F iterator);
-	
+
 	@Override
 	public default void set(final Object newRoot)
 	{
 		this.setRoot(newRoot);
 	}
-	
+
+	/**
+	 * Replaces the currently referenced root with {@code newRoot} by wrapping it in a constant supplier.
+	 *
+	 * @param newRoot the new root instance; may be {@code null}.
+	 *
+	 * @return the previously referenced root (resolved via the previous supplier).
+	 */
 	public default Object setRoot(final Object newRoot)
 	{
 		return this.setRootSupplier(() ->
 			newRoot
 		);
 	}
-	
-	public Object setRootSupplier(Supplier<?> rootSupplier);
-	
-	
 
+	/**
+	 * Replaces the supplier that resolves the root instance. Use this overload when the root cannot be
+	 * eagerly created (e.g. because doing so would trigger class-loading order issues).
+	 *
+	 * @param rootSupplier the new supplier; may be {@code null}.
+	 *
+	 * @return the previously referenced root (resolved via the previous supplier).
+	 */
+	public Object setRootSupplier(Supplier<?> rootSupplier);
+
+
+
+	/**
+	 * Creates a new empty {@link Default} root reference. The reference initially resolves to {@code null}
+	 * and can be populated later via {@link #setRoot(Object)} or {@link #setRootSupplier(Supplier)}.
+	 *
+	 * @return the newly created reference.
+	 */
 	public static PersistenceRootReference New()
 	{
 		return New(null);
 	}
-	
+
+	/**
+	 * Creates a new {@link Default} root reference initialized to {@code root}. Equivalent to
+	 * {@link #New()} followed by {@link #setRoot(Object)}.
+	 *
+	 * @param root the initial root instance; may be {@code null}.
+	 *
+	 * @return the newly created reference.
+	 */
 	public static PersistenceRootReference New(final Object root)
 	{
 		final PersistenceRootReference.Default instance = new PersistenceRootReference.Default(null);
 		instance.setRoot(root);
-		
+
 		return instance;
 	}
-	
+
+	/**
+	 * Creates a new {@link Default} root reference initialized with the passed supplier.
+	 *
+	 * @param rootSupplier the initial root supplier; may be {@code null}.
+	 *
+	 * @return the newly created reference.
+	 */
 	public static PersistenceRootReference New(final Supplier<?> rootSupplier)
 	{
 		return new PersistenceRootReference.Default(
 			mayNull(rootSupplier)
 		);
 	}
-	
+
+	/**
+	 * Default {@link PersistenceRootReference}: stores a single mutable {@link Supplier} and resolves the
+	 * root lazily on every {@link #get()} call.
+	 */
 	public final class Default implements PersistenceRootReference
 	{
 		///////////////////////////////////////////////////////////////////////////

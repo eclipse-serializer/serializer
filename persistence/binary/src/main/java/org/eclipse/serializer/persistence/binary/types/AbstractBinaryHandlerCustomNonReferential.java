@@ -20,9 +20,14 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 
 
 /**
- * Handler for types that are mutable but have no references. E.g. {@link java.util.Date}.
+ * Skeletal base for handlers of mutable types that hold no references &mdash; e.g. {@link java.util.Date}.
+ * Pins {@link #hasPersistedReferences()} to {@code false} and supplies a no-op
+ * {@link #iterateLoadableReferences} so subclasses only need to implement {@link #store},
+ * {@link #create}, and {@link #updateState}.
  *
- * @param <T> the handled type
+ * @param <T> the runtime type handled.
+ *
+ * @see AbstractBinaryHandlerCustomNonReferentialFixedLength
  */
 public abstract class AbstractBinaryHandlerCustomNonReferential<T>
 extends AbstractBinaryHandlerCustom<T>

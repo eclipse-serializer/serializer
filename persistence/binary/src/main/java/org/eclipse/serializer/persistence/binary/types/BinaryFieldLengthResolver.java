@@ -19,6 +19,14 @@ import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.types.PersistenceFieldLengthResolver;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDescriptionMemberFieldGeneric;
 
+/**
+ * Binary-specific specialization of {@link PersistenceFieldLengthResolver}. Resolves the persisted length
+ * of fields by using the native memory byte size for primitives and the binary list bounds (defined on
+ * {@link Binary}) for variable-length and complex members.
+ *
+ * @see Binary#binaryListMinimumLength()
+ * @see Binary#binaryListMaximumLength()
+ */
 public interface BinaryFieldLengthResolver extends PersistenceFieldLengthResolver
 {
 	@Override
@@ -77,6 +85,10 @@ public interface BinaryFieldLengthResolver extends PersistenceFieldLengthResolve
 
 
 
+	/**
+	 * Default {@link BinaryFieldLengthResolver}. Inherits all behavior from the interface's default
+	 * methods.
+	 */
 	public final class Default implements BinaryFieldLengthResolver
 	{
 		// empty default implementation. Something is missing in the new default method concept

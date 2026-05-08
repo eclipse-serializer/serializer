@@ -28,6 +28,21 @@ import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
 
 
+/**
+ * Storing-side {@link Binary} implementation: collects entities into a growable array of direct
+ * {@link ByteBuffer}s, allocating a fresh buffer (sized by the supplied
+ * {@link BufferSizeProviderIncremental}) whenever the current one runs out of room. One instance is
+ * created per channel; channel-routing is done by indexing into a shared {@code channelBuffers} array via
+ * the low bits of the entity's object id.
+ * <p>
+ * Optionally deduplicates entities within a channel (skipping repeated stores of the same object id
+ * during one storing pass) and supplies the {@link MemoryRangeReader} contract so other parts of the
+ * binary layer can append already-prepared memory ranges directly.
+ *
+ * @see Chunk
+ * @see ChunksBufferByteReversing
+ * @see ChunksWrapper
+ */
 public class ChunksBuffer extends Binary implements MemoryRangeReader
 {
 	///////////////////////////////////////////////////////////////////////////

@@ -69,6 +69,33 @@ import org.eclipse.serializer.util.xcsv.XCsvConfiguration;
 import org.eclipse.serializer.util.xcsv.XCsvDataType;
 
 
+/**
+ * Static-only utility class that anchors the persistence layer's cross-cutting concerns: id-space layout
+ * constants, JDK native-type registrations, persistability evaluators, default field/type evaluator
+ * factories, type-name resolution and derivation helpers, enum-root identifier handling, refactoring-mapping
+ * factories, and engine metadata. Most other types in the {@code org.eclipse.serializer.persistence.types}
+ * package reach back into one of these helpers when they need a default.
+ * <p>
+ * <strong>Id-space layout.</strong> The persistence layer carves the {@code long} id range into three
+ * disjoint sub-ranges:
+ * <ul>
+ * <li>{@code [FIRST_TID, BOUND_TID)} for type ids &mdash; first JDK native types occupy the low end, real
+ * types start at {@link #defaultStartTypeId()} (one million-ish).</li>
+ * <li>{@code [FIRST_OID, BOUND_OID)} for object ids &mdash; user instances start at
+ * {@link #defaultStartObjectId()} (one quintillion-ish).</li>
+ * <li>{@code [FIRST_CID, BOUND_CID)} for constant ids &mdash; JLS-cached constants occupy the low end,
+ * real constants start at {@link #defaultStartConstantId()}.</li>
+ * </ul>
+ * The bounds are stable across runs &mdash; persisted databases assume them &mdash; and the layout matches
+ * what the {@link IdType} enum reports for any single {@code long} value.
+ * <p>
+ * <strong>Static-only.</strong> Instantiation is blocked by a throwing constructor; every member is
+ * accessed through {@code Persistence.foo(...)}. The class still exists as a class (not interface) so the
+ * package-private constants live in a single, recognizable container.
+ *
+ * @see IdType
+ * @see PersistenceFoundation
+ */
 public class Persistence
 {
 	// (23.11.2018 TM)TODO: cleanup Persistence class
@@ -219,6 +246,11 @@ public class Persistence
 
 
 
+	/**
+	 * Human-readable engine name used in log lines and error messages.
+	 *
+	 * @return the literal {@code "Eclipse Serializer"}.
+	 */
 	public static String engineName()
 	{
 		/*
@@ -228,11 +260,21 @@ public class Persistence
 		return "Eclipse Serializer";
 	}
 
+	/**
+	 * The full label used when referring to object ids in user-facing text.
+	 *
+	 * @return the literal {@code "ObjectId"}.
+	 */
 	public static final String objectIdLabel()
 	{
 		return OBJECT_ID_LABEL;
 	}
 
+	/**
+	 * The short label used when referring to object ids in compact contexts.
+	 *
+	 * @return the literal {@code "OID"}.
+	 */
 	public static final String objectIdShortLabel()
 	{
 		return OBJECT_ID_LABEL_SHORT;
@@ -248,6 +290,13 @@ public class Persistence
 		return long.class;
 	}
 
+	/**
+	 * Returns a {@link PersistenceTypeIdLookup} that resolves the JDK native types registered in this class
+	 * (primitives, boxes, common collections, etc.) and yields {@link Swizzling#notFoundId()} for everything
+	 * else. Used as the default native lookup wired into freshly built foundations.
+	 *
+	 * @return the native-type lookup.
+	 */
 	public static final PersistenceTypeIdLookup createDefaultTypeLookup()
 	{
 		return new PersistenceTypeIdLookup()
@@ -265,21 +314,45 @@ public class Persistence
 	}
 
 
+	/**
+	 * The default starting type id for fresh databases &mdash; the lowest id from which user-defined types
+	 * are assigned. Values below this are reserved for the JDK natives registered here.
+	 *
+	 * @return the default starting type id.
+	 */
 	public static final long defaultStartTypeId()
 	{
 		return START_TID_REAL;
 	}
 
+	/**
+	 * The default starting constant id for fresh databases &mdash; the lowest id from which user-defined
+	 * constants are assigned. Values below this are reserved for the JLS-cached primitive boxes registered
+	 * by {@link #registerJavaConstants(PersistenceObjectRegistry)}.
+	 *
+	 * @return the default starting constant id.
+	 */
 	public static final long defaultStartConstantId()
 	{
 		return START_CID_REAL;
 	}
 
+	/**
+	 * The default starting object id for fresh databases &mdash; the lowest id from which user instances
+	 * are assigned. Lives strictly above the type-id range so the spaces never overlap.
+	 *
+	 * @return the default starting object id.
+	 */
 	public static final long defaultStartObjectId()
 	{
 		return START_OID_BASE;
 	}
 
+	/**
+	 * The exclusive upper bound of the constant-id range. Values at or above are not constant ids.
+	 *
+	 * @return the exclusive upper bound of the constant-id range.
+	 */
 	public static final long defaultBoundConstantId()
 	{
 		return BOUND_CID;
@@ -402,21 +475,51 @@ public class Persistence
 
 
 
+	/**
+	 * The fixed type id of {@link Class}.
+	 *
+	 * @return the type id of {@link Class}.
+	 */
 	public static final long classTypeId()
 	{
 		return TID_Class;
 	}
 
+	/**
+	 * Whether the passed type is one of the JDK native types this class registers (primitives, boxed
+	 * primitives, common collections, etc.).
+	 *
+	 * @param type the type to check.
+	 *
+	 * @return {@code true} if {@code type} has a native type id reserved for it.
+	 */
 	public static final boolean isNativeType(final Class<?> type)
 	{
 		return NATIVE_TYPES.get(type) != null;
 	}
 
+	/**
+	 * The reserved native type id for {@code type}, or {@code null} if no native id is reserved.
+	 *
+	 * @param type the type to look up.
+	 *
+	 * @return the reserved native type id, or {@code null}.
+	 */
 	public static final Long getNativeTypeId(final Class<?> type)
 	{
 		return NATIVE_TYPES.get(type);
 	}
 
+	/**
+	 * Registers the JDK natives' shared instance constants (boxed primitives in the JLS-cache range,
+	 * {@link Boolean#TRUE} / {@link Boolean#FALSE}, etc.) into the passed object registry under their
+	 * reserved constant ids. Returns {@code registry} for fluent chaining.
+	 *
+	 * @param <R>      the registry type.
+	 * @param registry the registry to populate.
+	 *
+	 * @return the same registry that was passed in.
+	 */
 	public static final <R extends PersistenceObjectRegistry> R registerJavaNatives(final R registry)
 	{
 //		registerJavaBasicTypes(registry);
@@ -424,6 +527,16 @@ public class Persistence
 		return registry;
 	}
 
+	/**
+	 * Registers the JDK natives' types into the passed type registry under their reserved native type
+	 * ids. Used by foundations that need every native type to be visible to the type registry from the
+	 * start.
+	 *
+	 * @param <R>      the registry type.
+	 * @param registry the registry to populate.
+	 *
+	 * @return the same registry that was passed in.
+	 */
 	public static final <R extends PersistenceTypeRegistry> R registerJavaBasicTypes(final R registry)
 	{
 		iterateJavaBasicTypes((c, tid) ->
@@ -434,6 +547,15 @@ public class Persistence
 		return registry;
 	}
 
+	/**
+	 * Iterates every {@code (type, native-type-id)} pair registered in this class, invoking the consumer
+	 * for each entry. The order matches the registration order (with super-types preceding subtypes).
+	 *
+	 * @param <C>      the consumer type, returned for fluent chaining.
+	 * @param iterator the consumer to invoke per entry.
+	 *
+	 * @return the same consumer that was passed in.
+	 */
 	public static final <C extends BiConsumer<Class<?>, Long>> C iterateJavaBasicTypes(final C iterator)
 	{
 		NATIVE_TYPES.iterate(e ->
@@ -443,6 +565,16 @@ public class Persistence
 		return iterator;
 	}
 
+	/**
+	 * Registers the JLS-cached numeric and boolean constants (boxed primitives in the cache range,
+	 * {@link Boolean#TRUE} / {@link Boolean#FALSE}, the lower {@link Character} range) into the passed
+	 * object registry under their reserved constant ids.
+	 *
+	 * @param <R>      the registry type.
+	 * @param registry the registry to populate.
+	 *
+	 * @return the same registry that was passed in.
+	 */
 	public static final <R extends PersistenceObjectRegistry> R registerJavaConstants(final R registry)
 	{
 		long
@@ -480,6 +612,16 @@ public class Persistence
 
 
 
+	/**
+	 * Validates that {@code id} is a permissible object id (i.e. lies in the object-id range), returning
+	 * it unchanged. Throws otherwise.
+	 *
+	 * @param id the id to validate.
+	 *
+	 * @return the validated id.
+	 *
+	 * @throws PersistenceExceptionConsistencyInvalidObjectId if the value is out of range.
+	 */
 	public static long validateObjectId(final long id) throws PersistenceExceptionConsistencyInvalidObjectId
 	{
 		if(id < START_OID_BASE)
@@ -489,6 +631,16 @@ public class Persistence
 		return id;
 	}
 
+	/**
+	 * Validates that {@code id} is a permissible type id (i.e. lies in the type-id range), returning it
+	 * unchanged. Throws otherwise.
+	 *
+	 * @param id the id to validate.
+	 *
+	 * @return the validated id.
+	 *
+	 * @throws PersistenceExceptionConsistencyInvalidTypeId if the value is out of range.
+	 */
 	public static long validateTypeId(final long id) throws PersistenceExceptionConsistencyInvalidTypeId
 	{
 		if(id < START_TID_BASE)
@@ -497,12 +649,26 @@ public class Persistence
 		}
 		return id;
 	}
-	
+
+	/**
+	 * Applies {@code iterator} to every element of {@code array}.
+	 *
+	 * @param iterator the function to apply.
+	 * @param array    the array whose elements to traverse.
+	 */
 	public static final void iterateReferences(final PersistenceFunction iterator, final Object[] array)
 	{
 		iterateReferences(iterator, array, 0, array.length);
 	}
 
+	/**
+	 * Applies {@code iterator} to {@code length} elements of {@code array} starting at {@code offset}.
+	 *
+	 * @param iterator the function to apply.
+	 * @param array    the array whose elements to traverse.
+	 * @param offset   the start index.
+	 * @param length   the number of elements to traverse.
+	 */
 	public static final void iterateReferences(
 		final PersistenceFunction iterator,
 		final Object[]            array   ,
@@ -517,11 +683,24 @@ public class Persistence
 		}
 	}
 
+	/**
+	 * Applies {@code iterator} to every element of an {@link XIterable}.
+	 *
+	 * @param iterator the function to apply.
+	 * @param elements the iterable whose elements to traverse.
+	 */
 	public static final void iterateReferences(final PersistenceFunction iterator, final XIterable<?> elements)
 	{
 		elements.iterate(iterator::apply);
 	}
 
+	/**
+	 * Applies {@code iterator} to every element of an {@link Iterable}. Distinct method name from the
+	 * {@link XIterable} overload to avoid creating two temporary lambdas via {@code forEach}.
+	 *
+	 * @param iterator the function to apply.
+	 * @param elements the iterable whose elements to traverse.
+	 */
 	public static final void iterateReferencesIterable(final PersistenceFunction iterator, final Iterable<?> elements)
 	{
 		// using forEach would create two temporary instances, this (and #iterateReferences) only creates one.
@@ -531,6 +710,12 @@ public class Persistence
 		}
 	}
 
+	/**
+	 * Applies {@code iterator} to each key and value of a {@link Map}.
+	 *
+	 * @param iterator the function to apply.
+	 * @param elements the map whose entries to traverse.
+	 */
 	public static final void iterateReferencesMap(final PersistenceFunction iterator, final Map<?, ?> elements)
 	{
 		// using forEach would create two temporary instances, this (and the method above) only creates one.
@@ -554,6 +739,11 @@ public class Persistence
 		return XChars.utf8();
 	}
 
+	/**
+	 * The default file name used when persisting the type dictionary to disk.
+	 *
+	 * @return the literal {@code "PersistenceTypeDictionary.ptd"}.
+	 */
 	public static String defaultFilenameTypeDictionary()
 	{
 		// why permanently occupy additional memory with fields and instances for constant values?
@@ -644,26 +834,60 @@ public class Persistence
 	// static methods //
 	///////////////////
 
+	/**
+	 * Whether the passed type is persistable, i.e. <em>not</em> in the {@link #unpersistableTypes()} set.
+	 *
+	 * @param type the type to check.
+	 *
+	 * @return {@code true} if {@code type} is persistable.
+	 */
 	public static boolean isPersistable(final Class<?> type)
 	{
 		return !isUnpersistable(type);
 	}
 
+	/**
+	 * Whether the passed type is in the {@link #unpersistableTypes()} set or assignable from any of them.
+	 *
+	 * @param type the type to check.
+	 *
+	 * @return {@code true} if {@code type} is unpersistable.
+	 */
 	public static boolean isUnpersistable(final Class<?> type)
 	{
 		return XReflect.isOfAnyType(type, unpersistableTypes());
 	}
 
+	/**
+	 * Returns a fresh {@link PersistenceTypeMismatchValidator} that fails on any unmatched type.
+	 *
+	 * @param <D> the persistence data type.
+	 *
+	 * @return the failing validator.
+	 */
 	public static final <D> PersistenceTypeMismatchValidator<D> typeMismatchValidatorFailing()
 	{
 		return PersistenceTypeMismatchValidator.Failing();
 	}
 
+	/**
+	 * Returns a fresh {@link PersistenceTypeMismatchValidator} that silently accepts any unmatched type.
+	 *
+	 * @param <D> the persistence data type.
+	 *
+	 * @return the no-op validator.
+	 */
 	public static final <D> PersistenceTypeMismatchValidator<D> typeMismatchValidatorNoOp()
 	{
 		return PersistenceTypeMismatchValidator.NoOp();
 	}
 
+	/**
+	 * Returns the default {@link PersistenceTypeEvaluator}: a type is persistable iff
+	 * {@link #isPersistable(Class)} returns {@code true} for it.
+	 *
+	 * @return the default type evaluator.
+	 */
 	public static final PersistenceTypeEvaluator defaultTypeEvaluatorPersistable()
 	{
 		return type ->
@@ -671,16 +895,38 @@ public class Persistence
 		;
 	}
 
+	/**
+	 * Whether the passed field is persistable in the default policy (i.e. not declared {@code transient}).
+	 *
+	 * @param entityType the declaring type (currently unused).
+	 * @param field      the field to check.
+	 *
+	 * @return {@code true} if the field is persistable.
+	 */
 	public static final boolean isPersistableField(final Class<?> entityType, final Field field)
 	{
 		return !XReflect.isTransient(field);
 	}
 
+	/**
+	 * Returns the default {@link PersistenceFieldEvaluator} for general persistability: delegates to
+	 * {@link #isPersistableField(Class, Field)}.
+	 *
+	 * @return the default persistability field evaluator.
+	 */
 	public static final PersistenceFieldEvaluator defaultFieldEvaluatorPersistable()
 	{
 		return Persistence::isPersistableField;
 	}
 
+	/**
+	 * Returns the default {@link PersistenceFieldEvaluator} for the persister-field feature: a permissive
+	 * predicate that allows every (non-transient, {@link Persister}-typed) field through. The actual type
+	 * check is hardcoded elsewhere; this evaluator's only purpose is to enable the feature and let users
+	 * narrow it.
+	 *
+	 * @return the default persister-field evaluator.
+	 */
 	public static final PersistenceFieldEvaluator defaultFieldEvaluatorPersister()
 	{
 		// the type check is hardcoded to be unremovable. The evaluator only enables the feature and covers customizing.
@@ -689,12 +935,30 @@ public class Persistence
 		;
 	}
 
+	/**
+	 * Whether the passed field's declared type is {@link Persister} or a subtype thereof, marking it as a
+	 * candidate for the persister-field feature.
+	 *
+	 * @param field the field to check.
+	 *
+	 * @return {@code true} if the field is persister-typed.
+	 */
 	public static final boolean isPersisterField(final Field field)
 	{
 		// the field's type must be Persister or "lower" / more specific, e.g. StorageManager.
 		return Persister.class.isAssignableFrom(field.getType());
 	}
 
+	/**
+	 * Whether the passed field of an enum type can be handled by the generic enum analyzer. Currently
+	 * always returns {@code true}; the commented-out logic below preserves an earlier, stricter ruleset
+	 * for reference.
+	 *
+	 * @param enumClass the declaring enum class.
+	 * @param field     the field to check.
+	 *
+	 * @return {@code true} if the field is generically handleable.
+	 */
 	public static boolean isHandleableEnumField(final Class<?> enumClass, final Field field)
 	{
 		// actually, even the crazy sh*t enum sub types with persistent state should be safely handleable.
@@ -729,6 +993,13 @@ public class Persistence
 //		return false;
 	}
 
+	/**
+	 * Returns the default {@link PersistenceFieldEvaluator} for enum fields: delegates to
+	 * {@link #isHandleableEnumField(Class, Field)}. No transient check is needed here &mdash; transient
+	 * fields are already filtered out by the general persistability evaluator.
+	 *
+	 * @return the default enum field evaluator.
+	 */
 	public static final PersistenceFieldEvaluator defaultFieldEvaluatorEnum()
 	{
 		/* No transient check necessary since transient fields are filtered out in general
@@ -741,6 +1012,18 @@ public class Persistence
 		;
 	}
 
+	/**
+	 * Whether the passed field of a reflectively-handled collection class is generically handleable
+	 * &mdash; broadly speaking, the field must reference a primitive, a {@link Comparator}, another
+	 * collection, the collection's own type variable, or an array of such. Anything else (notably internal
+	 * structural types like {@code Entry[]}) is rejected and would force the user to register a custom
+	 * type handler.
+	 *
+	 * @param collectionClass the declaring collection class.
+	 * @param field           the field to check.
+	 *
+	 * @return {@code true} if the field is generically handleable.
+	 */
 	public static boolean isHandleableCollectionField(final Class<?> collectionClass, final Field field)
 	{
 		final Class<?> fieldType = field.getType();
@@ -819,6 +1102,13 @@ public class Persistence
 		return false;
 	}
 
+	/**
+	 * Returns the default {@link PersistenceFieldEvaluator} for fields of reflectively-handled collection
+	 * classes: delegates to {@link #isHandleableCollectionField(Class, Field)}. No transient check is
+	 * needed &mdash; transient fields are already filtered out by the general persistability evaluator.
+	 *
+	 * @return the default collection field evaluator.
+	 */
 	public static final PersistenceFieldEvaluator defaultFieldEvaluatorCollection()
 	{
 		/* No transient check necessary since transient fields are filtered out in general
@@ -843,6 +1133,12 @@ public class Persistence
 		return HashEnum.New(tvs);
 	}
 
+	/**
+	 * Returns the default {@link PersistenceEagerStoringFieldEvaluator}: marks no field as eagerly stored.
+	 * Override at the foundation level to opt specific reference fields into eager storage.
+	 *
+	 * @return the default eager-storing field evaluator.
+	 */
 	public static final PersistenceEagerStoringFieldEvaluator defaultReferenceFieldEagerEvaluator()
 	{
 		// by default, no field is eager
@@ -851,6 +1147,21 @@ public class Persistence
 		;
 	}
 
+	/**
+	 * Resolves a sub-enum-class type whose name has been encoded as
+	 * {@code <declaredEnumType>$§<enumConstantName>} (or with a custom separator) back to the actual
+	 * synthetic sub-class produced by the JVM for that enum constant. Returns {@code null} if
+	 * {@code typeName} does not contain the separator.
+	 *
+	 * @param <T>                                the inferred type.
+	 * @param typeName                           the encoded type name.
+	 * @param classLoader                        the class loader to use when resolving the declared enum.
+	 * @param substituteClassIdentifierSeparator the separator used in the encoding.
+	 *
+	 * @return the resolved sub-enum class, or {@code null} if the name is not in the encoded form.
+	 *
+	 * @throws UnsupportedOperationException if the resolved declared type is not a declared enum.
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" }) // type safety guaranteed by the passed typename. The typename String "is" the T.
 	public static <T> Class<T> resolveEnumeratedClassIdentifierSeparatedType(
 		final String      typeName   ,
@@ -881,12 +1192,40 @@ public class Persistence
 		return (Class<T>)enumConstant.getClass();
 	}
 
+	/**
+	 * Resolves the passed type name to a {@link Class} via the passed {@link ClassLoader}, using the
+	 * default {@link #substituteClassIdentifierSeparator()} for any encoded sub-enum names.
+	 *
+	 * @param <T>         the inferred type.
+	 * @param typeName    the type name to resolve.
+	 * @param classLoader the class loader to use.
+	 *
+	 * @return the resolved class.
+	 *
+	 * @throws PersistenceExceptionTypeConsistencyDefinitionResolveTypeName if the name cannot be
+	 *         resolved.
+	 */
 	// type safety guaranteed by the passed typename. The typename String "is" the T.
 	public static <T> Class<T> resolveType(final String typeName, final ClassLoader classLoader)
 	{
 		return resolveType(typeName, classLoader, substituteClassIdentifierSeparator());
 	}
 
+	/**
+	 * Resolves the passed type name to a {@link Class}, first attempting sub-enum decoding via
+	 * {@link #resolveEnumeratedClassIdentifierSeparatedType(String, ClassLoader, String)} and falling
+	 * back to {@link XReflect#resolveType(String, ClassLoader)} for ordinary class names.
+	 *
+	 * @param <T>                                the inferred type.
+	 * @param typeName                           the type name to resolve.
+	 * @param classLoader                        the class loader to use.
+	 * @param substituteClassIdentifierSeparator the separator to use for sub-enum decoding.
+	 *
+	 * @return the resolved class.
+	 *
+	 * @throws PersistenceExceptionTypeConsistencyDefinitionResolveTypeName if the name cannot be
+	 *         resolved.
+	 */
 	@SuppressWarnings("unchecked") // type safety guaranteed by the passed typename. The typename String "is" the T.
 	public static <T> Class<T> resolveType(
 		final String      typeName   ,
@@ -914,6 +1253,16 @@ public class Persistence
 		}
 	}
 
+	/**
+	 * Like {@link #resolveType(String, ClassLoader)} but returns {@code null} instead of throwing if the
+	 * name cannot be resolved.
+	 *
+	 * @param <T>         the inferred type.
+	 * @param typeName    the type name to resolve.
+	 * @param classLoader the class loader to use.
+	 *
+	 * @return the resolved class, or {@code null} if unresolvable.
+	 */
 	public static <T> Class<T> tryResolveType(final String typeName, final ClassLoader classLoader)
 	{
 		try
@@ -927,6 +1276,18 @@ public class Persistence
 		}
 	}
 
+	/**
+	 * Builds the synthetic root identifier under which an enum type's constants array is registered, in
+	 * the form {@code "enum <typeId>"}. The identifier is later parsed back via
+	 * {@link #parseEnumRootIdentifierTypeId(String)} to retrieve the type id.
+	 *
+	 * @param typeHandler the type handler for the enum.
+	 *
+	 * @return the enum root identifier.
+	 *
+	 * @throws PersistenceException if the handler's type id is not a proper id (i.e. the handler hasn't
+	 *         been initialized against a type dictionary entry yet).
+	 */
 	public static String deriveEnumRootIdentifier(final PersistenceTypeHandler<?, ?> typeHandler)
 	{
 		XReflect.validateIsEnum(typeHandler.type());
@@ -942,6 +1303,13 @@ public class Persistence
 		return XReflect.typename_enum() + " " + typeHandler.typeId();
 	}
 
+	/**
+	 * Returns a defensive copy of the enum constants array of the type handled by {@code typeHandler}.
+	 *
+	 * @param typeHandler the type handler for the enum.
+	 *
+	 * @return a fresh array containing the enum constants in declaration order.
+	 */
 	public static Object[] collectEnumConstants(final PersistenceTypeHandler<?, ?> typeHandler)
 	{
 		XReflect.validateIsEnum(typeHandler.type());
@@ -962,11 +1330,26 @@ public class Persistence
 	 */
 	private static final String ENUM_ROOT_IDENTIFIER_START = XReflect.typename_enum() + " ";
 
+	/**
+	 * The prefix every enum-root identifier starts with: {@code "enum "}. Distinct from custom user
+	 * identifiers because the trailing space cannot occur in a Java identifier.
+	 *
+	 * @return the literal {@code "enum "}.
+	 */
 	public static String enumRootIdentifierStart()
 	{
 		return ENUM_ROOT_IDENTIFIER_START;
 	}
 
+	/**
+	 * Parses the type id out of an enum-root identifier produced by
+	 * {@link #deriveEnumRootIdentifier(PersistenceTypeHandler)}. Returns {@code null} if the identifier
+	 * is not in the expected form.
+	 *
+	 * @param enumRootIdentifier the identifier to parse.
+	 *
+	 * @return the parsed type id, or {@code null} if the input is not a valid enum-root identifier.
+	 */
 	public static Long parseEnumRootIdentifierTypeId(final String enumRootIdentifier)
 	{
 		// quick check before doing any instantiation. Has virtually no redundancy to the code below
@@ -987,6 +1370,14 @@ public class Persistence
 		}
 	}
 
+	/**
+	 * Whether the passed string is a complete enum-root identifier (correct prefix and a digit-only
+	 * suffix).
+	 *
+	 * @param enumRootIdentifier the identifier to check.
+	 *
+	 * @return {@code true} if the input matches the enum-root identifier shape.
+	 */
 	public static boolean isEnumRootIdentifier(final String enumRootIdentifier)
 	{
 		return isPotentialEnumRootIdentifier(enumRootIdentifier)
@@ -994,29 +1385,67 @@ public class Persistence
 		;
 	}
 
+	/**
+	 * Whether the passed string starts with the enum-root prefix (cheap check that does <em>not</em>
+	 * validate the suffix).
+	 *
+	 * @param enumRootIdentifier the identifier to check.
+	 *
+	 * @return {@code true} if the input has the enum-root prefix.
+	 */
 	public static boolean isPotentialEnumRootIdentifier(final String enumRootIdentifier)
 	{
 		return enumRootIdentifier != null && enumRootIdentifier.startsWith(enumRootIdentifierStart());
 	}
 
+	/**
+	 * Legacy default-root identifier from earlier versions. Retained for automatic version-change
+	 * detection.
+	 *
+	 * @return the literal {@code "defaultRoot"}.
+	 *
+	 * @deprecated use {@link #rootIdentifier()} instead.
+	 */
 	@Deprecated
 	public static final String defaultRootIdentifier()
 	{
 		return "defaultRoot";
 	}
 
+	/**
+	 * Legacy custom-root identifier from earlier versions. Retained for automatic version-change
+	 * detection.
+	 *
+	 * @return the literal {@code "root"}.
+	 *
+	 * @deprecated use {@link #rootIdentifier()} instead.
+	 */
 	@Deprecated
 	public static final String customRootIdentifier()
 	{
 		return "root";
 	}
 
+	/**
+	 * The current canonical user-defined root identifier. Upper-cased so it cannot collide with the
+	 * legacy {@link #customRootIdentifier()}, which lets the loader detect version changes automatically.
+	 *
+	 * @return the literal {@code "ROOT"}.
+	 */
 	public static final String rootIdentifier()
 	{
 		// must be upper case to be distinct from old custom root concept for automatic version change detection.
 		return "ROOT";
 	}
 
+	/**
+	 * Creates a {@link PersistenceRefactoringMappingProvider} from a CSV file on disk. Convenience
+	 * shortcut for {@code RefactoringMapping(readRefactoringMappings(path))}.
+	 *
+	 * @param refactoringsFile the path to the CSV file.
+	 *
+	 * @return the refactoring mapping provider.
+	 */
 	public static final PersistenceRefactoringMappingProvider RefactoringMapping(
 		final Path refactoringsFile
 	)
@@ -1026,6 +1455,14 @@ public class Persistence
 		);
 	}
 
+	/**
+	 * Creates a {@link PersistenceRefactoringMappingProvider} from an inline CSV string with default
+	 * separators.
+	 *
+	 * @param refactoringMappings the inline CSV content.
+	 *
+	 * @return the refactoring mapping provider.
+	 */
 	public static final PersistenceRefactoringMappingProvider RefactoringMapping(
 		final String refactoringMappings
 	)
@@ -1035,6 +1472,15 @@ public class Persistence
 		);
 	}
 
+	/**
+	 * Creates a {@link PersistenceRefactoringMappingProvider} from an inline CSV string with a custom
+	 * value separator.
+	 *
+	 * @param refactoringMappings the inline CSV content.
+	 * @param valueSeparator      the value separator character.
+	 *
+	 * @return the refactoring mapping provider.
+	 */
 	public static final PersistenceRefactoringMappingProvider RefactoringMapping(
 		final String refactoringMappings,
 		final char   valueSeparator
@@ -1045,6 +1491,15 @@ public class Persistence
 		);
 	}
 
+	/**
+	 * Creates a {@link PersistenceRefactoringMappingProvider} from an inline CSV string parsed via the
+	 * passed {@link XCsvDataType}.
+	 *
+	 * @param refactoringMappings the inline CSV content.
+	 * @param dataType            the CSV dialect to use.
+	 *
+	 * @return the refactoring mapping provider.
+	 */
 	public static final PersistenceRefactoringMappingProvider RefactoringMapping(
 		final String       refactoringMappings,
 		final XCsvDataType dataType
@@ -1055,6 +1510,15 @@ public class Persistence
 		);
 	}
 
+	/**
+	 * Creates a {@link PersistenceRefactoringMappingProvider} from an inline CSV string parsed via the
+	 * passed {@link XCsvConfiguration}.
+	 *
+	 * @param refactoringMappings the inline CSV content.
+	 * @param configuration       the CSV configuration to use.
+	 *
+	 * @return the refactoring mapping provider.
+	 */
 	public static final PersistenceRefactoringMappingProvider RefactoringMapping(
 		final String            refactoringMappings,
 		final XCsvConfiguration configuration
@@ -1065,6 +1529,15 @@ public class Persistence
 		);
 	}
 
+	/**
+	 * Creates a {@link PersistenceRefactoringMappingProvider} from an already-parsed sequence of mapping
+	 * entries. Primary factory; the other {@code RefactoringMapping(...)} overloads delegate here after
+	 * reading and parsing CSV.
+	 *
+	 * @param refactoringMappings the parsed mapping entries.
+	 *
+	 * @return the refactoring mapping provider.
+	 */
 	public static final PersistenceRefactoringMappingProvider RefactoringMapping(
 		final XGettingSequence<KeyValue<String, String>> refactoringMappings
 	)
@@ -1072,6 +1545,13 @@ public class Persistence
 		return PersistenceRefactoringMappingProvider.New(refactoringMappings);
 	}
 
+	/**
+	 * Reads a refactoring-mapping CSV file from the passed {@link Path} and parses it into entries.
+	 *
+	 * @param file the path to the CSV file.
+	 *
+	 * @return the parsed mapping entries.
+	 */
 	public static XGettingSequence<KeyValue<String, String>> readRefactoringMappings(final Path file)
 	{
 		final StringTable stringTable = XCSV.readFromFile(file);
@@ -1079,6 +1559,14 @@ public class Persistence
 		return parseRefactoringMappings(stringTable);
 	}
 
+	/**
+	 * Reads a refactoring-mapping CSV from an {@link AFile}, picking the {@link XCsvDataType} from the
+	 * file suffix.
+	 *
+	 * @param file the AFS file.
+	 *
+	 * @return the parsed mapping entries.
+	 */
 	public static XGettingSequence<KeyValue<String, String>> readRefactoringMappings(final AFile file)
 	{
 		final String       fileSuffix  = XIO.getFileSuffix(file.identifier());
@@ -1090,6 +1578,13 @@ public class Persistence
 		return parseRefactoringMappings(stringTable);
 	}
 
+	/**
+	 * Parses the inline CSV string with default separators.
+	 *
+	 * @param string the inline CSV content.
+	 *
+	 * @return the parsed mapping entries.
+	 */
 	public static XGettingSequence<KeyValue<String, String>> readRefactoringMappings(
 		final String string
 	)
@@ -1099,6 +1594,14 @@ public class Persistence
 		return parseRefactoringMappings(stringTable);
 	}
 
+	/**
+	 * Parses the inline CSV string with a custom value separator.
+	 *
+	 * @param string         the inline CSV content.
+	 * @param valueSeparator the value separator character.
+	 *
+	 * @return the parsed mapping entries.
+	 */
 	public static XGettingSequence<KeyValue<String, String>> readRefactoringMappings(
 		final String string        ,
 		final char   valueSeparator
@@ -1109,6 +1612,14 @@ public class Persistence
 		return parseRefactoringMappings(stringTable);
 	}
 
+	/**
+	 * Parses the inline CSV string via the passed {@link XCsvDataType}.
+	 *
+	 * @param string   the inline CSV content.
+	 * @param dataType the CSV dialect to use.
+	 *
+	 * @return the parsed mapping entries.
+	 */
 	public static XGettingSequence<KeyValue<String, String>> readRefactoringMappings(
 		final String       string  ,
 		final XCsvDataType dataType
@@ -1119,6 +1630,14 @@ public class Persistence
 		return parseRefactoringMappings(stringTable);
 	}
 
+	/**
+	 * Parses the inline CSV string via the passed {@link XCsvConfiguration}.
+	 *
+	 * @param string        the inline CSV content.
+	 * @param configuration the CSV configuration to use.
+	 *
+	 * @return the parsed mapping entries.
+	 */
 	public static XGettingSequence<KeyValue<String, String>> readRefactoringMappings(
 		final String            string       ,
 		final XCsvConfiguration configuration
@@ -1129,6 +1648,14 @@ public class Persistence
 		return parseRefactoringMappings(stringTable);
 	}
 
+	/**
+	 * Turns a {@link StringTable} (the parsed CSV form) into a sequence of {@code (oldName, newName)}
+	 * mapping entries, trimming empty cells to {@code null}.
+	 *
+	 * @param stringTable the parsed CSV table.
+	 *
+	 * @return the parsed mapping entries.
+	 */
 	public static XGettingSequence<KeyValue<String, String>> parseRefactoringMappings(final StringTable stringTable)
 	{
 		final BulkList<KeyValue<String, String>> entries = BulkList.New(stringTable.rows().size());
@@ -1155,11 +1682,36 @@ public class Persistence
 		return "$§";
 	}
 
+	/**
+	 * Derives the persistent type name for {@code type}, using the default
+	 * {@link #substituteClassIdentifierSeparator()} for any encoded sub-enum names.
+	 *
+	 * @param type the type to encode.
+	 *
+	 * @return the persistent type name.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if {@code type} has an enumerated synthetic class
+	 *         name (e.g. {@code Foo$1}) that cannot be reliably persisted.
+	 */
 	public static final String derivePersistentTypeName(final Class<?> type)
 	{
 		return derivePersistentTypeName(type, substituteClassIdentifierSeparator());
 	}
 
+	/**
+	 * Derives the persistent type name for {@code type}. Sub-enum classes are encoded as
+	 * {@code <declaredEnumType><separator><enumConstantName>} via
+	 * {@link #derivePersistentTypeNameEnum(Class, String)}; ordinary classes are returned by
+	 * {@link Class#getName()}; classes with synthetic enumerating names ({@code Foo$1}, {@code Foo$2}, ...)
+	 * are rejected because reordering source elements would silently change their identity.
+	 *
+	 * @param type                               the type to encode.
+	 * @param substituteClassIdentifierSeparator the separator to use for sub-enum encoding.
+	 *
+	 * @return the persistent type name.
+	 *
+	 * @throws PersistenceExceptionTypeNotPersistable if {@code type} has an enumerated synthetic class name.
+	 */
 	public static final String derivePersistentTypeName(
 		final Class<?> type,
 		final String   substituteClassIdentifierSeparator
@@ -1188,6 +1740,19 @@ public class Persistence
 		return type.getName();
 	}
 
+	/**
+	 * Derives the persistent type name for a sub-enum class in the form
+	 * {@code <declaredEnumType><separator><enumConstantName>}. The enum constant whose synthetic class
+	 * matches {@code type} is found by scanning {@link Class#getEnumConstants()} on the declared enum.
+	 *
+	 * @param type                               the sub-enum class.
+	 * @param substituteClassIdentifierSeparator the separator to use; must not be {@code null}.
+	 *
+	 * @return the encoded persistent type name.
+	 *
+	 * @throws PersistenceException if {@code type} is not a sub-enum, or no constant of its declared
+	 *         enum has the synthetic class {@code type}.
+	 */
 	public static final String derivePersistentTypeNameEnum(
 		final Class<?> type,
 		final String   substituteClassIdentifierSeparator
@@ -1306,8 +1871,16 @@ public class Persistence
 	}
 
 
+	/**
+	 * Classifies an arbitrary {@code long} value as one of the persistence id sub-ranges defined by this
+	 * class. Use {@link #determineFromValue(long)} to get the matching constant for a value, or
+	 * {@link #isInRange(long)} on a specific constant to test membership directly.
+	 *
+	 * @see Persistence
+	 */
 	public static enum IdType
 	{
+		/** The null id (a single sentinel value below all other ranges). */
 		NULL
 		{
 			@Override
@@ -1316,6 +1889,7 @@ public class Persistence
 				return Swizzling.isNullId(id);
 			}
 		},
+		/** Type id range. */
 		TID
 		{
 			@Override
@@ -1324,6 +1898,7 @@ public class Persistence
 				return id >= Persistence.FIRST_TID && id < BOUND_TID;
 			}
 		},
+		/** Object id range. */
 		OID
 		{
 			@Override
@@ -1332,6 +1907,7 @@ public class Persistence
 				return id >= Persistence.FIRST_OID && id < BOUND_OID;
 			}
 		},
+		/** Constant id range. */
 		CID
 		{
 			@Override
@@ -1340,6 +1916,7 @@ public class Persistence
 				return id >= Persistence.FIRST_CID && id < BOUND_CID;
 			}
 		},
+		/** Anything outside the three defined ranges (including negative values and values at or above {@link Persistence#BOUND_CID}). */
 		UNDEFINED
 		{
 			@Override
@@ -1350,11 +1927,27 @@ public class Persistence
 		};
 
 
+		/**
+		 * Whether the passed value lies in the sub-range represented by this constant. Each enum constant
+		 * overrides this method; the default implementation here is unreachable (kept as a safety net).
+		 *
+		 * @param id the id to check.
+		 *
+		 * @return {@code true} if {@code id} is in this sub-range.
+		 */
 		public boolean isInRange(final long id)
 		{
 			return true;
 		}
 
+		/**
+		 * Returns the {@link IdType} sub-range that contains the passed value. Decision order is tuned to
+		 * the expected access frequency (OID > CID > TID > NULL > UNDEFINED).
+		 *
+		 * @param id the id to classify.
+		 *
+		 * @return the matching {@link IdType} constant.
+		 */
 		public static IdType determineFromValue(final long id)
 		{
 			// order of checks is designed according to probability of type (OID having the highest etc.)

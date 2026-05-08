@@ -16,6 +16,14 @@ package org.eclipse.serializer.persistence.binary.types;
 
 import org.eclipse.serializer.memory.XMemory;
 
+/**
+ * {@link BinaryLoadItem} variant for sources whose persisted form uses a non-native byte order. Overrides
+ * each primitive memory read/write to apply {@link Long#reverseBytes} (and the corresponding
+ * {@link Short}, {@link Character}, {@link Integer} forms) so the loader can transparently read
+ * data persisted on the opposite endianness.
+ *
+ * @see BinaryLoadItem
+ */
 public final class BinaryLoadItemByteReversing extends BinaryLoadItem
 {
 	///////////////////////////////////////////////////////////////////////////

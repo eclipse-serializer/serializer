@@ -36,16 +36,34 @@ import org.eclipse.serializer.util.X;
 
 
 /**
- * This type serves as a factory instance for buidling {@link PersistenceManager} instances.
- * However, it is more than a mere factory as it keeps track of all component instances used in building
- * a {@link PersistenceManager} instance. For example managing parts of an application can use it
- * to access former set ID providers or dictionary providers even after they have been assembled into (and
- * are intentionally hindden in) a {@link PersistenceManager} instance.*
- * Hence it can be seen as a kind of "master instance" of the built persistence layer or as its "foundation".
+ * Factory and component registry for building {@link PersistenceManager} instances. More than a mere
+ * factory: keeps track of every component used to build a {@link PersistenceManager} so that managing parts
+ * of an application can access previously-set id providers, dictionary providers, etc. even after they have
+ * been assembled into (and are intentionally hidden behind) a manager. Hence it can be seen as a kind of
+ * "master instance" of the built persistence layer or as its "foundation".
+ * <p>
+ * <strong>Lazy default-creation pattern.</strong> Each component is exposed through both a setter and a
+ * matching {@code getX()} accessor that returns the configured component, lazily creating a default if none
+ * has been set. Calling any {@code getX()} therefore eagerly materializes the component graph; in
+ * contrast, the bare-field accessors that exist for a few selected components (e.g.
+ * {@link #customTypeHandlerRegistryEnsurer()} as opposed to {@link #getCustomTypeHandlerRegistryEnsurer()})
+ * return only what has been explicitly registered, without triggering creation.
+ * <p>
+ * <strong>Custom type handlers.</strong> Two register paths exist for handlers:
+ * {@link #customTypeHandlers()} and the {@code registerCustomTypeHandler*} methods accumulate handlers in
+ * an internal map without forcing creation of the registry, while {@link #getCustomTypeHandlerRegistry()}
+ * returns (and lazily creates) the actual registry. Prefer the former during configuration to avoid
+ * ordering issues with implicit dependencies.
+ * <p>
+ * <strong>Self-typing.</strong> The {@code F} pseudo-self-type makes setters fluent without forcing
+ * subclasses to override every setter. {@link Cloneable#Clone()} produces a deep enough copy of the
+ * foundation that it can be reconfigured independently.
  *
- * 
- * @param <D> the data type
- * @param <F> the foundation type
+ * @param <D> the data type produced and consumed by the persistence components.
+ * @param <F> the foundation self-type, returned by every fluent setter.
+ *
+ * @see PersistenceManager
+ * @see #createPersistenceManager()
  */
 public interface PersistenceFoundation<D, F extends PersistenceFoundation<D, ?>>
 extends Cloneable<PersistenceFoundation<D, F>>,
@@ -59,19 +77,72 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 	@Override
 	public PersistenceFoundation<D, F> Clone();
 	
+	/**
+	 * The mutable backing map of custom type handlers accumulated via {@code registerCustomTypeHandler*}.
+	 * Distinct from {@link #getCustomTypeHandlerRegistry()}: this map is collected eagerly during
+	 * configuration without forcing creation of the registry, which avoids implicit dependency cycles.
+	 *
+	 * @return the live custom-type-handlers map.
+	 */
 	public XMap<Class<?>, PersistenceTypeHandler<D, ?>> customTypeHandlers();
 
+	/**
+	 * The mutable backing map of custom type instantiators accumulated via
+	 * {@link #registerCustomInstantiator(Class, PersistenceTypeInstantiator)}.
+	 *
+	 * @return the live custom-type-instantiators map.
+	 */
 	public XMap<Class<?>, PersistenceTypeInstantiator<D, ?>> customTypeInstantiators();
-	
+
+	/**
+	 * Bulk-registers the entries of {@code customTypeHandlers} into the foundation's custom-handler map.
+	 *
+	 * @param customTypeHandlers the {@code Class → handler} mappings to add.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	public F registerCustomTypeHandlers(HashTable<Class<?>, PersistenceTypeHandler<D, ?>> customTypeHandlers);
-	
+
+	/**
+	 * Bulk-registers the passed handlers under each handler's own
+	 * {@link PersistenceTypeHandler#type() type}.
+	 *
+	 * @param customTypeHandlers the handlers to add.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	@SuppressWarnings("unchecked")
 	public F registerCustomTypeHandlers(PersistenceTypeHandler<D, ?>... customTypeHandlers);
-	
+
+	/**
+	 * Iterable variant of {@link #registerCustomTypeHandlers(PersistenceTypeHandler...)}.
+	 *
+	 * @param customTypeHandlers the handlers to add.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	public F registerCustomTypeHandlers(Iterable<? extends PersistenceTypeHandler<D, ?>> customTypeHandlers);
-	
+
+	/**
+	 * Registers a single handler under its own {@link PersistenceTypeHandler#type() type}. If the registry
+	 * has already been created, the handler is also forwarded to it directly so it takes effect immediately.
+	 *
+	 * @param customTypeHandler the handler to add.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	public F registerCustomTypeHandler(PersistenceTypeHandler<D, ?> customTypeHandler);
-	
+
+	/**
+	 * Registers a custom {@link PersistenceTypeInstantiator} for {@code type} so loading constructs
+	 * instances via the supplied instantiator instead of the universal default.
+	 *
+	 * @param <T>              the instantiated type.
+	 * @param type             the runtime type to register the instantiator for.
+	 * @param typeInstantiator the instantiator.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	public <T> F registerCustomInstantiator(Class<T> type, PersistenceTypeInstantiator<D, T> typeInstantiator);
 	
 	public PersistenceObjectIdProvider getObjectIdProvider();
@@ -146,8 +217,22 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 	 */
 	public PersistenceCustomTypeHandlerRegistry<D> getCustomTypeHandlerRegistry();
 	
+	/**
+	 * Returns the explicitly registered {@link PersistenceCustomTypeHandlerRegistryEnsurer}, or
+	 * {@code null} if none has been set. Does <em>not</em> trigger creation of a default ensurer; use
+	 * {@link #getCustomTypeHandlerRegistryEnsurer()} for that.
+	 *
+	 * @return the registered ensurer, or {@code null}.
+	 */
 	public PersistenceCustomTypeHandlerRegistryEnsurer<D> customTypeHandlerRegistryEnsurer();
-	
+
+	/**
+	 * Returns the {@link PersistenceCustomTypeHandlerRegistryEnsurer}, lazily creating a default if none
+	 * has been set. Counterpart of {@link #customTypeHandlerRegistryEnsurer()} that triggers default
+	 * creation.
+	 *
+	 * @return the ensurer.
+	 */
 	public PersistenceCustomTypeHandlerRegistryEnsurer<D> getCustomTypeHandlerRegistryEnsurer();
 
 	public PersistenceTypeAnalyzer getTypeAnalyzer();
@@ -282,10 +367,29 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 	
 	public F setTypeDictionaryStorer(PersistenceTypeDictionaryStorer typeDictionaryStorer);
 
+	/**
+	 * Convenience setter for installing a single object as both the type-dictionary loader and storer.
+	 * Use this when one component implements both halves &mdash; instead of calling
+	 * {@link #setTypeDictionaryLoader(PersistenceTypeDictionaryLoader)} and
+	 * {@link #setTypeDictionaryStorer(PersistenceTypeDictionaryStorer)} separately.
+	 *
+	 * @param <H>                   the IO-handling type, constrained to implement both halves.
+	 * @param typeDictionaryStorage the IO handler.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	public <H extends PersistenceTypeDictionaryLoader & PersistenceTypeDictionaryStorer> F setTypeDictionaryIoHandling(
 		H typeDictionaryStorage
 	);
-	
+
+	/**
+	 * Default-method shortcut for the common case of installing a {@link PersistenceTypeDictionaryIoHandler}
+	 * as both loader and storer. Delegates to {@link #setTypeDictionaryIoHandling(Object)}.
+	 *
+	 * @param typeDictionaryIoHandler the IO handler.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	public default F setTypeDictionaryIoHandler(
 		final PersistenceTypeDictionaryIoHandler typeDictionaryIoHandler
 	)
@@ -388,6 +492,17 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 
 	public F setTypeIdProvider(PersistenceTypeIdProvider tidProvider);
 
+	/**
+	 * Convenience setter for installing a single object as both the type-id provider and the object-id
+	 * provider. Use this when one component implements both halves &mdash; instead of calling
+	 * {@link #setTypeIdProvider(PersistenceTypeIdProvider)} and
+	 * {@link #setObjectIdProvider(PersistenceObjectIdProvider)} separately.
+	 *
+	 * @param <P>        the id-provider type, constrained to implement both halves.
+	 * @param idProvider the unified id provider.
+	 *
+	 * @return this foundation, for fluent chaining.
+	 */
 	public <P extends PersistenceTypeIdProvider & PersistenceObjectIdProvider>
 	F setIdProvider(P idProvider);
 		
@@ -402,21 +517,45 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 	);
 	
 
-	/*
-	 * generic name is intentional as the role of the created instance may change in extended types
-	 * (e.g. representing a database connection)
+	/**
+	 * Builds and returns a {@link PersistenceManager} from the currently configured components, materializing
+	 * any not-yet-set ones via the lazy-default-creation pattern. Subclasses may return a more specific
+	 * subtype (e.g. one representing a database connection); the generic return type leaves that open.
+	 *
+	 * @return the newly built persistence manager.
 	 */
 	public PersistenceManager<D> createPersistenceManager();
 
 
 
+	/**
+	 * Creates a new {@link Default} foundation for the passed persistence data type. The returned
+	 * foundation has no components configured; callers wire up whatever they need before calling
+	 * {@link #createPersistenceManager()}.
+	 *
+	 * @param <D>      the persistence data type.
+	 * @param dataType the {@link Class} literal of {@code D}; must not be {@code null}.
+	 *
+	 * @return the newly created foundation.
+	 */
 	public static <D> PersistenceFoundation<D, ?> New(final Class<D> dataType)
 	{
 		return new PersistenceFoundation.Default<>(
 			notNull(dataType)
 		);
 	}
-	
+
+	/**
+	 * Default {@link PersistenceFoundation}. Implements every {@code getX()} accessor by returning the
+	 * registered field, lazily creating a default if none has been set; setters install the passed value
+	 * and return the self-typed foundation for fluent chaining.
+	 * <p>
+	 * Implements {@link Unpersistable} because the foundation must never be written to the persistent
+	 * graph (it would re-create the entire persistence layer on read).
+	 *
+	 * @param <D> the persistence data type.
+	 * @param <F> the foundation self-type.
+	 */
 	public class Default<D, F extends PersistenceFoundation.Default<D, ?>>
 	extends InstanceDispatcher.Default
 	implements PersistenceFoundation<D, F>, Unpersistable

@@ -18,8 +18,34 @@ import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.reflect.XReflect;
 
+/**
+ * Locates a registered "abstract" handler that is assignable from the passed runtime type, by walking
+ * {@code type}'s super-class and super-interface graph in priority order: deeper class-hierarchy levels
+ * first, with super-classes preferred over interfaces at each level. The first registered match wins.
+ * <p>
+ * Used during type-handler discovery as a fallback when no concrete handler is registered for an exact type:
+ * if e.g. a custom handler has been registered for a common interface, instances of every class that
+ * implements that interface can be funneled to it.
+ *
+ * @param <D> the persistence data type passed through to the {@link PersistenceTypeHandler}.
+ *
+ * @see PersistenceCustomTypeHandlerRegistry
+ * @see PersistenceTypeHandler
+ */
 public interface PersistenceAbstractTypeHandlerSearcher<D>
 {
+	/**
+	 * Default-method shortcut delegating to
+	 * {@link #searchAbstractTypeHandler(PersistenceCustomTypeHandlerRegistry, Class)} so callers can
+	 * invoke the search through a registered searcher instance.
+	 *
+	 * @param <T>                       the searched type.
+	 * @param type                      the runtime type to look up.
+	 * @param customTypeHandlerRegistry the registry to search.
+	 *
+	 * @return a registered handler whose type is a super-type of {@code type}, or {@code null} if none
+	 *         exists.
+	 */
 	public default <T> PersistenceTypeHandler<D, ? super T> searchAbstractTypeHandler(
 		final Class<T>                                type                     ,
 		final PersistenceCustomTypeHandlerRegistry<D> customTypeHandlerRegistry
@@ -30,9 +56,23 @@ public interface PersistenceAbstractTypeHandlerSearcher<D>
 			type
 		);
 	}
-	
-	
-	
+
+
+
+	/**
+	 * Walks {@code type}'s super-class and super-interface graph in priority order and returns the first
+	 * handler registered in {@code customTypeHandlerRegistry} for any of the abstract super-types.
+	 * <p>
+	 * Priority: at each hierarchy level, the super-class is considered before that level's interfaces; only
+	 * abstract classes (including interfaces) are considered as potential targets.
+	 *
+	 * @param <D>                       the persistence data type.
+	 * @param <T>                       the searched type.
+	 * @param customTypeHandlerRegistry the registry to search.
+	 * @param type                      the runtime type to look up.
+	 *
+	 * @return a handler whose type is a super-type of {@code type}, or {@code null} if none is registered.
+	 */
 	public static <D, T> PersistenceTypeHandler<D, ? super T> searchAbstractTypeHandler(
 		final PersistenceCustomTypeHandlerRegistry<D> customTypeHandlerRegistry,
 		final Class<T>                                type
@@ -97,11 +137,25 @@ public interface PersistenceAbstractTypeHandlerSearcher<D>
 
 	
 	
+	/**
+	 * Creates a new {@link Default} searcher.
+	 *
+	 * @param <D> the persistence data type.
+	 *
+	 * @return the newly created searcher.
+	 */
 	public static <D> PersistenceAbstractTypeHandlerSearcher<D> New()
 	{
 		return new PersistenceAbstractTypeHandlerSearcher.Default<>();
 	}
-	
+
+	/**
+	 * Default {@link PersistenceAbstractTypeHandlerSearcher} that just delegates to the static
+	 * {@link #searchAbstractTypeHandler(PersistenceCustomTypeHandlerRegistry, Class)}. Stateless and
+	 * freely shareable.
+	 *
+	 * @param <D> the persistence data type.
+	 */
 	public final class Default<D> implements PersistenceAbstractTypeHandlerSearcher<D>
 	{
 		// actually belongs in the interface, but JLS' visibility rules are too stupid to allow clean architecture.

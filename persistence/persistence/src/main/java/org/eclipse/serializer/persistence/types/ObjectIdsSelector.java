@@ -14,8 +14,24 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Drives an {@link ObjectIdsProcessor} session: implementations decide which subset of live object ids the
+ * processor should see and orchestrate the actual {@link ObjectIdsProcessor#processObjectIdsByFilter} or
+ * {@link ObjectIdsProcessor#provideObjectIdsBaseSet} calls accordingly.
+ *
+ * @see ObjectIdsProcessor
+ */
 public interface ObjectIdsSelector
 {
+	/**
+	 * Drives a processing pass against {@code processor}, returning {@code true} on success and
+	 * {@code false} if the underlying source declined the request (e.g. a registry that refused to lock
+	 * for the operation).
+	 *
+	 * @param processor the processor to drive.
+	 *
+	 * @return {@code true} if processing completed, {@code false} if it was declined.
+	 */
 	public boolean processSelected(ObjectIdsProcessor processor);
 
 }

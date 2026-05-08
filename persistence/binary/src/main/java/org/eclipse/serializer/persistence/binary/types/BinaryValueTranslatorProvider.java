@@ -28,6 +28,17 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
 import org.eclipse.serializer.typing.TypeMappingLookup;
 
 
+/**
+ * Resolves the {@link BinaryValueSetter} that translates a persisted source member's value to either the
+ * matching current target member (instance-update path) or to the corresponding slot in a rewritten
+ * intermediate binary form (rerouting path). Custom translators may be registered under arbitrary keys
+ * built by {@link BinaryValueTranslatorKeyBuilder}s; if no custom translator matches, the provider falls
+ * back to the generic primitive-to-primitive lookup table or to a generic reference resolver.
+ *
+ * @see BinaryValueSetter
+ * @see BinaryValueTranslatorKeyBuilder
+ * @see BinaryValueTranslatorLookupProvider
+ */
 public interface BinaryValueTranslatorProvider
 {
 	/**
@@ -64,6 +75,16 @@ public interface BinaryValueTranslatorProvider
 	
 	
 	
+	/**
+	 * Creates a new default {@link BinaryValueTranslatorProvider}.
+	 *
+	 * @param customTranslatorLookup   optional map of registered custom translators keyed by lookup key, may be {@code null}.
+	 * @param translatorKeyBuilders    optional sequence of key builders to consult, may be {@code null} or empty.
+	 * @param translatorLookupProvider the generic primitive-to-primitive translator table provider.
+	 * @param switchByteOrder          whether the persisted form uses a non-native byte order.
+	 *
+	 * @return the newly created provider.
+	 */
 	public static BinaryValueTranslatorProvider New(
 		final XGettingMap<String, BinaryValueSetter>                      customTranslatorLookup  ,
 		final XGettingSequence<? extends BinaryValueTranslatorKeyBuilder> translatorKeyBuilders   ,
@@ -89,6 +110,11 @@ public interface BinaryValueTranslatorProvider
 		;
 	}
 	
+	/**
+	 * Default {@link BinaryValueTranslatorProvider} implementation. Caches the resolved translator lookup
+	 * table on first use and consults the configured key builders before falling back to the generic
+	 * primitive-to-primitive lookup or a generic reference resolver.
+	 */
 	public final class Default implements BinaryValueTranslatorProvider
 	{
 		///////////////////////////////////////////////////////////////////////////

@@ -19,6 +19,16 @@ import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
+/**
+ * Skeletal base for {@link AbstractBinaryHandlerCustom} subclasses whose handled type carries no
+ * persistent state. Stores only an entity header via {@link Binary#storeStateless(long, long)} on persist
+ * and exposes empty member/reference views; concrete subclasses only need to provide their {@link #create}
+ * logic.
+ *
+ * @param <T> the runtime type handled.
+ *
+ * @see AbstractBinaryHandlerTrivial
+ */
 public abstract class AbstractBinaryHandlerStateless<T> extends AbstractBinaryHandlerCustom<T>
 {
 	///////////////////////////////////////////////////////////////////////////

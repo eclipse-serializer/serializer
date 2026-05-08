@@ -26,6 +26,17 @@ import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
 
 
+/**
+ * Reflective legacy handler for enum classes whose <em>static</em> structure (the set and order of enum
+ * constants) has not changed since the legacy version. Resolves the instance by reading the persisted
+ * ordinal directly and looking up the matching enum constant on the current type. For changed constant
+ * structures, see {@link BinaryLegacyTypeHandlerGenericEnumMapped}.
+ *
+ * @param <T> the enum runtime type produced by this handler.
+ *
+ * @see BinaryLegacyTypeHandlerGenericEnumMapped
+ * @see AbstractBinaryLegacyTypeHandlerReflective
+ */
 public class BinaryLegacyTypeHandlerGenericEnum<T>
 extends AbstractBinaryLegacyTypeHandlerReflective<T>
 {
@@ -33,6 +44,19 @@ extends AbstractBinaryLegacyTypeHandlerReflective<T>
 	// static methods //
 	///////////////////
 
+	/**
+	 * Creates a new {@link BinaryLegacyTypeHandlerGenericEnum} for the given legacy/current type pairing.
+	 *
+	 * @param typeDefinition               the legacy type definition describing the persisted layout.
+	 * @param typeHandler                  the current type handler that owns the enum constants.
+	 * @param translatorsWithTargetOffsets ordered offset/translator pairs derived from the legacy mapping.
+	 * @param listener                     optional listener invoked on each legacy creation, may be {@code null}.
+	 * @param switchByteOrder              whether persisted values use a non-native byte order.
+	 *
+	 * @param <T> the enum runtime type produced by the handler.
+	 *
+	 * @return the newly created legacy handler.
+	 */
 	public static <T> BinaryLegacyTypeHandlerGenericEnum<T> New(
 		final PersistenceTypeDefinition                       typeDefinition              ,
 		final PersistenceTypeHandler<Binary, T>               typeHandler                 ,
@@ -87,6 +111,13 @@ extends AbstractBinaryLegacyTypeHandlerReflective<T>
 
 	// note on initializing methods: excluding the java.lang.Enum fields must already be excluded in valueTranslators
 
+	/**
+	 * Reads the persisted enum ordinal from the entity data at this handler's predetermined offset.
+	 *
+	 * @param data the persisted entity data.
+	 *
+	 * @return the persisted enum ordinal.
+	 */
 	public int getOrdinal(final Binary data)
 	{
 		return data.read_int(this.binaryOffsetOrdinal);

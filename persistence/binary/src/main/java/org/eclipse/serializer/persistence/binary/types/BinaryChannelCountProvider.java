@@ -14,8 +14,16 @@ package org.eclipse.serializer.persistence.binary.types;
  * #L%
  */
 
+/**
+ * Functional supplier for the number of parallel channels the binary persistence layer should partition
+ * its work across. The returned count drives chunk-buffer arrays, channel-hashed
+ * {@link LoadItemsChain}s, and any other channel-partitioned bookkeeping.
+ */
 @FunctionalInterface
 public interface BinaryChannelCountProvider
 {
+	/**
+	 * @return the number of parallel channels.
+	 */
 	public int getChannelCount();
 }

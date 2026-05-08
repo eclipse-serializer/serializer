@@ -19,6 +19,14 @@ import org.eclipse.serializer.memory.XMemory;
 import java.nio.ByteBuffer;
 
 
+/**
+ * {@link ChunksWrapper} variant for sources whose persisted form uses a non-native byte order. Overrides
+ * each primitive memory read to apply the matching {@code reverseBytes} call, allowing transparent
+ * loading of data persisted on the opposite endianness.
+ *
+ * @see ChunksWrapper
+ * @see ChunksBufferByteReversing
+ */
 public final class ChunksWrapperByteReversing extends ChunksWrapper
 {
 	///////////////////////////////////////////////////////////////////////////

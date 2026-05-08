@@ -22,6 +22,25 @@ import java.util.function.Consumer;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.XArrays;
 
+/**
+ * A file in an {@link AFileSystem}. Files are leaf {@link AItem items}: they have a {@link #parent()
+ * parent} directory and a content {@link #size() size}, but no children.
+ * <p>
+ * I/O is never performed directly on an {@link AFile}. Callers obtain a usage handle through
+ * {@link #useReading()} / {@link #useWriting()} (or the {@link #tryUseReading() tryUse} variants);
+ * the resulting {@link AReadableFile} / {@link AWritableFile} represents an active access claim
+ * tracked by the {@link AccessManager} and must be {@link AReadableFile#release() released} when
+ * the caller is done. {@link AFS} wrappers such as {@link AFS#applyWriting(AFile,
+ * java.util.function.Function)} encapsulate this acquire/release lifecycle.
+ * <p>
+ * {@link Observer}s registered on a file are notified of writes, moves, truncations, deletions and
+ * lifecycle transitions performed through writable / readable handles.
+ *
+ * @see AReadableFile
+ * @see AWritableFile
+ * @see AccessManager
+ * @see Observer
+ */
 public interface AFile extends AItem
 {
 	@Override
@@ -80,66 +99,164 @@ public interface AFile extends AItem
 		return this.fileSystem().ioHandler().size(this);
 	}
 	
+	/**
+	 * Whether the file's content {@link #size() size} is zero.
+	 *
+	 * @return {@code true} if this file has no content.
+	 */
 	public default boolean isEmpty()
 	{
 		return this.size() == 0;
 	}
-	
+
+	/**
+	 * Registers the passed {@link Observer} to receive notifications about operations on this file.
+	 * Has no effect if the observer is already registered.
+	 *
+	 * @param observer the observer to register.
+	 *
+	 * @return {@code true} if the observer was newly registered, {@code false} if it was already present.
+	 */
 	public boolean registerObserver(AFile.Observer observer);
-	
+
+	/**
+	 * Removes a previously registered {@link Observer}.
+	 *
+	 * @param observer the observer to remove.
+	 *
+	 * @return {@code true} if the observer was registered and got removed, {@code false} otherwise.
+	 */
 	public boolean removeObserver(AFile.Observer observer);
-	
+
+	/**
+	 * Iterates over the observers currently registered on this file, passing each to the supplied
+	 * consumer.
+	 *
+	 * @param <C>   the consumer type.
+	 * @param logic the consumer to apply.
+	 *
+	 * @return the passed consumer for chaining.
+	 */
 	public <C extends Consumer<? super AFile.Observer>> C iterateObservers(C logic);
-	
+
+	/**
+	 * Acquires a shared (reading) usage handle on this file for the passed user.
+	 * <p>
+	 * The returned handle must be {@link AReadableFile#release() released} when no longer needed.
+	 *
+	 * @param user the user identity to register the usage under.
+	 *
+	 * @return a readable file handle.
+	 */
 	public default AReadableFile useReading(final Object user)
 	{
 		return this.fileSystem().accessManager().useReading(this, user);
 	}
-	
+
 	// implementations also need to cover locking.
+	/**
+	 * Acquires an exclusive (writing) usage handle on this file for the passed user.
+	 * <p>
+	 * The returned handle must be {@link AWritableFile#release() released} when no longer needed.
+	 *
+	 * @param user the user identity to register the usage under.
+	 *
+	 * @return a writable file handle.
+	 */
 	public default AWritableFile useWriting(final Object user)
 	{
 		return this.fileSystem().accessManager().useWriting(this, user);
 	}
-	
+
+	/**
+	 * Acquires a shared (reading) usage handle on this file for the {@link #defaultUser() default user}.
+	 *
+	 * @return a readable file handle.
+	 *
+	 * @see #useReading(Object)
+	 */
 	public default AReadableFile useReading()
 	{
 		return this.fileSystem().accessManager().useReading(this);
 	}
-	
+
+	/**
+	 * Acquires an exclusive (writing) usage handle on this file for the {@link #defaultUser() default user}.
+	 *
+	 * @return a writable file handle.
+	 *
+	 * @see #useWriting(Object)
+	 */
 	public default AWritableFile useWriting()
 	{
 		return this.fileSystem().accessManager().useWriting(this);
 	}
-	
+
+	/**
+	 * Tries to acquire a shared (reading) usage handle on this file for the passed user, returning
+	 * {@code null} if shared access cannot currently be granted instead of throwing.
+	 *
+	 * @param user the user identity to register the usage under.
+	 *
+	 * @return a readable file handle, or {@code null} if shared access is not currently available.
+	 */
 	public default AReadableFile tryUseReading(final Object user)
 	{
 		return this.fileSystem().accessManager().tryUseReading(this, user);
 	}
 
 	// Implementation is also responsible for locking
+	/**
+	 * Tries to acquire an exclusive (writing) usage handle on this file for the passed user,
+	 * returning {@code null} if exclusive access cannot currently be granted instead of throwing.
+	 *
+	 * @param user the user identity to register the usage under.
+	 *
+	 * @return a writable file handle, or {@code null} if exclusive access is not currently available.
+	 */
 	public default AWritableFile tryUseWriting(final Object user)
 	{
 		return this.fileSystem().accessManager().tryUseWriting(this, user);
 	}
-	
+
+	/**
+	 * Tries to acquire a shared (reading) usage handle on this file for the {@link #defaultUser()
+	 * default user}, returning {@code null} if shared access cannot currently be granted.
+	 *
+	 * @return a readable file handle, or {@code null} if shared access is not currently available.
+	 */
 	public default AReadableFile tryUseReading()
 	{
 		return this.fileSystem().accessManager().tryUseReading(this);
 	}
-	
+
+	/**
+	 * Tries to acquire an exclusive (writing) usage handle on this file for the {@link
+	 * #defaultUser() default user}, returning {@code null} if exclusive access cannot currently
+	 * be granted.
+	 *
+	 * @return a writable file handle, or {@code null} if exclusive access is not currently available.
+	 */
 	public default AWritableFile tryUseWriting()
 	{
 		return this.fileSystem().accessManager().tryUseWriting(this);
 	}
-	
+
 	@Override
 	public default boolean exists()
 	{
 		return this.fileSystem().ioHandler().exists(this);
 	}
-	
+
 	// required to query the file size, for example
+	/**
+	 * Ensures that this file physically exists in the underlying storage layer, creating an empty
+	 * file if necessary.
+	 * <p>
+	 * Acquires a writing handle internally and is therefore subject to exclusive access conflicts.
+	 *
+	 * @return {@code true} if the file was created by this call, {@code false} if it already existed.
+	 */
 	public default boolean ensureExists()
 	{
 		// if(this.exists()) is very expensive, so double-checking to avoid a lambda instance is a bad idea
@@ -147,12 +264,24 @@ public interface AFile extends AItem
 
 		return AFS.applyWriting(this, wf -> wf.ensureExists());
 	}
-	
+
+	/**
+	 * Whether this file is currently in use by any user (reading or writing) according to the
+	 * {@link AccessManager}.
+	 *
+	 * @return {@code true} if at least one usage claim exists for this file.
+	 */
 	public default boolean isUsed()
 	{
 		return this.fileSystem().accessManager().isUsed(this);
 	}
-	
+
+	/**
+	 * The default user the {@link AccessManager} associates with usage claims when no explicit
+	 * user is supplied.
+	 *
+	 * @return the default user identity.
+	 */
 	public default Object defaultUser()
 	{
 		return this.fileSystem().accessManager().defaultUser();
@@ -160,6 +289,14 @@ public interface AFile extends AItem
 		
 	
 	
+	/**
+	 * Creates a new {@link AFile} with the passed parent directory and identifier.
+	 *
+	 * @param parent     the parent directory; must not be {@code null}.
+	 * @param identifier the file's locally unique identifier; must not be {@code null}.
+	 *
+	 * @return a new {@link AFile} instance.
+	 */
 	public static AFile New(
 		final ADirectory  parent    ,
 		final String      identifier
@@ -170,7 +307,10 @@ public interface AFile extends AItem
 			notNull(identifier)
 		);
 	}
-	
+
+	/**
+	 * Default {@link AFile} implementation. Manages the file's parent reference and observer list.
+	 */
 	public class Default
 	extends AItem.Abstract
 	implements AFile
@@ -289,8 +429,22 @@ public interface AFile extends AItem
 	}
 
 	// (27.05.2020 TM)TODO: priv#49: Composite Observer implementation with lambda-based factory
+	/**
+	 * Listener interface notified about operations performed on an {@link AFile} through one of its
+	 * usage handles. All callbacks are no-ops by default; implementations only need to override the
+	 * events they care about.
+	 * <p>
+	 * Observers are registered via {@link AFile#registerObserver(Observer)} and are invoked
+	 * synchronously by the file's I/O methods, both before and after the underlying operation.
+	 */
 	public interface Observer
 	{
+		/**
+		 * Invoked immediately before bytes are written to {@code targetFile}.
+		 *
+		 * @param targetFile the file about to be written to.
+		 * @param sources    the byte buffers about to be written.
+		 */
 		public default void onBeforeFileWrite(
 			final AWritableFile                  targetFile,
 			final Iterable<? extends ByteBuffer> sources
@@ -299,6 +453,13 @@ public interface AFile extends AItem
 			// no-op by default
 		}
 
+		/**
+		 * Invoked immediately after bytes have been written to {@code targetFile}.
+		 *
+		 * @param targetFile the file that was written to.
+		 * @param sources    the byte buffers that were written.
+		 * @param writeCount the number of bytes written.
+		 */
 		public default void onAfterFileWrite(
 			final AWritableFile                  targetFile,
 			final Iterable<? extends ByteBuffer> sources   ,
@@ -307,7 +468,13 @@ public interface AFile extends AItem
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately before {@code sourceFile} is moved to {@code targetFile}.
+		 *
+		 * @param sourceFile the file about to be moved.
+		 * @param targetFile the move target.
+		 */
 		public default void onBeforeFileMove(
 			final AWritableFile sourceFile,
 			final AWritableFile targetFile
@@ -315,7 +482,13 @@ public interface AFile extends AItem
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately after {@code sourceFile} has been moved to {@code targetFile}.
+		 *
+		 * @param sourceFile the file that was moved.
+		 * @param targetFile the move target.
+		 */
 		public default void onAfterFileMove(
 			final AWritableFile sourceFile,
 			final AWritableFile targetFile
@@ -323,42 +496,86 @@ public interface AFile extends AItem
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately before a readable handle is closed.
+		 *
+		 * @param fileToClose the handle about to be closed.
+		 */
 		public default void onBeforeFileClose(final AReadableFile fileToClose)
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately after a readable handle has been closed.
+		 *
+		 * @param closedFile the handle that was closed.
+		 * @param result     {@code true} if the close call performed work; {@code false} if the handle was already closed.
+		 */
 		public default void onAfterFileClose(final AReadableFile closedFile, final boolean result)
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately before the underlying physical file is created.
+		 *
+		 * @param fileToCreate the file about to be created.
+		 */
 		public default void onBeforeFileCreate(final AWritableFile fileToCreate)
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately after the underlying physical file has been created.
+		 *
+		 * @param fileToCreate the file that was created.
+		 */
 		public default void onAfterFileCreate(final AWritableFile fileToCreate)
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately before the file is truncated to the passed new size.
+		 *
+		 * @param fileToTruncate the file about to be truncated.
+		 * @param newSize        the size in bytes the file is being truncated to.
+		 */
 		public default void onBeforeFileTruncation(final AWritableFile fileToTruncate, final long newSize)
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately after the file has been truncated to the passed new size.
+		 *
+		 * @param truncatedFile the file that was truncated.
+		 * @param newSize       the new size in bytes.
+		 */
 		public default void onAfterFileTruncation(final AWritableFile truncatedFile, final long newSize)
 		{
 			// no-op by default
 		}
-				
+
+		/**
+		 * Invoked immediately before the underlying physical file is deleted.
+		 *
+		 * @param fileToDelete the file about to be deleted.
+		 */
 		public default void onBeforeFileDelete(final AWritableFile fileToDelete)
 		{
 			// no-op by default
 		}
-		
+
+		/**
+		 * Invoked immediately after a delete attempt on the underlying physical file.
+		 *
+		 * @param deletedFile the file that was attempted to be deleted.
+		 * @param result      {@code true} if the file was actually deleted by this call.
+		 */
 		public default void onAfterFileDelete(
 			final AWritableFile deletedFile,
 			final boolean       result
@@ -366,9 +583,17 @@ public interface AFile extends AItem
 		{
 			// no-op by default
 		}
-		
+
 	}
 
+	/**
+	 * Unwraps the passed file to its underlying actual file, walking through any {@link Wrapper}
+	 * layers. Returns the passed file unchanged if it is not a wrapper.
+	 *
+	 * @param file the file to unwrap (may be a wrapper).
+	 *
+	 * @return the underlying non-wrapper {@link AFile}.
+	 */
 	public static AFile actual(final AFile file)
 	{
 		return file instanceof AFile.Wrapper
@@ -376,12 +601,23 @@ public interface AFile extends AItem
 			: file
 		;
 	}
-		
+
+	/**
+	 * Sub-interface of {@link AItem.Wrapper} for wrappers around an {@link AFile}, used most
+	 * notably by {@link AReadableFile} and {@link AWritableFile} to associate a usage handle with
+	 * the underlying file and the user that holds the claim.
+	 */
 	public interface Wrapper extends AFile, AItem.Wrapper
 	{
 		@Override
 		public AFile actual();
-		
+
+		/**
+		 * Skeletal {@link AFile.Wrapper} implementation that holds the wrapped file and user, and
+		 * delegates {@link AItem} queries to the wrapped file.
+		 *
+		 * @param <U> the user type.
+		 */
 		public abstract class Abstract<U> extends AItem.Base implements AFile.Wrapper
 		{
 			///////////////////////////////////////////////////////////////////////////

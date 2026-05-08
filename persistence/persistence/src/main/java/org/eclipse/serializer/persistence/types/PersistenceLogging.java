@@ -14,7 +14,15 @@ package org.eclipse.serializer.persistence.types;
  * #L%
  */
 
+/**
+ * Container for shared logging context tokens used by the persistence layer's logging adapters. The token
+ * itself is opaque &mdash; callers compare it by identity to decide whether a log event originates from a
+ * given subsystem.
+ */
 public interface PersistenceLogging
 {
+	/**
+	 * Logging context marker for storer-related events. Adapters compare this token by identity.
+	 */
 	public final static Object STORER_CONTEXT = Storer.class;
 }

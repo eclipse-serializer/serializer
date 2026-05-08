@@ -19,6 +19,17 @@ import org.eclipse.serializer.persistence.types.PersistenceSizedArrayLengthContr
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldGeneric;
 
 
+/**
+ * Skeletal base for handlers of iterable types backed by a sized array (capacity-bearing arrays whose
+ * occupied portion can be smaller than the array length, e.g. {@code ArrayList}'s internal array). Holds
+ * a {@link PersistenceSizedArrayLengthController} that, on load, decides the effective array length from
+ * the persisted capacity and actual element count &mdash; allowing the runtime to clamp or grow the array
+ * to a sensible size rather than blindly trusting the persisted capacity.
+ *
+ * @param <T> the iterable runtime type handled.
+ *
+ * @see PersistenceSizedArrayLengthController
+ */
 public abstract class AbstractBinaryHandlerCustomIterableSizedArray<T extends Iterable<?>>
 extends AbstractBinaryHandlerCustomIterable<T>
 {

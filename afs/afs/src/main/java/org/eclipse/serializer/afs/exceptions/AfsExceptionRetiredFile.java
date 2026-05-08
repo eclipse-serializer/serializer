@@ -14,32 +14,68 @@ package org.eclipse.serializer.afs.exceptions;
  * #L%
  */
 
+/**
+ * Thrown when an operation is attempted through a file usage handle (an {@link
+ * org.eclipse.serializer.afs.types.AReadableFile} or {@link
+ * org.eclipse.serializer.afs.types.AWritableFile}) that has already been released and is therefore
+ * retired.
+ * <p>
+ * A retired handle no longer represents a live access claim; the caller must obtain a new handle
+ * via the access manager before performing any further I/O.
+ */
 public class AfsExceptionRetiredFile extends AfsException
 {
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
 	/////////////////
 
+	/**
+	 * Creates a new {@link AfsExceptionRetiredFile} without a message or cause.
+	 */
 	public AfsExceptionRetiredFile()
 	{
 		super();
 	}
 
+	/**
+	 * Creates a new {@link AfsExceptionRetiredFile} with the passed detail message.
+	 *
+	 * @param message the detail message.
+	 */
 	public AfsExceptionRetiredFile(final String message)
 	{
 		super(message);
 	}
 
+	/**
+	 * Creates a new {@link AfsExceptionRetiredFile} wrapping the passed cause.
+	 *
+	 * @param cause the underlying cause.
+	 */
 	public AfsExceptionRetiredFile(final Throwable cause)
 	{
 		super(cause);
 	}
 
+	/**
+	 * Creates a new {@link AfsExceptionRetiredFile} with the passed detail message and cause.
+	 *
+	 * @param message the detail message.
+	 * @param cause   the underlying cause.
+	 */
 	public AfsExceptionRetiredFile(final String message, final Throwable cause)
 	{
 		super(message, cause, true, true);
 	}
 
+	/**
+	 * Creates a new {@link AfsExceptionRetiredFile} with full control over suppression and stack trace writability.
+	 *
+	 * @param message            the detail message.
+	 * @param cause              the underlying cause.
+	 * @param enableSuppression  whether suppression is enabled.
+	 * @param writableStackTrace whether the stack trace is writable.
+	 */
 	public AfsExceptionRetiredFile(
 		final String    message           ,
 		final Throwable cause             ,
@@ -49,5 +85,5 @@ public class AfsExceptionRetiredFile extends AfsException
 	{
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
-	
+
 }

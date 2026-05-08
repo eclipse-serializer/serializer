@@ -63,6 +63,30 @@ import org.eclipse.serializer.reflect.Setter_short;
 import org.eclipse.serializer.typing.KeyValue;
 import org.eclipse.serializer.util.X;
 
+/**
+ * Central abstraction of the binary persistence layer's storing- and loading-side data view: a
+ * length-prefixed sequence of entities, each with an [length, type id, object id] header followed by its
+ * persisted content. Handlers read field values from this view ({@code read_xxx}, {@code readReference})
+ * and write entity headers plus content during storing ({@code storeEntityHeader}, {@code store_xxx}).
+ * <p>
+ * Two concrete implementations cover the two roles: {@link ChunksBuffer}/{@link BinaryLoadItem} on the
+ * storing side (allocate buffers, write entity headers, append content) and {@link ChunksWrapper} on the
+ * loading side (wrap already-filled buffers, expose entity content for reading). The
+ * {@code XxxByteReversing} variants override every primitive read/write to apply
+ * {@link Long#reverseBytes} so persisted bytes can transparently be in a non-native byte order. Methods
+ * not relevant to a given role throw {@link UnsupportedOperationException}.
+ * <p>
+ * Static helpers on this class encode the binary format: entity-header length, list-header layout, byte
+ * sizes for primitive and reference fields, key/value pair length, and the field-declaration factories
+ * used by {@link CustomBinaryHandler} subclasses ({@code Field_byte}, {@code Field_int}, {@code Field},
+ * etc.).
+ *
+ * @see Chunk
+ * @see ChunksBuffer
+ * @see ChunksWrapper
+ * @see BinaryLoadItem
+ * @see CustomBinaryHandler
+ */
 // CHECKSTYLE.OFF: AbstractClassName: this is kind of a hacky solution to improve readability on the use site
 public abstract class Binary implements Chunk
 {
@@ -142,31 +166,55 @@ public abstract class Binary implements Chunk
 	// static methods //
 	///////////////////
 
+	/**
+	 * @param elementCount the number of key/value pairs.
+	 *
+	 * @return the total reference count produced by {@code elementCount} key/value entries (two references per entry).
+	 */
 	public static long keyValueReferenceCount(final long elementCount)
 	{
 		return Binary.KEY_VALUE_REFERENCE_COUNT * elementCount;
 	}
-	
+
+	/**
+	 * @return the persisted byte length of one key/value entry (two references).
+	 */
 	public static long keyValueBinaryLength()
 	{
 		return Binary.KEY_VALUE_BINARY_LENGTH;
 	}
-	
+
+	/**
+	 * @return the minimum byte length of a binary list (the list header alone, with zero elements).
+	 */
 	public static long binaryListMinimumLength()
 	{
 		return Binary.LIST_HEADER_LENGTH;
 	}
 
+	/**
+	 * @return the maximum byte length of a binary list (effectively unbounded; {@link Long#MAX_VALUE}).
+	 */
 	public static long binaryListMaximumLength()
 	{
 		return Long.MAX_VALUE;
 	}
 
+	/**
+	 * @param binaryListElementsByteLength the byte length of just the elements.
+	 *
+	 * @return the total byte length of a binary list (elements plus list header).
+	 */
 	public static long toBinaryListTotalByteLength(final long binaryListElementsByteLength)
 	{
 		return binaryListElementsByteLength + Binary.LIST_HEADER_LENGTH;
 	}
-	
+
+	/**
+	 * @param binaryListTotalByteLength the total byte length of a binary list.
+	 *
+	 * @return the byte length of just the elements (total minus list header).
+	 */
 	public static long toBinaryListContentByteLength(final long binaryListTotalByteLength)
 	{
 		return binaryListTotalByteLength - Binary.LIST_HEADER_LENGTH;
@@ -180,6 +228,11 @@ public abstract class Binary implements Chunk
 		return Binary.LENGTH_LEN;
 	}
 
+	/**
+	 * @param gapLength the prospective gap length.
+	 *
+	 * @return {@code true} if {@code gapLength} can encode a valid gap (must at least cover the length field itself).
+	 */
 	public static boolean isValidGapLength(final long gapLength)
 	{
 		if(true)
@@ -190,66 +243,122 @@ public abstract class Binary implements Chunk
 		return gapLength >= Binary.LENGTH_LEN;
 	}
 
+	/**
+	 * @param entityLength the prospective entity total length.
+	 *
+	 * @return {@code true} if {@code entityLength} can encode a valid entity (must at least cover the entity header).
+	 */
 	public static boolean isValidEntityLength(final long entityLength)
 	{
 		return entityLength >= Binary.LENGTH_ENTITY_HEADER;
 	}
 
+	/**
+	 * @return the byte length of an entity header (length + type id + object id).
+	 */
 	public static int entityHeaderLength()
 	{
 		return Binary.LENGTH_ENTITY_HEADER;
 	}
 
+	/**
+	 * @param entityContentLength the byte length of the entity's content.
+	 *
+	 * @return the entity's total byte length (content plus header).
+	 */
 	public static long entityTotalLength(final long entityContentLength)
 	{
 		// the total length is the content length plus the length of the header (containing length, Tid, Oid)
 		return entityContentLength + Binary.LENGTH_ENTITY_HEADER;
 	}
-	
+
+	/**
+	 * @param entityTotalLength the entity's total byte length.
+	 *
+	 * @return the byte length of the entity's content (total minus header).
+	 */
 	public static long entityContentLength(final long entityTotalLength)
 	{
 		// the content length is the total length minus the length of the header (containing length, Tid, Oid)
 		return entityTotalLength - Binary.LENGTH_ENTITY_HEADER;
 	}
 
+	/**
+	 * @param entityOffset the offset (or absolute address) of an entity's start.
+	 *
+	 * @return the offset (or absolute address) of the entity's content area, just past the entity header.
+	 */
 	public static long toEntityContentOffset(final long entityOffset)
 	{
 		// note that this method can be used for absolute addresses, too.
 		return entityOffset + Binary.LENGTH_ENTITY_HEADER;
 	}
 
+	/**
+	 * @param binaryListOffset the offset (or absolute address) of a binary list's start.
+	 *
+	 * @return the offset of the list's byte-length header field.
+	 */
 	public static final long toBinaryListByteLengthOffset(final long binaryListOffset)
 	{
 		return binaryListOffset + LIST_OFFSET_BYTE_LENGTH;
 	}
-	
+
+	/**
+	 * @param binaryListOffset the offset (or absolute address) of a binary list's start.
+	 *
+	 * @return the offset of the list's element-count header field.
+	 */
 	public static final long toBinaryListElementCountOffset(final long binaryListOffset)
 	{
 		return binaryListOffset + LIST_OFFSET_ELEMENT_COUNT;
 	}
-	
+
+	/**
+	 * @param binaryListOffset the offset (or absolute address) of a binary list's start.
+	 *
+	 * @return the offset of the list's first element, past the list header.
+	 */
 	public static long toBinaryListElementsOffset(final long binaryListOffset)
 	{
 		// note that this method can be used for absolute addresses, too.
 		return binaryListOffset + Binary.LIST_OFFSET_ELEMENTS;
 	}
-	
+
+	/**
+	 * @return the byte length of a persisted object id (8 bytes).
+	 */
 	public static int objectIdByteLength()
 	{
 		return Binary.LENGTH_OID;
 	}
-	
+
+	/**
+	 * @param referenceCount the number of references.
+	 *
+	 * @return the byte length of {@code referenceCount} consecutive references.
+	 */
 	public static long referenceBinaryLength(final long referenceCount)
 	{
 		// should be optimized by the compiler to "<< 3" instead of "* 8".
 		return referenceCount * Binary.LENGTH_OID;
 	}
-	
+
+	/**
+	 * @param count the number of references in the list.
+	 *
+	 * @return the total byte length of a binary list holding {@code count} references (header plus payload).
+	 */
 	public static long calculateReferenceListTotalBinaryLength(final long count)
 	{
 		return toBinaryListTotalByteLength(referenceBinaryLength(count)); // 8 bytes per reference
 	}
-	
+
+	/**
+	 * @param strings the strings to size.
+	 *
+	 * @return the total byte length of the char-list payloads needed to persist {@code strings} back-to-back.
+	 */
 	public static long calculateStringListContentBinaryLength(final String[] strings)
 	{
 		// precise size for each string (char list header plus 2 byte per char)
@@ -262,6 +371,11 @@ public abstract class Binary implements Chunk
 		return listContentBinaryLength;
 	}
 
+	/**
+	 * @param count the number of chars.
+	 *
+	 * @return the total byte length of a binary list holding {@code count} chars (header plus 2 bytes per char).
+	 */
 	public static long calculateBinaryLengthChars(final long count)
 	{
 		return toBinaryListTotalByteLength(count << 1);  // header plus 2 bytes per char
@@ -276,16 +390,39 @@ public abstract class Binary implements Chunk
 	// static methods using an absolute memory address that should actually not be here //
 	/////////////////////////////////////////////////////////////////////////////////////
 		
+	/**
+	 * Reads the persisted entity total length from the entity header at the given absolute address. The
+	 * &ldquo;raw&rdquo; in the name signals that no byte-order transformation is applied; callers reading
+	 * a non-native form must reverse the bytes themselves.
+	 *
+	 * @param entityAddress the absolute address of the entity's start.
+	 *
+	 * @return the persisted total length value as written.
+	 */
 	public static final long getEntityLengthRawValue(final long entityAddress)
 	{
 		return XMemory.get_long(entityAddress + OFFSET_LEN);
 	}
-		
+
+	/**
+	 * Reads the persisted entity type id from the entity header at the given absolute address.
+	 *
+	 * @param entityAddress the absolute address of the entity's start.
+	 *
+	 * @return the persisted type id value as written (no byte-order transformation).
+	 */
 	public static final long getEntityTypeIdRawValue(final long entityAddress)
 	{
 		return XMemory.get_long(entityAddress + OFFSET_TID);
 	}
 
+	/**
+	 * Reads the persisted entity object id from the entity header at the given absolute address.
+	 *
+	 * @param entityAddress the absolute address of the entity's start.
+	 *
+	 * @return the persisted object id value as written (no byte-order transformation).
+	 */
 	public static final long getEntityObjectIdRawValue(final long entityAddress)
 	{
 		return XMemory.get_long(entityAddress + OFFSET_OID);
@@ -395,6 +532,16 @@ public abstract class Binary implements Chunk
 		;
 	}
 			
+	/**
+	 * Reserves space for an entity header in the underlying chunk and writes the supplied length, type id,
+	 * and object id into it. Subsequent {@code store_xxx} calls append the entity's content right after.
+	 *
+	 * @param entityContentLength the byte length of the content that will follow.
+	 * @param entityTypeId        the persisted type id.
+	 * @param entityObjectId      the persisted object id.
+	 *
+	 * @return the address of the start of the entity's content (just past the written header).
+	 */
 	public abstract long storeEntityHeader(
 		long entityContentLength,
 		long entityTypeId       ,
@@ -2723,7 +2870,25 @@ public abstract class Binary implements Chunk
 	///////////////////////////////////////////////////////////////////////////
 	// Binary Fields //
 	//////////////////
-	
+
+	/*
+	 * The Field_xxx and Field factory methods below build BinaryField instances for use with
+	 * CustomBinaryHandler subclasses. Each primitive flavor comes in a getter-only variant (read-only,
+	 * the field is validated on update but never written) and a getter+setter variant (read/write).
+	 * A null setter marks the field as non-settable.
+	 */
+
+	/**
+	 * Read-only convenience: see {@link #Field_byte(String, Getter_byte, Setter_byte)} with a {@code null}
+	 * setter.
+	 *
+	 * @param name   the field name.
+	 * @param getter reads the field value from an instance.
+	 *
+	 * @param <T> the runtime type the field reads from.
+	 *
+	 * @return the new {@link BinaryField}.
+	 */
 	public static final <T> BinaryField<T> Field_byte(
 		final String         name  ,
 		final Getter_byte<T> getter
@@ -2731,7 +2896,18 @@ public abstract class Binary implements Chunk
 	{
 		return Field_byte(name, getter, null);
 	}
-	
+
+	/**
+	 * Creates a {@code byte} {@link BinaryField} bound to the given getter and (optional) setter.
+	 *
+	 * @param name   the field name.
+	 * @param getter reads the field value from an instance.
+	 * @param setter writes the field value to an instance, or {@code null} to mark the field non-settable.
+	 *
+	 * @param <T> the runtime type the field reads from / writes to.
+	 *
+	 * @return the new {@link BinaryField}.
+	 */
 	public static final <T> BinaryField<T> Field_byte(
 		final String         name  ,
 		final Getter_byte<T> getter,
@@ -2892,6 +3068,18 @@ public abstract class Binary implements Chunk
 		);
 	}
 	
+	/**
+	 * Read-only convenience: see {@link #Field(Class, String, Getter, Setter)} with a {@code null} setter.
+	 *
+	 * @param referenceType the reference's runtime type.
+	 * @param name          the field name.
+	 * @param getter        reads the field value from an instance.
+	 *
+	 * @param <T> the runtime type the field reads from.
+	 * @param <R> the reference's runtime type.
+	 *
+	 * @return the new {@link BinaryField}.
+	 */
 	public static final <T, R> BinaryField<T> Field(
 		final Class<R>     referenceType,
 		final String       name         ,
@@ -2900,7 +3088,20 @@ public abstract class Binary implements Chunk
 	{
 		return Field(referenceType, name, getter, null);
 	}
-		
+
+	/**
+	 * Creates a reference-typed {@link BinaryField} bound to the given getter and (optional) setter.
+	 *
+	 * @param referenceType the reference's runtime type.
+	 * @param name          the field name.
+	 * @param getter        reads the field value from an instance.
+	 * @param setter        writes the field value to an instance, or {@code null} to mark the field non-settable.
+	 *
+	 * @param <T> the runtime type the field reads from / writes to.
+	 * @param <R> the reference's runtime type.
+	 *
+	 * @return the new {@link BinaryField}.
+	 */
 	public static final <T, R> BinaryField<T> Field(
 		final Class<R>     referenceType,
 		final String       name         ,
@@ -2915,7 +3116,19 @@ public abstract class Binary implements Chunk
 			mayNull(setter)
 		);
 	}
-	
+
+	/**
+	 * Creates a custom {@link BinaryTypeHandler} for {@code entityType} from the given binary field
+	 * declarations, using a default reflective instantiator. The fields define the persistent layout in
+	 * declaration order.
+	 *
+	 * @param entityType   the entity runtime type.
+	 * @param binaryFields the persisted fields in declaration order.
+	 *
+	 * @param <T> the entity runtime type.
+	 *
+	 * @return a {@link BinaryTypeHandler} backed by a {@link CustomBinaryHandler} carrying the fields.
+	 */
 	@SafeVarargs
 	public static <T> BinaryTypeHandler<T> TypeHandler(
 		final Class<T>                  entityType  ,
@@ -2929,6 +3142,19 @@ public abstract class Binary implements Chunk
 		);
 	}
 	
+	/**
+	 * Creates a custom {@link BinaryTypeHandler} for {@code entityType} with an explicit instantiator and
+	 * the given binary field declarations. Use this overload when the default reflective instantiator
+	 * cannot create instances of the entity type (for example, types without a no-arg constructor).
+	 *
+	 * @param entityType   the entity runtime type.
+	 * @param instantiator the instantiator used to create instances during loading.
+	 * @param binaryFields the persisted fields in declaration order.
+	 *
+	 * @param <T> the entity runtime type.
+	 *
+	 * @return a {@link BinaryTypeHandler} backed by a {@link CustomBinaryHandler} carrying the fields.
+	 */
 	@SafeVarargs
 	public static <T> BinaryTypeHandler<T> TypeHandler(
 		final Class<T>                               entityType  ,

@@ -138,13 +138,34 @@ import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.VMInfo;
 
+/**
+ * Static facade for the binary persistence layer. Provides the entry-point factory methods for assembling
+ * a {@link BinaryPersistenceFoundation}, the catalogues of built-in {@link BinaryTypeHandler}s used by
+ * the default custom-type-handler registry, and a handful of binary-specific helpers (field-length
+ * resolution, primitive byte sizing, and reference iteration via raw field offsets).
+ * <p>
+ * This class is purely static; instantiation is forbidden.
+ *
+ * @see BinaryPersistenceFoundation
+ * @see BinaryTypeHandler
+ */
 public final class BinaryPersistence extends Persistence
 {
+	/**
+	 * @return a new default {@link BinaryPersistenceFoundation} ready to be configured.
+	 */
 	public static BinaryPersistenceFoundation<?> Foundation()
 	{
 		return Foundation(null);
 	}
 
+	/**
+	 * Creates a new default {@link BinaryPersistenceFoundation} with the given instance dispatcher.
+	 *
+	 * @param dispatcher the dispatcher used to post-process every produced component, may be {@code null}.
+	 *
+	 * @return the newly created foundation.
+	 */
 	public static BinaryPersistenceFoundation<?> Foundation(final InstanceDispatcherLogic dispatcher)
 	{
 		final BinaryPersistenceFoundation<?> foundation = BinaryPersistenceFoundation.New()
@@ -153,6 +174,20 @@ public final class BinaryPersistence extends Persistence
 		return foundation;
 	}
 
+	/**
+	 * Builds the default {@link PersistenceCustomTypeHandlerRegistry} for the binary layer: registers the
+	 * native value-type handlers, the native referencing-type handlers, the framework's default custom
+	 * collection handlers, the lazy-collection handlers, the platform-dependent handlers, and finally any
+	 * caller-supplied handlers (which take precedence over earlier registrations). Also registers the
+	 * legacy SQL timestamp handler.
+	 *
+	 * @param typeHandlerManager forward reference to the surrounding type-handler manager.
+	 * @param controller         length controller used by sized-array handlers.
+	 * @param typeHandlerCreator the type-handler creator to defer to for derived handlers.
+	 * @param customHandlers     additional caller-supplied handlers, layered on top.
+	 *
+	 * @return the assembled custom type-handler registry.
+	 */
 	public static final PersistenceCustomTypeHandlerRegistry<Binary> createDefaultCustomTypeHandlerRegistry(
 		final Referencing<PersistenceTypeHandlerManager<Binary>>              typeHandlerManager,
 		final PersistenceSizedArrayLengthController                           controller        ,
@@ -201,6 +236,19 @@ public final class BinaryPersistence extends Persistence
 		typeHandler.initialize(nativeTypeId);
 	}
 
+	/**
+	 * Builds the catalogue of native value-type handlers (primitives, boxed primitives, {@link String} and
+	 * its kin, {@link java.math.BigInteger BigInteger}/{@link java.math.BigDecimal BigDecimal},
+	 * {@code java.time}/{@code java.net} value types, etc.). These handlers are split out from the
+	 * referencing-type handlers because plugins that handle references differently (e.g. on-demand REST
+	 * data viewers) can reuse the value-type handlers unchanged.
+	 *
+	 * @param typeHandlerManager forward reference to the surrounding type-handler manager.
+	 * @param controller         length controller used by sized-array handlers.
+	 * @param typeHandlerCreator the type-handler creator to defer to for derived handlers.
+	 *
+	 * @return the native value-type handlers in registration order.
+	 */
 	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> createNativeHandlersValueTypes(
 		final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager,
 		final PersistenceSizedArrayLengthController              controller        ,
@@ -306,6 +354,17 @@ public final class BinaryPersistence extends Persistence
 		return nativeHandlersValueTypes;
 	}
 
+	/**
+	 * Builds the catalogue of native referencing-type handlers &mdash; the JDK collection types whose
+	 * persisted form contains references the persistence layer must follow. Replaceable by plugins that
+	 * implement different reference-handling strategies.
+	 *
+	 * @param typeHandlerManager forward reference to the surrounding type-handler manager.
+	 * @param controller         length controller used by sized-array handlers.
+	 * @param typeHandlerCreator the type-handler creator to defer to for derived handlers.
+	 *
+	 * @return the native referencing-type handlers in registration order.
+	 */
 	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> createNativeHandlersReferencingTypes(
 		final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager,
 		final PersistenceSizedArrayLengthController              controller        ,
@@ -367,6 +426,15 @@ public final class BinaryPersistence extends Persistence
 		return nativeHandlers;
 	}
 
+	/**
+	 * Builds the catalogue of framework-supplied custom collection handlers (BulkList, HashEnum,
+	 * HashTable, Singleton, Substituter, etc.). Unlike the native handlers, these have no fixed type ids
+	 * and receive their ids during normal type-handler registration.
+	 *
+	 * @param controller length controller used by sized-array handlers.
+	 *
+	 * @return the framework's default custom handlers in registration order.
+	 */
 	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> defaultCustomHandlers(
 		final PersistenceSizedArrayLengthController controller
 	)
@@ -396,6 +464,9 @@ public final class BinaryPersistence extends Persistence
 		return defaultHandlers;
 	}
 	
+	/**
+	 * @return the catalogue of lazy-collection handlers (LazyArrayList, LazyHashMap, LazyHashSet, etc.).
+	 */
 	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> lazyCollectionsHandlers()
 	{
 		final ConstList<? extends PersistenceTypeHandler<Binary, ?>> lazyCollectionsHandlers = ConstList.New(
@@ -409,6 +480,10 @@ public final class BinaryPersistence extends Persistence
 		return lazyCollectionsHandlers;
 	}
 	
+	/**
+	 * @return the catalogue of handlers whose registration depends on the current runtime platform (for
+	 *         instance, handlers skipped on Android due to absent JDK classes).
+	 */
 	@SuppressWarnings("unchecked")
 	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> platformDependentHandlers()
 	{
@@ -425,6 +500,12 @@ public final class BinaryPersistence extends Persistence
 	}
 	
 
+	/**
+	 * @param fieldType the field's runtime type.
+	 *
+	 * @return the persisted byte length for a field of {@code fieldType}: the native primitive byte size
+	 *         for primitives, or {@link Binary#objectIdByteLength()} for references.
+	 */
 	public static final long resolveFieldBinaryLength(final Class<?> fieldType)
 	{
 		return fieldType.isPrimitive()
@@ -433,16 +514,32 @@ public final class BinaryPersistence extends Persistence
 		;
 	}
 
+	/**
+	 * @param primitiveType a primitive type.
+	 *
+	 * @return the native byte size of {@code primitiveType}.
+	 */
 	public static final long resolvePrimitiveFieldBinaryLength(final Class<?> primitiveType)
 	{
 		return XMemory.byteSizePrimitive(primitiveType);
 	}
 
+	/**
+	 * @return a new default {@link BinaryFieldLengthResolver}.
+	 */
 	public static final BinaryFieldLengthResolver createFieldLengthResolver()
 	{
 		return new BinaryFieldLengthResolver.Default();
 	}
 
+	/**
+	 * Loads a {@link PersistenceTypeDictionary} from the given AFS file via a fresh
+	 * {@link BinaryPersistenceFoundation}.
+	 *
+	 * @param dictionaryFile the type dictionary file.
+	 *
+	 * @return the loaded type dictionary.
+	 */
 	public static PersistenceTypeDictionary provideTypeDictionaryFromFile(final AFile dictionaryFile)
 	{
 		final BinaryPersistenceFoundation<?> f = BinaryPersistenceFoundation.New()
@@ -453,6 +550,12 @@ public final class BinaryPersistence extends Persistence
 		return f.getTypeDictionaryProvider().provideTypeDictionary();
 	}
 
+	/**
+	 * @param type the value type.
+	 *
+	 * @return the persisted byte size of a value of {@code type} as an {@code int} (primitive byte size
+	 *         for primitives, {@link Binary#objectIdByteLength()} for references).
+	 */
 	public static final int binaryValueSize(final Class<?> type)
 	{
 		return type.isPrimitive()
@@ -461,6 +564,11 @@ public final class BinaryPersistence extends Persistence
 		;
 	}
 
+	/**
+	 * @param fields the fields to size.
+	 *
+	 * @return an array of binary sizes parallel to {@code fields}.
+	 */
 	public static int[] calculateBinarySizes(final XGettingSequence<Field> fields)
 	{
 		final int[] fieldOffsets = new int[XTypes.to_int(fields.size())];
@@ -475,6 +583,15 @@ public final class BinaryPersistence extends Persistence
 		return fieldOffsets;
 	}
 
+	/**
+	 * Iterates over the references of {@code instance} by reading each non-zero offset in
+	 * {@code referenceOffsets} as a raw object field offset and forwarding the resulting object to
+	 * {@code iterator}. Zero offsets are skipped (they represent gaps in the offset array).
+	 *
+	 * @param iterator         the callback receiving each referenced instance.
+	 * @param instance         the source instance.
+	 * @param referenceOffsets the raw memory offsets of the reference fields.
+	 */
 	public static final void iterateInstanceReferences(
 		final PersistenceFunction iterator,
 		final Object              instance,

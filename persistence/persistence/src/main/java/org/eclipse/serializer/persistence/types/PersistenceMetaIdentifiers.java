@@ -28,16 +28,26 @@ import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.hashing.XHashing;
 
+/**
+ * Static utilities for the textual identifiers ("meta identifiers") that thread through the persistence
+ * layer &mdash; root identifiers, refactoring keys, etc. Provides a normalization helper and the catalog of
+ * platform-supplied constants that get registered as roots so persisted graphs can reference shared JDK
+ * constant instances ({@link java.util.Collections#emptyList()} and friends) without committing them to
+ * persistent storage.
+ *
+ * @see PersistenceRootResolver
+ * @see PersistenceRootResolverProvider
+ */
 public interface PersistenceMetaIdentifiers
 {
 	/**
 	 * Identifiers cannot have whitespaces at the end or the beginning.
 	 * A string that only consists of whitespaces is considered no identifier at all.
-	 * 
+	 *
 	 * Note that for strings that don't have bordering whitespaces or are already {@code null},
 	 * this method takes very little time and does not allocate any new instances. Only
 	 * the problematic case is any mentionable effort.
-	 * 
+	 *
 	 * @param s the raw string to be normalized.
 	 * @return the normalized string, potentially {@code null}.
 	 */
@@ -47,15 +57,23 @@ public interface PersistenceMetaIdentifiers
 		{
 			return null;
 		}
-		
+
 		final String normalized = s.trim();
-		
+
 		return normalized.isEmpty()
 			? null
 			: normalized
 		;
 	}
-	
+
+	/**
+	 * Builds the catalog of platform-supplied constant suppliers registered as system roots by
+	 * {@link PersistenceRootResolverProvider}. The keys are stable textual identifiers (intentionally
+	 * decoupled from class/field names so the underlying JDK can be refactored without breaking persisted
+	 * data); the values are zero-argument suppliers that resolve to the corresponding shared constant.
+	 *
+	 * @return a fresh {@code identifier → supplier} table containing the platform constants.
+	 */
 	public static EqHashTable<String, Supplier<?>> defineConstantSuppliers()
 	{
 		final EqHashTable<String, Supplier<?>> entries = EqHashTable.New();

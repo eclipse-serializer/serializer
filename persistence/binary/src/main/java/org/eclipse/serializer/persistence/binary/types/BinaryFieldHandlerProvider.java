@@ -20,6 +20,16 @@ import org.eclipse.serializer.collections.EqHashTable;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+/**
+ * Registry of per-{@link Field} {@link BinaryFieldStorerCreator}s and {@link BinaryFieldSetterCreator}s
+ * consulted by reflective binary handlers when they need a custom storage or load strategy for a
+ * particular field. The default implementation seeds itself with a creator for the
+ * {@link Throwable#getStackTrace() Throwable.stackTrace} field so stack traces are properly captured
+ * before being persisted.
+ *
+ * @see BinaryFieldStorerCreator
+ * @see BinaryFieldSetterCreator
+ */
 public interface BinaryFieldHandlerProvider
 {
 	/**

@@ -17,6 +17,15 @@ package org.eclipse.serializer.persistence.binary.types;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 
 
+/**
+ * Reads a single persisted value from binary memory and writes it into a target instance (or, for
+ * absolute-addressing callers, into raw target memory). One {@link BinaryValueSetter} is configured per
+ * persisted member; the reflective and translating handler infrastructures invoke them in iteration order
+ * to materialize an entity's state.
+ *
+ * @see BinaryValueStorer
+ * @see BinaryValueFunctions
+ */
 public interface BinaryValueSetter
 {
 	/* (20.09.2018 TM)TODO: BinaryValueSetter performance optimization
