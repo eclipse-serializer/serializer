@@ -20,6 +20,7 @@ import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.com.ComException;
 import org.eclipse.serializer.communication.types.ComConnection;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.types.Binary;
@@ -44,6 +45,22 @@ public class ComTypeMappingResolver
 	//////////////
 	
 	protected static final int LENGTH_CHAR_COUNT = 8;
+
+	/*
+	 * Hardening limits for the dynamic type-mapping handshake. The host reads the length and count
+	 * header fields from an unauthenticated peer and would otherwise allocate a direct buffer of the
+	 * declared size before validating anything (CWE-770 / CWE-400). These bounds reject malformed,
+	 * negative-sized and excessively large messages before any allocation takes place.
+	 */
+
+	// the two header fields (length + count) are the minimum a well-formed message can contain
+	protected static final int MIN_MESSAGE_LENGTH = LENGTH_CHAR_COUNT + LENGTH_CHAR_COUNT;
+
+	// generous upper bound on a single type-mapping message; far larger than any realistic type dictionary
+	protected static final int MAX_MESSAGE_LENGTH = 64 * 1024 * 1024;
+
+	// upper bound on the number of declared type definitions in a single message
+	protected static final int MAX_TYPE_COUNT     = 1_000_000;
 		
 	private final static Logger logger = Logging.getLogger(ComHandlerSendMessageNewType.class);
 	
@@ -195,28 +212,80 @@ public class ComTypeMappingResolver
 	private ByteBuffer receiveUpdatedDefintionsfromClient()
 	{
 		logger.trace("receiving new type defintions from client");
-		
-		final ByteBuffer lengthBuffer = XMemory.allocateDirectNative(LENGTH_CHAR_COUNT);
-		this.connection.read(lengthBuffer, LENGTH_CHAR_COUNT);
-		
-		lengthBuffer.position(0);
-		final String lengthDigits = XChars.standardCharset().decode(lengthBuffer).toString();
-		final int    length       = Integer.parseInt(lengthDigits);
-		
-		final ByteBuffer countBuffer = XMemory.allocateDirectNative(LENGTH_CHAR_COUNT);
-		this.connection.read(countBuffer, LENGTH_CHAR_COUNT);
-		countBuffer.position(0);
-		final String countDigits = XChars.standardCharset().decode(countBuffer).toString();
-		final int    count       = Integer.parseInt(countDigits);
-		
+
+		final int length = this.readHeaderField("length");
+		final int count  = this.readHeaderField("count");
+
+		this.validateTypeMappingHeader(length, count);
+
 		if(count > 0 )
 		{
-			final ByteBuffer typeDefinitionsBuffer = XMemory.allocateDirectNative(length - LENGTH_CHAR_COUNT - LENGTH_CHAR_COUNT);
-			this.connection.read(typeDefinitionsBuffer, length - LENGTH_CHAR_COUNT - LENGTH_CHAR_COUNT);
+			final int bodyLength = length - LENGTH_CHAR_COUNT - LENGTH_CHAR_COUNT;
+			final ByteBuffer typeDefinitionsBuffer = XMemory.allocateDirectNative(bodyLength);
+			this.connection.read(typeDefinitionsBuffer, bodyLength);
 			return typeDefinitionsBuffer;
 		}
-		
+
 		return null;
+	}
+
+	/**
+	 * Reads a single fixed-width {@link #LENGTH_CHAR_COUNT}-character ASCII decimal header field
+	 * and parses it. The decoded characters are verified to be decimal digits before parsing so
+	 * that malformed (non-numeric or signed) handshake data is rejected with a clear
+	 * {@link ComException} instead of relying on {@link NumberFormatException} or producing a
+	 * negative value.
+	 */
+	private int readHeaderField(final String fieldName)
+	{
+		final ByteBuffer buffer = XMemory.allocateDirectNative(LENGTH_CHAR_COUNT);
+		this.connection.read(buffer, LENGTH_CHAR_COUNT);
+
+		buffer.position(0);
+		final String digits = XChars.standardCharset().decode(buffer).toString();
+
+		for(int i = 0; i < digits.length(); i++)
+		{
+			final char c = digits.charAt(i);
+			if(c < '0' || c > '9')
+			{
+				throw new ComException("Invalid type mapping " + fieldName + " field: non-numeric handshake data");
+			}
+		}
+
+		return Integer.parseInt(digits);
+	}
+
+	/**
+	 * Validates the type-mapping message header before any body buffer is allocated. Guards against
+	 * negative-sized allocations (length below the header size), excessively large allocations
+	 * (length above {@link #MAX_MESSAGE_LENGTH}) and inconsistent or oversized type counts.
+	 */
+	private void validateTypeMappingHeader(final int length, final int count)
+	{
+		if(length < MIN_MESSAGE_LENGTH)
+		{
+			throw new ComException("Type mapping message length " + length
+				+ " is below the minimum of " + MIN_MESSAGE_LENGTH);
+		}
+		if(length > MAX_MESSAGE_LENGTH)
+		{
+			throw new ComException("Type mapping message length " + length
+				+ " exceeds the maximum of " + MAX_MESSAGE_LENGTH);
+		}
+		if(count > MAX_TYPE_COUNT)
+		{
+			throw new ComException("Type mapping type count " + count
+				+ " exceeds the maximum of " + MAX_TYPE_COUNT);
+		}
+
+		// every declared type definition requires at least one body byte; reject inconsistent headers
+		final int bodyLength = length - LENGTH_CHAR_COUNT - LENGTH_CHAR_COUNT;
+		if(count > bodyLength)
+		{
+			throw new ComException("Type mapping type count " + count
+				+ " is inconsistent with the declared body length " + bodyLength);
+		}
 	}
 	
 	private void applyHostTypeMapping(final XGettingSequence<PersistenceTypeDefinition> typeDefinitions)

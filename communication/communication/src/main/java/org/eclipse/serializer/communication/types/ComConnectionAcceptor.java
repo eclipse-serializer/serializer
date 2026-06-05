@@ -132,12 +132,19 @@ public interface ComConnectionAcceptor<C>
 				this.connectionHandler.enableSecurity(connection);
 				
 				final ComProtocol protocol = this.protocolProvider.provideProtocol(connection);
-				this.connectionHandler.setInactivityTimeout(connection, protocol.inactivityTimeout());
 								
 				this.connectionHandler.sendProtocol(connection, protocol, this.protocolStringConverter);
 				
+				// The dynamic type-mapping handshake runs inside createHostChannel and reads
+				// attacker-controlled data from an as-yet-unauthenticated peer. It must therefore stay
+				// bounded by the connection's (positive) handshake read timeout. The configured
+				// inactivity timeout - which may be 0 (= wait indefinitely for client messages) - is
+				// applied only afterwards, once the connection has become an established channel, so it
+				// can no longer disable the read deadline during the handshake.
 				final ComHostChannel<C> channel = this.persistenceAdaptor.createHostChannel(connection, protocol, parent);
-				
+
+				this.connectionHandler.setInactivityTimeout(connection, protocol.inactivityTimeout());
+
 				try
 				{
 					this.channelAcceptor.acceptChannel(channel);
