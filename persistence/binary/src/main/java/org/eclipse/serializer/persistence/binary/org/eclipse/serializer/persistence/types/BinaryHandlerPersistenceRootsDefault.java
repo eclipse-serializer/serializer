@@ -155,7 +155,15 @@ extends AbstractBinaryHandlerCustom<PersistenceRoots.Default>
 	)
 	{
 		final PersistenceRootResolver   rootResolver  = instance.$rootResolver ();
-		final EqHashTable<String, Long> rootIdMapping = instance.$rootIdMapping();
+		// rootIdMapping is discarded by complete() after a successful load. On a re-load of the
+		// same instance (e.g. after a storage shutdown/start cycle, where the instance survives
+		// in the object registry) we must rebuild the mapping from the binary data instead of
+		// dereferencing a null field.
+		final EqHashTable<String, Long> existingRootIdMapping = instance.$rootIdMapping();
+		final EqHashTable<String, Long> rootIdMapping         = existingRootIdMapping != null
+			? existingRootIdMapping
+			: data.buildRootMapping(EqHashTable.New())
+		;
 		
 		final EqHashTable<String, PersistenceRootEntry> resolvedRootEntries = EqHashTable.New();
 		this.ensureRefactoredOldRoots(rootIdMapping, resolvedRootEntries, handler);
