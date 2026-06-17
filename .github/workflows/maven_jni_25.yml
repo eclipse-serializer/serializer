@@ -73,9 +73,9 @@ jobs:
               cp ../target/libs/libEclipseStoreNativeMemory.dylib ../libEclipseStoreNativeMemory-macos-arm64.dylib
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: 25
           distribution: temurin
@@ -88,7 +88,7 @@ jobs:
         run: ${{ matrix.build-cmd }}
 
       - name: Upload native library
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-${{ matrix.os }}-${{ matrix.arch }}
           path: nativememory/libEclipseStoreNativeMemory-*.${{ matrix.ext }}
