@@ -45,7 +45,6 @@
 		<license.licenceFile>${basedir}/LICENSE</license.licenceFile>
 		<api.version>1</api.version>
 		<javadoc.failed.on.error>false</javadoc.failed.on.error>
-		<failsafe.rerunFailingTestsCount>2</failsafe.rerunFailingTestsCount>
 		<surefire.rerunFailingTestsCount>2</surefire.rerunFailingTestsCount>
 		<slf4j.version>2.0.17</slf4j.version>
 	</properties>
@@ -305,6 +304,11 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-install-plugin</artifactId>
 					<version>3.1.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.5.5</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
