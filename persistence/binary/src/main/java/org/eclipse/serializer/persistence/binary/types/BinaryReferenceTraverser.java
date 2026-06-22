@@ -58,6 +58,24 @@ public interface BinaryReferenceTraverser
 	public long apply(long address, PersistenceObjectIdAcceptor acceptor);
 
 	/**
+	 * Bounds-checked variant of {@link #apply(long, PersistenceObjectIdAcceptor)} for traversing potentially
+	 * corrupted data. {@code bound} is the first address past the valid data. Variable-length traversers override
+	 * this to validate their data-derived advance against {@code bound}, turning an out-of-bounds read into a
+	 * {@link BinaryPersistenceException}. The default ignores {@code bound}: fixed-layout traversers advance by a
+	 * per-type constant and are checked centrally in the bounded {@link #iterateReferences}.
+	 *
+	 * @param address  the start address of the content to traverse.
+	 * @param bound    the first address past the valid data; the traversed range must not exceed it.
+	 * @param acceptor the callback receiving the visited reference object ids.
+	 *
+	 * @return the address immediately after the traversed range.
+	 */
+	public default long apply(final long address, final long bound, final PersistenceObjectIdAcceptor acceptor)
+	{
+		return this.apply(address, acceptor);
+	}
+
+	/**
 	 * This method reports the amount of bytes that a particular instance of an implementing type covers or advances.
 	 * For example, an objectId is 8 bytes long. 5 objectIds are 40 bytes long.
 	 * Skipping 6 bytes (primitives) is 6 bytes long.
@@ -99,6 +117,55 @@ public interface BinaryReferenceTraverser
 		for(int i = 0; i < traversers.length; i++)
 		{
 			a = traversers[i].apply(a, acceptor);
+		}
+		return a;
+	}
+
+	/**
+	 * Bounds-checked variant of {@link #iterateReferences(long, BinaryReferenceTraverser[], PersistenceObjectIdAcceptor)}
+	 * for traversing potentially corrupted data. {@code bound} is the first address past the valid data; a range
+	 * exceeding it raises a {@link BinaryPersistenceException} instead of reading out of bounds. Fixed-layout
+	 * traversers (covered byte count {@code > 0}) are checked here; variable-length ones (count {@code 0})
+	 * self-validate via {@link #apply(long, long, PersistenceObjectIdAcceptor)}.
+	 */
+	public static long iterateReferences(
+		final long                        address   ,
+		final long                        bound     ,
+		final BinaryReferenceTraverser[]  traversers,
+		final PersistenceObjectIdAcceptor acceptor
+	)
+	{
+		long a = address;
+		for(int i = 0; i < traversers.length; i++)
+		{
+			final BinaryReferenceTraverser traverser = traversers[i];
+			final int covered = traverser.coveredConstantByteCount();
+			if(covered > 0)
+			{
+				// fixed-layout: constant advance, so a single bound check suffices
+				if(a + covered > bound)
+				{
+					throw new BinaryPersistenceException(
+						"Reference traversal of " + covered + " bytes at " + a + " exceeds the valid data bound "
+						+ bound + " (corrupted entity or element count)."
+					);
+				}
+				a = traverser.apply(a, acceptor);
+			}
+			else
+			{
+				// variable-length: a binary list always has a >=16-byte header, which the traverser dereferences
+				// before it can validate the data-derived length, so the header itself must be in bounds first
+				if(bound - a < Binary.binaryListMinimumLength())
+				{
+					throw new BinaryPersistenceException(
+						"Variable length list header at address " + a + " exceeds the valid data bound " + bound
+						+ " (corrupted entity or element count)."
+					);
+				}
+				// data-derived advance, validated against the bound by the traverser
+				a = traverser.apply(a, bound, acceptor);
+			}
 		}
 		return a;
 	}
@@ -175,6 +242,9 @@ public interface BinaryReferenceTraverser
 		;
 
 		static final BinaryReferenceTraverser[] EMPTY = new BinaryReferenceTraverser[0];
+
+		// sentinel bound for the unbounded apply: validation against it is a no-op for valid data
+		static final long UNBOUNDED = Long.MAX_VALUE;
 
 		static final BinaryReferenceTraverser SKIP_1 = new BinaryReferenceTraverser()
 		{
@@ -296,6 +366,32 @@ public interface BinaryReferenceTraverser
 			}
 		};
 		
+		/**
+		 * Validates a data-derived variable-length list against the valid-data {@code bound} before traversal,
+		 * so a corrupted list byte length cannot drive a read past the end of the data. {@code listByteLength} is
+		 * the list's total binary length (incl. its 16-byte header), read from the list's first 8 bytes.
+		 *
+		 * @return the first address past the list, i.e. {@code address + listByteLength}.
+		 */
+		static long validateVariableLengthBound(
+			final long address       ,
+			final long listByteLength ,
+			final long bound
+		)
+		{
+			// a valid list spans at least its 16-byte header; "> bound - address" (not "address + ... > bound")
+			// avoids overflow. The sub-header check also rejects negative lengths.
+			if(listByteLength < Binary.binaryListMinimumLength() || listByteLength > bound - address)
+			{
+				throw new BinaryPersistenceException(
+					"Invalid variable length binary list: length " + listByteLength + " at address " + address
+					+ " is below the list header length or exceeds the valid data bound " + bound
+					+ " (corrupted list byte length or element count)."
+				);
+			}
+			return address + listByteLength;
+		}
+
 		static final BinaryReferenceTraverser variableLengthSkipper(final boolean switchByteOrder)
 		{
 			return switchByteOrder
@@ -310,21 +406,33 @@ public interface BinaryReferenceTraverser
 				@Override
 				public final long apply(final long address, final PersistenceObjectIdAcceptor acceptor)
 				{
+					return this.apply(address, UNBOUNDED, acceptor);
+				}
+
+				@Override
+				public final long apply(final long address, final long bound, final PersistenceObjectIdAcceptor acceptor)
+				{
 					// first 8 bytes of inlined data is its total binary length
-					return address + XMemory.get_long(address);
+					return Static.validateVariableLengthBound(address, XMemory.get_long(address), bound);
 				}
 
 			}
 		;
-		
+
 		static final BinaryReferenceTraverser SKIP_VARIABLE_LENGTH_REVERSED =
 			new BinaryReferenceTraverser()
 			{
 				@Override
 				public final long apply(final long address, final PersistenceObjectIdAcceptor acceptor)
 				{
+					return this.apply(address, UNBOUNDED, acceptor);
+				}
+
+				@Override
+				public final long apply(final long address, final long bound, final PersistenceObjectIdAcceptor acceptor)
+				{
 					// first 8 bytes of inlined data is its total binary length
-					return address + Long.reverseBytes(XMemory.get_long(address));
+					return Static.validateVariableLengthBound(address, Long.reverseBytes(XMemory.get_long(address)), bound);
 				}
 
 			}
@@ -534,15 +642,25 @@ public interface BinaryReferenceTraverser
 			@Override
 			public final long apply(final long address, final PersistenceObjectIdAcceptor acceptor)
 			{
+				return this.apply(address, UNBOUNDED, acceptor);
+			}
+
+			@Override
+			public final long apply(final long address, final long bound, final PersistenceObjectIdAcceptor acceptor)
+			{
 				// using length instead of element count is crucial for consolidated multi-reference iteration
-				final long bound = address + XMemory.get_long(Binary.toBinaryListByteLengthOffset(address));
-				for(long a = Binary.toBinaryListElementsOffset(address); a < bound; a += REFERENCE_LENGTH)
+				final long elementsBound = Static.validateVariableLengthBound(
+					address,
+					XMemory.get_long(Binary.toBinaryListByteLengthOffset(address)),
+					bound
+				);
+				for(long a = Binary.toBinaryListElementsOffset(address); a < elementsBound; a += REFERENCE_LENGTH)
 				{
 					// see REFERENCE_VARIABLE_LENGTH_START_BOUND_BASED_REVERSED for ByteOrder switching
 					acceptor.acceptObjectId(XMemory.get_long(a));
 				}
-				
-				return bound;
+
+				return elementsBound;
 			}
 
 			@Override
@@ -558,7 +676,7 @@ public interface BinaryReferenceTraverser
 			}
 
 		};
-		
+
 		static final BinaryReferenceTraverser REFERENCE_1_REVERSED = new BinaryReferenceTraverser()
 		{
 			@Override
@@ -763,14 +881,24 @@ public interface BinaryReferenceTraverser
 			@Override
 			public final long apply(final long address, final PersistenceObjectIdAcceptor iterator)
 			{
+				return this.apply(address, UNBOUNDED, iterator);
+			}
+
+			@Override
+			public final long apply(final long address, final long bound, final PersistenceObjectIdAcceptor iterator)
+			{
 				// using length instead of element count is crucial for consolidated multi-reference iteration
-				final long bound = address + Long.reverseBytes(XMemory.get_long(Binary.toBinaryListByteLengthOffset(address)));
-				for(long a = Binary.toBinaryListElementsOffset(address); a < bound; a += REFERENCE_LENGTH)
+				final long elementsBound = Static.validateVariableLengthBound(
+					address,
+					Long.reverseBytes(XMemory.get_long(Binary.toBinaryListByteLengthOffset(address))),
+					bound
+				);
+				for(long a = Binary.toBinaryListElementsOffset(address); a < elementsBound; a += REFERENCE_LENGTH)
 				{
 					iterator.acceptObjectId(Long.reverseBytes(XMemory.get_long(a)));
 				}
-				
-				return bound;
+
+				return elementsBound;
 			}
 
 			@Override
@@ -887,7 +1015,7 @@ public interface BinaryReferenceTraverser
 				return variableLengthSkipper(switchByteOrder);
 			}
 
-			// otherwise truely complex types have to be traversed in the full complex way
+			// otherwise truly complex types have to be traversed in the full complex way
 			return new BinaryReferenceTraverser.InlinedComplexType(traversers, switchByteOrder);
 		}
 
@@ -1215,30 +1343,36 @@ public interface BinaryReferenceTraverser
 		@Override
 		public final long apply(final long address, final PersistenceObjectIdAcceptor acceptor)
 		{
-			/* Note on security:
-			 * The traverser neither handles newly received data nor does it create new instances.
-			 * It always only traverses existing, already validated data.
-			 * 
-			 * (22.01.2019 TM)XXX: BinaryReferenceTraverser naively safe?
-			 * But is that assumption really true? Also in the future?
-			 * What it received data shall be traversed to analyze/etc. it?
-			 * A (intentionally) malformed element count would cause the traverser to read data
-			 * way beyond the limits of the to be traversed data.
-			 * 
-			 * Using the validating element count getter would require to know the element binary length.
-			 * And that can get very ugly if the element of a complex type has variable length on its own.
+			return this.apply(address, Static.UNBOUNDED, acceptor);
+		}
+
+		@Override
+		public final long apply(final long address, final long bound, final PersistenceObjectIdAcceptor acceptor)
+		{
+			/* Resolves the long-standing "(22.01.2019 TM)XXX: naively safe?" concern: a malformed element count
+			 * would otherwise drive a read way past the data. The list byte length is validated against the bound
+			 * first, then the element loop is capped by that validated list bound, so neither a corrupted byte
+			 * length nor a corrupted element count can read out of bounds (inner elements are in turn checked by
+			 * the bounded iterateReferences).
 			 */
+			final long byteLengthRawValue = XMemory.get_long(Binary.toBinaryListByteLengthOffset(address));
+			final long listBound = Static.validateVariableLengthBound(
+				address,
+				this.switchByteOrder ? Long.reverseBytes(byteLengthRawValue) : byteLengthRawValue,
+				bound
+			);
+
 			final long elementCountRawValue = XMemory.get_long(Binary.toBinaryListElementCountOffset(address));
 			final long elementCount = this.switchByteOrder
 				? Long.reverseBytes(elementCountRawValue)
 				: elementCountRawValue
 			;
 
-			// apply all element traversers to each element
+			// apply all element traversers to each element, capped by the validated list bound
 			long a = Binary.toBinaryListElementsOffset(address);
 			for(long i = 0; i < elementCount; i++)
 			{
-				a = BinaryReferenceTraverser.iterateReferences(a, this.traversers, acceptor);
+				a = BinaryReferenceTraverser.iterateReferences(a, listBound, this.traversers, acceptor);
 			}
 
 			// return resulting address for recursive continued use
