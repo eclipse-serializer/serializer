@@ -9,23 +9,23 @@ package org.eclipse.serializer.collections;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
+
+import java.util.function.Predicate;
 
 import org.eclipse.serializer.equality.Equalator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.function.Predicate;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-public class AbstractArrayStorageTest {
+public class AbstractArrayStorageTest
+{
 
     @Test
-    void rangedRemoveDuplicatesEqualatorTest() {
+    void rangedRemoveDuplicatesEqualatorTest()
+    {
         Integer[] integers = {1, 2, 3, 4, 1, 2, 3, 4};
         Integer marker = (Integer) null;
 
@@ -43,7 +43,8 @@ public class AbstractArrayStorageTest {
     }
 
     @Test
-    void rangedRemoveDuplicatesEqualatorOffsetTest() {
+    void rangedRemoveDuplicatesEqualatorOffsetTest()
+    {
         Integer[] integers = {1, 2, 3, 4, 1, 2, 3, 4};
         Integer marker = (Integer) null;
 
@@ -61,7 +62,8 @@ public class AbstractArrayStorageTest {
     }
 
     @Test
-    void rangedRemoveDuplicatesEqualatorReversTest() {
+    void rangedRemoveDuplicatesEqualatorReversTest()
+    {
         Integer[] integers = {1, 2, 3, 4, 1, 2, 3, 4};
         Integer marker = (Integer) null;
 
@@ -79,7 +81,8 @@ public class AbstractArrayStorageTest {
     }
 
     @Test
-    void rangedRemoveDuplicatesTest() {
+    void rangedRemoveDuplicatesTest()
+    {
         Integer[] integers = {1, 2, 3, 4, 1, 2, 3, 4};
         Integer marker = (Integer) null;
 
@@ -96,7 +99,8 @@ public class AbstractArrayStorageTest {
     }
 
     @Test
-    void rangedRemoveDuplicatesOffsetTest() {
+    void rangedRemoveDuplicatesOffsetTest()
+    {
         Integer[] integers = {1, 2, 3, 4, 1, 2, 3, 4};
         Integer marker = (Integer) null;
 
@@ -113,7 +117,8 @@ public class AbstractArrayStorageTest {
     }
 
     @Test
-    void rangedRemoveDuplicatesReversTest() {
+    void rangedRemoveDuplicatesReversTest()
+    {
         Integer[] integers = {1, 2, 3, 4, 1, 2, 3, 4};
         Integer marker = (Integer) null;
 
@@ -130,7 +135,8 @@ public class AbstractArrayStorageTest {
     }
 
     @Test
-    void testRangedConditionalIndexOf() {
+    void testRangedConditionalIndexOf()
+    {
         // Create an array of integers to search
         Integer[] data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 

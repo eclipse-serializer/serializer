@@ -9,7 +9,7 @@ package test.eclipse.serializer.serializer;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -25,13 +25,15 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import test.eclipse.serializer.fixtures.TypeEnum;
 
-public class SerializeTypeDiffTest {
+public class SerializeTypeDiffTest
+{
 
     static Serializer<byte[]> serializer;
     static Serializer<byte[]> deserializer;
 
     @BeforeAll
-    static void setup(){
+    static void setup()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.Diff(true));
@@ -42,7 +44,8 @@ public class SerializeTypeDiffTest {
 
     @ParameterizedTest
     @EnumSource(value = TypeEnum.class, names = {"Lazy", "IdentityHashMap", "HashTableMicroStream"}, mode = EnumSource.Mode.EXCLUDE)
-    public void serializerTest(TypeEnum type) {
+    public void serializerTest(TypeEnum type)
+    {
 
         byte[] data = serializer.serialize(type.getOriginal());
 
@@ -50,14 +53,15 @@ public class SerializeTypeDiffTest {
         type.getOriginal().proveResults(o);
     }
 
-	@ParameterizedTest
-	@EnabledForJreRange(min = JRE.JAVA_26)
-	@EnumSource(value = TypeEnum.class, names = {"Lazy", "IdentityHashMap", "HashTableMicroStream", "LocalDate", "LocalDateTime","Java_util_Calendar"}, mode = EnumSource.Mode.EXCLUDE)
-	public void serializerTestJava26(TypeEnum type) {
+    @ParameterizedTest
+    @EnabledForJreRange(min = JRE.JAVA_26)
+    @EnumSource(value = TypeEnum.class, names = {"Lazy", "IdentityHashMap", "HashTableMicroStream", "LocalDate", "LocalDateTime", "Java_util_Calendar"}, mode = EnumSource.Mode.EXCLUDE)
+    public void serializerTestJava26(TypeEnum type)
+    {
 
-		byte[] data = serializer.serialize(type.getOriginal());
+        byte[] data = serializer.serialize(type.getOriginal());
 
-		Object o = deserializer.deserialize(data);
-		type.getOriginal().proveResults(o);
-	}
+        Object o = deserializer.deserialize(data);
+        type.getOriginal().proveResults(o);
+    }
 }

@@ -9,11 +9,14 @@ package test.eclipse.serializer.communication.tls;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+
+import java.nio.ByteOrder;
+import java.nio.file.Paths;
 
 import org.eclipse.serializer.com.ComException;
 import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
@@ -25,12 +28,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import test.eclipse.serializer.fixtures.TypeRegister;
 
-import java.nio.ByteOrder;
-import java.nio.file.Paths;
-
-public class ClientWithoutTLSTest extends AbstractSecurityComTest {
+public class ClientWithoutTLSTest extends AbstractSecurityComTest
+{
 
     private Thread t;
     private final String pksPath = super.findPksPath();
@@ -38,7 +40,8 @@ public class ClientWithoutTLSTest extends AbstractSecurityComTest {
     private final int port = 51_005;
 
     @Test
-    public void clientTlsClientTest() {
+    public void clientTlsClientTest()
+    {
 
         final ComClient<?> client = ComBinaryDynamic.Client(port);
 
@@ -50,7 +53,8 @@ public class ClientWithoutTLSTest extends AbstractSecurityComTest {
 
 
     @BeforeEach
-    public void setupServer() throws InterruptedException {
+    public void setupServer() throws InterruptedException
+    {
         final String largeString = createLargeString(10);
         host = ComBinaryDynamic.Foundation()
                 .setHostByteOrder(ByteOrder.BIG_ENDIAN)
@@ -76,13 +80,15 @@ public class ClientWithoutTLSTest extends AbstractSecurityComTest {
     }
 
     @AfterEach
-    public void stopServer() throws InterruptedException {
+    public void stopServer() throws InterruptedException
+    {
         //System.out.println("is running: " +  host.isRunning());
         host.stop();
         t.join(1000);
     }
 
-    private static String createLargeString(final int lines) {
+    private static String createLargeString(final int lines)
+    {
         StringBuilder largeString = new StringBuilder();
 
         for (int i = 1; i <= lines; i++) {

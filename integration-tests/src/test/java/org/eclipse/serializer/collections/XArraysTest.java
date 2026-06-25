@@ -9,7 +9,7 @@ package org.eclipse.serializer.collections;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -17,11 +17,13 @@ package org.eclipse.serializer.collections;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class XArraysTest {
+public class XArraysTest
+{
 
 
     @Test
-    void removeSelection_fromWholeArrayTest() {
+    void removeSelection_fromWholeArrayTest()
+    {
         Integer[] integers = {1, 2, null, 4, null, 6, 7, 8, 9};
 
         XArrays.removeAllFromArray(integers, 2, integers.length, null);

@@ -9,23 +9,24 @@ package test.eclipse.serializer.com.basic;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
 
+import java.net.InetSocketAddress;
+import java.time.Duration;
 
 import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
 import org.eclipse.serializer.communication.types.ComChannel;
 import org.eclipse.serializer.communication.types.ComClient;
 
-import java.net.InetSocketAddress;
-import java.time.Duration;
+public class Client
+{
 
-public class Client {
-
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
 
         int port = 30_000;
         String serverAddress = "192.168.1.104";

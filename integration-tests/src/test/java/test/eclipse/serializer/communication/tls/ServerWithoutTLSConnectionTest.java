@@ -9,26 +9,11 @@ package test.eclipse.serializer.communication.tls;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-
-import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
-import org.eclipse.serializer.communication.tls.ComTLSConnectionHandler;
-import org.eclipse.serializer.communication.tls.TLSKeyManagerProvider;
-import org.eclipse.serializer.communication.tls.TLSParametersProvider;
-import org.eclipse.serializer.communication.tls.TLSTrustManagerProvider;
-import org.eclipse.serializer.communication.tls.SecureRandomProvider;
-import org.eclipse.serializer.communication.types.ComClient;
-import org.eclipse.serializer.communication.types.ComHost;
-import org.eclipse.serializer.com.ComException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import test.eclipse.serializer.fixtures.TypeRegister;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,7 +23,20 @@ import java.nio.ByteOrder;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
-public class ServerWithoutTLSConnectionTest extends AbstractSecurityComTest {
+import org.eclipse.serializer.com.ComException;
+import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
+import org.eclipse.serializer.communication.tls.*;
+import org.eclipse.serializer.communication.types.ComClient;
+import org.eclipse.serializer.communication.types.ComHost;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import test.eclipse.serializer.fixtures.TypeRegister;
+
+public class ServerWithoutTLSConnectionTest extends AbstractSecurityComTest
+{
 
     private Thread t;
     private final String pksPath = super.findPksPath();
@@ -46,7 +44,8 @@ public class ServerWithoutTLSConnectionTest extends AbstractSecurityComTest {
     private final int port = 51_003;
 
     @Test
-    public void clientTlsClientTest() throws IOException, InterruptedException {
+    public void clientTlsClientTest() throws IOException, InterruptedException
+    {
 
         final ComClient<?> client = ComBinaryDynamic.Foundation()
                 .setConnectionHandler(ComTLSConnectionHandler.New(
@@ -65,7 +64,8 @@ public class ServerWithoutTLSConnectionTest extends AbstractSecurityComTest {
 
 
     @BeforeEach
-    public void setupServer() throws InterruptedException {
+    public void setupServer() throws InterruptedException
+    {
 
         final String largeString = createLargeString(10);
         t = new Thread(() -> {
@@ -90,13 +90,15 @@ public class ServerWithoutTLSConnectionTest extends AbstractSecurityComTest {
     }
 
     @AfterEach
-    public void stopServer() throws InterruptedException {
+    public void stopServer() throws InterruptedException
+    {
         //System.out.println("is running: " +  host.isRunning());
         host.stop();
         t.join(1000);
     }
 
-    private static String createLargeString(final int lines) {
+    private static String createLargeString(final int lines)
+    {
         StringBuilder largeString = new StringBuilder();
 
         for (int i = 1; i <= lines; i++) {
@@ -107,17 +109,20 @@ public class ServerWithoutTLSConnectionTest extends AbstractSecurityComTest {
     }
 
 
-    private static class StreamGobbler implements Runnable {
+    private static class StreamGobbler implements Runnable
+    {
         private InputStream inputStream;
         private Consumer<String> consumer;
 
-        public StreamGobbler(InputStream inputStream, Consumer<String> consumer) {
+        public StreamGobbler(InputStream inputStream, Consumer<String> consumer)
+        {
             this.inputStream = inputStream;
             this.consumer = consumer;
         }
 
         @Override
-        public void run() {
+        public void run()
+        {
             new BufferedReader(new InputStreamReader(inputStream)).lines()
                     .forEach(consumer);
         }

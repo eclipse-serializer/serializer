@@ -9,7 +9,7 @@ package test.eclipse.serializer.sampler.layeredentities;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -27,38 +27,38 @@ import test.eclipse.serializer.sampler.layeredentities._Pet.PetCreator;
 
 public final class EntityFactory
 {
-	final static JulLogger                     logger  = new JulLogger();
-	final static EntityVersionCleaner<Integer> cleaner = EntityVersionCleaner.AmountPreserving(10);
-	
-	public static AddressCreator AddressCreator()
-	{
-		return addLayers(AddressCreator.New());
-	}
-	
-	public static AnimalCreator AnimalCreator()
-	{
-		return addLayers(AnimalCreator.New());
-	}
-	
-	public static HumanCreator HumanCreator()
-	{
-		return addLayers(HumanCreator.New());
-	}
-	
-	public static PetCreator PetCreator()
-	{
-		return addLayers(PetCreator.New());
-	}
-	
-	private static <E extends Entity, C extends Entity.Creator<E, C>> C addLayers(final C creator)
-	{
-		return creator
-			.addLayer(logger)
-			.addLayer(EntityVersionContext.AutoIncrementingInt(cleaner))
-		;
-	}
-	
-	private EntityFactory()
-	{
-	}
+    final static JulLogger logger = new JulLogger();
+    final static EntityVersionCleaner<Integer> cleaner = EntityVersionCleaner.AmountPreserving(10);
+
+    public static AddressCreator AddressCreator()
+    {
+        return addLayers(AddressCreator.New());
+    }
+
+    public static AnimalCreator AnimalCreator()
+    {
+        return addLayers(AnimalCreator.New());
+    }
+
+    public static HumanCreator HumanCreator()
+    {
+        return addLayers(HumanCreator.New());
+    }
+
+    public static PetCreator PetCreator()
+    {
+        return addLayers(PetCreator.New());
+    }
+
+    private static <E extends Entity, C extends Entity.Creator<E, C>> C addLayers(final C creator)
+    {
+        return creator
+                .addLayer(logger)
+                .addLayer(EntityVersionContext.AutoIncrementingInt(cleaner))
+                ;
+    }
+
+    private EntityFactory()
+    {
+    }
 }

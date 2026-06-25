@@ -9,7 +9,7 @@ package test.eclipse.serializer.sampler.layeredentities;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -24,10 +24,12 @@ import org.junit.jupiter.api.Test;
 
 import test.eclipse.serializer.sampler.layeredentities._Human.HumanUpdater;
 
-public class LayeredEntitiesTest {
+public class LayeredEntitiesTest
+{
 
     @Test
-    public void entities_version_test() {
+    public void entities_version_test()
+    {
         final Human human = EntityFactory.HumanCreator()
                 .name("John Doe")
                 .address(
@@ -49,7 +51,8 @@ public class LayeredEntitiesTest {
         checkVersion(human);
     }
 
-    static void checkVersion(final Entity entity) {
+    static void checkVersion(final Entity entity)
+    {
         final EntityVersionContext<Integer> context = EntityVersionContext.lookup(entity);
         final XGettingTable<Integer, Entity> versions = context.versions(entity);
         versions.iterate(v ->

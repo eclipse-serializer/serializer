@@ -9,11 +9,15 @@ package test.eclipse.serializer.communication;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+
+import java.io.IOException;
+import java.nio.ByteOrder;
+import java.time.Duration;
 
 import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
 import org.eclipse.serializer.communication.types.ComChannel;
@@ -22,14 +26,10 @@ import org.eclipse.serializer.communication.types.ComHost;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.nio.ByteOrder;
-import java.time.Duration;
-
-public class CommunicationTest extends AbstractCommunicationTest{
+public class CommunicationTest extends AbstractCommunicationTest
+{
 
     private ComHost<?> host;
     private Thread t;
@@ -38,7 +38,8 @@ public class CommunicationTest extends AbstractCommunicationTest{
     private int port;
 
     @Test
-    public void receiveBasicObjectTest() {
+    public void receiveBasicObjectTest()
+    {
         final ComClient<?> client = ComBinaryDynamic.Client(port);
         // create a channel by connecting the client
         final ComChannel channel = client.connect(10, Duration.ofMillis(500));
@@ -55,7 +56,8 @@ public class CommunicationTest extends AbstractCommunicationTest{
     }
 
     @Test
-    public void basicTestWithPortCheck() throws IOException, InterruptedException {
+    public void basicTestWithPortCheck() throws IOException, InterruptedException
+    {
         waitForPortToBeAvailable(port);
         System.out.println("Port Available, i can continue");
         final ComClient<?> client = ComBinaryDynamic.Client(port);
@@ -74,7 +76,8 @@ public class CommunicationTest extends AbstractCommunicationTest{
     }
 
     @BeforeEach
-    public void startServer() throws InterruptedException {
+    public void startServer() throws InterruptedException
+    {
         port = findFreePort();
         t = new Thread(() -> {
             host = ComBinaryDynamic.Foundation()
@@ -100,7 +103,8 @@ public class CommunicationTest extends AbstractCommunicationTest{
     }
 
     @AfterEach
-    public void stopServer() throws InterruptedException {
+    public void stopServer() throws InterruptedException
+    {
         //System.out.println("is running: " +  host.isRunning());
         try {
             host.stop();

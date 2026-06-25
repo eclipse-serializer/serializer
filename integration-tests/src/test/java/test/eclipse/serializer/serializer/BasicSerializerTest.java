@@ -9,7 +9,7 @@ package test.eclipse.serializer.serializer;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -30,10 +30,12 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import test.eclipse.serializer.fixtures.TypeEnum;
 
-public class BasicSerializerTest {
+public class BasicSerializerTest
+{
 
     @Test
-    public void basicSerializerTest() {
+    public void basicSerializerTest()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .registerEntityTypes(LocalDateTime.class);
         final Serializer<byte[]> serializer = Serializer.Bytes(foundation);
@@ -51,7 +53,8 @@ public class BasicSerializerTest {
             names = {"HashTableMicroStream", "IdentityHashMap", "Lazy"},
             mode = EnumSource.Mode.EXCLUDE
     )
-    public void typeParamsTest(TypeEnum type) {
+    public void typeParamsTest(TypeEnum type)
+    {
 
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .registerEntityTypes(type.getClass());
@@ -64,29 +67,31 @@ public class BasicSerializerTest {
         type.getOriginal().proveResults(copy);
     }
 
-	@ParameterizedTest
-	@EnabledForJreRange(min = JRE.JAVA_26)
-	@EnumSource(
-			value = TypeEnum.class,
-			names = {"HashTableMicroStream", "IdentityHashMap", "Lazy",  "LocalDate", "LocalDateTime","Java_util_Calendar"},
-			mode = EnumSource.Mode.EXCLUDE
-	)
-	public void typeParamsTestJava26(TypeEnum type) {
+    @ParameterizedTest
+    @EnabledForJreRange(min = JRE.JAVA_26)
+    @EnumSource(
+            value = TypeEnum.class,
+            names = {"HashTableMicroStream", "IdentityHashMap", "Lazy", "LocalDate", "LocalDateTime", "Java_util_Calendar"},
+            mode = EnumSource.Mode.EXCLUDE
+    )
+    public void typeParamsTestJava26(TypeEnum type)
+    {
 
-		final SerializerFoundation<?> foundation = SerializerFoundation.New()
-				.registerEntityTypes(type.getClass());
-		final Serializer<byte[]> serializer = Serializer.Bytes(foundation);
+        final SerializerFoundation<?> foundation = SerializerFoundation.New()
+                .registerEntityTypes(type.getClass());
+        final Serializer<byte[]> serializer = Serializer.Bytes(foundation);
 
-		final byte[] bytes = serializer.serialize(type.getOriginal());
-		Object copy;
-		copy = serializer.deserialize(bytes);
+        final byte[] bytes = serializer.serialize(type.getOriginal());
+        Object copy;
+        copy = serializer.deserialize(bytes);
 
-		type.getOriginal().proveResults(copy);
-	}
+        type.getOriginal().proveResults(copy);
+    }
 
 
-	@Test
-    public void throwUnsupportedLazyTest() {
+    @Test
+    public void throwUnsupportedLazyTest()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .registerEntityTypes(Lazy.class);
         final Serializer<byte[]> serializer = Serializer.Bytes(foundation);
@@ -96,7 +101,8 @@ public class BasicSerializerTest {
     }
 
     @Test
-    public void binarySerializerTest() {
+    public void binarySerializerTest()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .registerEntityTypes(LocalDateTime.class);
         final Serializer<Binary> serializer = Serializer.Binary(foundation);
@@ -109,7 +115,8 @@ public class BasicSerializerTest {
     }
 
     @Test
-    public void throwUnsupportedBinaryLazyTest() {
+    public void throwUnsupportedBinaryLazyTest()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .registerEntityTypes(Lazy.class);
         final Serializer<Binary> serializer = Serializer.Binary(foundation);

@@ -9,14 +9,10 @@ package org.eclipse.serializer.equality;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
-
-import org.eclipse.serializer.equality.Equalator;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,10 +20,15 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class EqualatorTest {
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class EqualatorTest
+{
 
     @Test
-    void wrapTest() {
+    void wrapTest()
+    {
         String s1 = "This is a String";
         String s2 = "aaaa just string to compare";
 
@@ -39,7 +40,8 @@ public class EqualatorTest {
 
 
     @Test
-    void wrapTestCompareSuccessful() {
+    void wrapTestCompareSuccessful()
+    {
         String s1 = new String("This is a String"); // new String() I just need another instance
         String s2 = new String("This is a String"); // new String() I just need another instance
 
@@ -50,7 +52,8 @@ public class EqualatorTest {
     }
 
     @Test
-    void compareSuccessfulChain() {
+    void compareSuccessfulChain()
+    {
         String s1 = new String("This is a String"); // new String() I just need another instance
         String s2 = new String("This is a String"); // new String() I just need another instance
 
@@ -63,7 +66,8 @@ public class EqualatorTest {
     }
 
     @Test
-    void compareOneFailedInhain() {
+    void compareOneFailedInhain()
+    {
         String s1 = new String("This is a String"); // new String() I just need another instance
         String s2 = new String("This is a String"); // new String() I just need another instance
 
@@ -79,7 +83,8 @@ public class EqualatorTest {
     }
 
     @Test
-    void equalityIdentifyNotEquals() {
+    void equalityIdentifyNotEquals()
+    {
         String s1 = new String("This is a String"); // new String() I just need another instance
         String s2 = new String("This is a String"); // new String() I just need another instance
 
@@ -90,7 +95,8 @@ public class EqualatorTest {
     }
 
     @Test
-    void equalityIdentifyEquals() {
+    void equalityIdentifyEquals()
+    {
         String s1 = "This is a String";
         String s2 = "This is a String";
 
@@ -101,7 +107,8 @@ public class EqualatorTest {
     }
 
     @Test
-    void equalityValueEquals() {
+    void equalityValueEquals()
+    {
         String s1 = "This is a String";
         String s2 = "This is a String";
 
@@ -110,7 +117,8 @@ public class EqualatorTest {
     }
 
     @Test
-    void equalitySampleEquals() {
+    void equalitySampleEquals()
+    {
         String s1 = "This is a String";
         String s2 = "This is a String";
         ArrayList<String> strings = Stream.generate(() -> "This is a String")
@@ -129,7 +137,8 @@ public class EqualatorTest {
     }
 
     @Test
-    void equalitySampleNotEquals() {
+    void equalitySampleNotEquals()
+    {
         String s1 = "This is a String";
         String s2 = "This is a String";
         ArrayList<String> strings = Stream.generate(() -> "This is a String")
@@ -148,8 +157,10 @@ public class EqualatorTest {
         Assertions.assertNotEquals(filteredStrings.size(), strings.size());
     }
 
-    static class ExampleComparator implements Comparator<String> {
-        public int compare(String obj1, String obj2) {
+    static class ExampleComparator implements Comparator<String>
+    {
+        public int compare(String obj1, String obj2)
+        {
             if (obj1 == obj2) {
                 return 0;
             }
@@ -163,8 +174,10 @@ public class EqualatorTest {
         }
     }
 
-    static class StillFalseComparator implements Comparator<String> {
-        public int compare(String obj1, String obj2) {
+    static class StillFalseComparator implements Comparator<String>
+    {
+        public int compare(String obj1, String obj2)
+        {
             return -1;
         }
     }

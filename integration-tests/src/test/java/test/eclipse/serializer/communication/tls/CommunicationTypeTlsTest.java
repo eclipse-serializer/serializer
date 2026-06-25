@@ -9,7 +9,7 @@ package test.eclipse.serializer.communication.tls;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -25,10 +25,10 @@ import org.eclipse.serializer.communication.tls.*;
 import org.eclipse.serializer.communication.types.ComChannel;
 import org.eclipse.serializer.communication.types.ComClient;
 import org.eclipse.serializer.communication.types.ComHost;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.DisabledIf;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -49,7 +49,7 @@ public class CommunicationTypeTlsTest extends AbstractSecurityComTest
 
     private static boolean firstTestSuccessful = false;
 
-//    @Test
+    //    @Test
 //    @Order(1)
     public void receiveTypeRegisterTest()
     {
@@ -69,7 +69,7 @@ public class CommunicationTypeTlsTest extends AbstractSecurityComTest
         channel.close();
 
         Assertions.assertNotNull(o);
-        typeRegister.proveData(transferedTypeRegister,"hashTableMSData", "identityHashMapData", "lazyData");
+        typeRegister.proveData(transferedTypeRegister, "hashTableMSData", "identityHashMapData", "lazyData");
 
         firstTestSuccessful = true;
     }
@@ -102,8 +102,7 @@ public class CommunicationTypeTlsTest extends AbstractSecurityComTest
 //	}
 
 
-
-	@ParameterizedTest
+    @ParameterizedTest
     @EnumSource(value = TypeEnum.class)
     public void receiveTypeTest(TypeEnum type)
     {

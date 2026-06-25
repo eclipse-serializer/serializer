@@ -1,4 +1,4 @@
-package test.eclipse.serializer.serializer.harald;
+package test.eclipse.serializer.serializer.development;
 
 /*-
  * #%L
@@ -9,23 +9,26 @@ package test.eclipse.serializer.serializer.harald;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
 import java.util.Objects;
 
-public class A {
+public class A
+{
     String description = "TestClass A";
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(this.description);
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(final Object obj)
+    {
         if (this == obj) {
             return true;
         }

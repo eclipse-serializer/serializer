@@ -1,4 +1,4 @@
-package test.eclipse.serializer.serializer.harald;
+package test.eclipse.serializer.serializer.development;
 
 /*-
  * #%L
@@ -9,10 +9,15 @@ package test.eclipse.serializer.serializer.harald;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.nio.ByteBuffer;
+import java.util.stream.Stream;
 
 import org.eclipse.serializer.Serializer;
 import org.eclipse.serializer.SerializerFoundation;
@@ -25,19 +30,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.nio.ByteBuffer;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-public class SerializerTest {
+public class SerializerTest
+{
 
     @ParameterizedTest(name = "serializeSameDeserializerTest {index}")
     @MethodSource("supplySerializers")
-    <S> void serializeSameDeserializerTest(final Serializer<S> serializer) {
+    <S> void serializeSameDeserializerTest(final Serializer<S> serializer)
+    {
         final S data = serializer.serialize("Hello World");
         final String result = serializer.deserialize(data);
 
@@ -46,7 +45,8 @@ public class SerializerTest {
 
     @ParameterizedTest(name = "serializeDifferentDeserializerTest {index}")
     @MethodSource("supplySerializersPairs")
-    <S> void serializeDifferentDeserializerTest(final Serializer<S> serializer, final Serializer<S> deserializer) {
+    <S> void serializeDifferentDeserializerTest(final Serializer<S> serializer, final Serializer<S> deserializer)
+    {
         final S data = serializer.serialize("Hello World");
         final String result = deserializer.deserialize(data);
 
@@ -55,7 +55,8 @@ public class SerializerTest {
 
     @ParameterizedTest(name = "serializeTest {index}")
     @MethodSource("supplySerializersPairs")
-    <S> void serializeTest(final Serializer<S> serializer, final Serializer<S> deserializer) {
+    <S> void serializeTest(final Serializer<S> serializer, final Serializer<S> deserializer)
+    {
         S data = serializer.serialize("Hello World");
         String result = deserializer.deserialize(data);
         assertEquals("Hello World", result);
@@ -67,7 +68,8 @@ public class SerializerTest {
 
     @ParameterizedTest(name = "serializeNewTypesTest {index}")
     @MethodSource("supplySerializersPairs")
-    <S> void serializeNewTypesTest(final Serializer<S> serializer, final Serializer<S> deserializer) {
+    <S> void serializeNewTypesTest(final Serializer<S> serializer, final Serializer<S> deserializer)
+    {
 
         final A originalA = new A();
         S data = serializer.serialize(originalA);
@@ -82,7 +84,8 @@ public class SerializerTest {
 
     @ParameterizedTest(name = "serializeOnceSizeTest {index}")
     @MethodSource("supplyOnceSerializersPairs")
-    <S> void serializeOnceSizeTest(final Serializer<S> serializer, final Serializer<S> deserializer) {
+    <S> void serializeOnceSizeTest(final Serializer<S> serializer, final Serializer<S> deserializer)
+    {
 
         final A originalA = new A();
         final S data = serializer.serialize(originalA);
@@ -120,7 +123,8 @@ public class SerializerTest {
 
     @ParameterizedTest(name = "serializeAlwaysSizeTest {index}")
     @MethodSource("supplyAlwaysSerializersPairs")
-    <S> void serializeAlwaysSizeTest(final Serializer<S> serializer, final Serializer<S> deserializer) {
+    <S> void serializeAlwaysSizeTest(final Serializer<S> serializer, final Serializer<S> deserializer)
+    {
 
         final A originalA = new A();
         final S data = serializer.serialize(originalA);
@@ -157,7 +161,8 @@ public class SerializerTest {
     }
 
     @Test
-    void incompatibleTest() {
+    void incompatibleTest()
+    {
 
         final Serializer<Binary> serializer = createBinaryDiffOnce();
         final Serializer<Binary> deserializer = createBinaryDiffOnce();
@@ -173,7 +178,8 @@ public class SerializerTest {
     /*
      * Binary
      */
-    static Serializer<Binary> createBinaryIncrementalDiffOnce() {
+    static Serializer<Binary> createBinaryIncrementalDiffOnce()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.IncrementalDiff(true));
@@ -181,14 +187,16 @@ public class SerializerTest {
         return TypedSerializer.Binary(foundation);
     }
 
-    static Serializer<Binary> createBinaryIncrementalDiffAlways() {
+    static Serializer<Binary> createBinaryIncrementalDiffAlways()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.IncrementalDiff(false));
         return TypedSerializer.Binary(foundation);
     }
 
-    static Serializer<Binary> createBinaryDiffOnce() {
+    static Serializer<Binary> createBinaryDiffOnce()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.Diff(true));
@@ -196,14 +204,16 @@ public class SerializerTest {
         return TypedSerializer.Binary(foundation);
     }
 
-    static Serializer<Binary> createBinaryDiffAlways() {
+    static Serializer<Binary> createBinaryDiffAlways()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.Diff(false));
         return TypedSerializer.Binary(foundation);
     }
 
-    static Serializer<Binary> createBinaryTypeDictionaryOnce() {
+    static Serializer<Binary> createBinaryTypeDictionaryOnce()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.TypeDictionary(true));
@@ -211,14 +221,16 @@ public class SerializerTest {
         return TypedSerializer.Binary(foundation);
     }
 
-    static Serializer<Binary> createBinaryTypeDictionaryAlways() {
+    static Serializer<Binary> createBinaryTypeDictionaryAlways()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.TypeDictionary(false));
         return TypedSerializer.Binary(foundation);
     }
 
-    static Serializer<Binary> createBinarySimpleSerializer() {
+    static Serializer<Binary> createBinarySimpleSerializer()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .registerEntityTypes(A.class, B.class);
 
@@ -228,7 +240,8 @@ public class SerializerTest {
     /*
      * byte[]
      */
-    static Serializer<byte[]> createBytesIncrementalDiffOnce() {
+    static Serializer<byte[]> createBytesIncrementalDiffOnce()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.IncrementalDiff(true));
@@ -236,14 +249,16 @@ public class SerializerTest {
         return TypedSerializer.Bytes(foundation);
     }
 
-    static Serializer<byte[]> createBytesIncrementalDiffAlways() {
+    static Serializer<byte[]> createBytesIncrementalDiffAlways()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.IncrementalDiff(false));
         return TypedSerializer.Bytes(foundation);
     }
 
-    static Serializer<byte[]> createBytesDiffOnce() {
+    static Serializer<byte[]> createBytesDiffOnce()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.Diff(true));
@@ -251,14 +266,16 @@ public class SerializerTest {
         return TypedSerializer.Bytes(foundation);
     }
 
-    static Serializer<byte[]> createBytesDiffAlways() {
+    static Serializer<byte[]> createBytesDiffAlways()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.Diff(false));
         return TypedSerializer.Bytes(foundation);
     }
 
-    static Serializer<byte[]> createBytesTypeDictionaryOnce() {
+    static Serializer<byte[]> createBytesTypeDictionaryOnce()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.TypeDictionary(true));
@@ -266,14 +283,16 @@ public class SerializerTest {
         return TypedSerializer.Bytes(foundation);
     }
 
-    static Serializer<byte[]> createBytesTypeDictionaryAlways() {
+    static Serializer<byte[]> createBytesTypeDictionaryAlways()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .setSerializerTypeInfoStrategyCreator(
                         new SerializerTypeInfoStrategyCreator.TypeDictionary(false));
         return TypedSerializer.Bytes(foundation);
     }
 
-    static Serializer<byte[]> createBytesSimpleSerializer() {
+    static Serializer<byte[]> createBytesSimpleSerializer()
+    {
         final SerializerFoundation<?> foundation = SerializerFoundation.New()
                 .registerEntityTypes(A.class, B.class);
 
@@ -281,7 +300,8 @@ public class SerializerTest {
     }
 
 
-    static Stream<Serializer<?>> supplySerializers() {
+    static Stream<Serializer<?>> supplySerializers()
+    {
         return Stream.of(
                 createBinarySimpleSerializer(),
                 createBinaryIncrementalDiffOnce(),
@@ -301,7 +321,8 @@ public class SerializerTest {
         );
     }
 
-    static Stream<Arguments> supplySerializersPairs() {
+    static Stream<Arguments> supplySerializersPairs()
+    {
         return Stream.of(
                 Arguments.of(createBinarySimpleSerializer(), createBinarySimpleSerializer()),
                 Arguments.of(createBinaryIncrementalDiffOnce(), createBinaryIncrementalDiffOnce()),
@@ -321,7 +342,8 @@ public class SerializerTest {
         );
     }
 
-    static Stream<Arguments> supplyTypedSerializersPairs() {
+    static Stream<Arguments> supplyTypedSerializersPairs()
+    {
         return Stream.of(
                 //Arguments.of(createBinarySimpleSerializer(),      createBinarySimpleSerializer()),
                 Arguments.of(createBinaryIncrementalDiffOnce(), createBinaryIncrementalDiffOnce()),
@@ -341,7 +363,8 @@ public class SerializerTest {
         );
     }
 
-    static Stream<Arguments> supplyOnceSerializersPairs() {
+    static Stream<Arguments> supplyOnceSerializersPairs()
+    {
         return Stream.of(
                 Arguments.of(createBinaryIncrementalDiffOnce(), createBinaryIncrementalDiffOnce()),
                 Arguments.of(createBinaryDiffOnce(), createBinaryDiffOnce()),
@@ -353,7 +376,8 @@ public class SerializerTest {
         );
     }
 
-    static Stream<Arguments> supplyAlwaysSerializersPairs() {
+    static Stream<Arguments> supplyAlwaysSerializersPairs()
+    {
         return Stream.of(
                 Arguments.of(createBinaryIncrementalDiffAlways(), createBinaryIncrementalDiffAlways()),
                 Arguments.of(createBinaryDiffAlways(), createBinaryDiffAlways()),

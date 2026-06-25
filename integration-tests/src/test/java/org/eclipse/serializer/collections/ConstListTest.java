@@ -9,21 +9,14 @@ package org.eclipse.serializer.collections;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -34,10 +27,12 @@ import org.eclipse.serializer.meta.NotImplementedYetError;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class ConstListTest {
+public class ConstListTest
+{
 
     @Test
-    void builder() {
+    void builder()
+    {
         ConstList<Object> yield = ConstList.Builder()
                 .yield();
 
@@ -45,7 +40,8 @@ public class ConstListTest {
     }
 
     @Test
-    void builderInitialCapacity() {
+    void builderInitialCapacity()
+    {
         Aggregator<Integer, ConstList<Integer>> builder = ConstList.Builder(8);
         builder.accept(10);
 
@@ -54,33 +50,38 @@ public class ConstListTest {
     }
 
     @Test
-    void NewEmpty() {
+    void NewEmpty()
+    {
         ConstList<Integer> aNew = ConstList.New();
         assertTrue(aNew.isEmpty());
     }
 
     @Test
-    void New_initialCapacity() {
+    void New_initialCapacity()
+    {
         ConstList<Object> aNew = ConstList.New(10);
         assertEquals(10, aNew.maximumCapacity());
     }
 
     @Test
-    void New_fromConstList() {
+    void New_fromConstList()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> aNew = ConstList.New(integers);
         Assertions.assertIterableEquals(integers, aNew);
     }
 
     @Test
-    void New_fromXGettingCollection() {
+    void New_fromXGettingCollection()
+    {
         BulkList<Integer> integers = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> aNew = ConstList.New(integers);
         Assertions.assertIterableEquals(integers, aNew);
     }
 
     @Test
-    void New_arrayStartLength() {
+    void New_arrayStartLength()
+    {
         Integer[] integers = new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
         ConstList<Integer> aNew = ConstList.New(integers, 2, 3);
 
@@ -89,7 +90,8 @@ public class ConstListTest {
     }
 
     @Test
-    void internalGetStorageArray() {
+    void internalGetStorageArray()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] internalGetStorageArray = integers.internalGetStorageArray();
 
@@ -98,14 +100,16 @@ public class ConstListTest {
     }
 
     @Test
-    void internalSize() {
+    void internalSize()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         int i = integers.internalSize();
         Assertions.assertEquals(8, i);
     }
 
     @Test
-    void internalGetSectionIndices() {
+    void internalGetSectionIndices()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         int[] ints = integers.internalGetSectionIndices();
 
@@ -114,14 +118,16 @@ public class ConstListTest {
     }
 
     @Test
-    void equality() {
+    void equality()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Equalator<? super Integer> equality = integers.equality();
         Assertions.assertEquals(Equalator.identity(), equality);
     }
 
     @Test
-    void internalCountingAddAll() {
+    void internalCountingAddAll()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
 
         Integer[] instToAdd = {7, 7, 8, 9};
@@ -134,7 +140,8 @@ public class ConstListTest {
     }
 
     @Test
-    void internalCountingPutAll() {
+    void internalCountingPutAll()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
 
         Integer[] instToAdd = {7, 7, 8, 9};
@@ -147,21 +154,24 @@ public class ConstListTest {
     }
 
     @Test
-    void copy() {
+    void copy()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> copy = integers.copy();
         Assertions.assertIterableEquals(integers, copy);
     }
 
     @Test
-    void immure() {
+    void immure()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> immure = integers.immure();
         Assertions.assertIterableEquals(integers, immure);
     }
 
     @Test
-    void toReversed() {
+    void toReversed()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> list = integers.toReversed();
 
@@ -170,7 +180,8 @@ public class ConstListTest {
     }
 
     @Test
-    void toArray_withType() {
+    void toArray_withType()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] intArray = integers.toArray(Integer.class);
 
@@ -179,7 +190,8 @@ public class ConstListTest {
     }
 
     @Test
-    void joinTest() {
+    void joinTest()
+    {
         Map<Integer, Integer> map = new HashMap<>();
         BiConsumer<Integer, Integer> biConsumer = map::put;
         ConstList<Integer> constList = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
@@ -188,7 +200,8 @@ public class ConstListTest {
     }
 
     @Test
-    void iterateIndexed() {
+    void iterateIndexed()
+    {
         AtomicInteger aInt = new AtomicInteger(0);
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         integers.iterateIndexed((e, index) -> aInt.addAndGet(e));
@@ -196,7 +209,8 @@ public class ConstListTest {
     }
 
     @Test
-    void count() {
+    void count()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 1, 2);
         Assertions.assertAll(
                 () -> assertEquals(2, integers.count(2)),
@@ -206,38 +220,44 @@ public class ConstListTest {
     }
 
     @Test
-    void countBy() {
+    void countBy()
+    {
         Predicate<Integer> predicate = i -> i < 5;
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(4, list.countBy(predicate));
     }
 
     @Test
-    void indexOf() {
+    void indexOf()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(4, integers.indexOf(5));
     }
 
     @Test
-    void indexBy() {
+    void indexBy()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(4, integers.indexBy(integer -> integer.equals(5)));
     }
 
     @Test
-    void lastIndexOf() {
+    void lastIndexOf()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 1, 2);
         assertEquals(7, integers.lastIndexOf(2));
     }
 
     @Test
-    void lastIndexBy() {
+    void lastIndexBy()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 1, 2);
         assertEquals(7, integers.lastIndexBy(integer -> integer.equals(2)));
     }
 
     @Test
-    void maxIndex() {
+    void maxIndex()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Comparator<Integer> comparator2 = (Integer i1, Integer i2) -> {
             Integer valueToFind = 2;
@@ -255,7 +275,8 @@ public class ConstListTest {
     }
 
     @Test
-    void minIndex() {
+    void minIndex()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Comparator<Integer> comparator2 = (Integer i1, Integer i2) -> {
             Integer valueToFind = 2;
@@ -275,109 +296,126 @@ public class ConstListTest {
     }
 
     @Test
-    void scan() {
+    void scan()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> predicate = (integer -> integer.equals(2));
         assertEquals(1, list.scan(predicate));
     }
 
     @Test
-    void get() {
+    void get()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(1, integers.get());
     }
 
     @Test
-    void first() {
+    void first()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(1, integers.first());
     }
 
     @Test
-    void last() {
+    void last()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(8, integers.last());
     }
 
     @Test
-    void poll() {
+    void poll()
+    {
         ConstList<Integer> integers = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(1, integers.poll());
     }
 
     @Test
-    void pollEmpty() {
+    void pollEmpty()
+    {
         ConstList<Integer> list = ConstList.New();
         Assertions.assertNull(list.poll());
     }
 
     @Test
-    void peek() {
+    void peek()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(8, list.peek());
     }
 
     @Test
-    void peekEmpty() {
+    void peekEmpty()
+    {
         ConstList<Integer> list = ConstList.New();
         Assertions.assertNull(list.peek());
     }
 
     @Test
-    void seek() {
+    void seek()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(5, list.seek(5));
         Assertions.assertNull(list.seek(4000));
     }
 
     @Test
-    void seekEmpty() {
+    void seekEmpty()
+    {
         ConstList<Integer> list = ConstList.New();
         Assertions.assertNull(list.seek(5));
     }
 
     @Test
-    void search() {
+    void search()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i.equals(3);
         assertEquals(3, list.search(searchPredicate));
     }
 
     @Test
-    void searchEmpty() {
+    void searchEmpty()
+    {
         ConstList<Integer> list = ConstList.New();
         Predicate<Integer> searchPredicate = i -> i.equals(3);
         Assertions.assertNull(list.search(searchPredicate));
     }
 
     @Test
-    void hasVolatileElements() {
+    void hasVolatileElements()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertFalse(list.hasVolatileElements());
     }
 
     @Test
-    void nulAllowed() {
+    void nulAllowed()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertTrue(list.nullAllowed());
     }
 
     @Test
-    void isSorted() {
+    void isSorted()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Comparator<Integer> integerComparator = Integer::compare;
         assertTrue(list.isSorted(integerComparator));
     }
 
     @Test
-    void isSortedFalse() {
+    void isSortedFalse()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8, 1);
         Comparator<Integer> integerComparator = Integer::compare;
         assertFalse(list.isSorted(integerComparator));
     }
 
     @Test
-    void constainsSearched() {
+    void constainsSearched()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertAll(
                 () -> assertTrue(list.containsSearched(integer -> integer.equals(3))),
@@ -386,21 +424,24 @@ public class ConstListTest {
     }
 
     @Test
-    void applies() {
+    void applies()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i < 9;
         assertTrue(list.applies(searchPredicate));
     }
 
     @Test
-    void appliesNotAll() {
+    void appliesNotAll()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i < 5;
         assertFalse(list.applies(searchPredicate));
     }
 
     @Test
-    void nullContained() {
+    void nullContained()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> nullList = ConstList.New(1, 2, 3, 4, 5, 6, 7, null, 8);
         Assertions.assertAll(
@@ -410,7 +451,8 @@ public class ConstListTest {
     }
 
     @Test
-    void containsId() {
+    void containsId()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertAll(
                 () -> assertTrue(list.containsId(3)),
@@ -419,7 +461,8 @@ public class ConstListTest {
     }
 
     @Test
-    void contains() {
+    void contains()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertAll(
                 () -> assertTrue(list.contains(3)),
@@ -428,7 +471,8 @@ public class ConstListTest {
     }
 
     @Test
-    void containsAll() {
+    void containsAll()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> contains = ConstList.New(1, 2, 5, 3, 4);
         ConstList<Integer> containsNot = ConstList.New(1, 2, 5, 3, 4, 10);
@@ -439,7 +483,8 @@ public class ConstListTest {
     }
 
     @Test
-    void equalsTestXGettingCollection() {
+    void equalsTestXGettingCollection()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> sameList = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> differentList = ConstList.New(1, 2, 3, 4, 5, 6, 7);
@@ -452,7 +497,8 @@ public class ConstListTest {
     }
 
     @Test
-    void equalsContent() {
+    void equalsContent()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> sameList = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> differentList = ConstList.New(1, 2, 3, 4, 5, 6, 7);
@@ -465,7 +511,8 @@ public class ConstListTest {
     }
 
     @Test
-    void intersect() {
+    void intersect()
+    {
         ConstList<Integer> collection1 = ConstList.New(1, 2, 3);
         ConstList<Integer> collection2 = ConstList.New(2, 3, 4);
         BulkList<Integer> intersection = collection1.intersect(collection2, Equalator.identity(), BulkList.New());
@@ -477,7 +524,8 @@ public class ConstListTest {
     }
 
     @Test
-    void except() {
+    void except()
+    {
         ConstList<Integer> collection1 = ConstList.New(1, 2, 3);
         ConstList<Integer> collection2 = ConstList.New(2, 3, 4);
         BulkList<Integer> exceptCollection = collection1.except(collection2, Equalator.identity(), BulkList.New());
@@ -488,7 +536,8 @@ public class ConstListTest {
     }
 
     @Test
-    void union() {
+    void union()
+    {
         ConstList<Integer> collection1 = ConstList.New(1, 2, 3);
         ConstList<Integer> collection2 = ConstList.New(2, 3, 4);
         BulkList<Integer> union = collection1.union(collection2, Equalator.identity(), BulkList.New());
@@ -500,7 +549,8 @@ public class ConstListTest {
     }
 
     @Test
-    void copyTo() {
+    void copyTo()
+    {
         ConstList<Integer> collection1 = ConstList.New(1, 2, 3);
         BulkList<Integer> copiedCollection = collection1.copyTo(BulkList.New());
         Assertions.assertAll(
@@ -510,7 +560,8 @@ public class ConstListTest {
     }
 
     @Test
-    void filterTo() {
+    void filterTo()
+    {
         ConstList<Integer> collection1 = ConstList.New(1, 2, 3);
         BulkList<Integer> filteredCollection = collection1.filterTo(BulkList.New(), e -> e % 2 == 0);
         Assertions.assertAll(
@@ -520,7 +571,8 @@ public class ConstListTest {
     }
 
     @Test
-    void distinct() {
+    void distinct()
+    {
         ConstList<Integer> collection1 = ConstList.New(1, 2, 2, 3);
         BulkList<Integer> distinctCollection = collection1.distinct(BulkList.New());
         BulkList<Integer> compareResult = BulkList.New(1, 2, 3);
@@ -528,7 +580,8 @@ public class ConstListTest {
     }
 
     @Test
-    void distinctEqualator() {
+    void distinctEqualator()
+    {
         ConstList<Integer> collection1 = ConstList.New(1, 2, 2, 3);
         BulkList<Integer> distinctCollection = collection1.distinct(BulkList.New(), Equalator.value());
         BulkList<Integer> compareResult = BulkList.New(1, 2, 3);
@@ -536,7 +589,8 @@ public class ConstListTest {
     }
 
     @Test
-    void copySelection() {
+    void copySelection()
+    {
         ConstList<Integer> constList = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> ConstList1 = constList.copySelection(BulkList.New(), 1, 2, 3);
         BulkList<Integer> compareResult = BulkList.New(2, 3, 4);
@@ -544,13 +598,15 @@ public class ConstListTest {
     }
 
     @Test
-    void listIterator() {
+    void listIterator()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertNotNull(list.listIterator());
     }
 
     @Test
-    void listIteratorIndex() {
+    void listIteratorIndex()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ListIterator<Integer> integerListIterator = list.listIterator(3);
         Integer next = integerListIterator.next();
@@ -558,45 +614,52 @@ public class ConstListTest {
     }
 
     @Test
-    void isFull() {
+    void isFull()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertTrue(list.isFull());
     }
 
     @Test
-    void remainingCapacity() {
+    void remainingCapacity()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         assertEquals(0, list.remainingCapacity());
     }
 
     @Test
-    void view() {
+    void view()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ConstList<Integer> view = list.view();
         Assertions.assertIterableEquals(list, view);
     }
 
     @Test
-    void view_index() {
+    void view_index()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertThrows(NotImplementedYetError.class, () -> list.view(1, 4));
     }
 
     @Test
-    void range_index() {
+    void range_index()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertThrows(NotImplementedYetError.class, () -> list.range(1, 4));
     }
 
     @Test
-    void toStringTest() {
+    void toStringTest()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         String toString = list.toString();
         Assertions.assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", toString);
     }
 
     @Test
-    void toArray() {
+    void toArray()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Object[] objects = list.toArray();
         Object[] compare = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -604,7 +667,8 @@ public class ConstListTest {
     }
 
     @Test
-    void atIndex() {
+    void atIndex()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertAll(
                 () -> assertEquals(3, list.at(2)),
@@ -614,7 +678,8 @@ public class ConstListTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    void equalsTest() {
+    void equalsTest()
+    {
         List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
         ConstList<Integer> constList = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8, 9);
         assertTrue(constList.equals(list));
@@ -622,7 +687,8 @@ public class ConstListTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    void hashCodeTest() {
+    void hashCodeTest()
+    {
         ConstList<Integer> list = ConstList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(list.hashCode() != 0);
     }

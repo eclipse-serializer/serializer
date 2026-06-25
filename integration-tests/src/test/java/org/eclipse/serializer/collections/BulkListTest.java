@@ -9,7 +9,7 @@ package org.eclipse.serializer.collections;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -30,9 +30,12 @@ import org.eclipse.serializer.typing.KeyValue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-public class BulkListTest {
+
+public class BulkListTest
+{
     @Test
-    void immurerTest() {
+    void immurerTest()
+    {
         Function<BulkList<Integer>, ConstList<Integer>> immurer = BulkList.Immurer();
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6);
         ConstList<Integer> constList = immurer.apply(bulkList);
@@ -41,7 +44,8 @@ public class BulkListTest {
     }
 
     @Test
-    void builderDefaultTest() {
+    void builderDefaultTest()
+    {
         Integer i = 20;
         Aggregator<Integer, BulkList<Integer>> builder = BulkList.Builder();
         builder.accept(i);
@@ -53,7 +57,8 @@ public class BulkListTest {
     }
 
     @Test
-    void newTest() {
+    void newTest()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertAll(
                 () -> Assertions.assertNotNull(bulkList),
@@ -63,7 +68,8 @@ public class BulkListTest {
     }
 
     @Test
-    void newXIterableTest() {
+    void newXIterableTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> newBulkList = BulkList.New((XIterable<Integer>) bulkList);
 
@@ -71,7 +77,8 @@ public class BulkListTest {
     }
 
     @Test
-    void newIterableTest() {
+    void newIterableTest()
+    {
         List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> newBulkList = BulkList.New((Iterable<Integer>) list);
@@ -80,13 +87,15 @@ public class BulkListTest {
     }
 
     @Test
-    void newInitialCapacityTest() {
+    void newInitialCapacityTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(100);
         Assertions.assertTrue(bulkList.currentCapacity() > 99);
     }
 
     @Test
-    void constructorWithExistingBulkList() {
+    void constructorWithExistingBulkList()
+    {
         Integer item = 50;
         BulkList<Integer> bulkList = BulkList.New(100);
         bulkList.add(item);
@@ -98,7 +107,8 @@ public class BulkListTest {
     }
 
     @Test
-    void constructorWithInitialCapacityArrayAndRange() {
+    void constructorWithInitialCapacityArrayAndRange()
+    {
         Integer[] integers = {1, 2, 3, 4, 5, 6, 7, 8, 9};
         BulkList<Integer> bulkList = new BulkList<>(12, integers, 2, 4);
         Assertions.assertAll(
@@ -108,20 +118,23 @@ public class BulkListTest {
     }
 
     @Test
-    void equalator() {
+    void equalator()
+    {
         BulkList<Integer> bulkList = new BulkList<>();
         Assertions.assertEquals(Equalator.identity(), bulkList.equality());
     }
 
     @Test
-    void copyTest() {
+    void copyTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> copy = bulkList.copy();
         Assertions.assertIterableEquals(bulkList, copy);
     }
 
     @Test
-    void toReversed() {
+    void toReversed()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> reversedToCompare = BulkList.New(8, 7, 6, 5, 4, 3, 2, 1);
         BulkList<Integer> bulkList1 = bulkList.toReversed();
@@ -129,7 +142,8 @@ public class BulkListTest {
     }
 
     @Test
-    void toArray() {
+    void toArray()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {1, 2, 3, 4, 5, 6, 7, 8};
         Integer[] integers1 = bulkList.toArray(Integer.class);
@@ -137,7 +151,8 @@ public class BulkListTest {
     }
 
     @Test
-    void iterate() {
+    void iterate()
+    {
         AtomicInteger atomicInteger = new AtomicInteger(0);
         Consumer<Integer> consumer = atomicInteger::addAndGet;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
@@ -146,7 +161,8 @@ public class BulkListTest {
     }
 
     @Test
-    void joinTest() {
+    void joinTest()
+    {
         Map<Integer, Integer> map = new HashMap<>();
         BiConsumer<Integer, Integer> biConsumer = map::put;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
@@ -155,20 +171,23 @@ public class BulkListTest {
     }
 
     @Test
-    void countTest() {
+    void countTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 1, 1);
         Assertions.assertEquals(3, bulkList.count(1));
     }
 
     @Test
-    void countBy() {
+    void countBy()
+    {
         Predicate<Integer> predicate = i -> i < 5;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(4, bulkList.countBy(predicate));
     }
 
     @Test
-    void newFromSingle() {
+    void newFromSingle()
+    {
         Integer i = 20;
         BulkList<Integer> bulkList = BulkList.NewFromSingle(i);
         Assertions.assertAll(
@@ -178,40 +197,46 @@ public class BulkListTest {
     }
 
     @Test
-    void newFromXIterable() {
+    void newFromXIterable()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> aNew = BulkList.New(bulkList);
         Assertions.assertIterableEquals(bulkList, aNew);
     }
 
     @Test
-    void indexOf() {
+    void indexOf()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(3, bulkList.indexOf(4));
     }
 
     @Test
-    void indexBy() {
+    void indexBy()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> predicate = i -> i == 4;
         Assertions.assertEquals(3, bulkList.indexBy(predicate));
     }
 
     @Test
-    void lastIndexOf() {
+    void lastIndexOf()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Assertions.assertEquals(6, bulkList.lastIndexOf(1));
     }
 
     @Test
-    void lastIndexBy() {
+    void lastIndexBy()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Predicate<Integer> predicate = i -> i == 1;
         Assertions.assertEquals(6, bulkList.lastIndexBy(predicate));
     }
 
     @Test
-    void maxIndex() {
+    void maxIndex()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Comparator<Integer> comparator2 = (Integer i1, Integer i2) -> {
             Integer valueToFind = 2;
@@ -229,7 +254,8 @@ public class BulkListTest {
     }
 
     @Test
-    void minIndex() {
+    void minIndex()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Comparator<Integer> comparator2 = (Integer i1, Integer i2) -> {
             Integer valueToFind = 2;
@@ -249,114 +275,132 @@ public class BulkListTest {
     }
 
     @Test
-    void scan() {
+    void scan()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> predicate = (integer -> integer.equals(2));
         Assertions.assertEquals(1, bulkList.scan(predicate));
     }
 
     @Test
-    void get() {
+    void get()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(1, bulkList.get());
     }
 
     @Test
-    void getEmptyList() {
+    void getEmptyList()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertThrows(NoSuchElementException.class, bulkList::get);
     }
 
     @Test
-    void first() {
+    void first()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(1, bulkList.first());
     }
 
     @Test
-    void firstEmptyList() {
+    void firstEmptyList()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertThrows(IndexOutOfBoundsException.class, bulkList::first);
     }
 
     @Test
-    void last() {
+    void last()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(8, bulkList.last());
     }
 
     @Test
-    void lastEmptyList() {
+    void lastEmptyList()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertThrows(IndexOutOfBoundsException.class, bulkList::last);
     }
 
     @Test
-    void poll() {
+    void poll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(1, bulkList.poll());
     }
 
     @Test
-    void pollEmptyList() {
+    void pollEmptyList()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertNull(bulkList.poll());
     }
 
     @Test
-    void peek() {
+    void peek()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(8, bulkList.peek());
     }
 
     @Test
-    void peekEmptyList() {
+    void peekEmptyList()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertNull(bulkList.peek());
     }
 
     @Test
-    void search() {
+    void search()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i.equals(3);
         Assertions.assertEquals(3, bulkList.search(searchPredicate));
     }
 
     @Test
-    void searchEmpty() {
+    void searchEmpty()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Predicate<Integer> searchPredicate = i -> i.equals(3);
         Assertions.assertNull(bulkList.search(searchPredicate));
     }
 
     @Test
-    void searchNotFound() {
+    void searchNotFound()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i.equals(11);
         Assertions.assertNull(bulkList.search(searchPredicate));
     }
 
     @Test
-    void seek() {
+    void seek()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(3, bulkList.seek(3));
     }
 
     @Test
-    void seekEmpty() {
+    void seekEmpty()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertNull(bulkList.seek(10));
     }
 
     @Test
-    void seekNotFound() {
+    void seekNotFound()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertNull(bulkList.seek(10));
     }
 
     @Test
     @Disabled("https://github.com/microstream-one/microstream-private/issues/668")
-    void max() {
+    void max()
+    {
         Comparator<Integer> integerComparator = Integer::compare;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(8, bulkList.max(integerComparator));
@@ -364,68 +408,78 @@ public class BulkListTest {
 
     @Test
     @Disabled("https://github.com/microstream-one/microstream-private/issues/668")
-    void min() {
+    void min()
+    {
         Comparator<Integer> integerComparator = Integer::compare;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(1, bulkList.min(integerComparator));
     }
 
     @Test
-    void hasVolatileElements() {
+    void hasVolatileElements()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertFalse(bulkList.hasVolatileElements());
     }
 
     @Test
-    void nullAllowed() {
+    void nullAllowed()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.nullAllowed());
     }
 
     @Test
-    void isSorted() {
+    void isSorted()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Comparator<Integer> integerComparator = Integer::compare;
         Assertions.assertTrue(bulkList.isSorted(integerComparator));
     }
 
     @Test
-    void isSortedFalse() {
+    void isSortedFalse()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Comparator<Integer> integerComparator = Integer::compare;
         Assertions.assertFalse(bulkList.isSorted(integerComparator));
     }
 
     @Test
-    void containsSearched() {
+    void containsSearched()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i.equals(8);
         Assertions.assertTrue(bulkList.containsSearched(searchPredicate));
     }
 
     @Test
-    void applies() {
+    void applies()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i < 9;
         Assertions.assertTrue(bulkList.applies(searchPredicate));
     }
 
     @Test
-    void appliesNotAll() {
+    void appliesNotAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> searchPredicate = i -> i < 5;
         Assertions.assertFalse(bulkList.applies(searchPredicate));
     }
 
     @Test
-    void appliesEmptyList() {
+    void appliesEmptyList()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Predicate<Integer> searchPredicate = i -> i < 5;
         Assertions.assertFalse(bulkList.applies(searchPredicate));
     }
 
     @Test
-    void nullContained() {
+    void nullContained()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertFalse(bulkList.nullContained());
         BulkList<Integer> bulkList1 = BulkList.New(1, 2, 3, 4, null, 6, 7, 8);
@@ -433,7 +487,8 @@ public class BulkListTest {
     }
 
     @Test
-    void containsId() {
+    void containsId()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertAll(
                 () -> Assertions.assertTrue(bulkList.containsId(1)),
@@ -442,7 +497,8 @@ public class BulkListTest {
     }
 
     @Test
-    void containsAll() {
+    void containsAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> contains = BulkList.New(1, 2, 5, 3, 4);
         BulkList<Integer> containsNot = BulkList.New(1, 2, 5, 3, 4, 10);
@@ -453,7 +509,8 @@ public class BulkListTest {
     }
 
     @Test
-    void equalsWithAnotherCollection() {
+    void equalsWithAnotherCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkListEqual = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkListNotEqual = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9);
@@ -465,7 +522,8 @@ public class BulkListTest {
     }
 
     @Test
-    void equalsContent() {
+    void equalsContent()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkListEqual = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkListNotEqual = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9);
@@ -477,7 +535,8 @@ public class BulkListTest {
     }
 
     @Test
-    void intersect() {
+    void intersect()
+    {
         BulkList<Integer> collection1 = BulkList.New(1, 2, 3);
         BulkList<Integer> collection2 = BulkList.New(2, 3, 4);
         BulkList<Integer> intersection = collection1.intersect(collection2, Equalator.identity(), BulkList.New());
@@ -489,7 +548,8 @@ public class BulkListTest {
     }
 
     @Test
-    void except() {
+    void except()
+    {
         BulkList<Integer> collection1 = BulkList.New(1, 2, 3);
         BulkList<Integer> collection2 = BulkList.New(2, 3, 4);
         BulkList<Integer> exceptCollection = collection1.except(collection2, Equalator.identity(), BulkList.New());
@@ -500,7 +560,8 @@ public class BulkListTest {
     }
 
     @Test
-    void union() {
+    void union()
+    {
         BulkList<Integer> collection1 = BulkList.New(1, 2, 3);
         BulkList<Integer> collection2 = BulkList.New(2, 3, 4);
         BulkList<Integer> union = collection1.union(collection2, Equalator.identity(), BulkList.New());
@@ -512,7 +573,8 @@ public class BulkListTest {
     }
 
     @Test
-    void copyTo() {
+    void copyTo()
+    {
         BulkList<Integer> collection1 = BulkList.New(1, 2, 3);
         BulkList<Integer> copiedCollection = collection1.copyTo(BulkList.New());
         Assertions.assertAll(
@@ -522,7 +584,8 @@ public class BulkListTest {
     }
 
     @Test
-    void filterTo() {
+    void filterTo()
+    {
         BulkList<Integer> collection1 = BulkList.New(1, 2, 3);
         BulkList<Integer> filteredCollection = collection1.filterTo(BulkList.New(), e -> e % 2 == 0);
         Assertions.assertAll(
@@ -532,7 +595,8 @@ public class BulkListTest {
     }
 
     @Test
-    void distinct() {
+    void distinct()
+    {
         BulkList<Integer> collection1 = BulkList.New(1, 2, 2, 3);
         BulkList<Integer> distinctCollection = collection1.distinct(BulkList.New());
         BulkList<Integer> compareResult = BulkList.New(1, 2, 3);
@@ -540,7 +604,8 @@ public class BulkListTest {
     }
 
     @Test
-    void distinctEqualator() {
+    void distinctEqualator()
+    {
         BulkList<Integer> collection1 = BulkList.New(1, 2, 2, 3);
         BulkList<Integer> distinctCollection = collection1.distinct(BulkList.New(), Equalator.value());
         BulkList<Integer> compareResult = BulkList.New(1, 2, 3);
@@ -548,7 +613,8 @@ public class BulkListTest {
     }
 
     @Test
-    void copySelection() {
+    void copySelection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.copySelection(BulkList.New(), 1, 2, 3);
         BulkList<Integer> compareResult = BulkList.New(2, 3, 4);
@@ -556,21 +622,24 @@ public class BulkListTest {
     }
 
     @Test
-    void view_ListView() {
+    void view_ListView()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ListView<Integer> view = bulkList.view();
         Assertions.assertIterableEquals(bulkList, view);
     }
 
     @Test
-    void view_SubListView() {
+    void view_SubListView()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         SubListView<Integer> view = bulkList.view(1, 3);
         Assertions.assertEquals(3, view.size());
     }
 
     @Test
-    void shiftTo() {
+    void shiftTo()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftTo(1, 3);
 
@@ -579,7 +648,8 @@ public class BulkListTest {
     }
 
     @Test
-    void shiftTo_validationTest() {
+    void shiftTo_validationTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertAll(
                 () -> Assertions.assertThrows(IndexExceededException.class, () -> bulkList.shiftTo(20, 25)),
@@ -589,14 +659,16 @@ public class BulkListTest {
     }
 
     @Test
-    void shiftTo_sameIndex() {
+    void shiftTo_sameIndex()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftTo(2, 2);
         Assertions.assertTrue(bulkList.equals(bulkList1, Equalator.value()));
     }
 
     @Test
-    void shiftAnotherDirection() {
+    void shiftAnotherDirection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftTo(3, 1);
 
@@ -605,7 +677,8 @@ public class BulkListTest {
     }
 
     @Test
-    void shiftToAmount() {
+    void shiftToAmount()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftTo(1, 3, 2);
 
@@ -614,7 +687,8 @@ public class BulkListTest {
     }
 
     @Test
-    void shiftToAmount_validationTest() {
+    void shiftToAmount_validationTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertAll(
                 () -> Assertions.assertThrows(IndexExceededException.class, () -> bulkList.shiftTo(20, 25, 2)),
@@ -624,14 +698,16 @@ public class BulkListTest {
     }
 
     @Test
-    void shiftToAmount_sameIndex() {
+    void shiftToAmount_sameIndex()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftTo(2, 2, 2);
         Assertions.assertTrue(bulkList.equals(bulkList1, Equalator.value()));
     }
 
     @Test
-    void shiftToAmountAnotherDirection() {
+    void shiftToAmountAnotherDirection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftTo(3, 1, 2);
 
@@ -640,7 +716,8 @@ public class BulkListTest {
     }
 
     @Test
-    void shiftBy() {
+    void shiftBy()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftBy(1, 3);
 
@@ -649,7 +726,8 @@ public class BulkListTest {
     }
 
     @Test
-    void shiftByLength() {
+    void shiftByLength()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkList1 = bulkList.shiftBy(1, 3, 2);
 
@@ -658,7 +736,8 @@ public class BulkListTest {
     }
 
     @Test
-    void swap() {
+    void swap()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> swap = bulkList.swap(1, 4, 2);
 
@@ -667,7 +746,8 @@ public class BulkListTest {
     }
 
     @Test
-    void swapElement() {
+    void swapElement()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> swap = bulkList.swap(1, 4);
 
@@ -676,7 +756,8 @@ public class BulkListTest {
     }
 
     @Test
-    void reverse() {
+    void reverse()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> reverse = bulkList.reverse();
 
@@ -685,7 +766,8 @@ public class BulkListTest {
     }
 
     @Test
-    void setFirst() {
+    void setFirst()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.setFirst(10);
 
@@ -694,7 +776,8 @@ public class BulkListTest {
     }
 
     @Test
-    void setLast() {
+    void setLast()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.setLast(10);
 
@@ -703,7 +786,8 @@ public class BulkListTest {
     }
 
     @Test
-    void setAll() {
+    void setAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
 
         bulkList.setAll(0, 10, 20, 30, 40, 50, 60, 70 /*, 80*/);
@@ -713,7 +797,8 @@ public class BulkListTest {
     }
 
     @Test
-    void setAll_fullLength() {
+    void setAll_fullLength()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
 
         bulkList.setAll(0, 10, 20, 30, 40, 50, 60, 70, 80);
@@ -723,7 +808,8 @@ public class BulkListTest {
     }
 
     @Test
-    void setAll_oneElement() {
+    void setAll_oneElement()
+    {
         BulkList<Integer> bulkList = BulkList.NewFromSingle(1);
 
         bulkList.setAll(0, 80);
@@ -733,7 +819,8 @@ public class BulkListTest {
     }
 
     @Test
-    void set() {
+    void set()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
         BulkList<Integer> set = bulkList.set(0, integers, 0, 6);
@@ -743,14 +830,16 @@ public class BulkListTest {
     }
 
     @Test
-    void setWithCollection() {
+    void setWithCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> src = BulkList.New(10, 20, 30, 40, 50, 60, 70, 80);
         Assertions.assertThrows(NotImplementedYetError.class, () -> bulkList.set(0, src, 0, 6));
     }
 
     @Test
-    void fill() {
+    void fill()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> fill = bulkList.fill(0, 8, 10);
 
@@ -759,7 +848,8 @@ public class BulkListTest {
     }
 
     @Test
-    void sort() {
+    void sort()
+    {
         BulkList<Integer> bulkList = BulkList.New(10, 2, 3, 4, 5, 6, 7, 8);
         Comparator<Integer> integerComparator = Integer::compare;
         BulkList<Integer> sort = bulkList.sort(integerComparator);
@@ -769,7 +859,8 @@ public class BulkListTest {
     }
 
     @Test
-    void replaceOne_element() {
+    void replaceOne_element()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
 
         BulkList<Integer> resultToCompare = BulkList.New(1, 2, 3, 40, 5, 6, 7, 8);
@@ -781,7 +872,8 @@ public class BulkListTest {
     }
 
     @Test
-    void replaceOne_predicate() {
+    void replaceOne_predicate()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Predicate<Integer> predicate = i -> i.equals(2);
         Predicate<Integer> predicateNotExists = i -> i.equals(80);
@@ -795,7 +887,8 @@ public class BulkListTest {
     }
 
     @Test
-    void replace_element() {
+    void replace_element()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         long replace = bulkList.replace(2, 20);
 
@@ -807,7 +900,8 @@ public class BulkListTest {
     }
 
     @Test
-    void replace_predicate() {
+    void replace_predicate()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Predicate<Integer> predicate = i -> i.equals(2);
         Predicate<Integer> predicateNotExists = i -> i.equals(80);
@@ -821,7 +915,8 @@ public class BulkListTest {
     }
 
     @Test
-    void replaceAll() {
+    void replaceAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> listToReplace = BulkList.New(1, 2, 3);
 
@@ -834,7 +929,8 @@ public class BulkListTest {
     }
 
     @Test
-    void substitute() {
+    void substitute()
+    {
         Function<Integer, Integer> substituteFunction = integer -> integer.equals(3) ? 30 : integer;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
 
@@ -847,7 +943,8 @@ public class BulkListTest {
     }
 
     @Test
-    void substitute_predicate_function() {
+    void substitute_predicate_function()
+    {
         Function<Integer, Integer> substituteFunction = integer -> 30;
         Predicate<Integer> predicate = integer -> integer.equals(3);
 
@@ -861,25 +958,29 @@ public class BulkListTest {
     }
 
     @Test
-    void currentCapacity() {
+    void currentCapacity()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(8, bulkList.currentCapacity());
     }
 
     @Test
-    void maximumCapacity() {
+    void maximumCapacity()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(Integer.MAX_VALUE, bulkList.maximumCapacity());
     }
 
     @Test
-    void isFull() {
+    void isFull()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertFalse(bulkList.isFull());
     }
 
     @Test
-    void optimize() {
+    void optimize()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.add(10);
         bulkList.remove(10);
@@ -888,7 +989,8 @@ public class BulkListTest {
     }
 
     @Test
-    void ensureFreeCapacity() {
+    void ensureFreeCapacity()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.ensureFreeCapacity(1000);
         long l = bulkList.currentCapacity();
@@ -896,7 +998,8 @@ public class BulkListTest {
     }
 
     @Test
-    void ensureCapacity() {
+    void ensureCapacity()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.ensureCapacity(1024);
         long l = bulkList.currentCapacity();
@@ -904,7 +1007,8 @@ public class BulkListTest {
     }
 
     @Test
-    void addAllElements() {
+    void addAllElements()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {11, 22, 33, 44, 55, 66};
         BulkList<Integer> bulkList1 = bulkList.addAll(integers);
@@ -914,7 +1018,8 @@ public class BulkListTest {
     }
 
     @Test
-    void addAllElements_offsetLenth() {
+    void addAllElements_offsetLenth()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {11, 22, 33, 44, 55, 66};
         BulkList<Integer> bulkList1 = bulkList.addAll(integers, 2, 2);
@@ -924,7 +1029,8 @@ public class BulkListTest {
     }
 
     @Test
-    void addAllElements_offsetLenth_minus() {
+    void addAllElements_offsetLenth_minus()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {11, 22, 33, 44, 55, 66};
         BulkList<Integer> bulkList1 = bulkList.addAll(integers, 4, -2);
@@ -934,7 +1040,8 @@ public class BulkListTest {
     }
 
     @Test
-    void addAllXGettingCollection() {
+    void addAllXGettingCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         KeyValue<Integer, Integer> keyValue = KeyValue.New(10, 30);
         ConstHashTable<Integer, Integer> table = ConstHashTable.New(keyValue);
@@ -945,7 +1052,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullAdd() {
+    void nullAdd()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.nullAdd());
 
@@ -954,7 +1062,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullPut() {
+    void nullPut()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.nullPut());
 
@@ -963,7 +1072,8 @@ public class BulkListTest {
     }
 
     @Test
-    void put() {
+    void put()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.put(9));
 
@@ -972,7 +1082,8 @@ public class BulkListTest {
     }
 
     @Test
-    void putAll() {
+    void putAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50};
         bulkList.putAll(integers);
@@ -982,7 +1093,8 @@ public class BulkListTest {
     }
 
     @Test
-    void putAllOffsetLength() {
+    void putAllOffsetLength()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50};
         bulkList.putAll(integers, 2, 2);
@@ -992,7 +1104,8 @@ public class BulkListTest {
     }
 
     @Test
-    void putAllXCollection() {
+    void putAllXCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> listToPut = BulkList.New(10, 20);
 
@@ -1003,7 +1116,8 @@ public class BulkListTest {
     }
 
     @Test
-    void prepend() {
+    void prepend()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.prepend(10);
 
@@ -1012,7 +1126,8 @@ public class BulkListTest {
     }
 
     @Test
-    void prepend_emptyCollection() {
+    void prepend_emptyCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         bulkList.prepend(10);
 
@@ -1021,7 +1136,8 @@ public class BulkListTest {
     }
 
     @Test
-    void prependAll() {
+    void prependAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50};
         bulkList.prependAll(integers);
@@ -1031,7 +1147,8 @@ public class BulkListTest {
     }
 
     @Test
-    void prependAllOffsetLength() {
+    void prependAllOffsetLength()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50};
         bulkList.prependAll(integers, 2, 2);
@@ -1041,7 +1158,8 @@ public class BulkListTest {
     }
 
     @Test
-    void prependXGettingCollection() {
+    void prependXGettingCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> prependList = BulkList.New(10, 20, 30, 40, 50);
 
@@ -1051,7 +1169,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullPrepend() {
+    void nullPrepend()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.nullPrepend();
 
@@ -1060,7 +1179,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullPrependEmpty() {
+    void nullPrependEmpty()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         bulkList.nullPrepend();
 
@@ -1069,7 +1189,8 @@ public class BulkListTest {
     }
 
     @Test
-    void preput() {
+    void preput()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.preput(5));
 
@@ -1078,7 +1199,8 @@ public class BulkListTest {
     }
 
     @Test
-    void preputEmpty() {
+    void preputEmpty()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertTrue(bulkList.preput(5));
 
@@ -1087,7 +1209,8 @@ public class BulkListTest {
     }
 
     @Test
-    void preputAll() {
+    void preputAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30};
         bulkList.preputAll(integers);
@@ -1097,7 +1220,8 @@ public class BulkListTest {
     }
 
     @Test
-    void preputAll_offsetLength() {
+    void preputAll_offsetLength()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50};
         bulkList.preputAll(integers, 2, 2);
@@ -1107,7 +1231,8 @@ public class BulkListTest {
     }
 
     @Test
-    void preputAll_collection() {
+    void preputAll_collection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> preput = BulkList.New(10, 20, 30, 40, 50);
         bulkList.preputAll(preput);
@@ -1117,7 +1242,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullPreput_empty() {
+    void nullPreput_empty()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.nullPreput();
 
@@ -1126,7 +1252,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullPreput() {
+    void nullPreput()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         bulkList.nullPreput();
 
@@ -1135,7 +1262,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insert() {
+    void insert()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.insert(5, 1));
 
@@ -1144,7 +1272,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insert_toEmpty() {
+    void insert_toEmpty()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertTrue(bulkList.insert(0, 1));
 
@@ -1153,7 +1282,8 @@ public class BulkListTest {
     }
 
     @Test
-    void testInsert_outsideListSize() {
+    void testInsert_outsideListSize()
+    {
         // Create a new BulkList with some values
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
 
@@ -1172,7 +1302,8 @@ public class BulkListTest {
 
 
     @Test
-    void insert_newOne() {
+    void insert_newOne()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.insert(8, 10);
 
@@ -1181,7 +1312,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAllElements() {
+    void insertAllElements()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40};
 
@@ -1191,7 +1323,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAllElementsOnEnd() {
+    void insertAllElementsOnEnd()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40};
 
@@ -1201,7 +1334,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAllElementsOnEndMinusOne() {
+    void insertAllElementsOnEndMinusOne()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40};
 
@@ -1211,7 +1345,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAll() {
+    void insertAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1221,7 +1356,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAll_end() {
+    void insertAll_end()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1231,7 +1367,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAll_endNegativ() {
+    void insertAll_endNegativ()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1241,7 +1378,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAllCollection() {
+    void insertAllCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> insert = BulkList.New(10, 20, 30, 40);
 
@@ -1251,7 +1389,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAllCollection_end() {
+    void insertAllCollection_end()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> insert = BulkList.New(10, 20, 30, 40);
 
@@ -1261,7 +1400,8 @@ public class BulkListTest {
     }
 
     @Test
-    void insertAllCollectionNullInside() {
+    void insertAllCollectionNullInside()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> insert = BulkList.New(10, null, 30, 40, null);
 
@@ -1271,7 +1411,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullInsert() {
+    void nullInsert()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.nullInsert(2);
 
@@ -1280,7 +1421,8 @@ public class BulkListTest {
     }
 
     @Test
-    void input() {
+    void input()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.input(5, 50);
 
@@ -1289,7 +1431,8 @@ public class BulkListTest {
     }
 
     @Test
-    void input_end() {
+    void input_end()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.input(8, 50);
 
@@ -1300,7 +1443,8 @@ public class BulkListTest {
     }
 
     @Test
-    void input_first() {
+    void input_first()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.input(0, 50);
 
@@ -1310,13 +1454,15 @@ public class BulkListTest {
     }
 
     @Test
-    void input_outside() {
+    void input_outside()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertThrows(IndexExceededException.class, () -> bulkList.input(10, 50));
     }
 
     @Test
-    void inputAll() {
+    void inputAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30};
 
@@ -1326,7 +1472,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAll_end() {
+    void inputAll_end()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30};
 
@@ -1336,7 +1483,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllOffsetIndex() {
+    void inputAllOffsetIndex()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1346,7 +1494,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllOffsetIndexSameSize() {
+    void inputAllOffsetIndexSameSize()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1356,7 +1505,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllOffsetIndexSameSize_end() {
+    void inputAllOffsetIndexSameSize_end()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1367,7 +1517,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllOffsetIndexMinus() {
+    void inputAllOffsetIndexMinus()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1377,7 +1528,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllOffsetIndexSameSizeMinus() {
+    void inputAllOffsetIndexSameSizeMinus()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1387,7 +1539,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllOffset_EndIndexSameSizeMinus() {
+    void inputAllOffset_EndIndexSameSizeMinus()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
         Integer[] integers = {10, 20, 30, 40, 50, 60, 70, 80};
 
@@ -1398,7 +1551,8 @@ public class BulkListTest {
 
 
     @Test
-    void inputAllCollection() {
+    void inputAllCollection()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> insert = BulkList.New(10, 20, 30, 40);
 
@@ -1408,7 +1562,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllCollection_end() {
+    void inputAllCollection_end()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> insert = BulkList.New(10, 20, 30, 40);
 
@@ -1418,7 +1573,8 @@ public class BulkListTest {
     }
 
     @Test
-    void inputAllCollectionWihoutSizeChange() {
+    void inputAllCollectionWihoutSizeChange()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
         BulkList<Integer> insert = BulkList.New(10, 20);
 
@@ -1428,7 +1584,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullInput() {
+    void nullInput()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.nullInput(3);
 
@@ -1437,14 +1594,16 @@ public class BulkListTest {
     }
 
     @Test
-    void truncate() {
+    void truncate()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.truncate();
         Assertions.assertTrue(bulkList.isEmpty());
     }
 
     @Test
-    void consolidate() {
+    void consolidate()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(0, bulkList.consolidate());
 
@@ -1453,7 +1612,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeOne() {
+    void removeOne()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.removeOne(5));
 
@@ -1464,7 +1624,8 @@ public class BulkListTest {
     }
 
     @Test
-    void retrieve() {
+    void retrieve()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(5, bulkList.retrieve(5));
 
@@ -1475,7 +1636,8 @@ public class BulkListTest {
     }
 
     @Test
-    void retrieveBy() {
+    void retrieveBy()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Predicate<Integer> by = integer -> integer.equals(3);
 
@@ -1489,7 +1651,8 @@ public class BulkListTest {
     }
 
     @Test
-    void nullRemove() {
+    void nullRemove()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, null, 7, null);
         Assertions.assertEquals(2, bulkList.nullRemove());
 
@@ -1498,7 +1661,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeAt() {
+    void removeAt()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> resultToCompare = BulkList.New(1, 2, 3, 5, 6, 7, 8);
         Assertions.assertAll(
@@ -1509,7 +1673,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeByPredicate() {
+    void removeByPredicate()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         Predicate<Integer> removeBy = integer -> integer.equals(2);
         BulkList<Integer> resultToCompare = BulkList.New(1, 3, 1, 3, 1, 3);
@@ -1521,7 +1686,8 @@ public class BulkListTest {
     }
 
     @Test
-    void retainAll() {
+    void retainAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 1, 2, 3, 1, 2, 3);
         BulkList<Integer> retain = BulkList.New(1, 2);
 
@@ -1533,7 +1699,8 @@ public class BulkListTest {
     }
 
     @Test
-    void process() {
+    void process()
+    {
         AtomicInteger atomicInteger = new AtomicInteger(0);
         Consumer<Integer> consumer = atomicInteger::getAndAdd;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
@@ -1542,7 +1709,8 @@ public class BulkListTest {
     }
 
     @Test
-    void moveTo() {
+    void moveTo()
+    {
         AtomicInteger atomicInteger = new AtomicInteger(0);
         Consumer<Integer> consumer = atomicInteger::getAndAdd;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
@@ -1551,7 +1719,8 @@ public class BulkListTest {
     }
 
     @Test
-    void moveSelection() {
+    void moveSelection()
+    {
         AtomicInteger atomicInteger = new AtomicInteger(0);
         Consumer<Integer> consumer = atomicInteger::getAndAdd;
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
@@ -1560,7 +1729,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeAll() {
+    void removeAll()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> bulkListToRemove = BulkList.New(1, 2, 3);
         long l = bulkList.removeAll(bulkListToRemove);
@@ -1573,7 +1743,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeAllRepeat() {
+    void removeAllRepeat()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 1, 2, 3, 4);
         BulkList<Integer> bulkListToRemove = BulkList.New(1, 2, 3);
         long l = bulkList.removeAll(bulkListToRemove);
@@ -1586,7 +1757,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeDuplicatesWithEqualator() {
+    void removeDuplicatesWithEqualator()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 1, 2, 3, 4);
         long l = bulkList.removeDuplicates(Equalator.value());
 
@@ -1598,7 +1770,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeDuplicates() {
+    void removeDuplicates()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 1, 2, 3, 4);
         long l = bulkList.removeDuplicates();
 
@@ -1610,7 +1783,8 @@ public class BulkListTest {
     }
 
     @Test
-    void fetch() {
+    void fetch()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer fetch = bulkList.fetch();
 
@@ -1622,13 +1796,15 @@ public class BulkListTest {
     }
 
     @Test
-    void fetchEmpty() {
+    void fetchEmpty()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertThrows(IndexOutOfBoundsException.class, bulkList::fetch);
     }
 
     @Test
-    void pop() {
+    void pop()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer pop = bulkList.pop();
 
@@ -1640,13 +1816,15 @@ public class BulkListTest {
     }
 
     @Test
-    void popEmpty() {
+    void popEmpty()
+    {
         BulkList<Integer> bulkList = BulkList.New();
         Assertions.assertThrows(IndexOutOfBoundsException.class, bulkList::pop);
     }
 
     @Test
-    void pinch() {
+    void pinch()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer pinch = bulkList.pinch();
 
@@ -1660,7 +1838,8 @@ public class BulkListTest {
     }
 
     @Test
-    void pick() {
+    void pick()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer pick = bulkList.pick();
 
@@ -1674,7 +1853,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeSelection() {
+    void removeSelection()
+    {
         long[] indicies = {1, 2, 3};
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         long l = bulkList.removeSelection(indicies);
@@ -1687,7 +1867,8 @@ public class BulkListTest {
     }
 
     @Test
-    void removeRange() {
+    void removeRange()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.removeRange(1, 4);
 
@@ -1696,13 +1877,15 @@ public class BulkListTest {
     }
 
     @Test
-    void removeRangeOut() {
+    void removeRangeOut()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertThrows(IndexOutOfBoundsException.class, () -> bulkList.removeRange(23, 4));
     }
 
     @Test
-    void retainRange() {
+    void retainRange()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.retainRange(1, 4);
 
@@ -1711,7 +1894,8 @@ public class BulkListTest {
     }
 
     @Test
-    void range() {
+    void range()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         SubList<Integer> range = bulkList.range(1, 4);
 
@@ -1722,7 +1906,8 @@ public class BulkListTest {
     }
 
     @Test
-    void listIterator() {
+    void listIterator()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         ListIterator<Integer> integerListIterator = bulkList.listIterator();
 
@@ -1735,7 +1920,8 @@ public class BulkListTest {
     }
 
     @Test
-    void listIteratorIndex() {
+    void listIteratorIndex()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         BulkList<Integer> resultToCompare = BulkList.New(3, 4, 5, 6, 7, 8);
 
@@ -1750,19 +1936,22 @@ public class BulkListTest {
     }
 
     @Test
-    void listIteratorIndexThrown() {
+    void listIteratorIndexThrown()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertThrows(IndexBoundsException.class, () -> bulkList.listIterator(50));
     }
 
     @Test
-    void atTest() {
+    void atTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertEquals(8, bulkList.at(7));
     }
 
     @Test
-    void setTest() {
+    void setTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         boolean set = bulkList.set(5, 50);
 
@@ -1774,14 +1963,16 @@ public class BulkListTest {
     }
 
     @Test
-    void setIndexBoundsExceptionTest() {
+    void setIndexBoundsExceptionTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertThrows(IndexBoundsException.class, () -> bulkList.set(50, 50));
 
     }
 
     @Test
-    void setGet() {
+    void setGet()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Integer integer = bulkList.setGet(5, 50);
 
@@ -1793,13 +1984,15 @@ public class BulkListTest {
     }
 
     @Test
-    void setGetIndexBoundsException() {
+    void setGetIndexBoundsException()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertThrows(IndexBoundsException.class, () -> bulkList.setGet(50, 50));
     }
 
     @Test
-    void clear() {
+    void clear()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         bulkList.clear();
         Assertions.assertTrue(bulkList.isEmpty());
@@ -1808,7 +2001,8 @@ public class BulkListTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    void equalsTest() {
+    void equalsTest()
+    {
         List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8, 9);
         Assertions.assertTrue(bulkList.equals(list));
@@ -1816,13 +2010,15 @@ public class BulkListTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    void hashCodeTest() {
+    void hashCodeTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Assertions.assertTrue(bulkList.hashCode() != 0);
     }
 
     @Test
-    void supplierTest() {
+    void supplierTest()
+    {
         BulkList.Supplier<Integer, Integer> supplier = new BulkList.Supplier<>(50);
         Assertions.assertEquals(64, supplier.getInitialCapacity());
         BulkList<Integer> apply = supplier.apply(1);
@@ -1830,7 +2026,8 @@ public class BulkListTest {
     }
 
     @Test
-    void collectorTest() {
+    void collectorTest()
+    {
         BulkList<Integer> bulkList = BulkList.New(1, 2, 3, 4, 5, 6, 7, 8);
         Aggregator<Integer, BulkList<Integer>> collector = bulkList.collector();
         collector.accept(9);

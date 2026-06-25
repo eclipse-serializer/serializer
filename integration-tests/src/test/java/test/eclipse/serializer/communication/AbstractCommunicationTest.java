@@ -9,12 +9,10 @@ package test.eclipse.serializer.communication;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
-
-import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -23,16 +21,21 @@ import java.net.ServerSocket;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractCommunicationTest {
+import org.junit.jupiter.api.Assertions;
+
+public abstract class AbstractCommunicationTest
+{
 
     private static final AtomicInteger port = new AtomicInteger(49_500);
 
-    protected static synchronized Integer findPort() {
+    protected static synchronized Integer findPort()
+    {
         return port.addAndGet(3);
     }
 
 
-    public static int findFreePort() {
+    public static int findFreePort()
+    {
         Integer port = null;
         try (ServerSocket serverSocket = new ServerSocket(0)) {
 
@@ -46,7 +49,8 @@ public abstract class AbstractCommunicationTest {
         return port;
     }
 
-    public static boolean isTcpPortAvailable(int port) {
+    public static boolean isTcpPortAvailable(int port)
+    {
         try (ServerSocket serverSocket = new ServerSocket()) {
             // setReuseAddress(false) is required only on OSX,
             // otherwise the code will not work correctly on that platform
@@ -60,7 +64,8 @@ public abstract class AbstractCommunicationTest {
         }
     }
 
-    protected void waitForPortToBeAvailable(int port) throws IOException {
+    protected void waitForPortToBeAvailable(int port) throws IOException
+    {
         boolean scanning = true;
         int counter = 0;
         SocketChannel channel = null;
@@ -79,8 +84,7 @@ public abstract class AbstractCommunicationTest {
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
-            }
-            finally {
+            } finally {
                 if (channel != null) {
                     channel.close();
                 }
@@ -90,10 +94,12 @@ public abstract class AbstractCommunicationTest {
 
     /**
      * Utility for testing purpose only, make a connection and do not close the socket after.
+     *
      * @param host
      * @param port
      */
-    protected static void waitForPortToBeAvailableWithoutClose(String host, int port) {
+    protected static void waitForPortToBeAvailableWithoutClose(String host, int port)
+    {
         boolean scanning = true;
         int counter = 0;
         while (scanning) {

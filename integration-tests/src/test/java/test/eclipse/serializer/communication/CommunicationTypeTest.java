@@ -9,7 +9,7 @@ package test.eclipse.serializer.communication;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -24,8 +24,10 @@ import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
 import org.eclipse.serializer.communication.types.ComChannel;
 import org.eclipse.serializer.communication.types.ComClient;
 import org.eclipse.serializer.communication.types.ComHost;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -33,7 +35,8 @@ import test.eclipse.serializer.fixtures.TypeEnum;
 import test.eclipse.serializer.fixtures.TypeRegister;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CommunicationTypeTest extends AbstractCommunicationTest {
+public class CommunicationTypeTest extends AbstractCommunicationTest
+{
 
     private ComHost<?> host;
     private Thread t;
@@ -42,7 +45,8 @@ public class CommunicationTypeTest extends AbstractCommunicationTest {
     private static boolean firstTestSuccessful = false;
 
     //@Test
-    public void receiveSimpleTypeTest() {
+    public void receiveSimpleTypeTest()
+    {
         Integer port = findPort();
         System.out.println(port);
         startServer(TypeEnum.Java_util_Calendar, port);
@@ -63,12 +67,12 @@ public class CommunicationTypeTest extends AbstractCommunicationTest {
     }
 
 
-
     //@Test
     //@Order(1)
     //@RepeatedTest(1000)
 
-    public void receiveTypeRegisterTest() {
+    public void receiveTypeRegisterTest()
+    {
 
         Integer port = findFreePort();
         //System.out.println(port);
@@ -88,7 +92,7 @@ public class CommunicationTypeTest extends AbstractCommunicationTest {
 
         Assertions.assertNotNull(o);
         typeRegister.proveData(transferedTypeRegister,
-				"hashTableMSData", "identityHashMapData", "lazyData", "calendarApiData");
+                "hashTableMSData", "identityHashMapData", "lazyData", "calendarApiData");
 
         firstTestSuccessful = true;
     }
@@ -97,7 +101,8 @@ public class CommunicationTypeTest extends AbstractCommunicationTest {
     @EnumSource(value = TypeEnum.class)
     //@Order(2)
     //@DisabledIf("firstTestSuccessful")
-    public void receiveTypeTest(TypeEnum type) {
+    public void receiveTypeTest(TypeEnum type)
+    {
 
         Integer port = findFreePort();
         //System.out.println(port);
@@ -123,7 +128,8 @@ public class CommunicationTypeTest extends AbstractCommunicationTest {
         return firstTestSuccessful && !(day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY);
     }
 
-    public void startServer(Object type, Integer port) {
+    public void startServer(Object type, Integer port)
+    {
 
         t = new Thread(() -> {
             host = ComBinaryDynamic.Foundation()
@@ -148,7 +154,8 @@ public class CommunicationTypeTest extends AbstractCommunicationTest {
     }
 
     @AfterEach
-    public void stopServer() throws InterruptedException {
+    public void stopServer() throws InterruptedException
+    {
         try {
             host.stop();
         } catch (Exception e) {

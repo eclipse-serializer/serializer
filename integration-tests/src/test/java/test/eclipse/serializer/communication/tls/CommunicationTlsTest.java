@@ -9,35 +9,28 @@ package test.eclipse.serializer.communication.tls;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
 
+import java.nio.ByteOrder;
+import java.nio.file.Paths;
+import java.time.Duration;
+
 import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
-import org.eclipse.serializer.communication.tls.ComTLSConnectionHandler;
-import org.eclipse.serializer.communication.tls.TLSKeyManagerProvider;
-import org.eclipse.serializer.communication.tls.TLSTrustManagerProvider;
-import org.eclipse.serializer.communication.tls.TLSParametersProvider;
-import org.eclipse.serializer.communication.tls.SecureRandomProvider;
+import org.eclipse.serializer.communication.tls.*;
 import org.eclipse.serializer.communication.types.ComChannel;
 import org.eclipse.serializer.communication.types.ComClient;
 import org.eclipse.serializer.communication.types.ComHost;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import test.eclipse.serializer.communication.AbstractCommunicationTest;
 
-import java.io.File;
-import java.nio.ByteOrder;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.Objects;
-
-public class CommunicationTlsTest extends AbstractSecurityComTest {
+public class CommunicationTlsTest extends AbstractSecurityComTest
+{
 
     private ComHost<?> host;
     private Thread t;
@@ -48,7 +41,8 @@ public class CommunicationTlsTest extends AbstractSecurityComTest {
 
 
     @Test
-    public void receiveBasicObjectTest() {
+    public void receiveBasicObjectTest()
+    {
 
         String pksPath = findPksPath();
 
@@ -68,7 +62,8 @@ public class CommunicationTlsTest extends AbstractSecurityComTest {
 
     }
 
-    private ComClient<?> prepareClient(String pksPath) {
+    private ComClient<?> prepareClient(String pksPath)
+    {
         return ComBinaryDynamic.Foundation()
                 .setConnectionHandler(ComTLSConnectionHandler.New(
                         new TLSKeyManagerProvider.PKCS12(Paths.get(pksPath), password),
@@ -82,7 +77,8 @@ public class CommunicationTlsTest extends AbstractSecurityComTest {
 
 
     @BeforeEach
-    public void startServer() {
+    public void startServer()
+    {
 
         String pksPath = findPksPath();
 
@@ -117,7 +113,8 @@ public class CommunicationTlsTest extends AbstractSecurityComTest {
     }
 
     @AfterEach
-    public void stopServer() throws InterruptedException {
+    public void stopServer() throws InterruptedException
+    {
         //System.out.println("is running: " +  host.isRunning());
         try {
             host.stop();

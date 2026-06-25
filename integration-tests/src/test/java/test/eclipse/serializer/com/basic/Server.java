@@ -9,7 +9,7 @@ package test.eclipse.serializer.com.basic;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -18,20 +18,21 @@ package test.eclipse.serializer.com.basic;
 import org.eclipse.serializer.communication.binarydynamic.ComBinaryDynamic;
 import org.eclipse.serializer.communication.types.ComHost;
 
-import java.nio.ByteOrder;
-
-public class Server {
+public class Server
+{
 
     private static int port = 30_000;
     private static ComHost<?> host;
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         String value = "ahoj";
         startServer(value);
     }
 
 
-    public static void startServer(Object original) {
+    public static void startServer(Object original)
+    {
 
         host = ComBinaryDynamic.Foundation()
                 .setPort(port)

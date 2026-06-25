@@ -9,7 +9,7 @@ package org.eclipse.serializer.collections;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -19,10 +19,12 @@ import java.util.Comparator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class XSortTest {
+public class XSortTest
+{
 
     @Test
-    void compare_samevalues() {
+    void compare_samevalues()
+    {
         Assertions.assertAll(
                 () -> Assertions.assertEquals(0, XSort.compare(true, true)),
                 () -> Assertions.assertEquals(0, XSort.compare(Byte.valueOf("1"), Byte.valueOf("1"))),
@@ -35,7 +37,8 @@ public class XSortTest {
     }
 
     @Test
-    void compare_differentvalues() {
+    void compare_differentvalues()
+    {
         Assertions.assertAll(
                 () -> Assertions.assertEquals(-1, XSort.compare(false, true)),
                 () -> Assertions.assertEquals(-1, XSort.compare(Byte.valueOf("2"), Byte.valueOf("5"))),
@@ -48,24 +51,28 @@ public class XSortTest {
     }
 
     @Test
-    void compareLength() {
+    void compareLength()
+    {
         Assertions.assertEquals(XSort.compareLength("String1", "String2"), 0);
     }
 
     @Test
-    void compareIdentityHash() {
+    void compareIdentityHash()
+    {
         Assertions.assertEquals(XSort.compareIdentityHash(1, 1), 0);
     }
 
     @Test
-    void reverse() {
+    void reverse()
+    {
         Comparator<Integer> comparator = Integer::compareTo;
 
         Assertions.assertNotNull(XSort.reverse(comparator));
     }
 
     @Test
-    void insertionsort_boolean() {
+    void insertionsort_boolean()
+    {
         boolean[] input = new boolean[]{false, true, false, true, false};
         XSort.insertionsort(input);
 
@@ -74,7 +81,8 @@ public class XSortTest {
     }
 
     @Test
-    void insertionsort_byte() {
+    void insertionsort_byte()
+    {
         byte[] input = new byte[]{5, 2, 9, 1, 8};
         XSort.insertionsort(input);
 
@@ -83,7 +91,8 @@ public class XSortTest {
     }
 
     @Test
-    void insertionsort_short() {
+    void insertionsort_short()
+    {
         short[] input = new short[]{5, 2, 9, 1, 8};
         XSort.insertionsort(input);
 
@@ -92,7 +101,8 @@ public class XSortTest {
     }
 
     @Test
-    void insertionsort_int() {
+    void insertionsort_int()
+    {
         int[] input = new int[]{5, 2, 9, 1, 8};
         XSort.insertionsort(input);
 
@@ -105,9 +115,9 @@ public class XSortTest {
     {
         int[] input = new int[]{5, 2, 9, 1, 8};
 
-        XSort.insertionsort(input,2,5);
+        XSort.insertionsort(input, 2, 5);
 
-        int[] expected  = new int[]{5, 2, 1, 8, 9};
+        int[] expected = new int[]{5, 2, 1, 8, 9};
         Assertions.assertArrayEquals(expected, input);
     }
 
@@ -116,14 +126,15 @@ public class XSortTest {
     {
         Integer[] input = new Integer[]{5, 2, 9, 1, 8};
 
-        XSort.insertionsort(input,Comparator.naturalOrder(), 2,5);
+        XSort.insertionsort(input, Comparator.naturalOrder(), 2, 5);
 
-        Integer[] expected  = new Integer[]{5, 2, 1, 8, 9};
+        Integer[] expected = new Integer[]{5, 2, 1, 8, 9};
         Assertions.assertArrayEquals(expected, input);
     }
 
     @Test
-    void insertionsort_long() {
+    void insertionsort_long()
+    {
         long[] input = new long[]{5, 2, 9, 1, 8};
         XSort.insertionsort(input);
 
@@ -132,7 +143,8 @@ public class XSortTest {
     }
 
     @Test
-    void insertionsort_float() {
+    void insertionsort_float()
+    {
         float[] input = new float[]{5, 2, 9, 1, 8};
         XSort.insertionsort(input);
 
@@ -141,7 +153,8 @@ public class XSortTest {
     }
 
     @Test
-    void insertionsort_double() {
+    void insertionsort_double()
+    {
         double[] input = new double[]{5, 2, 9, 1, 8};
         XSort.insertionsort(input);
 
@@ -150,7 +163,8 @@ public class XSortTest {
     }
 
     @Test
-    void insertionsort_char() {
+    void insertionsort_char()
+    {
         char[] input = new char[]{5, 2, 9, 1, 8};
         XSort.insertionsort(input);
 
@@ -159,7 +173,8 @@ public class XSortTest {
     }
 
     @Test
-    void insertionsort_values() {
+    void insertionsort_values()
+    {
         Integer[] values = new Integer[]{5, 1, 3, 6, 4, 2};
 
         XSort.insertionsort(values, Integer::compareTo);
@@ -168,7 +183,8 @@ public class XSortTest {
     }
 
     @Test
-    void sort_completeRange() {
+    void sort_completeRange()
+    {
         Integer[] input = {5, 4, 3, 2, 1};
 
         XSort.sort(input, Comparator.naturalOrder());
@@ -178,7 +194,8 @@ public class XSortTest {
     }
 
     @Test
-    void sort_subRange() {
+    void sort_subRange()
+    {
         Integer[] input = {4, 2, 3, 1, 5};
 
         XSort.sort(input, 1, 4, Comparator.naturalOrder());
