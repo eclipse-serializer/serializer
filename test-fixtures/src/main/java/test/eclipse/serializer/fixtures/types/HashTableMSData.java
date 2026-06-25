@@ -9,24 +9,25 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.eclipse.serializer.collections.HashTable;
 import org.junit.jupiter.api.Assertions;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-
-public class HashTableMSData implements BinaryHandlerTestData {
+public class HashTableMSData implements BinaryHandlerTestData
+{
     private HashTable<Integer, Integer> intTable = createEmptyIntMap();
     private HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> threeTable = createEmptyThreeMap();
     private HashTable<Integer, PrimitiveTypes> primitiveTypeHashTable = HashTable.New();
 
     @Override
-    public HashTableMSData fillSampleData() {
+    public HashTableMSData fillSampleData()
+    {
         intTable = createIntMap();
         threeTable = createThreeMap();
         primitiveTypeHashTable = HashTable.New();
@@ -37,18 +38,22 @@ public class HashTableMSData implements BinaryHandlerTestData {
     }
 
 
-    HashTable<Integer, Integer> createEmptyIntMap() {
+    HashTable<Integer, Integer> createEmptyIntMap()
+    {
         HashTable<Integer, Integer> intMap = HashTable.New();
         intMap.put(100, 0);
         return intMap;
     }
-    HashTable<Integer, Integer> createIntMap() {
+
+    HashTable<Integer, Integer> createIntMap()
+    {
         HashTable<Integer, Integer> intMap = HashTable.New();
         intMap.put(100, 6);
         return intMap;
     }
 
-    HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> createEmptyThreeMap() {
+    HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> createEmptyThreeMap()
+    {
         HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> map = HashTable.New();
 
         HashTable<Integer, PrimitiveTypes> primitive = HashTable.New();
@@ -62,7 +67,8 @@ public class HashTableMSData implements BinaryHandlerTestData {
         return map;
     }
 
-    HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> createThreeMap() {
+    HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> createThreeMap()
+    {
         HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> map = HashTable.New();
 
         HashTable<Integer, PrimitiveTypes> primitive = HashTable.New();
@@ -77,22 +83,26 @@ public class HashTableMSData implements BinaryHandlerTestData {
         return map;
     }
 
-    HashTable<Integer, Integer> getIntTable() {
+    HashTable<Integer, Integer> getIntTable()
+    {
         return intTable;
     }
 
-    HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> getThreeTable() {
+    HashTable<Integer, HashTable<Integer, HashTable<Integer, PrimitiveTypes>>> getThreeTable()
+    {
         return threeTable;
     }
 
-    HashTable<Integer, PrimitiveTypes> getPrimitiveTypeHashTable() {
+    HashTable<Integer, PrimitiveTypes> getPrimitiveTypeHashTable()
+    {
         return primitiveTypeHashTable;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
-        HashTableMSData copy = (HashTableMSData)o;
+        HashTableMSData copy = (HashTableMSData) o;
         assertAll("Array list Tests", //
                 () -> assertIterableEquals(this.getIntTable().values(), copy.getIntTable().values()), //
                 () -> assertEquals(this.getThreeTable().get(100).get(100).get(100), copy.getThreeTable().get(100).get(100).get(100)),

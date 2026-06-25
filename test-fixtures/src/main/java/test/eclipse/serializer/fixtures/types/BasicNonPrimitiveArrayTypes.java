@@ -9,7 +9,7 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -17,7 +17,8 @@ package test.eclipse.serializer.fixtures.types;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BasicNonPrimitiveArrayTypes implements BinaryHandlerTestData {
+public class BasicNonPrimitiveArrayTypes implements BinaryHandlerTestData
+{
     private static final Byte SAMPLE_BYTE = 100;
     private static final Byte SAMPLE_BYTE_2 = 127;
     private static final Short SAMPLE_SHORT = 50;
@@ -65,7 +66,8 @@ public class BasicNonPrimitiveArrayTypes implements BinaryHandlerTestData {
     private Byte[] emptyByteArray;
     private Integer[] largeIntArray;
 
-    public BasicNonPrimitiveArrayTypes() {
+    public BasicNonPrimitiveArrayTypes()
+    {
         byteValues = new Byte[1];
         shortValues = new Short[1];
         intValues = new Integer[1];
@@ -86,7 +88,8 @@ public class BasicNonPrimitiveArrayTypes implements BinaryHandlerTestData {
     }
 
     @Override
-    public BasicNonPrimitiveArrayTypes fillSampleData() {
+    public BasicNonPrimitiveArrayTypes fillSampleData()
+    {
         byteValues = new Byte[]{SAMPLE_BYTE, SAMPLE_BYTE_2};
         shortValues = new Short[]{SAMPLE_SHORT, SAMPLE_SHORT_2};
         intValues = new Integer[]{SAMPLE_INT, SAMPLE_INT_2};
@@ -113,9 +116,9 @@ public class BasicNonPrimitiveArrayTypes implements BinaryHandlerTestData {
         floatValuesSpecial = new Float[]{Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY};
         doubleValuesSpecial = new Double[]{Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
         charValuesWithNulls = new Character[]{null, SAMPLE_CHAR};
-        objectValuesHetero = new Object[]{"str", 123, null, new Integer[]{1,2}};
-        jaggedIntMatrix = new Integer[][]{{1,2}, {3}, {}}; // rows of varying lengths
-        matrixWithNullRow = new Integer[][]{{1,2}, null, {3,4}}; // middle row null
+        objectValuesHetero = new Object[]{"str", 123, null, new Integer[]{1, 2}};
+        jaggedIntMatrix = new Integer[][]{{1, 2}, {3}, {}}; // rows of varying lengths
+        matrixWithNullRow = new Integer[][]{{1, 2}, null, {3, 4}}; // middle row null
         emptyByteArray = new Byte[]{};
         largeIntArray = new Integer[512];
         for (int i = 0; i < largeIntArray.length; i++) largeIntArray[i] = i;
@@ -124,7 +127,8 @@ public class BasicNonPrimitiveArrayTypes implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         byteValues = new Byte[]{SAMPLE_BYTE_2, SAMPLE_BYTE};
         shortValues = new Short[]{SAMPLE_SHORT_2, SAMPLE_SHORT_2};
         intValues = new Integer[]{SAMPLE_INT_2, SAMPLE_INT_2};
@@ -151,104 +155,162 @@ public class BasicNonPrimitiveArrayTypes implements BinaryHandlerTestData {
         floatValuesSpecial = new Float[]{Float.NaN, Float.NaN};
         doubleValuesSpecial = new Double[]{Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
         charValuesWithNulls = new Character[]{SAMPLE_CHAR, null};
-        objectValuesHetero = new Object[]{"changed", 456, new Integer[]{3,4}};
-        jaggedIntMatrix = new Integer[][]{{9}, {8,7,6}};
-        matrixWithNullRow = new Integer[][]{{5,6}, {7}, {8,9}}; // remove null row
+        objectValuesHetero = new Object[]{"changed", 456, new Integer[]{3, 4}};
+        jaggedIntMatrix = new Integer[][]{{9}, {8, 7, 6}};
+        matrixWithNullRow = new Integer[][]{{5, 6}, {7}, {8, 9}}; // remove null row
         emptyByteArray = new Byte[]{}; // still empty
         if (largeIntArray != null && largeIntArray.length > 0) largeIntArray[0] = -999;
 
         return this;
     }
 
-    public Byte[] getByteValues() {
+    public Byte[] getByteValues()
+    {
         return byteValues;
     }
 
-    public Short[] getShortValues() {
+    public Short[] getShortValues()
+    {
         return shortValues;
     }
 
-    public Integer[] getIntValues() {
+    public Integer[] getIntValues()
+    {
         return intValues;
     }
 
-    public Long[] getLongValues() {
+    public Long[] getLongValues()
+    {
         return longValues;
     }
 
-    public Float[] getFloatValues() {
+    public Float[] getFloatValues()
+    {
         return floatValues;
     }
 
-    public Double[] getDoubleValues() {
+    public Double[] getDoubleValues()
+    {
         return doubleValues;
     }
 
-    public Boolean[] getBooleanValues() {
+    public Boolean[] getBooleanValues()
+    {
         return booleanValues;
     }
 
-    public Character[] getCharValues() {
+    public Character[] getCharValues()
+    {
         return charValues;
     }
 
-    public Byte[][] getByteValueMatrix() {
+    public Byte[][] getByteValueMatrix()
+    {
         return byteValueMatrix;
     }
 
-    public Short[][] getShortValueMatrix() {
+    public Short[][] getShortValueMatrix()
+    {
         return shortValueMatrix;
     }
 
-    public Integer[][] getIntValueMatrix() {
+    public Integer[][] getIntValueMatrix()
+    {
         return intValueMatrix;
     }
 
-    public Long[][] getLongValueMatrix() {
+    public Long[][] getLongValueMatrix()
+    {
         return longValueMatrix;
     }
 
-    public Float[][] getFloatValueMatrix() {
+    public Float[][] getFloatValueMatrix()
+    {
         return floatValueMatrix;
     }
 
-    public Double[][] getDoubleValueMatrix() {
+    public Double[][] getDoubleValueMatrix()
+    {
         return doubleValueMatrix;
     }
 
-    public Boolean[][] getBooleanValueMatrix() {
+    public Boolean[][] getBooleanValueMatrix()
+    {
         return booleanValueMatrix;
     }
 
-    public Character[][] getCharValueMatrix() {
+    public Character[][] getCharValueMatrix()
+    {
         return charValueMatrix;
     }
 
-    public Object[] getObjectValues() {
+    public Object[] getObjectValues()
+    {
         return objectValues;
     }
 
-    public Object[][] getObjectValueMatrix() {
+    public Object[][] getObjectValueMatrix()
+    {
         return objectValueMatrix;
     }
 
     // getters for corner-case fields
-    public Byte[] getByteValuesWithNulls() { return byteValuesWithNulls; }
-    public Integer[] getIntValuesDuplicates() { return intValuesDuplicates; }
-    public Float[] getFloatValuesSpecial() { return floatValuesSpecial; }
-    public Double[] getDoubleValuesSpecial() { return doubleValuesSpecial; }
-    public Character[] getCharValuesWithNulls() { return charValuesWithNulls; }
-    public Object[] getObjectValuesHetero() { return objectValuesHetero; }
-    public Integer[][] getJaggedIntMatrix() { return jaggedIntMatrix; }
-    public Integer[][] getMatrixWithNullRow() { return matrixWithNullRow; }
-    public Byte[] getEmptyByteArray() { return emptyByteArray; }
-    public Integer[] getLargeIntArray() { return largeIntArray; }
+    public Byte[] getByteValuesWithNulls()
+    {
+        return byteValuesWithNulls;
+    }
+
+    public Integer[] getIntValuesDuplicates()
+    {
+        return intValuesDuplicates;
+    }
+
+    public Float[] getFloatValuesSpecial()
+    {
+        return floatValuesSpecial;
+    }
+
+    public Double[] getDoubleValuesSpecial()
+    {
+        return doubleValuesSpecial;
+    }
+
+    public Character[] getCharValuesWithNulls()
+    {
+        return charValuesWithNulls;
+    }
+
+    public Object[] getObjectValuesHetero()
+    {
+        return objectValuesHetero;
+    }
+
+    public Integer[][] getJaggedIntMatrix()
+    {
+        return jaggedIntMatrix;
+    }
+
+    public Integer[][] getMatrixWithNullRow()
+    {
+        return matrixWithNullRow;
+    }
+
+    public Byte[] getEmptyByteArray()
+    {
+        return emptyByteArray;
+    }
+
+    public Integer[] getLargeIntArray()
+    {
+        return largeIntArray;
+    }
 
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         assertNotNull(o);
-        BasicNonPrimitiveArrayTypes copy = (BasicNonPrimitiveArrayTypes)  o;
+        BasicNonPrimitiveArrayTypes copy = (BasicNonPrimitiveArrayTypes) o;
         assertAll("Primitive Types tests", //
                 () -> assertArrayEquals(this.getByteValues(), copy.getByteValues(), "Byte[]"),
                 () -> assertArrayEquals(this.getShortValues(), copy.getShortValues(), "Short[]"),

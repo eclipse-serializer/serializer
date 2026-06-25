@@ -9,13 +9,10 @@ package test.eclipse.serializer.fixtures;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
-
-import org.opentest4j.MultipleFailuresError;
-import test.eclipse.serializer.fixtures.types.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -25,7 +22,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class TypeRegister {
+import org.opentest4j.MultipleFailuresError;
+
+import test.eclipse.serializer.fixtures.types.*;
+
+public class TypeRegister
+{
     final private PrimitiveTypes primitiveTypes = new PrimitiveTypes();
     final private ArrayDequeData arrayDeque = new ArrayDequeData();
     final private ArrayListData arrayListData = new ArrayListData();
@@ -94,7 +96,8 @@ public class TypeRegister {
     final private LocalDateData localDateData = new LocalDateData();
 
 
-    public TypeRegister fillSampleDate() {
+    public TypeRegister fillSampleDate()
+    {
         Field[] fields = this.getClass().getDeclaredFields();
         Arrays.asList(fields).forEach(f -> {
             f.setAccessible(true);
@@ -109,7 +112,8 @@ public class TypeRegister {
         return this;
     }
 
-    public Object getFieldsByName(String name) {
+    public Object getFieldsByName(String name)
+    {
         Field[] fields = this.getClass().getDeclaredFields();
 
         for (Field field : fields) {
@@ -125,12 +129,13 @@ public class TypeRegister {
         throw new IllegalArgumentException(name);
     }
 
-    public void proveData(TypeRegister copy, String... ignore) {
+    public void proveData(TypeRegister copy, String... ignore)
+    {
         List<Throwable> exceptionList = new ArrayList<>();
         Field[] fields = this.getClass().getDeclaredFields();
         List<String> ignoreList = Arrays.asList(ignore);
-        for (Field f : fields){
-            if (ignoreList.contains(f.getName()) ) {
+        for (Field f : fields) {
+            if (ignoreList.contains(f.getName())) {
                 continue;
             }
             f.setAccessible(true);
@@ -140,7 +145,8 @@ public class TypeRegister {
                 Object copyData = field.get(copy);
                 Method fillMethod = data.getClass().getDeclaredMethod("proveResults", Object.class);
                 fillMethod.invoke(data, copyData);
-            } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | NoSuchFieldException e) {
+            } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException |
+                     NoSuchFieldException e) {
                 exceptionList.add(e);
                 exceptionList.add(new RuntimeException(String.valueOf(f)));
             }
@@ -154,244 +160,304 @@ public class TypeRegister {
         }
     }
 
-    public void proveData(TypeRegister copy) {
+    public void proveData(TypeRegister copy)
+    {
         proveData(copy, new String[]{});
     }
 
 
-    public PrimitiveTypes getPrimitiveTypes() {
+    public PrimitiveTypes getPrimitiveTypes()
+    {
         return primitiveTypes;
     }
 
-    public ArrayDequeData getArrayDeque() {
+    public ArrayDequeData getArrayDeque()
+    {
         return arrayDeque;
     }
 
-    public ArrayListData getArrayListData() {
+    public ArrayListData getArrayListData()
+    {
         return arrayListData;
     }
 
-    public BasicNonPrimitiveArrayTypes getBasicNonPrimitiveArrayTypes() {
+    public BasicNonPrimitiveArrayTypes getBasicNonPrimitiveArrayTypes()
+    {
         return basicNonPrimitiveArrayTypes;
     }
 
-    public BasicNonPrimitive getBasicNonPrimitive() {
+    public BasicNonPrimitive getBasicNonPrimitive()
+    {
         return basicNonPrimitive;
     }
 
-    public BigDecimalData getBigDecimalData() {
+    public BigDecimalData getBigDecimalData()
+    {
         return bigDecimalData;
     }
 
-    public BigIntegerData getBigIntegerData() {
+    public BigIntegerData getBigIntegerData()
+    {
         return bigIntegerData;
     }
 
-    public BulkListData getBulkListData() {
+    public BulkListData getBulkListData()
+    {
         return bulkListData;
     }
 
-    public ClassTypeData getClassTypeData() {
+    public ClassTypeData getClassTypeData()
+    {
         return classTypeData;
     }
 
-    public ConcurrentHashMapData getConcurrentHashMapData() {
+    public ConcurrentHashMapData getConcurrentHashMapData()
+    {
         return concurrentHashMapData;
     }
 
-    public ConcurrentLinkedDequeData getConcurrentLinkedDequeData() {
+    public ConcurrentLinkedDequeData getConcurrentLinkedDequeData()
+    {
         return concurrentLinkedDequeData;
     }
 
-    public ConcurrentLinkedQueueData getConcurrentLinkedQueueData() {
+    public ConcurrentLinkedQueueData getConcurrentLinkedQueueData()
+    {
         return concurrentLinkedQueueData;
     }
 
-    public ConcurrentSkipListMapData getConcurrentSkipListMapData() {
+    public ConcurrentSkipListMapData getConcurrentSkipListMapData()
+    {
         return concurrentSkipListMapData;
     }
 
-    public ConcurrentSkipListSetData getConcurrentSkipListSetData() {
+    public ConcurrentSkipListSetData getConcurrentSkipListSetData()
+    {
         return concurrentSkipListSetData;
     }
 
-    public ConstHashEnumData getConstHashEnumData() {
+    public ConstHashEnumData getConstHashEnumData()
+    {
         return constHashEnumData;
     }
 
-    public ConstHashTableData getConstHashTableData() {
+    public ConstHashTableData getConstHashTableData()
+    {
         return constHashTableData;
     }
 
-    public ConstListData getConstListData() {
+    public ConstListData getConstListData()
+    {
         return constListData;
     }
 
-    public CopyOnWriteArrayListData getCopyOnWriteArrayListData() {
+    public CopyOnWriteArrayListData getCopyOnWriteArrayListData()
+    {
         return copyOnWriteArrayListData;
     }
 
-    public CurrencyData getCurrencyData() {
+    public CurrencyData getCurrencyData()
+    {
         return currencyData;
     }
 
-    public CustomEnumTrivialData getCustomEnumTrivialData() {
+    public CustomEnumTrivialData getCustomEnumTrivialData()
+    {
         return customEnumTrivialData;
     }
 
-    public DateData getDateData() {
+    public DateData getDateData()
+    {
         return dateData;
     }
 
-    public EqBulkListData getEqBulkListData() {
+    public EqBulkListData getEqBulkListData()
+    {
         return eqBulkListData;
     }
 
-    public EqConstHashEnumData getEqConstHashEnumData() {
+    public EqConstHashEnumData getEqConstHashEnumData()
+    {
         return eqConstHashEnumData;
     }
 
-    public EqConstHashTableData getEqConstHashTableData() {
+    public EqConstHashTableData getEqConstHashTableData()
+    {
         return eqConstHashTableData;
     }
 
-    public EqHashEnumData getEqHashEnumData() {
+    public EqHashEnumData getEqHashEnumData()
+    {
         return eqHashEnumData;
     }
 
-    public FileData getFileData() {
+    public FileData getFileData()
+    {
         return fileData;
     }
 
-    public HashEnumData getHashEnumData() {
+    public HashEnumData getHashEnumData()
+    {
         return hashEnumData;
     }
 
-    public HashMapData getHashMapData() {
+    public HashMapData getHashMapData()
+    {
         return hashMapData;
     }
 
-    public HashSetData getHashSetData() {
+    public HashSetData getHashSetData()
+    {
         return hashSetData;
     }
 
-    public HashtableData getHashtableData() {
+    public HashtableData getHashtableData()
+    {
         return hashtableData;
     }
 
-    public HashTableMSData getHashTableMSData() {
+    public HashTableMSData getHashTableMSData()
+    {
         return hashTableMSData;
     }
 
-    public IdentityHashMapData getIdentityHashMapData() {
+    public IdentityHashMapData getIdentityHashMapData()
+    {
         return identityHashMapData;
     }
 
-    public IntetAddressData getIntetAddressData() {
+    public IntetAddressData getIntetAddressData()
+    {
         return intetAddressData;
     }
 
-    public LazyData getLazyData() {
+    public LazyData getLazyData()
+    {
         return lazyData;
     }
 
-    public LimitListData getLimitListData() {
+    public LimitListData getLimitListData()
+    {
         return limitListData;
     }
 
-    public LinkedHashMapData getLinkedHashMapData() {
+    public LinkedHashMapData getLinkedHashMapData()
+    {
         return linkedHashMapData;
     }
 
-    public LinkedHashSetData getLinkedHashSetData() {
+    public LinkedHashSetData getLinkedHashSetData()
+    {
         return linkedHashSetData;
     }
 
-    public LinkedListData getLinkedListData() {
+    public LinkedListData getLinkedListData()
+    {
         return linkedListData;
     }
 
-    public OptionalDoubleData getOptionalDoubleData() {
+    public OptionalDoubleData getOptionalDoubleData()
+    {
         return optionalDoubleData;
     }
 
-    public OptionalIntData getOptionalIntData() {
+    public OptionalIntData getOptionalIntData()
+    {
         return optionalIntData;
     }
 
-    public OptionalLongData getOptionalLongData() {
+    public OptionalLongData getOptionalLongData()
+    {
         return optionalLongData;
     }
 
-    public PathData getPathData() {
+    public PathData getPathData()
+    {
         return pathData;
     }
 
-    public RootsData getRootsData() {
+    public RootsData getRootsData()
+    {
         return rootsData;
     }
 
-    public PriorityQueueData getPriorityQueueData() {
+    public PriorityQueueData getPriorityQueueData()
+    {
         return priorityQueueData;
     }
 
-    public PropertiesData getPropertiesData() {
+    public PropertiesData getPropertiesData()
+    {
         return propertiesData;
     }
 
-    public RegexPatternData getRegexPatternData() {
+    public RegexPatternData getRegexPatternData()
+    {
         return regexPatternData;
     }
 
-    public SocketAddressData getSocketAddressData() {
+    public SocketAddressData getSocketAddressData()
+    {
         return socketAddressData;
     }
 
-    public StackData getStackData() {
+    public StackData getStackData()
+    {
         return stackData;
     }
 
-    public StringBufferData getStringBufferData() {
+    public StringBufferData getStringBufferData()
+    {
         return stringBufferData;
     }
 
-    public StringBuilderData getStringBuilderData() {
+    public StringBuilderData getStringBuilderData()
+    {
         return stringBuilderData;
     }
 
-    public SubstituterDefaultData getSubstituterDefaultData() {
+    public SubstituterDefaultData getSubstituterDefaultData()
+    {
         return substituterDefaultData;
     }
 
-    public TreeMapData getTreeMapData() {
+    public TreeMapData getTreeMapData()
+    {
         return treeMapData;
     }
 
-    public TreeSetData getTreeSetData() {
+    public TreeSetData getTreeSetData()
+    {
         return treeSetData;
     }
 
-    public VectorData getVectorData() {
+    public VectorData getVectorData()
+    {
         return vectorData;
     }
 
-    public WeakHashMapData getWeakHashMapData() {
+    public WeakHashMapData getWeakHashMapData()
+    {
         return weakHashMapData;
     }
 
-    public URIData getUriData() {
+    public URIData getUriData()
+    {
         return uriData;
     }
 
-    public JavaNetURLData getJavaNetURLData() {
+    public JavaNetURLData getJavaNetURLData()
+    {
         return javaNetURLData;
     }
 
-    public UUIDData getUuidData() {
+    public UUIDData getUuidData()
+    {
         return uuidData;
     }
 
-    public PrimitiveArrayTypes getPrimitiveArrayTypes() {
+    public PrimitiveArrayTypes getPrimitiveArrayTypes()
+    {
         return primitiveArrayTypes;
     }
 
@@ -400,15 +466,18 @@ public class TypeRegister {
         return throwableData;
     }
 
-    public CalendarApiData getCalendarApiData() {
+    public CalendarApiData getCalendarApiData()
+    {
         return calendarApiData;
     }
 
-    public SqlCalendarData getSqlCalendarData() {
+    public SqlCalendarData getSqlCalendarData()
+    {
         return sqlCalendarData;
     }
 
-    public AtomicPrimitiveData getAtomicPrimitiveData() {
+    public AtomicPrimitiveData getAtomicPrimitiveData()
+    {
         return atomicPrimitiveData;
     }
 

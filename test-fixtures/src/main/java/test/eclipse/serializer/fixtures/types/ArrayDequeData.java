@@ -9,16 +9,17 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
-
 import java.util.ArrayDeque;
 
-public class ArrayDequeData implements BinaryHandlerTestData {
+import org.junit.jupiter.api.Assertions;
+
+public class ArrayDequeData implements BinaryHandlerTestData
+{
 
     ArrayDeque<String> arrayDeque = new ArrayDeque<>();
 
@@ -32,7 +33,8 @@ public class ArrayDequeData implements BinaryHandlerTestData {
     private final ArrayDeque<String> arrayDequeManyElements = new ArrayDeque<>();
 
     @Override
-    public ArrayDequeData fillSampleData() {
+    public ArrayDequeData fillSampleData()
+    {
         arrayDeque.add("first");
         arrayDeque.add("second");
         arrayDeque.add("third");
@@ -73,41 +75,50 @@ public class ArrayDequeData implements BinaryHandlerTestData {
         return this;
     }
 
-    ArrayDeque<String> getArrayDeque() {
+    ArrayDeque<String> getArrayDeque()
+    {
         return arrayDeque;
     }
 
     // getters for corner-case fields
-    public ArrayDeque<String> getArrayDequeWithDuplicates() {
+    public ArrayDeque<String> getArrayDequeWithDuplicates()
+    {
         return arrayDequeWithDuplicates;
     }
 
-    public ArrayDeque<String> getEmptyArrayDeque() {
+    public ArrayDeque<String> getEmptyArrayDeque()
+    {
         return emptyArrayDeque;
     }
 
-    public ArrayDeque<String> getArrayDequeWithLongStrings() {
+    public ArrayDeque<String> getArrayDequeWithLongStrings()
+    {
         return arrayDequeWithLongStrings;
     }
 
-    public ArrayDeque<String> getArrayDequeWithWhitespace() {
+    public ArrayDeque<String> getArrayDequeWithWhitespace()
+    {
         return arrayDequeWithWhitespace;
     }
 
-    public ArrayDeque<String> getArrayDequeWithUnicode() {
+    public ArrayDeque<String> getArrayDequeWithUnicode()
+    {
         return arrayDequeWithUnicode;
     }
 
-    public ArrayDeque<String> getArrayDequeWithEmptyString() {
+    public ArrayDeque<String> getArrayDequeWithEmptyString()
+    {
         return arrayDequeWithEmptyString;
     }
 
-    public ArrayDeque<String> getArrayDequeManyElements() {
+    public ArrayDeque<String> getArrayDequeManyElements()
+    {
         return arrayDequeManyElements;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         ArrayDequeData copy = (ArrayDequeData) o;
         Assertions.assertIterableEquals(this.getArrayDeque(), copy.getArrayDeque());
@@ -123,7 +134,8 @@ public class ArrayDequeData implements BinaryHandlerTestData {
     }
 
     @Override
-    public ArrayDequeData updateSampleData( ) {
+    public ArrayDequeData updateSampleData()
+    {
         arrayDeque.add("update");
 
         // modify corner-case deques a bit

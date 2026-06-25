@@ -9,26 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.*;
+
 import org.junit.jupiter.api.Assertions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.PriorityQueue;
-
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class PriorityQueueData implements BinaryHandlerTestData {
+public class PriorityQueueData implements BinaryHandlerTestData
+{
     PriorityQueue<String> value = new PriorityQueue<>();
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -45,7 +38,8 @@ public class PriorityQueueData implements BinaryHandlerTestData {
     private PriorityQueue<Integer> largePQ;
 
     @Override
-    public PriorityQueueData fillSampleData() {
+    public PriorityQueueData fillSampleData()
+    {
         value.add("C");
         value.add("C++");
         value.add("Java");
@@ -61,33 +55,40 @@ public class PriorityQueueData implements BinaryHandlerTestData {
         return this;
     }
 
-    public PriorityQueue<String> getValue() {
+    public PriorityQueue<String> getValue()
+    {
         return value;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public PriorityQueue<Integer> getEmptyPQ() {
+    public PriorityQueue<Integer> getEmptyPQ()
+    {
         return emptyPQ;
     }
 
-    public PriorityQueue<Integer> getNaturalOrderPQ() {
+    public PriorityQueue<Integer> getNaturalOrderPQ()
+    {
         return naturalOrderPQ;
     }
 
-    public PriorityQueue<Integer> getReversePQ() {
+    public PriorityQueue<Integer> getReversePQ()
+    {
         return reversePQ;
     }
 
-    public PriorityQueue<Integer> getDuplicatesPQ() {
+    public PriorityQueue<Integer> getDuplicatesPQ()
+    {
         return duplicatesPQ;
     }
 
-    public PriorityQueue<Integer> getLargePQ() {
+    public PriorityQueue<Integer> getLargePQ()
+    {
         return largePQ;
     }
 
-    PriorityQueue<Integer> createNaturalOrderPQ() {
+    PriorityQueue<Integer> createNaturalOrderPQ()
+    {
         // Insertion order is shuffled; poll() must yield ascending.
         PriorityQueue<Integer> q = new PriorityQueue<>();
         for (int n : new int[]{3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5}) {
@@ -96,7 +97,8 @@ public class PriorityQueueData implements BinaryHandlerTestData {
         return q;
     }
 
-    PriorityQueue<Integer> createReversePQ() {
+    PriorityQueue<Integer> createReversePQ()
+    {
         // Comparator.reverseOrder() — public singleton. If preserved, poll() yields descending [5..1].
         // If dropped, copy falls back to natural ordering and poll() yields ascending [1..5].
         PriorityQueue<Integer> q = new PriorityQueue<>(Comparator.reverseOrder());
@@ -106,7 +108,8 @@ public class PriorityQueueData implements BinaryHandlerTestData {
         return q;
     }
 
-    PriorityQueue<Integer> createDuplicatesPQ() {
+    PriorityQueue<Integer> createDuplicatesPQ()
+    {
         PriorityQueue<Integer> q = new PriorityQueue<>();
         q.add(5);
         q.add(5);
@@ -114,7 +117,8 @@ public class PriorityQueueData implements BinaryHandlerTestData {
         return q;
     }
 
-    PriorityQueue<Integer> createLargePQ() {
+    PriorityQueue<Integer> createLargePQ()
+    {
         // Pseudo-random insertion (deterministic) so the test stays stable across runs while still
         // exercising a non-trivial heap structure.
         PriorityQueue<Integer> q = new PriorityQueue<>();
@@ -126,7 +130,8 @@ public class PriorityQueueData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         PriorityQueueData copy = (PriorityQueueData) o;
         assertAll("PriorityQueue tests",
@@ -189,7 +194,8 @@ public class PriorityQueueData implements BinaryHandlerTestData {
         );
     }
 
-    private static List<Integer> drain(PriorityQueue<Integer> q) {
+    private static List<Integer> drain(PriorityQueue<Integer> q)
+    {
         List<Integer> out = new ArrayList<>(q.size());
         while (!q.isEmpty()) {
             out.add(q.poll());
@@ -198,7 +204,8 @@ public class PriorityQueueData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         value.add("ahoj");
         return this;
     }

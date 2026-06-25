@@ -9,23 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
 import java.util.TreeMap;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class TreeMapData implements BinaryHandlerTestData {
+public class TreeMapData implements BinaryHandlerTestData
+{
     private TreeMap<Integer, Integer> intMap = new TreeMap<>();
     private TreeMap<Integer, TreeMap<Integer, TreeMap<Integer, PrimitiveTypes>>> threeMap = new TreeMap<>();
     private TreeMap<Integer, PrimitiveTypes> primitiveTypeTreeMap = new TreeMap<>();
@@ -44,7 +41,8 @@ public class TreeMapData implements BinaryHandlerTestData {
     private TreeMap<Integer, Integer> largeTreeMap;
 
     @Override
-    public TreeMapData fillSampleData() {
+    public TreeMapData fillSampleData()
+    {
         intMap = createIntMap();
         threeMap = createThreeMap();
         primitiveTypeTreeMap = new TreeMap<>();
@@ -60,13 +58,15 @@ public class TreeMapData implements BinaryHandlerTestData {
         return this;
     }
 
-    TreeMap<Integer, Integer> createIntMap() {
+    TreeMap<Integer, Integer> createIntMap()
+    {
         TreeMap<Integer, Integer> intMap = new TreeMap<>();
         intMap.put(100, 6);
         return intMap;
     }
 
-    TreeMap<Integer, TreeMap<Integer, TreeMap<Integer, PrimitiveTypes>>> createThreeMap() {
+    TreeMap<Integer, TreeMap<Integer, TreeMap<Integer, PrimitiveTypes>>> createThreeMap()
+    {
         TreeMap<Integer, TreeMap<Integer, TreeMap<Integer, PrimitiveTypes>>> map = new TreeMap<>();
 
         TreeMap<Integer, PrimitiveTypes> primitive = new TreeMap<>();
@@ -79,41 +79,50 @@ public class TreeMapData implements BinaryHandlerTestData {
         return map;
     }
 
-    TreeMap<Integer, Integer> getIntMap() {
+    TreeMap<Integer, Integer> getIntMap()
+    {
         return intMap;
     }
 
-    TreeMap<Integer, TreeMap<Integer, TreeMap<Integer, PrimitiveTypes>>> getThreeMap() {
+    TreeMap<Integer, TreeMap<Integer, TreeMap<Integer, PrimitiveTypes>>> getThreeMap()
+    {
         return threeMap;
     }
 
-    TreeMap<Integer, PrimitiveTypes> getPrimitiveTypeTreeMap() {
+    TreeMap<Integer, PrimitiveTypes> getPrimitiveTypeTreeMap()
+    {
         return primitiveTypeTreeMap;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public TreeMap<Integer, Integer> getEmptyTreeMap() {
+    public TreeMap<Integer, Integer> getEmptyTreeMap()
+    {
         return emptyTreeMap;
     }
 
-    public TreeMap<Integer, Integer> getReverseTreeMap() {
+    public TreeMap<Integer, Integer> getReverseTreeMap()
+    {
         return reverseTreeMap;
     }
 
-    public TreeMap<String, Integer> getCaseInsensitiveTreeMap() {
+    public TreeMap<String, Integer> getCaseInsensitiveTreeMap()
+    {
         return caseInsensitiveTreeMap;
     }
 
-    public TreeMap<String, String> getNullValueMap() {
+    public TreeMap<String, String> getNullValueMap()
+    {
         return nullValueMap;
     }
 
-    public TreeMap<Integer, Integer> getLargeTreeMap() {
+    public TreeMap<Integer, Integer> getLargeTreeMap()
+    {
         return largeTreeMap;
     }
 
-    TreeMap<Integer, Integer> createReverseTreeMap() {
+    TreeMap<Integer, Integer> createReverseTreeMap()
+    {
         // Collections.reverseOrder() — public singleton. If preserved, iteration is [5,4,3,2,1];
         // if dropped, the loaded TreeMap falls back to natural order [1,2,3,4,5] and the test fails.
         TreeMap<Integer, Integer> m = new TreeMap<>(Collections.reverseOrder());
@@ -125,7 +134,8 @@ public class TreeMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    TreeMap<String, Integer> createCaseInsensitiveTreeMap() {
+    TreeMap<String, Integer> createCaseInsensitiveTreeMap()
+    {
         // String.CASE_INSENSITIVE_ORDER — public singleton. Natural String.compareTo would sort
         // ["APPLE","Cherry","banana"] (uppercase first); case-insensitive comparator sorts
         // ["APPLE","banana","Cherry"]. Divergence signals dropped comparator.
@@ -136,7 +146,8 @@ public class TreeMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    TreeMap<String, String> createNullValueMap() {
+    TreeMap<String, String> createNullValueMap()
+    {
         // TreeMap permits null values (only keys are restricted by natural ordering).
         TreeMap<String, String> m = new TreeMap<>();
         m.put("k1", null);
@@ -145,7 +156,8 @@ public class TreeMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    TreeMap<Integer, Integer> createLargeTreeMap() {
+    TreeMap<Integer, Integer> createLargeTreeMap()
+    {
         TreeMap<Integer, Integer> m = new TreeMap<>();
         // Insert in reverse to make sortedness round-trip meaningful
         for (int i = 999; i >= 0; i--) {
@@ -155,7 +167,8 @@ public class TreeMapData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         TreeMapData copy = (TreeMapData) o;
         assertAll("Array list Tests", //

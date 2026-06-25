@@ -9,20 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Assertions;
 
-public class StringBuilderData implements BinaryHandlerTestData {
+public class StringBuilderData implements BinaryHandlerTestData
+{
     StringBuilder value = new StringBuilder();
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -38,7 +37,8 @@ public class StringBuilderData implements BinaryHandlerTestData {
     private StringBuilder largeBuilder;
 
     @Override
-    public StringBuilderData fillSampleData() {
+    public StringBuilderData fillSampleData()
+    {
         value = new StringBuilder().append("Some Text").append("SecondText")
                 .append("A, Á, B, C, Č, D, Ď, E, É, Ě, F, G, H, Ch, I, Í, J, K, L, M, N, Ň, O, Ó, P, Q, R, Ř, S, Š, T, Ť, U, Ú, Ů, V, W, X, Y, Ý, Z, Ž.")
                 .append("a, á, b, c, č, d, ď, e, é, ě, f, g, h, ch, i, í, j, k, l, m, n, ň, o, ó, p, q, r, ř, s, š, t, ť, u, ú, ů, v, w, x, y, ý, z, ž.");
@@ -56,32 +56,39 @@ public class StringBuilderData implements BinaryHandlerTestData {
 
     // ===== proposed edge-cases — getters =====
 
-    public StringBuilder getEmptyBuilder() {
+    public StringBuilder getEmptyBuilder()
+    {
         return emptyBuilder;
     }
 
-    public StringBuilder getNulCharBuilder() {
+    public StringBuilder getNulCharBuilder()
+    {
         return nulCharBuilder;
     }
 
-    public StringBuilder getEmojiBuilder() {
+    public StringBuilder getEmojiBuilder()
+    {
         return emojiBuilder;
     }
 
-    public StringBuilder getLoneSurrogateBuilder() {
+    public StringBuilder getLoneSurrogateBuilder()
+    {
         return loneSurrogateBuilder;
     }
 
-    public StringBuilder getOversizedCapacityBuilder() {
+    public StringBuilder getOversizedCapacityBuilder()
+    {
         return oversizedCapacityBuilder;
     }
 
-    public StringBuilder getLargeBuilder() {
+    public StringBuilder getLargeBuilder()
+    {
         return largeBuilder;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         StringBuilderData copy = (StringBuilderData) o;
         assertAll("StringBuilder tests",

@@ -9,23 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
 import java.util.Vector;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class VectorData implements BinaryHandlerTestData {
+public class VectorData implements BinaryHandlerTestData
+{
     byte SAMPLE_BYTE = 100;
     short SAMPLE_SHORT = 50;
     int SAMPLE_INT = 5401;
@@ -60,12 +57,14 @@ public class VectorData implements BinaryHandlerTestData {
     private Vector<Vector<PrimitiveTypes>> nestedVector;
     private Vector<String> stringEdgeCasesVector;
 
-    Vector<Object> getVector() {
+    Vector<Object> getVector()
+    {
         return vector;
     }
 
     @Override
-    public VectorData fillSampleData() {
+    public VectorData fillSampleData()
+    {
         vector.add(0, SAMPLE_BYTE);
         vector.add(1, SAMPLE_SHORT);
         vector.add(2, SAMPLE_INT);
@@ -100,39 +99,48 @@ public class VectorData implements BinaryHandlerTestData {
 
     // ===== proposed edge-cases — getters =====
 
-    public Vector<String> getEmptyVector() {
+    public Vector<String> getEmptyVector()
+    {
         return emptyVector;
     }
 
-    public Vector<Integer> getOversizedCapacityVector() {
+    public Vector<Integer> getOversizedCapacityVector()
+    {
         return oversizedCapacityVector;
     }
 
-    public Vector<Integer> getLargeVector() {
+    public Vector<Integer> getLargeVector()
+    {
         return largeVector;
     }
 
-    public Vector<Integer> getNullsVector() {
+    public Vector<Integer> getNullsVector()
+    {
         return nullsVector;
     }
 
-    public Vector<Integer> getDuplicatesVector() {
+    public Vector<Integer> getDuplicatesVector()
+    {
         return duplicatesVector;
     }
 
-    public Vector<Integer> getLargeValuesVector() {
+    public Vector<Integer> getLargeValuesVector()
+    {
         return largeValuesVector;
     }
 
-    public Vector<Vector<PrimitiveTypes>> getNestedVector() {
+    public Vector<Vector<PrimitiveTypes>> getNestedVector()
+    {
         return nestedVector;
     }
 
-    public Vector<String> getStringEdgeCasesVector() {
+    public Vector<String> getStringEdgeCasesVector()
+    {
         return stringEdgeCasesVector;
     }
 
-    Vector<Integer> createOversizedCapacityVector() {
+    Vector<Integer> createOversizedCapacityVector()
+    {
         Vector<Integer> v = new Vector<>(1000);
         v.add(1);
         v.add(2);
@@ -140,7 +148,8 @@ public class VectorData implements BinaryHandlerTestData {
         return v;
     }
 
-    Vector<Integer> createLargeVector() {
+    Vector<Integer> createLargeVector()
+    {
         Vector<Integer> v = new Vector<>();
         for (int i = 0; i < 10_000; i++) {
             v.add(i);
@@ -148,7 +157,8 @@ public class VectorData implements BinaryHandlerTestData {
         return v;
     }
 
-    Vector<Integer> createNullsVector() {
+    Vector<Integer> createNullsVector()
+    {
         Vector<Integer> v = new Vector<>();
         v.add(null);
         v.add(0);
@@ -157,7 +167,8 @@ public class VectorData implements BinaryHandlerTestData {
         return v;
     }
 
-    Vector<Integer> createDuplicatesVector() {
+    Vector<Integer> createDuplicatesVector()
+    {
         Vector<Integer> v = new Vector<>();
         v.add(7);
         v.add(7);
@@ -165,7 +176,8 @@ public class VectorData implements BinaryHandlerTestData {
         return v;
     }
 
-    Vector<Integer> createLargeValuesVector() {
+    Vector<Integer> createLargeValuesVector()
+    {
         Vector<Integer> v = new Vector<>();
         v.add(Integer.MAX_VALUE);
         v.add(Integer.MIN_VALUE);
@@ -173,7 +185,8 @@ public class VectorData implements BinaryHandlerTestData {
         return v;
     }
 
-    Vector<Vector<PrimitiveTypes>> createNestedVector() {
+    Vector<Vector<PrimitiveTypes>> createNestedVector()
+    {
         Vector<Vector<PrimitiveTypes>> outer = new Vector<>();
         outer.add(null); // null inner Vector
         outer.add(new Vector<>()); // empty inner Vector
@@ -183,7 +196,8 @@ public class VectorData implements BinaryHandlerTestData {
         return outer;
     }
 
-    Vector<String> createStringEdgeCasesVector() {
+    Vector<String> createStringEdgeCasesVector()
+    {
         Vector<String> v = new Vector<>();
         v.add("");
         v.add("a" + ((char) 0) + "b"); // NUL inside string
@@ -193,7 +207,8 @@ public class VectorData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         VectorData copy = (VectorData) o;
         assertAll("Vector tests",

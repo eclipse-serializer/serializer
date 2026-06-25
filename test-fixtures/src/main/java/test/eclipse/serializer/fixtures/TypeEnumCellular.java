@@ -9,79 +9,18 @@ package test.eclipse.serializer.fixtures;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
 
-import test.eclipse.serializer.fixtures.types.ArrayDequeData;
-import test.eclipse.serializer.fixtures.types.ArrayListData;
-import test.eclipse.serializer.fixtures.types.AtomicPrimitiveData;
-import test.eclipse.serializer.fixtures.types.BasicNonPrimitive;
-import test.eclipse.serializer.fixtures.types.BasicNonPrimitiveArrayTypes;
-import test.eclipse.serializer.fixtures.types.BigDecimalData;
-import test.eclipse.serializer.fixtures.types.BigIntegerData;
-import test.eclipse.serializer.fixtures.types.BinaryHandlerTestData;
-import test.eclipse.serializer.fixtures.types.BitSetData;
-import test.eclipse.serializer.fixtures.types.BulkListData;
-import test.eclipse.serializer.fixtures.types.CalendarApiData;
-import test.eclipse.serializer.fixtures.types.ClassTypeData;
-import test.eclipse.serializer.fixtures.types.ConcurrentHashMapData;
-import test.eclipse.serializer.fixtures.types.ConcurrentLinkedDequeData;
-import test.eclipse.serializer.fixtures.types.ConcurrentLinkedQueueData;
-import test.eclipse.serializer.fixtures.types.ConcurrentSkipListMapData;
-import test.eclipse.serializer.fixtures.types.ConcurrentSkipListSetData;
-import test.eclipse.serializer.fixtures.types.ConstHashEnumData;
-import test.eclipse.serializer.fixtures.types.ConstHashTableData;
-import test.eclipse.serializer.fixtures.types.ConstListData;
-import test.eclipse.serializer.fixtures.types.CopyOnWriteArrayListData;
-import test.eclipse.serializer.fixtures.types.CopyOnWriteArraySetData;
-import test.eclipse.serializer.fixtures.types.CurrencyData;
-import test.eclipse.serializer.fixtures.types.CustomEnumTrivialData;
-import test.eclipse.serializer.fixtures.types.DateData;
-import test.eclipse.serializer.fixtures.types.EqBulkListData;
-import test.eclipse.serializer.fixtures.types.EqConstHashEnumData;
-import test.eclipse.serializer.fixtures.types.EqConstHashTableData;
-import test.eclipse.serializer.fixtures.types.EqHashEnumData;
-import test.eclipse.serializer.fixtures.types.FileData;
-import test.eclipse.serializer.fixtures.types.HashEnumData;
-import test.eclipse.serializer.fixtures.types.HashMapData;
-import test.eclipse.serializer.fixtures.types.HashSetData;
-import test.eclipse.serializer.fixtures.types.HashTableMSData;
-import test.eclipse.serializer.fixtures.types.HashtableData;
-import test.eclipse.serializer.fixtures.types.IntetAddressData;
-import test.eclipse.serializer.fixtures.types.JavaNetURLData;
-import test.eclipse.serializer.fixtures.types.LimitListData;
-import test.eclipse.serializer.fixtures.types.LinkedHashMapData;
-import test.eclipse.serializer.fixtures.types.LinkedHashSetData;
-import test.eclipse.serializer.fixtures.types.LinkedListData;
-import test.eclipse.serializer.fixtures.types.OptionalDoubleData;
-import test.eclipse.serializer.fixtures.types.OptionalIntData;
-import test.eclipse.serializer.fixtures.types.OptionalLongData;
-import test.eclipse.serializer.fixtures.types.PathData;
-import test.eclipse.serializer.fixtures.types.PrimitiveArrayTypes;
-import test.eclipse.serializer.fixtures.types.PrimitiveTypes;
-import test.eclipse.serializer.fixtures.types.PriorityQueueData;
-import test.eclipse.serializer.fixtures.types.PropertiesData;
-import test.eclipse.serializer.fixtures.types.RegexPatternData;
-import test.eclipse.serializer.fixtures.types.RootsData;
-import test.eclipse.serializer.fixtures.types.SocketAddressData;
-import test.eclipse.serializer.fixtures.types.SqlCalendarData;
-import test.eclipse.serializer.fixtures.types.StackData;
-import test.eclipse.serializer.fixtures.types.StringBufferData;
-import test.eclipse.serializer.fixtures.types.StringBuilderData;
-import test.eclipse.serializer.fixtures.types.SubstituterDefaultData;
-import test.eclipse.serializer.fixtures.types.TreeMapData;
-import test.eclipse.serializer.fixtures.types.TreeSetData;
-import test.eclipse.serializer.fixtures.types.URIData;
-import test.eclipse.serializer.fixtures.types.UUIDData;
-import test.eclipse.serializer.fixtures.types.VectorData;
-import test.eclipse.serializer.fixtures.types.WeakHashMapData;
-
 import java.util.function.Supplier;
 
-public enum TypeEnumCellular {
+import test.eclipse.serializer.fixtures.types.*;
+
+public enum TypeEnumCellular
+{
     PrimitiveTypes(new PrimitiveTypes().fillSampleData(), PrimitiveTypes::new),
     ArrayDeque(new ArrayDequeData().fillSampleData(), ArrayDequeData::new),
     ArrayList(new ArrayListData().fillSampleData(), ArrayListData::new),
@@ -149,21 +88,25 @@ public enum TypeEnumCellular {
     final private BinaryHandlerTestData original;
     final private Supplier<?> instanceSupplier;
 
-    TypeEnumCellular(BinaryHandlerTestData original, Supplier<?> copy) {
+    TypeEnumCellular(BinaryHandlerTestData original, Supplier<?> copy)
+    {
         this.original = original;
         this.instanceSupplier = copy;
     }
 
-    public BinaryHandlerTestData getOriginal() {
+    public BinaryHandlerTestData getOriginal()
+    {
         return original;
     }
 
-    public Object createEmptyInstance() {
+    public Object createEmptyInstance()
+    {
         return instanceSupplier.get();
     }
 
     @Deprecated
-    public Supplier<?> getCopy() {
+    public Supplier<?> getCopy()
+    {
         return instanceSupplier;
     }
 }

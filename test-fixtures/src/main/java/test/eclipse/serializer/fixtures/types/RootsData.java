@@ -9,21 +9,22 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Assertions;
 
-public class RootsData implements BinaryHandlerTestData {
+public class RootsData implements BinaryHandlerTestData
+{
     private List<String> emptyList;
     private Map<String, String> emptyMap;
     private NavigableSet<String> emptyNavigableSet;
@@ -47,7 +48,8 @@ public class RootsData implements BinaryHandlerTestData {
 
 
     @Override
-    public RootsData fillSampleData() {
+    public RootsData fillSampleData()
+    {
         emptyList = Collections.emptyList();
         emptyMap = Collections.emptyMap();
         emptyNavigableSet = Collections.emptyNavigableSet();
@@ -67,72 +69,89 @@ public class RootsData implements BinaryHandlerTestData {
         return this;
     }
 
-    Map<String, String> getEmptyMap() {
+    Map<String, String> getEmptyMap()
+    {
         return emptyMap;
     }
 
-    List<String> getEmptyList() {
+    List<String> getEmptyList()
+    {
         return emptyList;
     }
 
-    NavigableSet<String> getEmptyNavigableSet() {
+    NavigableSet<String> getEmptyNavigableSet()
+    {
         return emptyNavigableSet;
     }
 
-    NavigableMap<String, String> getEmptyNavigableMap() {
+    NavigableMap<String, String> getEmptyNavigableMap()
+    {
         return emptyNavigableMap;
     }
 
-    Comparator<String> getReverseOrderComparator() {
+    Comparator<String> getReverseOrderComparator()
+    {
         return reverseOrderComparator;
     }
 
-    Comparator<String> getNaturalOrderComparator() {
+    Comparator<String> getNaturalOrderComparator()
+    {
         return naturalOrderComparator;
     }
 
-    BigDecimal getZeroBigDecimal() {
+    BigDecimal getZeroBigDecimal()
+    {
         return zeroBigDecimal;
     }
 
-    BigDecimal getOneBigDecimal() {
+    BigDecimal getOneBigDecimal()
+    {
         return oneBigDecimal;
     }
 
-    BigDecimal getTenBigDecimal() {
+    BigDecimal getTenBigDecimal()
+    {
         return tenBigDecimal;
     }
 
-    BigInteger getZeroBigInteger() {
+    BigInteger getZeroBigInteger()
+    {
         return zeroBigInteger;
     }
 
-    BigInteger getOneBigInteger() {
+    BigInteger getOneBigInteger()
+    {
         return oneBigInteger;
     }
 
-    BigInteger getTenBigInteger() {
+    BigInteger getTenBigInteger()
+    {
         return tenBigInteger;
     }
 
-    Optional<String> getEmptyOptional() {
+    Optional<String> getEmptyOptional()
+    {
         return emptyOptional;
     }
 
-    OptionalInt getEmptyOptionalInt() {
+    OptionalInt getEmptyOptionalInt()
+    {
         return emptyOptionalInt;
     }
 
-    OptionalLong getEmptyOptionalLong() {
+    OptionalLong getEmptyOptionalLong()
+    {
         return emptyOptionalLong;
     }
 
-    OptionalDouble getEmptyOptionalDouble() {
+    OptionalDouble getEmptyOptionalDouble()
+    {
         return emptyOptionalDouble;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         RootsData copy = (RootsData) o;
         assertAll(

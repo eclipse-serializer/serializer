@@ -9,40 +9,43 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
-
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
-
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
-public class CopyOnWriteArraySetData implements BinaryHandlerTestData {
+import java.util.concurrent.CopyOnWriteArraySet;
 
-        CopyOnWriteArraySet<PrimitiveTypes> value = new CopyOnWriteArraySet<>();
+import org.junit.jupiter.api.Assertions;
 
-        @Override
-        public CopyOnWriteArraySetData fillSampleData() {
-            PrimitiveTypes p = new PrimitiveTypes();
-            p.fillSampleData();
+public class CopyOnWriteArraySetData implements BinaryHandlerTestData
+{
 
-            value.add(new PrimitiveTypes());
-            value.add(p);
-            value.add(new PrimitiveTypes());
-
-            return this;
-        }
-
-    CopyOnWriteArraySet<PrimitiveTypes> getValue() {
-            return value;
-        }
+    CopyOnWriteArraySet<PrimitiveTypes> value = new CopyOnWriteArraySet<>();
 
     @Override
-    public void proveResults(Object o) {
+    public CopyOnWriteArraySetData fillSampleData()
+    {
+        PrimitiveTypes p = new PrimitiveTypes();
+        p.fillSampleData();
+
+        value.add(new PrimitiveTypes());
+        value.add(p);
+        value.add(new PrimitiveTypes());
+
+        return this;
+    }
+
+    CopyOnWriteArraySet<PrimitiveTypes> getValue()
+    {
+        return value;
+    }
+
+    @Override
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         CopyOnWriteArraySetData copy = (CopyOnWriteArraySetData) o;
 

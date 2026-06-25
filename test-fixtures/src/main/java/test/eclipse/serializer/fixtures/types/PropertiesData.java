@@ -9,21 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class PropertiesData implements BinaryHandlerTestData {
+public class PropertiesData implements BinaryHandlerTestData
+{
     Properties value = new Properties();
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -43,7 +41,8 @@ public class PropertiesData implements BinaryHandlerTestData {
     private Properties largeProperties;
 
     @Override
-    public PropertiesData fillSampleData() {
+    public PropertiesData fillSampleData()
+    {
         value.put("key", "value");
 
         // ===== proposed edge-cases =====
@@ -55,29 +54,35 @@ public class PropertiesData implements BinaryHandlerTestData {
         return this;
     }
 
-    public Properties getValue() {
+    public Properties getValue()
+    {
         return value;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public Properties getEmptyProperties() {
+    public Properties getEmptyProperties()
+    {
         return emptyProperties;
     }
 
-    public Properties getMultiEntryProperties() {
+    public Properties getMultiEntryProperties()
+    {
         return multiEntryProperties;
     }
 
-    public Properties getSpecialCharsProperties() {
+    public Properties getSpecialCharsProperties()
+    {
         return specialCharsProperties;
     }
 
-    public Properties getLargeProperties() {
+    public Properties getLargeProperties()
+    {
         return largeProperties;
     }
 
-    Properties createMultiEntryProperties() {
+    Properties createMultiEntryProperties()
+    {
         Properties p = new Properties();
         p.setProperty("user.name", "alice");
         p.setProperty("user.home", "/home/alice");
@@ -87,7 +92,8 @@ public class PropertiesData implements BinaryHandlerTestData {
         return p;
     }
 
-    Properties createSpecialCharsProperties() {
+    Properties createSpecialCharsProperties()
+    {
         Properties p = new Properties();
         p.setProperty("unicode", "Příliš žluťoučký kůň úpěl ďábelské ódy");
         p.setProperty("with.newlines", "line1\nline2\r\nline3");
@@ -98,7 +104,8 @@ public class PropertiesData implements BinaryHandlerTestData {
         return p;
     }
 
-    Properties createLargeProperties() {
+    Properties createLargeProperties()
+    {
         Properties p = new Properties();
         for (int i = 0; i < 1000; i++) {
             p.setProperty("key." + i, "value." + i);
@@ -107,7 +114,8 @@ public class PropertiesData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         PropertiesData copy = (PropertiesData) o;
         assertAll("Properties tests",

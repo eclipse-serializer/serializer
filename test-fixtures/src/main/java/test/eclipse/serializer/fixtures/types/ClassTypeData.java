@@ -9,21 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.DayOfWeek;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Assertions;
 
-public class ClassTypeData implements BinaryHandlerTestData {
+public class ClassTypeData implements BinaryHandlerTestData
+{
     Class clazz;
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -45,7 +44,8 @@ public class ClassTypeData implements BinaryHandlerTestData {
     private Class nestedClass;
 
     @Override
-    public ClassTypeData fillSampleData() {
+    public ClassTypeData fillSampleData()
+    {
         clazz = PrimitiveTypes.class;
 
         // ===== proposed edge-cases =====
@@ -59,38 +59,46 @@ public class ClassTypeData implements BinaryHandlerTestData {
         return this;
     }
 
-    Class getClazz() {
+    Class getClazz()
+    {
         return clazz;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public Class getArrayClass() {
+    public Class getArrayClass()
+    {
         return arrayClass;
     }
 
-    public Class getMultiDimArrayClass() {
+    public Class getMultiDimArrayClass()
+    {
         return multiDimArrayClass;
     }
 
-    public Class getInterfaceClass() {
+    public Class getInterfaceClass()
+    {
         return interfaceClass;
     }
 
-    public Class getEnumClass() {
+    public Class getEnumClass()
+    {
         return enumClass;
     }
 
-    public Class getObjectClass() {
+    public Class getObjectClass()
+    {
         return objectClass;
     }
 
-    public Class getNestedClass() {
+    public Class getNestedClass()
+    {
         return nestedClass;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         ClassTypeData copy = (ClassTypeData) o;
         assertAll("Class type tests",

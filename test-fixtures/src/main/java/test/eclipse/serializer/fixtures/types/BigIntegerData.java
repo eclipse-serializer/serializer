@@ -9,18 +9,17 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.math.BigInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-public class BigIntegerData implements BinaryHandlerTestData {
+public class BigIntegerData implements BinaryHandlerTestData
+{
     private BigInteger bigIntegerValue;
 
     // corner-case fields and typical usage
@@ -38,7 +37,8 @@ public class BigIntegerData implements BinaryHandlerTestData {
     private BigInteger bigIntegerMulResult;
 
     @Override
-    public BigIntegerData fillSampleData() {
+    public BigIntegerData fillSampleData()
+    {
         bigIntegerValue = new java.math.BigInteger("852");
 
         // corner-case and typical initializations
@@ -59,7 +59,8 @@ public class BigIntegerData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         bigIntegerValue = bigIntegerValue.add(new BigInteger("444"));
 
         // corner-case updates
@@ -79,26 +80,75 @@ public class BigIntegerData implements BinaryHandlerTestData {
         return this;
     }
 
-    BigInteger getBigIntegerValue() {
+    BigInteger getBigIntegerValue()
+    {
         return bigIntegerValue;
     }
 
     // getters for corner-case fields
-    public BigInteger getBigIntegerNull() { return bigIntegerNull; }
-    public BigInteger getBigIntegerZero() { return bigIntegerZero; }
-    public BigInteger getBigIntegerNegative() { return bigIntegerNegative; }
-    public BigInteger getBigIntegerLarge() { return bigIntegerLarge; }
-    public BigInteger getBigIntegerFromBytes() { return bigIntegerFromBytes; }
-    public BigInteger getBigIntegerFromHex() { return bigIntegerFromHex; }
-    public BigInteger getBigIntegerShiftLeft() { return bigIntegerShiftLeft; }
-    public BigInteger getBigIntegerPow() { return bigIntegerPow; }
-    public BigInteger getBigIntegerGcd() { return bigIntegerGcd; }
-    public BigInteger getBigIntegerModPow() { return bigIntegerModPow; }
-    public BigInteger getBigIntegerAddResult() { return bigIntegerAddResult; }
-    public BigInteger getBigIntegerMulResult() { return bigIntegerMulResult; }
+    public BigInteger getBigIntegerNull()
+    {
+        return bigIntegerNull;
+    }
+
+    public BigInteger getBigIntegerZero()
+    {
+        return bigIntegerZero;
+    }
+
+    public BigInteger getBigIntegerNegative()
+    {
+        return bigIntegerNegative;
+    }
+
+    public BigInteger getBigIntegerLarge()
+    {
+        return bigIntegerLarge;
+    }
+
+    public BigInteger getBigIntegerFromBytes()
+    {
+        return bigIntegerFromBytes;
+    }
+
+    public BigInteger getBigIntegerFromHex()
+    {
+        return bigIntegerFromHex;
+    }
+
+    public BigInteger getBigIntegerShiftLeft()
+    {
+        return bigIntegerShiftLeft;
+    }
+
+    public BigInteger getBigIntegerPow()
+    {
+        return bigIntegerPow;
+    }
+
+    public BigInteger getBigIntegerGcd()
+    {
+        return bigIntegerGcd;
+    }
+
+    public BigInteger getBigIntegerModPow()
+    {
+        return bigIntegerModPow;
+    }
+
+    public BigInteger getBigIntegerAddResult()
+    {
+        return bigIntegerAddResult;
+    }
+
+    public BigInteger getBigIntegerMulResult()
+    {
+        return bigIntegerMulResult;
+    }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         assertNotNull(o);
         BigIntegerData copy = (BigIntegerData) o;
         assertEquals(this.getBigIntegerValue(), copy.getBigIntegerValue(), "BigInteger");

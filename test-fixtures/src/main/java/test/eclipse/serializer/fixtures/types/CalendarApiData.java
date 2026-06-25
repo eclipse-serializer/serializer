@@ -9,36 +9,21 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
-
-import java.time.Clock;
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.time.MonthDay;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.Period;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.TimeZone;
-
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CalendarApiData implements BinaryHandlerTestData {
+import java.time.*;
+import java.util.TimeZone;
+
+import org.junit.jupiter.api.Assertions;
+
+public class CalendarApiData implements BinaryHandlerTestData
+{
 
     TimeZone timeZone = TimeZone.getDefault();
     Clock clock;
@@ -75,12 +60,13 @@ public class CalendarApiData implements BinaryHandlerTestData {
 
 
     @Override
-    public BinaryHandlerTestData fillSampleData() {
+    public BinaryHandlerTestData fillSampleData()
+    {
 
         this.timeZone = TimeZone.getTimeZone("Europe/Copenhagen");
 
-        LocalDateTime  datetime = LocalDateTime.of(2020, 5, 24, 14, 0);
-        Instant instant = ZonedDateTime.of(datetime,ZoneId.of("UTC")).toInstant();
+        LocalDateTime datetime = LocalDateTime.of(2020, 5, 24, 14, 0);
+        Instant instant = ZonedDateTime.of(datetime, ZoneId.of("UTC")).toInstant();
         this.clock = Clock.fixed(instant, ZoneId.of("UTC"));
 
         this.duration = Duration.ofDays(10);
@@ -94,7 +80,7 @@ public class CalendarApiData implements BinaryHandlerTestData {
         this.period = Period.ofDays(7);
         this.year = Year.now();
         this.yearMonth = YearMonth.now();
-        this.zonedDateTime = ZonedDateTime.of(2020,12,5,11,23,50,898989,ZoneId.of("UTC"));
+        this.zonedDateTime = ZonedDateTime.of(2020, 12, 5, 11, 23, 50, 898989, ZoneId.of("UTC"));
         this.zoneId = ZoneId.of("UTC");
         this.zoneOffset = ZoneOffset.ofHours(5);
         this.dayOfWeek = DayOfWeek.FRIDAY;
@@ -105,12 +91,12 @@ public class CalendarApiData implements BinaryHandlerTestData {
         this.instantEpoch = Instant.EPOCH;
         this.leapDay = LocalDate.of(2000, 2, 29);
         // choose a DST transition time (may be adjusted by zone rules)
-        this.dstTransition = ZonedDateTime.of(LocalDateTime.of(2020,3,29,2,30), ZoneId.of("Europe/Copenhagen"));
+        this.dstTransition = ZonedDateTime.of(LocalDateTime.of(2020, 3, 29, 2, 30), ZoneId.of("Europe/Copenhagen"));
         this.timeZoneExtreme = TimeZone.getTimeZone("Pacific/Kiritimati"); // UTC+14
         this.negativeDuration = Duration.ofHours(-5);
         this.largePeriod = Period.ofMonths(18);
-        this.offsetPlus14 = OffsetDateTime.of(2020,1,1,12,0,0,0, ZoneOffset.ofHours(14));
-        this.offsetMinus12 = OffsetDateTime.of(2020,1,1,12,0,0,0, ZoneOffset.ofHours(-12));
+        this.offsetPlus14 = OffsetDateTime.of(2020, 1, 1, 12, 0, 0, 0, ZoneOffset.ofHours(14));
+        this.offsetMinus12 = OffsetDateTime.of(2020, 1, 1, 12, 0, 0, 0, ZoneOffset.ofHours(-12));
         this.systemClock = Clock.system(ZoneId.of("UTC"));
         this.distantYear = Year.of(9999);
 
@@ -118,7 +104,8 @@ public class CalendarApiData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         // mutate some values to ensure update detection
         this.timeZone = TimeZone.getTimeZone("UTC");
         this.clock = Clock.system(ZoneId.of("UTC"));
@@ -154,18 +141,19 @@ public class CalendarApiData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         CalendarApiData copy = (CalendarApiData) o;
         assertAll(
                 () -> assertEquals(this.getTimeZone().toZoneId(), copy.getTimeZone().toZoneId(), "TimeZone"),
-				() -> {
-					if (this.getClock() == null) {
-						Assertions.assertNull(copy.getClock(), "Clock");
-					} else {
-						assertEquals(this.getClock().toString(), copy.getClock().toString(), "Clock");
-					}
-				},
+                () -> {
+                    if (this.getClock() == null) {
+                        Assertions.assertNull(copy.getClock(), "Clock");
+                    } else {
+                        assertEquals(this.getClock().toString(), copy.getClock().toString(), "Clock");
+                    }
+                },
                 () -> assertEquals(this.getDuration(), copy.getDuration(), "Duration"),
                 () -> assertEquals(this.getInstant(), copy.getInstant(), "Instant"),
                 () -> assertEquals(this.getLocalDate(), copy.getLocalDate(), "LocalDate"),
@@ -254,88 +242,149 @@ public class CalendarApiData implements BinaryHandlerTestData {
         }
     }
 
-    public TimeZone getTimeZone() {
+    public TimeZone getTimeZone()
+    {
         return timeZone;
     }
 
-    public Clock getClock() {
+    public Clock getClock()
+    {
         return clock;
     }
 
-    public Duration getDuration() {
+    public Duration getDuration()
+    {
         return duration;
     }
 
-    public Instant getInstant() {
+    public Instant getInstant()
+    {
         return instant;
     }
 
-    public LocalDate getLocalDate() {
+    public LocalDate getLocalDate()
+    {
         return localDate;
     }
 
-    public LocalDateTime getLocalDateTime() {
+    public LocalDateTime getLocalDateTime()
+    {
         return localDateTime;
     }
 
-    public LocalTime getLocalTime() {
+    public LocalTime getLocalTime()
+    {
         return localTime;
     }
 
-    public MonthDay getMonthDay() {
+    public MonthDay getMonthDay()
+    {
         return monthDay;
     }
 
-    public OffsetDateTime getOffsetDateTime() {
+    public OffsetDateTime getOffsetDateTime()
+    {
         return offsetDateTime;
     }
 
-    public OffsetTime getOffsetTime() {
+    public OffsetTime getOffsetTime()
+    {
         return offsetTime;
     }
 
-    public Period getPeriod() {
+    public Period getPeriod()
+    {
         return period;
     }
 
-    public Year getYear() {
+    public Year getYear()
+    {
         return year;
     }
 
-    public YearMonth getYearMonth() {
+    public YearMonth getYearMonth()
+    {
         return yearMonth;
     }
 
-    public ZonedDateTime getZonedDateTime() {
+    public ZonedDateTime getZonedDateTime()
+    {
         return zonedDateTime;
     }
 
-    public ZoneId getZoneId() {
+    public ZoneId getZoneId()
+    {
         return zoneId;
     }
 
-    public ZoneOffset getZoneOffset() {
+    public ZoneOffset getZoneOffset()
+    {
         return zoneOffset;
     }
 
-    public DayOfWeek getDayOfWeek() {
+    public DayOfWeek getDayOfWeek()
+    {
         return dayOfWeek;
     }
 
-    public Month getMonth() {
+    public Month getMonth()
+    {
         return month;
     }
 
     // getters for corner-case fields
-    public Instant getInstantMin() { return instantMin; }
-    public Instant getInstantEpoch() { return instantEpoch; }
-    public LocalDate getLeapDay() { return leapDay; }
-    public ZonedDateTime getDstTransition() { return dstTransition; }
-    public TimeZone getTimeZoneExtreme() { return timeZoneExtreme; }
-    public Duration getNegativeDuration() { return negativeDuration; }
-    public Period getLargePeriod() { return largePeriod; }
-    public OffsetDateTime getOffsetPlus14() { return offsetPlus14; }
-    public OffsetDateTime getOffsetMinus12() { return offsetMinus12; }
-    public Clock getSystemClock() { return systemClock; }
-    public Year getDistantYear() { return distantYear; }
- }
+    public Instant getInstantMin()
+    {
+        return instantMin;
+    }
+
+    public Instant getInstantEpoch()
+    {
+        return instantEpoch;
+    }
+
+    public LocalDate getLeapDay()
+    {
+        return leapDay;
+    }
+
+    public ZonedDateTime getDstTransition()
+    {
+        return dstTransition;
+    }
+
+    public TimeZone getTimeZoneExtreme()
+    {
+        return timeZoneExtreme;
+    }
+
+    public Duration getNegativeDuration()
+    {
+        return negativeDuration;
+    }
+
+    public Period getLargePeriod()
+    {
+        return largePeriod;
+    }
+
+    public OffsetDateTime getOffsetPlus14()
+    {
+        return offsetPlus14;
+    }
+
+    public OffsetDateTime getOffsetMinus12()
+    {
+        return offsetMinus12;
+    }
+
+    public Clock getSystemClock()
+    {
+        return systemClock;
+    }
+
+    public Year getDistantYear()
+    {
+        return distantYear;
+    }
+}

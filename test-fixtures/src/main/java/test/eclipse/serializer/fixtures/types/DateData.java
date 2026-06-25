@@ -9,12 +9,12 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -23,11 +23,10 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Assertions;
 
-public class DateData implements BinaryHandlerTestData {
+public class DateData implements BinaryHandlerTestData
+{
     private Date date;
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -43,7 +42,8 @@ public class DateData implements BinaryHandlerTestData {
     private Date farPast;
     private Date farFuture;
 
-    public DateData() {
+    public DateData()
+    {
         try {
             date = new SimpleDateFormat("dd/MM/yyyy").parse("31/12/1998");
         } catch (ParseException e) {
@@ -52,7 +52,8 @@ public class DateData implements BinaryHandlerTestData {
     }
 
     @Override
-    public DateData fillSampleData() {
+    public DateData fillSampleData()
+    {
         String sDate1 = "31/12/2020";
         try {
             date = new SimpleDateFormat("dd/MM/yyyy").parse(sDate1);
@@ -72,41 +73,50 @@ public class DateData implements BinaryHandlerTestData {
         return this;
     }
 
-    Date getDate() {
+    Date getDate()
+    {
         return date;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public Date getEpoch() {
+    public Date getEpoch()
+    {
         return epoch;
     }
 
-    public Date getLongMin() {
+    public Date getLongMin()
+    {
         return longMin;
     }
 
-    public Date getLongMax() {
+    public Date getLongMax()
+    {
         return longMax;
     }
 
-    public Date getPreEpoch() {
+    public Date getPreEpoch()
+    {
         return preEpoch;
     }
 
-    public Date getSubSecond() {
+    public Date getSubSecond()
+    {
         return subSecond;
     }
 
-    public Date getFarPast() {
+    public Date getFarPast()
+    {
         return farPast;
     }
 
-    public Date getFarFuture() {
+    public Date getFarFuture()
+    {
         return farFuture;
     }
 
-    private static Date buildDate(int year, int month, int day, int hour, int minute, int second, int millis) {
+    private static Date buildDate(int year, int month, int day, int hour, int minute, int second, int millis)
+    {
         Calendar c = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
         c.clear();
         c.set(year, month, day, hour, minute, second);
@@ -115,7 +125,8 @@ public class DateData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         DateData copy = (DateData) o;
         assertAll("Date tests",

@@ -9,17 +9,18 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
-
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-public class PrimitiveArrayTypes implements BinaryHandlerTestData {
+import org.junit.jupiter.api.Assertions;
+
+public class PrimitiveArrayTypes implements BinaryHandlerTestData
+{
     private static final byte SAMPLE_BYTE = 100;
     private static final byte SAMPLE_BYTE_2 = 127;
     private static final short SAMPLE_SHORT = 50;
@@ -56,7 +57,8 @@ public class PrimitiveArrayTypes implements BinaryHandlerTestData {
     private char[][] charEmptyMatrix;
 
 
-    public static PrimitiveArrayTypes createEmpty() {
+    public static PrimitiveArrayTypes createEmpty()
+    {
         PrimitiveArrayTypes a = new PrimitiveArrayTypes();
         a.byteValues = new byte[1];
         a.shortValues = new short[1];
@@ -81,7 +83,8 @@ public class PrimitiveArrayTypes implements BinaryHandlerTestData {
     }
 
     @Override
-    public PrimitiveArrayTypes fillSampleData() {
+    public PrimitiveArrayTypes fillSampleData()
+    {
         byteValues = new byte[]{SAMPLE_BYTE, SAMPLE_BYTE_2};
         shortValues = new short[]{SAMPLE_SHORT, SAMPLE_SHORT_2};
         intValues = new int[]{SAMPLE_INT, SAMPLE_INT_2};
@@ -105,9 +108,10 @@ public class PrimitiveArrayTypes implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
-        PrimitiveArrayTypes copy = (PrimitiveArrayTypes)o;
+        PrimitiveArrayTypes copy = (PrimitiveArrayTypes) o;
         assertAll("Primitive Types tests", //
                 () -> assertArrayEquals(this.getByteValues(), copy.getByteValues(), "byte[]"),
                 () -> assertArrayEquals(this.getShortValues(), copy.getShortValues(), "short[]"),
@@ -129,67 +133,83 @@ public class PrimitiveArrayTypes implements BinaryHandlerTestData {
         );
     }
 
-    public byte[] getByteValues() {
+    public byte[] getByteValues()
+    {
         return byteValues;
     }
 
-    public short[] getShortValues() {
+    public short[] getShortValues()
+    {
         return shortValues;
     }
 
-    public int[] getIntValues() {
+    public int[] getIntValues()
+    {
         return intValues;
     }
 
-    public long[] getLongValues() {
+    public long[] getLongValues()
+    {
         return longValues;
     }
 
-    public float[] getFloatValues() {
+    public float[] getFloatValues()
+    {
         return floatValues;
     }
 
-    public double[] getDoubleValues() {
+    public double[] getDoubleValues()
+    {
         return doubleValues;
     }
 
-    public boolean[] getBooleanValues() {
+    public boolean[] getBooleanValues()
+    {
         return booleanValues;
     }
 
-    public char[] getCharValues() {
+    public char[] getCharValues()
+    {
         return charValues;
     }
 
-    public byte[][] getByteValueMatrix() {
+    public byte[][] getByteValueMatrix()
+    {
         return byteValueMatrix;
     }
 
-    public short[][] getShortValueMatrix() {
+    public short[][] getShortValueMatrix()
+    {
         return shortValueMatrix;
     }
 
-    public int[][] getIntValueMatrix() {
+    public int[][] getIntValueMatrix()
+    {
         return intValueMatrix;
     }
 
-    public long[][] getLongValueMatrix() {
+    public long[][] getLongValueMatrix()
+    {
         return longValueMatrix;
     }
 
-    public float[][] getFloatValueMatrix() {
+    public float[][] getFloatValueMatrix()
+    {
         return floatValueMatrix;
     }
 
-    public double[][] getDoubleValueMatrix() {
+    public double[][] getDoubleValueMatrix()
+    {
         return doubleValueMatrix;
     }
 
-    public boolean[][] getBooleanValueMatrix() {
+    public boolean[][] getBooleanValueMatrix()
+    {
         return booleanValueMatrix;
     }
 
-    public char[][] getCharValueMatrix() {
+    public char[][] getCharValueMatrix()
+    {
         return charValueMatrix;
     }
 

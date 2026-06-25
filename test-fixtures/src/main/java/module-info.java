@@ -13,11 +13,11 @@
  */
 module org.eclipse.serializer.test.fixtures
 {
-	requires transitive org.eclipse.serializer.base;
-	requires java.sql;
-	requires static org.junit.jupiter.api;
+    requires transitive org.eclipse.serializer.base;
+    requires java.sql;
+    requires static org.junit.jupiter.api;
 
-	exports test.eclipse.serializer.fixtures;
-	exports test.eclipse.serializer.fixtures.types;
-	exports test.eclipse.serializer.fixtures.types.help;
+    exports test.eclipse.serializer.fixtures;
+    exports test.eclipse.serializer.fixtures.types;
+    exports test.eclipse.serializer.fixtures.types.help;
 }

@@ -9,19 +9,17 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-public class UUIDData implements BinaryHandlerTestData {
+public class UUIDData implements BinaryHandlerTestData
+{
     UUID uuid;
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -37,7 +35,8 @@ public class UUIDData implements BinaryHandlerTestData {
     private UUID longBoundaryUuid;
 
     @Override
-    public UUIDData fillSampleData() {
+    public UUIDData fillSampleData()
+    {
         uuid = UUID.fromString("a96c3d61-0291-4068-b065-1d63d4a94fef");
 
         // ===== proposed edge-cases =====
@@ -50,36 +49,43 @@ public class UUIDData implements BinaryHandlerTestData {
         return this;
     }
 
-    public UUID getUuid() {
+    public UUID getUuid()
+    {
         return uuid;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public UUID getNilUuid() {
+    public UUID getNilUuid()
+    {
         return nilUuid;
     }
 
-    public UUID getMaxUuid() {
+    public UUID getMaxUuid()
+    {
         return maxUuid;
     }
 
-    public UUID getMostSigOnly() {
+    public UUID getMostSigOnly()
+    {
         return mostSigOnly;
     }
 
-    public UUID getLeastSigOnly() {
+    public UUID getLeastSigOnly()
+    {
         return leastSigOnly;
     }
 
-    public UUID getLongBoundaryUuid() {
+    public UUID getLongBoundaryUuid()
+    {
         return longBoundaryUuid;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         assertNotNull(o);
-        UUIDData copy = (UUIDData)o;
+        UUIDData copy = (UUIDData) o;
         assertAll("UUID tests",
                 () -> assertEquals(this.getUuid(), copy.getUuid()),
 

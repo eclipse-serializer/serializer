@@ -9,24 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class HashMapData implements BinaryHandlerTestData {
+public class HashMapData implements BinaryHandlerTestData
+{
     private HashMap<Integer, Integer> intMap = new HashMap<>();
     private HashMap<Integer, HashMap<Integer, HashMap<Integer, PrimitiveTypes>>> threeMap = new HashMap<>();
     private HashMap<Integer, PrimitiveTypes> primitiveTypeHashMap = new HashMap<>();
@@ -40,7 +36,8 @@ public class HashMapData implements BinaryHandlerTestData {
     private HashMap<String, Integer> stringKeyEdgeCasesMap;
 
     @Override
-    public HashMapData fillSampleData() {
+    public HashMapData fillSampleData()
+    {
         intMap = createIntMap();
         threeMap = createThreeMap();
         primitiveTypeHashMap = new HashMap<>();
@@ -58,7 +55,8 @@ public class HashMapData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         // existing fields
         intMap.put(200, 12);
         HashMap<Integer, HashMap<Integer, PrimitiveTypes>> nested = new HashMap<>();
@@ -78,13 +76,15 @@ public class HashMapData implements BinaryHandlerTestData {
         return this;
     }
 
-    HashMap<Integer, Integer> createIntMap() {
+    HashMap<Integer, Integer> createIntMap()
+    {
         HashMap<Integer, Integer> intMap = new HashMap<>();
         intMap.put(100, 6);
         return intMap;
     }
 
-    HashMap<Integer, HashMap<Integer, HashMap<Integer, PrimitiveTypes>>> createThreeMap() {
+    HashMap<Integer, HashMap<Integer, HashMap<Integer, PrimitiveTypes>>> createThreeMap()
+    {
         HashMap<Integer, HashMap<Integer, HashMap<Integer, PrimitiveTypes>>> map = new HashMap<>();
 
         HashMap<Integer, PrimitiveTypes> primitive = new HashMap<>();
@@ -97,21 +97,25 @@ public class HashMapData implements BinaryHandlerTestData {
         return map;
     }
 
-    HashMap<Integer, Integer> getIntMap() {
+    HashMap<Integer, Integer> getIntMap()
+    {
         return intMap;
     }
 
-    HashMap<Integer, HashMap<Integer, HashMap<Integer, PrimitiveTypes>>> getThreeMap() {
+    HashMap<Integer, HashMap<Integer, HashMap<Integer, PrimitiveTypes>>> getThreeMap()
+    {
         return threeMap;
     }
 
-    HashMap<Integer, PrimitiveTypes> getPrimitiveTypeHashMap() {
+    HashMap<Integer, PrimitiveTypes> getPrimitiveTypeHashMap()
+    {
         return primitiveTypeHashMap;
     }
 
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         HashMapData copy = (HashMapData) o;
         assertAll("Array list Tests", //
@@ -185,38 +189,46 @@ public class HashMapData implements BinaryHandlerTestData {
 
     // ===== proposed edge-cases — helpers & getters =====
 
-    public HashMap<String, String> getNullKeyMap() {
+    public HashMap<String, String> getNullKeyMap()
+    {
         return nullKeyMap;
     }
 
-    public HashMap<String, String> getNullValueMap() {
+    public HashMap<String, String> getNullValueMap()
+    {
         return nullValueMap;
     }
 
-    public HashMap<String, String> getEmptyMap() {
+    public HashMap<String, String> getEmptyMap()
+    {
         return emptyMap;
     }
 
-    public HashMap<Integer, Integer> getOversizedCapacityMap() {
+    public HashMap<Integer, Integer> getOversizedCapacityMap()
+    {
         return oversizedCapacityMap;
     }
 
-    public HashMap<Integer, Integer> getLargeMap() {
+    public HashMap<Integer, Integer> getLargeMap()
+    {
         return largeMap;
     }
 
-    public HashMap<String, Integer> getStringKeyEdgeCasesMap() {
+    public HashMap<String, Integer> getStringKeyEdgeCasesMap()
+    {
         return stringKeyEdgeCasesMap;
     }
 
-    HashMap<String, String> createNullKeyMap() {
+    HashMap<String, String> createNullKeyMap()
+    {
         HashMap<String, String> m = new HashMap<>();
         m.put(null, "value-for-null-key");
         m.put("regular", "regular-value");
         return m;
     }
 
-    HashMap<String, String> createNullValueMap() {
+    HashMap<String, String> createNullValueMap()
+    {
         HashMap<String, String> m = new HashMap<>();
         m.put("k1", null);
         m.put("k2", "v2");
@@ -224,7 +236,8 @@ public class HashMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    HashMap<Integer, Integer> createOversizedCapacityMap() {
+    HashMap<Integer, Integer> createOversizedCapacityMap()
+    {
         HashMap<Integer, Integer> m = new HashMap<>(1024);
         m.put(1, 1);
         m.put(2, 2);
@@ -232,7 +245,8 @@ public class HashMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    HashMap<Integer, Integer> createLargeMap() {
+    HashMap<Integer, Integer> createLargeMap()
+    {
         HashMap<Integer, Integer> m = new HashMap<>();
         for (int i = 0; i < 10_000; i++) {
             m.put(i, i * 2);
@@ -240,7 +254,8 @@ public class HashMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    HashMap<String, Integer> createStringKeyEdgeCasesMap() {
+    HashMap<String, Integer> createStringKeyEdgeCasesMap()
+    {
         HashMap<String, Integer> m = new HashMap<>();
         m.put("", 1);
         m.put("a" + ((char) 0) + "b", 2); // NUL inside key

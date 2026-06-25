@@ -9,22 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.OptionalInt;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class OptionalIntData implements BinaryHandlerTestData {
+public class OptionalIntData implements BinaryHandlerTestData
+{
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     OptionalInt value = OptionalInt.of(0);
@@ -47,7 +44,8 @@ public class OptionalIntData implements BinaryHandlerTestData {
     private OptionalInt ofNegativeOne;
 
     @Override
-    public OptionalIntData fillSampleData() {
+    public OptionalIntData fillSampleData()
+    {
         value = OptionalInt.of(44356);
 
         // ===== proposed edge-cases =====
@@ -60,34 +58,41 @@ public class OptionalIntData implements BinaryHandlerTestData {
         return this;
     }
 
-    OptionalInt getValue() {
+    OptionalInt getValue()
+    {
         return value;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public OptionalInt getEmptyOptional() {
+    public OptionalInt getEmptyOptional()
+    {
         return emptyOptional;
     }
 
-    public OptionalInt getOfZero() {
+    public OptionalInt getOfZero()
+    {
         return ofZero;
     }
 
-    public OptionalInt getOfIntMin() {
+    public OptionalInt getOfIntMin()
+    {
         return ofIntMin;
     }
 
-    public OptionalInt getOfIntMax() {
+    public OptionalInt getOfIntMax()
+    {
         return ofIntMax;
     }
 
-    public OptionalInt getOfNegativeOne() {
+    public OptionalInt getOfNegativeOne()
+    {
         return ofNegativeOne;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         OptionalIntData copy = (OptionalIntData) o;
         assertAll("OptionalInt tests",

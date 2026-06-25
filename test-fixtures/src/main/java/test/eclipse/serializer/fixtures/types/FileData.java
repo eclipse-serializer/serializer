@@ -9,20 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Assertions;
 
-public class FileData implements BinaryHandlerTestData {
+public class FileData implements BinaryHandlerTestData
+{
     // Stable default — fillSampleData and the default-constructor instance must both yield a
     // non-null value so loadDefaultCompare does not NPE on getValue().
     File value = new File("default.txt");
@@ -39,7 +38,8 @@ public class FileData implements BinaryHandlerTestData {
     private File spacesFile;
     private File unicodeFile;
 
-    public FileData fillSampleData() {
+    public FileData fillSampleData()
+    {
         value = new File("test-fixture.txt");
 
         // ===== proposed edge-cases =====
@@ -52,34 +52,41 @@ public class FileData implements BinaryHandlerTestData {
         return this;
     }
 
-    File getValue() {
+    File getValue()
+    {
         return value;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public File getEmptyFile() {
+    public File getEmptyFile()
+    {
         return emptyFile;
     }
 
-    public File getRelativeFile() {
+    public File getRelativeFile()
+    {
         return relativeFile;
     }
 
-    public File getDotsAndDoubleDots() {
+    public File getDotsAndDoubleDots()
+    {
         return dotsAndDoubleDots;
     }
 
-    public File getSpacesFile() {
+    public File getSpacesFile()
+    {
         return spacesFile;
     }
 
-    public File getUnicodeFile() {
+    public File getUnicodeFile()
+    {
         return unicodeFile;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         FileData copy = (FileData) o;
         assertAll("File tests",

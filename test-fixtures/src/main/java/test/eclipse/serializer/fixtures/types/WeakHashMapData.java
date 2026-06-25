@@ -9,7 +9,7 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
@@ -21,25 +21,29 @@ import java.util.WeakHashMap;
 
 import org.junit.jupiter.api.Assertions;
 
-public class WeakHashMapData implements BinaryHandlerTestData {
+public class WeakHashMapData implements BinaryHandlerTestData
+{
 
     static private PrimitiveTypes primitiveTypes = PrimitiveTypes.fillSample();
 
     private WeakHashMap<Integer, PrimitiveTypes> primitiveTypeWeakHashMap;
 
     @Override
-    public WeakHashMapData fillSampleData() {
+    public WeakHashMapData fillSampleData()
+    {
         primitiveTypeWeakHashMap = new WeakHashMap<>();
         primitiveTypeWeakHashMap.put(105, WeakHashMapData.primitiveTypes);
         return this;
     }
 
-    WeakHashMap<Integer, PrimitiveTypes> getPrimitiveTypeWeakHashMap() {
+    WeakHashMap<Integer, PrimitiveTypes> getPrimitiveTypeWeakHashMap()
+    {
         return primitiveTypeWeakHashMap;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         WeakHashMapData copy = (WeakHashMapData) o;
 

@@ -9,41 +9,45 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Assertions;
 
-public class SocketAddressData implements BinaryHandlerTestData {
+public class SocketAddressData implements BinaryHandlerTestData
+{
 
-        SocketAddress socketAddress;
-
-        @Override
-        public SocketAddressData fillSampleData() {
-            try {
-                socketAddress = new InetSocketAddress(80);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            return this;
-        }
+    SocketAddress socketAddress;
 
     @Override
-    public void proveResults(Object o) {
+    public SocketAddressData fillSampleData()
+    {
+        try {
+            socketAddress = new InetSocketAddress(80);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
-        SocketAddressData copy = (SocketAddressData)o;
+        SocketAddressData copy = (SocketAddressData) o;
         assertEquals(this.getSocketAddress(), copy.getSocketAddress(), "java.net.InetAddress");
     }
 
-    public SocketAddress getSocketAddress() {
-            return socketAddress;
-        }
+    public SocketAddress getSocketAddress()
+    {
+        return socketAddress;
     }
+}

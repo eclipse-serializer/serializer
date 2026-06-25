@@ -9,12 +9,13 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.Date;
 import java.sql.Time;
@@ -22,10 +23,10 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Assertions;
 
-public class SqlCalendarData implements BinaryHandlerTestData {
+public class SqlCalendarData implements BinaryHandlerTestData
+{
 
 
     Timestamp sqlTimestamp;
@@ -33,7 +34,8 @@ public class SqlCalendarData implements BinaryHandlerTestData {
     java.sql.Date date = new Date(1000);
 
     @Override
-    public BinaryHandlerTestData fillSampleData() {
+    public BinaryHandlerTestData fillSampleData()
+    {
         sqlTimestamp = Timestamp.valueOf(LocalDateTime.of(2020, 10, 9, 11, 52, 41));
         sqlTime = Time.valueOf(LocalTime.of(8, 53, 50, 410420));
         date = new Date(System.currentTimeMillis());
@@ -41,7 +43,8 @@ public class SqlCalendarData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         SqlCalendarData copy = (SqlCalendarData) o;
         assertAll(
@@ -51,15 +54,18 @@ public class SqlCalendarData implements BinaryHandlerTestData {
         );
     }
 
-    public Timestamp getSqlTimestamp() {
+    public Timestamp getSqlTimestamp()
+    {
         return sqlTimestamp;
     }
 
-    public Time getSqlTime() {
+    public Time getSqlTime()
+    {
         return sqlTime;
     }
 
-    public Date getDate() {
+    public Date getDate()
+    {
         return date;
     }
 }

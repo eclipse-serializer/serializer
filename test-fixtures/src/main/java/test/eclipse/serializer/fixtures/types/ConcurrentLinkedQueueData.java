@@ -9,31 +9,35 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
-
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class ConcurrentLinkedQueueData implements BinaryHandlerTestData {
+import org.junit.jupiter.api.Assertions;
+
+public class ConcurrentLinkedQueueData implements BinaryHandlerTestData
+{
     ConcurrentLinkedQueue<PrimitiveTypes> value = new ConcurrentLinkedQueue<>();
 
     @Override
-    public ConcurrentLinkedQueueData fillSampleData() {
+    public ConcurrentLinkedQueueData fillSampleData()
+    {
         value.add(PrimitiveTypes.fillSample());
         value.add(new PrimitiveTypes());
         return this;
     }
 
-    ConcurrentLinkedQueue<PrimitiveTypes> getValue() {
+    ConcurrentLinkedQueue<PrimitiveTypes> getValue()
+    {
         return value;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         ConcurrentLinkedQueueData copy = (ConcurrentLinkedQueueData) o;
         Assertions.assertIterableEquals(this.getValue(), copy.getValue());

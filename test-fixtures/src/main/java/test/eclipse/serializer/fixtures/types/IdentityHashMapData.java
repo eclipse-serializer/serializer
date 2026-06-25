@@ -9,19 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Assertions;
 
-public class IdentityHashMapData implements BinaryHandlerTestData {
+public class IdentityHashMapData implements BinaryHandlerTestData
+{
     private IdentityHashMap<Integer, Integer> intMap = createEmptyIntMap();
     private IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> threeMap = createEmptyThreeMap();
     private IdentityHashMap<Integer, PrimitiveTypes> primitiveTypeIdentityHashMap = new IdentityHashMap<>();
@@ -37,7 +38,8 @@ public class IdentityHashMapData implements BinaryHandlerTestData {
     private IdentityHashMap<Integer, Integer> largeMap;
 
     @Override
-    public IdentityHashMapData fillSampleData() {
+    public IdentityHashMapData fillSampleData()
+    {
         intMap = createIntMap();
         threeMap = createThreeMap();
         primitiveTypeIdentityHashMap = new IdentityHashMap<>();
@@ -54,19 +56,22 @@ public class IdentityHashMapData implements BinaryHandlerTestData {
     }
 
 
-    IdentityHashMap<Integer, Integer> createEmptyIntMap() {
+    IdentityHashMap<Integer, Integer> createEmptyIntMap()
+    {
         IdentityHashMap<Integer, Integer> intMap = new IdentityHashMap<>();
         intMap.put(100, 0);
         return intMap;
     }
 
-    IdentityHashMap<Integer, Integer> createIntMap() {
+    IdentityHashMap<Integer, Integer> createIntMap()
+    {
         IdentityHashMap<Integer, Integer> intMap = new IdentityHashMap<>();
         intMap.put(100, 6);
         return intMap;
     }
 
-    IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> createEmptyThreeMap() {
+    IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> createEmptyThreeMap()
+    {
         IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> map = new IdentityHashMap<>();
 
         IdentityHashMap<Integer, PrimitiveTypes> primitive = new IdentityHashMap<>();
@@ -79,7 +84,8 @@ public class IdentityHashMapData implements BinaryHandlerTestData {
         return map;
     }
 
-    IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> createThreeMap() {
+    IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> createThreeMap()
+    {
         IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> map = new IdentityHashMap<>();
 
         IdentityHashMap<Integer, PrimitiveTypes> primitive = new IdentityHashMap<>();
@@ -92,20 +98,24 @@ public class IdentityHashMapData implements BinaryHandlerTestData {
         return map;
     }
 
-    IdentityHashMap<Integer, Integer> getIntMap() {
+    IdentityHashMap<Integer, Integer> getIntMap()
+    {
         return intMap;
     }
 
-    IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> getThreeMap() {
+    IdentityHashMap<Integer, IdentityHashMap<Integer, IdentityHashMap<Integer, PrimitiveTypes>>> getThreeMap()
+    {
         return threeMap;
     }
 
-    IdentityHashMap<Integer, PrimitiveTypes> getPrimitiveTypeIdentityHashMap() {
+    IdentityHashMap<Integer, PrimitiveTypes> getPrimitiveTypeIdentityHashMap()
+    {
         return primitiveTypeIdentityHashMap;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         IdentityHashMapData copy = (IdentityHashMapData) o;
         assertAll("Array list Tests", //
@@ -169,34 +179,41 @@ public class IdentityHashMapData implements BinaryHandlerTestData {
 
     // ===== proposed edge-cases — helpers & getters =====
 
-    public IdentityHashMap<String, String> getNullKeyMap() {
+    public IdentityHashMap<String, String> getNullKeyMap()
+    {
         return nullKeyMap;
     }
 
-    public IdentityHashMap<String, String> getNullValueMap() {
+    public IdentityHashMap<String, String> getNullValueMap()
+    {
         return nullValueMap;
     }
 
-    public IdentityHashMap<String, String> getEmptyMap() {
+    public IdentityHashMap<String, String> getEmptyMap()
+    {
         return emptyMap;
     }
 
-    public IdentityHashMap<Integer, Integer> getOversizedCapacityMap() {
+    public IdentityHashMap<Integer, Integer> getOversizedCapacityMap()
+    {
         return oversizedCapacityMap;
     }
 
-    public IdentityHashMap<Integer, Integer> getLargeMap() {
+    public IdentityHashMap<Integer, Integer> getLargeMap()
+    {
         return largeMap;
     }
 
-    IdentityHashMap<String, String> createNullKeyMap() {
+    IdentityHashMap<String, String> createNullKeyMap()
+    {
         IdentityHashMap<String, String> m = new IdentityHashMap<>();
         m.put(null, "value-for-null-key");
         m.put("regular", "regular-value");
         return m;
     }
 
-    IdentityHashMap<String, String> createNullValueMap() {
+    IdentityHashMap<String, String> createNullValueMap()
+    {
         IdentityHashMap<String, String> m = new IdentityHashMap<>();
         m.put("k1", null);
         m.put("k2", "v2");
@@ -204,7 +221,8 @@ public class IdentityHashMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    IdentityHashMap<Integer, Integer> createOversizedCapacityMap() {
+    IdentityHashMap<Integer, Integer> createOversizedCapacityMap()
+    {
         IdentityHashMap<Integer, Integer> m = new IdentityHashMap<>(1024);
         m.put(1, 1);
         m.put(2, 2);
@@ -212,7 +230,8 @@ public class IdentityHashMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    IdentityHashMap<Integer, Integer> createLargeMap() {
+    IdentityHashMap<Integer, Integer> createLargeMap()
+    {
         IdentityHashMap<Integer, Integer> m = new IdentityHashMap<>();
         for (int i = 0; i < 10_000; i++) {
             m.put(i, i * 2);

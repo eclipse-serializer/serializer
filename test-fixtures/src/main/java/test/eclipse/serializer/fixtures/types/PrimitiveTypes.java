@@ -9,19 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
-
-import java.util.Objects;
-
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PrimitiveTypes implements BinaryHandlerTestData {
+import java.util.Objects;
+
+import org.junit.jupiter.api.Assertions;
+
+public class PrimitiveTypes implements BinaryHandlerTestData
+{
     private static final byte SAMPLE_BYTE = 100;
     private static final short SAMPLE_SHORT = 50;
     private static final int SAMPLE_INT = 5401;
@@ -71,18 +72,21 @@ public class PrimitiveTypes implements BinaryHandlerTestData {
     private char charMaxBmp;
     private boolean booleanFalse;
 
-    public PrimitiveTypes() {
+    public PrimitiveTypes()
+    {
         super();
     }
 
-    public static PrimitiveTypes fillSample() {
+    public static PrimitiveTypes fillSample()
+    {
         PrimitiveTypes p = new PrimitiveTypes();
         p.fillSampleData();
         return p;
     }
 
     @Override
-    public PrimitiveTypes fillSampleData() {
+    public PrimitiveTypes fillSampleData()
+    {
         this.byteValue = SAMPLE_BYTE;
         this.shortValue = SAMPLE_SHORT;
         this.intValue = SAMPLE_INT;
@@ -125,154 +129,191 @@ public class PrimitiveTypes implements BinaryHandlerTestData {
         return this;
     }
 
-    public byte getByteValue() {
+    public byte getByteValue()
+    {
         return byteValue;
     }
 
-    public short getShortValue() {
+    public short getShortValue()
+    {
         return shortValue;
     }
 
-    public int getIntValue() {
+    public int getIntValue()
+    {
         return intValue;
     }
 
-    public long getLongValue() {
+    public long getLongValue()
+    {
         return longValue;
     }
 
-    public float getFloatValue() {
+    public float getFloatValue()
+    {
         return floatValue;
     }
 
-    public double getDoubleValue() {
+    public double getDoubleValue()
+    {
         return doubleValue;
     }
 
-    public boolean isBooleanValue() {
+    public boolean isBooleanValue()
+    {
         return booleanValue;
     }
 
-    public char getCharValue() {
+    public char getCharValue()
+    {
         return charValue;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public byte getByteMin() {
+    public byte getByteMin()
+    {
         return byteMin;
     }
 
-    public byte getByteMax() {
+    public byte getByteMax()
+    {
         return byteMax;
     }
 
-    public byte getByteZero() {
+    public byte getByteZero()
+    {
         return byteZero;
     }
 
-    public short getShortMin() {
+    public short getShortMin()
+    {
         return shortMin;
     }
 
-    public short getShortMax() {
+    public short getShortMax()
+    {
         return shortMax;
     }
 
-    public int getIntMin() {
+    public int getIntMin()
+    {
         return intMin;
     }
 
-    public int getIntMax() {
+    public int getIntMax()
+    {
         return intMax;
     }
 
-    public long getLongMin() {
+    public long getLongMin()
+    {
         return longMin;
     }
 
-    public long getLongMax() {
+    public long getLongMax()
+    {
         return longMax;
     }
 
-    public float getFloatNaN() {
+    public float getFloatNaN()
+    {
         return floatNaN;
     }
 
-    public float getFloatPositiveInfinity() {
+    public float getFloatPositiveInfinity()
+    {
         return floatPositiveInfinity;
     }
 
-    public float getFloatNegativeInfinity() {
+    public float getFloatNegativeInfinity()
+    {
         return floatNegativeInfinity;
     }
 
-    public float getFloatMin() {
+    public float getFloatMin()
+    {
         return floatMin;
     }
 
-    public float getFloatMax() {
+    public float getFloatMax()
+    {
         return floatMax;
     }
 
-    public float getFloatMinNormal() {
+    public float getFloatMinNormal()
+    {
         return floatMinNormal;
     }
 
-    public float getFloatNegZero() {
+    public float getFloatNegZero()
+    {
         return floatNegZero;
     }
 
-    public float getFloatPosZero() {
+    public float getFloatPosZero()
+    {
         return floatPosZero;
     }
 
-    public double getDoubleNaN() {
+    public double getDoubleNaN()
+    {
         return doubleNaN;
     }
 
-    public double getDoublePositiveInfinity() {
+    public double getDoublePositiveInfinity()
+    {
         return doublePositiveInfinity;
     }
 
-    public double getDoubleNegativeInfinity() {
+    public double getDoubleNegativeInfinity()
+    {
         return doubleNegativeInfinity;
     }
 
-    public double getDoubleMin() {
+    public double getDoubleMin()
+    {
         return doubleMin;
     }
 
-    public double getDoubleMax() {
+    public double getDoubleMax()
+    {
         return doubleMax;
     }
 
-    public double getDoubleMinNormal() {
+    public double getDoubleMinNormal()
+    {
         return doubleMinNormal;
     }
 
-    public double getDoubleNegZero() {
+    public double getDoubleNegZero()
+    {
         return doubleNegZero;
     }
 
-    public double getDoublePosZero() {
+    public double getDoublePosZero()
+    {
         return doublePosZero;
     }
 
-    public char getCharNul() {
+    public char getCharNul()
+    {
         return charNul;
     }
 
-    public char getCharMaxBmp() {
+    public char getCharMaxBmp()
+    {
         return charMaxBmp;
     }
 
-    public boolean isBooleanFalse() {
+    public boolean isBooleanFalse()
+    {
         return booleanFalse;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         PrimitiveTypes copy = (PrimitiveTypes) o;
         assertAll("Primitive original tests",
@@ -320,7 +361,8 @@ public class PrimitiveTypes implements BinaryHandlerTestData {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PrimitiveTypes that = (PrimitiveTypes) o;
@@ -328,12 +370,14 @@ public class PrimitiveTypes implements BinaryHandlerTestData {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(byteValue, shortValue, intValue, longValue, floatValue, doubleValue, booleanValue, charValue);
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "PrimitiveTypes{" +
                 "byteValue=" + byteValue +
                 ", shortValue=" + shortValue +

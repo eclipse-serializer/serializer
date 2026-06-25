@@ -9,23 +9,22 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Assertions;
 
-public class ConcurrentHashMapData implements BinaryHandlerTestData {
+public class ConcurrentHashMapData implements BinaryHandlerTestData
+{
     ConcurrentHashMap<Integer, PrimitiveTypes> value = new ConcurrentHashMap<>();
 
     // additional corner-case maps
@@ -36,7 +35,8 @@ public class ConcurrentHashMapData implements BinaryHandlerTestData {
     private ConcurrentHashMap<BadHashKey, String> badHashMap = new ConcurrentHashMap<>();
 
     @Override
-    public ConcurrentHashMapData fillSampleData() {
+    public ConcurrentHashMapData fillSampleData()
+    {
         value.put(1, PrimitiveTypes.fillSample());
 
         // aliased values: same instance stored under multiple keys
@@ -71,7 +71,8 @@ public class ConcurrentHashMapData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         value.put(2, new PrimitiveTypes());
 
         // update aliased: modify the shared instance
@@ -104,32 +105,39 @@ public class ConcurrentHashMapData implements BinaryHandlerTestData {
         return this;
     }
 
-    ConcurrentHashMap<Integer, PrimitiveTypes> getValue() {
+    ConcurrentHashMap<Integer, PrimitiveTypes> getValue()
+    {
         return value;
     }
 
-    public ConcurrentHashMap<Integer, PrimitiveTypes> getValueAliased() {
+    public ConcurrentHashMap<Integer, PrimitiveTypes> getValueAliased()
+    {
         return valueAliased;
     }
 
-    public ConcurrentHashMap<Integer, PrimitiveTypes> getValueSubclass() {
+    public ConcurrentHashMap<Integer, PrimitiveTypes> getValueSubclass()
+    {
         return valueSubclass;
     }
 
-    public ConcurrentHashMap<Object, Object> getValueHetero() {
+    public ConcurrentHashMap<Object, Object> getValueHetero()
+    {
         return valueHetero;
     }
 
-    public ConcurrentHashMap<Integer, PrimitiveTypes> getLargeValue() {
+    public ConcurrentHashMap<Integer, PrimitiveTypes> getLargeValue()
+    {
         return largeValue;
     }
 
-    public ConcurrentHashMap<BadHashKey, String> getBadHashMap() {
+    public ConcurrentHashMap<BadHashKey, String> getBadHashMap()
+    {
         return badHashMap;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         ConcurrentHashMapData copy = (ConcurrentHashMapData) o;
 
@@ -176,20 +184,24 @@ public class ConcurrentHashMapData implements BinaryHandlerTestData {
     }
 
     // helper subclass to test polymorphic values
-    public static class ExtendedPrimitive extends PrimitiveTypes {
+    public static class ExtendedPrimitive extends PrimitiveTypes
+    {
         public String tag;
     }
 
     // key type that returns constant hash code to force collisions
-    public static class BadHashKey {
+    public static class BadHashKey
+    {
         public final Integer id;
 
-        public BadHashKey(Integer id) {
+        public BadHashKey(Integer id)
+        {
             this.id = id;
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(Object o)
+        {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             BadHashKey that = (BadHashKey) o;
@@ -197,12 +209,14 @@ public class ConcurrentHashMapData implements BinaryHandlerTestData {
         }
 
         @Override
-        public int hashCode() {
+        public int hashCode()
+        {
             return 42;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return "BadHashKey{" + id + '}';
         }
     }

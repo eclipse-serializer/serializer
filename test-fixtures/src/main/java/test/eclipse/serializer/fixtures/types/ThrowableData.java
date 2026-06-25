@@ -9,18 +9,14 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
 public class ThrowableData implements BinaryHandlerTestData
 {
@@ -71,23 +67,28 @@ public class ThrowableData implements BinaryHandlerTestData
 
     // ===== proposed edge-cases — getters =====
 
-    public Throwable getNullMessageThrowable() {
+    public Throwable getNullMessageThrowable()
+    {
         return nullMessageThrowable;
     }
 
-    public Throwable getSubclassThrowable() {
+    public Throwable getSubclassThrowable()
+    {
         return subclassThrowable;
     }
 
-    public Throwable getChainedThrowable() {
+    public Throwable getChainedThrowable()
+    {
         return chainedThrowable;
     }
 
-    public Throwable getSuppressedThrowable() {
+    public Throwable getSuppressedThrowable()
+    {
         return suppressedThrowable;
     }
 
-    public Throwable getStackTraceThrowable() {
+    public Throwable getStackTraceThrowable()
+    {
         return stackTraceThrowable;
     }
 

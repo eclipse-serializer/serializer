@@ -9,21 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Stack;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class StackData implements BinaryHandlerTestData {
+public class StackData implements BinaryHandlerTestData
+{
     private Stack<Integer> stack = new Stack<>();
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -36,34 +34,41 @@ public class StackData implements BinaryHandlerTestData {
     private Stack<Integer> duplicatesStack;
     private Stack<Integer> peekAndSearchStack;
 
-    Stack<Integer> getStack() {
+    Stack<Integer> getStack()
+    {
         return stack;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public Stack<Integer> getEmptyStack() {
+    public Stack<Integer> getEmptyStack()
+    {
         return emptyStack;
     }
 
-    public Stack<Integer> getLargeStack() {
+    public Stack<Integer> getLargeStack()
+    {
         return largeStack;
     }
 
-    public Stack<Integer> getNullsStack() {
+    public Stack<Integer> getNullsStack()
+    {
         return nullsStack;
     }
 
-    public Stack<Integer> getDuplicatesStack() {
+    public Stack<Integer> getDuplicatesStack()
+    {
         return duplicatesStack;
     }
 
-    public Stack<Integer> getPeekAndSearchStack() {
+    public Stack<Integer> getPeekAndSearchStack()
+    {
         return peekAndSearchStack;
     }
 
     @Override
-    public StackData fillSampleData() {
+    public StackData fillSampleData()
+    {
         stack.push(1);
         stack.push(2);
         stack.push(3);
@@ -78,7 +83,8 @@ public class StackData implements BinaryHandlerTestData {
         return this;
     }
 
-    Stack<Integer> createLargeStack() {
+    Stack<Integer> createLargeStack()
+    {
         Stack<Integer> s = new Stack<>();
         for (int i = 0; i < 1000; i++) {
             s.push(i);
@@ -86,7 +92,8 @@ public class StackData implements BinaryHandlerTestData {
         return s;
     }
 
-    Stack<Integer> createNullsStack() {
+    Stack<Integer> createNullsStack()
+    {
         // Stack permits null (inherited from Vector). pop order from top: null, 1, null
         Stack<Integer> s = new Stack<>();
         s.push(null);
@@ -95,7 +102,8 @@ public class StackData implements BinaryHandlerTestData {
         return s;
     }
 
-    Stack<Integer> createDuplicatesStack() {
+    Stack<Integer> createDuplicatesStack()
+    {
         Stack<Integer> s = new Stack<>();
         s.push(5);
         s.push(5);
@@ -103,7 +111,8 @@ public class StackData implements BinaryHandlerTestData {
         return s;
     }
 
-    Stack<Integer> createPeekAndSearchStack() {
+    Stack<Integer> createPeekAndSearchStack()
+    {
         // After push(10), push(20), push(30): top = 30; search() is 1-based from top:
         // search(30) = 1, search(20) = 2, search(10) = 3, search(99) = -1
         Stack<Integer> s = new Stack<>();
@@ -114,7 +123,8 @@ public class StackData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         StackData copy = (StackData) o;
 

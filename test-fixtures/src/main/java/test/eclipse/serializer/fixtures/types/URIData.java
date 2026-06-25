@@ -9,22 +9,21 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Assertions;
 
-public class URIData implements BinaryHandlerTestData {
+public class URIData implements BinaryHandlerTestData
+{
 
     URI uri;
 
@@ -42,7 +41,8 @@ public class URIData implements BinaryHandlerTestData {
     private URI userInfoUri;
 
     @Override
-    public URIData fillSampleData() {
+    public URIData fillSampleData()
+    {
         try {
             uri = new URL("http://example.com/pages/").toURI();
 
@@ -62,42 +62,51 @@ public class URIData implements BinaryHandlerTestData {
         return this;
     }
 
-    public URI getUri() {
+    public URI getUri()
+    {
         return uri;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public URI getOpaqueUri() {
+    public URI getOpaqueUri()
+    {
         return opaqueUri;
     }
 
-    public URI getUrnUri() {
+    public URI getUrnUri()
+    {
         return urnUri;
     }
 
-    public URI getRelativeUri() {
+    public URI getRelativeUri()
+    {
         return relativeUri;
     }
 
-    public URI getIpv6Uri() {
+    public URI getIpv6Uri()
+    {
         return ipv6Uri;
     }
 
-    public URI getEncodedUri() {
+    public URI getEncodedUri()
+    {
         return encodedUri;
     }
 
-    public URI getFragmentOnlyUri() {
+    public URI getFragmentOnlyUri()
+    {
         return fragmentOnlyUri;
     }
 
-    public URI getUserInfoUri() {
+    public URI getUserInfoUri()
+    {
         return userInfoUri;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         URIData copy = (URIData) o;
         assertAll("URI tests",

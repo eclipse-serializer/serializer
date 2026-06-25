@@ -9,23 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
 import java.util.TreeSet;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class TreeSetData implements BinaryHandlerTestData {
+public class TreeSetData implements BinaryHandlerTestData
+{
     TreeSet<String> value = new TreeSet<>();
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -43,7 +40,8 @@ public class TreeSetData implements BinaryHandlerTestData {
     private TreeSet<Integer> largeTreeSet;
 
     @Override
-    public TreeSetData fillSampleData() {
+    public TreeSetData fillSampleData()
+    {
         value.add("SomeString");
 
         // ===== proposed edge-cases =====
@@ -58,27 +56,33 @@ public class TreeSetData implements BinaryHandlerTestData {
 
     // ===== proposed edge-cases — getters =====
 
-    public TreeSet<Integer> getEmptyTreeSet() {
+    public TreeSet<Integer> getEmptyTreeSet()
+    {
         return emptyTreeSet;
     }
 
-    public TreeSet<Integer> getIntTreeSet() {
+    public TreeSet<Integer> getIntTreeSet()
+    {
         return intTreeSet;
     }
 
-    public TreeSet<Integer> getReverseTreeSet() {
+    public TreeSet<Integer> getReverseTreeSet()
+    {
         return reverseTreeSet;
     }
 
-    public TreeSet<String> getCaseInsensitiveTreeSet() {
+    public TreeSet<String> getCaseInsensitiveTreeSet()
+    {
         return caseInsensitiveTreeSet;
     }
 
-    public TreeSet<Integer> getLargeTreeSet() {
+    public TreeSet<Integer> getLargeTreeSet()
+    {
         return largeTreeSet;
     }
 
-    TreeSet<Integer> createIntTreeSet() {
+    TreeSet<Integer> createIntTreeSet()
+    {
         TreeSet<Integer> s = new TreeSet<>();
         // insert out of order — iteration must come back as [1, 2, 3, 4, 5]
         s.add(3);
@@ -89,7 +93,8 @@ public class TreeSetData implements BinaryHandlerTestData {
         return s;
     }
 
-    TreeSet<Integer> createReverseTreeSet() {
+    TreeSet<Integer> createReverseTreeSet()
+    {
         // Collections.reverseOrder() returns a public singleton (Collections.ReverseComparator.REVERSE_ORDER).
         // Iteration after round-trip must remain [5, 4, 3, 2, 1] — otherwise the comparator was dropped.
         TreeSet<Integer> s = new TreeSet<>(Collections.reverseOrder());
@@ -101,7 +106,8 @@ public class TreeSetData implements BinaryHandlerTestData {
         return s;
     }
 
-    TreeSet<String> createCaseInsensitiveTreeSet() {
+    TreeSet<String> createCaseInsensitiveTreeSet()
+    {
         // String.CASE_INSENSITIVE_ORDER is a public singleton (String.CaseInsensitiveComparator).
         // Natural String.compareTo would order ["APPLE", "Cherry", "banana"] (uppercase first);
         // case-insensitive comparator orders ["APPLE", "banana", "Cherry"]. Divergence after round-trip
@@ -113,7 +119,8 @@ public class TreeSetData implements BinaryHandlerTestData {
         return s;
     }
 
-    TreeSet<Integer> createLargeTreeSet() {
+    TreeSet<Integer> createLargeTreeSet()
+    {
         TreeSet<Integer> s = new TreeSet<>();
         // Insert in non-sorted order to make sortedness round-trip meaningful
         for (int i = 999; i >= 0; i--) {
@@ -123,9 +130,10 @@ public class TreeSetData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
-        TreeSetData copy = (TreeSetData)o;
+        TreeSetData copy = (TreeSetData) o;
         assertAll("TreeSet tests",
                 () -> assertIterableEquals(this.value, copy.value),
 

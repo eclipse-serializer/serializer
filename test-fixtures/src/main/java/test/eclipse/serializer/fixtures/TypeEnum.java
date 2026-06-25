@@ -9,17 +9,18 @@ package test.eclipse.serializer.fixtures;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
 
-import test.eclipse.serializer.fixtures.types.*;
-
 import java.util.function.Supplier;
 
-public enum TypeEnum {
+import test.eclipse.serializer.fixtures.types.*;
+
+public enum TypeEnum
+{
     PrimitiveTypes(new PrimitiveTypes().fillSampleData(), PrimitiveTypes::new),
     ArrayDeque(new ArrayDequeData().fillSampleData(), ArrayDequeData::new),
     ArrayList(new ArrayListData().fillSampleData(), ArrayListData::new),
@@ -91,21 +92,25 @@ public enum TypeEnum {
     final private BinaryHandlerTestData original;
     final private Supplier<?> instanceSupplier;
 
-    TypeEnum(BinaryHandlerTestData original, Supplier<?> copy) {
+    TypeEnum(BinaryHandlerTestData original, Supplier<?> copy)
+    {
         this.original = original;
         this.instanceSupplier = copy;
     }
 
-    public BinaryHandlerTestData getOriginal() {
+    public BinaryHandlerTestData getOriginal()
+    {
         return original;
     }
 
-    public Object createEmptyInstance() {
+    public Object createEmptyInstance()
+    {
         return instanceSupplier.get();
     }
 
     @Deprecated
-    public Supplier<?> getCopy() {
+    public Supplier<?> getCopy()
+    {
         return instanceSupplier;
     }
 }

@@ -9,22 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.OptionalLong;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class OptionalLongData implements BinaryHandlerTestData {
+public class OptionalLongData implements BinaryHandlerTestData
+{
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     OptionalLong value = OptionalLong.of(0);
@@ -46,7 +43,8 @@ public class OptionalLongData implements BinaryHandlerTestData {
     private OptionalLong ofNegativeOne;
 
     @Override
-    public OptionalLongData fillSampleData() {
+    public OptionalLongData fillSampleData()
+    {
         value = OptionalLong.of(44356);
 
         // ===== proposed edge-cases =====
@@ -59,34 +57,41 @@ public class OptionalLongData implements BinaryHandlerTestData {
         return this;
     }
 
-    OptionalLong getValue() {
+    OptionalLong getValue()
+    {
         return value;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public OptionalLong getEmptyOptional() {
+    public OptionalLong getEmptyOptional()
+    {
         return emptyOptional;
     }
 
-    public OptionalLong getOfZero() {
+    public OptionalLong getOfZero()
+    {
         return ofZero;
     }
 
-    public OptionalLong getOfLongMin() {
+    public OptionalLong getOfLongMin()
+    {
         return ofLongMin;
     }
 
-    public OptionalLong getOfLongMax() {
+    public OptionalLong getOfLongMax()
+    {
         return ofLongMax;
     }
 
-    public OptionalLong getOfNegativeOne() {
+    public OptionalLong getOfNegativeOne()
+    {
         return ofNegativeOne;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         OptionalLongData copy = (OptionalLongData) o;
         assertAll("OptionalLong tests",

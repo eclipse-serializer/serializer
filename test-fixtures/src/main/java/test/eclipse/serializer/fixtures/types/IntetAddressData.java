@@ -9,23 +9,25 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.InetAddress;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Assertions;
 
-public class IntetAddressData implements BinaryHandlerTestData {
+public class IntetAddressData implements BinaryHandlerTestData
+{
 
     InetAddress inetAddress;
 
     @Override
-    public IntetAddressData fillSampleData() {
+    public IntetAddressData fillSampleData()
+    {
         try {
             inetAddress = InetAddress.getByName("127.0.0.1");
         } catch (Exception e) {
@@ -34,12 +36,14 @@ public class IntetAddressData implements BinaryHandlerTestData {
         return this;
     }
 
-    public InetAddress getInetAddress() {
+    public InetAddress getInetAddress()
+    {
         return inetAddress;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         IntetAddressData copy = (IntetAddressData) o;
         assertEquals(this.getInetAddress(), copy.getInetAddress(), "java.net.InetAddress");

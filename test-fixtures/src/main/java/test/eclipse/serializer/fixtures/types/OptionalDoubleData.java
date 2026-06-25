@@ -9,22 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.OptionalDouble;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class OptionalDoubleData implements BinaryHandlerTestData {
+public class OptionalDoubleData implements BinaryHandlerTestData
+{
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     OptionalDouble value = OptionalDouble.of(0);
@@ -50,7 +47,8 @@ public class OptionalDoubleData implements BinaryHandlerTestData {
     private OptionalDouble ofDoubleMax;
 
     @Override
-    public OptionalDoubleData fillSampleData() {
+    public OptionalDoubleData fillSampleData()
+    {
         value = OptionalDouble.of(44356.455d);
 
         // ===== proposed edge-cases =====
@@ -64,40 +62,48 @@ public class OptionalDoubleData implements BinaryHandlerTestData {
         return this;
     }
 
-    OptionalDouble getValue() {
+    OptionalDouble getValue()
+    {
         return value;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public OptionalDouble getEmptyOptional() {
+    public OptionalDouble getEmptyOptional()
+    {
         return emptyOptional;
     }
 
-    public OptionalDouble getOfZero() {
+    public OptionalDouble getOfZero()
+    {
         return ofZero;
     }
 
-    public OptionalDouble getOfNaN() {
+    public OptionalDouble getOfNaN()
+    {
         return ofNaN;
     }
 
-    public OptionalDouble getOfPositiveInfinity() {
+    public OptionalDouble getOfPositiveInfinity()
+    {
         return ofPositiveInfinity;
     }
 
-    public OptionalDouble getOfNegativeZero() {
+    public OptionalDouble getOfNegativeZero()
+    {
         return ofNegativeZero;
     }
 
-    public OptionalDouble getOfDoubleMax() {
+    public OptionalDouble getOfDoubleMax()
+    {
         return ofDoubleMax;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
-        OptionalDoubleData copy = (OptionalDoubleData)o;
+        OptionalDoubleData copy = (OptionalDoubleData) o;
         assertAll("OptionalDouble tests",
                 () -> assertEquals(this.getValue(), copy.getValue(), "OptionalDouble"),
 

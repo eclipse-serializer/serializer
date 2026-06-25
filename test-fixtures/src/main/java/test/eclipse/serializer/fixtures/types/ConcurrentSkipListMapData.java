@@ -9,23 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class ConcurrentSkipListMapData implements BinaryHandlerTestData {
+public class ConcurrentSkipListMapData implements BinaryHandlerTestData
+{
     ConcurrentSkipListMap<Integer, PrimitiveTypes> value = new ConcurrentSkipListMap<>();
 
     // ===== proposed edge-cases (review & cherry-pick) =====
@@ -39,7 +36,8 @@ public class ConcurrentSkipListMapData implements BinaryHandlerTestData {
     private ConcurrentSkipListMap<Integer, Integer> largeMap;
 
     @Override
-    public ConcurrentSkipListMapData fillSampleData() {
+    public ConcurrentSkipListMapData fillSampleData()
+    {
         value.put(1, PrimitiveTypes.fillSample());
 
         // ===== proposed edge-cases =====
@@ -51,29 +49,35 @@ public class ConcurrentSkipListMapData implements BinaryHandlerTestData {
         return this;
     }
 
-    ConcurrentSkipListMap<Integer, PrimitiveTypes> getValue() {
+    ConcurrentSkipListMap<Integer, PrimitiveTypes> getValue()
+    {
         return value;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public ConcurrentSkipListMap<Integer, Integer> getEmptyMap() {
+    public ConcurrentSkipListMap<Integer, Integer> getEmptyMap()
+    {
         return emptyMap;
     }
 
-    public ConcurrentSkipListMap<Integer, Integer> getReverseMap() {
+    public ConcurrentSkipListMap<Integer, Integer> getReverseMap()
+    {
         return reverseMap;
     }
 
-    public ConcurrentSkipListMap<String, Integer> getCaseInsensitiveMap() {
+    public ConcurrentSkipListMap<String, Integer> getCaseInsensitiveMap()
+    {
         return caseInsensitiveMap;
     }
 
-    public ConcurrentSkipListMap<Integer, Integer> getLargeMap() {
+    public ConcurrentSkipListMap<Integer, Integer> getLargeMap()
+    {
         return largeMap;
     }
 
-    ConcurrentSkipListMap<Integer, Integer> createReverseMap() {
+    ConcurrentSkipListMap<Integer, Integer> createReverseMap()
+    {
         // Collections.reverseOrder() — public singleton. If preserved, iteration is [5,4,3,2,1];
         // if dropped, the loaded map falls back to natural ordering and the test fails.
         ConcurrentSkipListMap<Integer, Integer> m = new ConcurrentSkipListMap<>(Collections.reverseOrder());
@@ -85,7 +89,8 @@ public class ConcurrentSkipListMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    ConcurrentSkipListMap<String, Integer> createCaseInsensitiveMap() {
+    ConcurrentSkipListMap<String, Integer> createCaseInsensitiveMap()
+    {
         // String.CASE_INSENSITIVE_ORDER — public singleton. Divergence flags dropped comparator.
         ConcurrentSkipListMap<String, Integer> m = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
         m.put("banana", 1);
@@ -94,7 +99,8 @@ public class ConcurrentSkipListMapData implements BinaryHandlerTestData {
         return m;
     }
 
-    ConcurrentSkipListMap<Integer, Integer> createLargeMap() {
+    ConcurrentSkipListMap<Integer, Integer> createLargeMap()
+    {
         ConcurrentSkipListMap<Integer, Integer> m = new ConcurrentSkipListMap<>();
         for (int i = 999; i >= 0; i--) {
             m.put(i, i * 2);
@@ -103,7 +109,8 @@ public class ConcurrentSkipListMapData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         ConcurrentSkipListMapData copy = (ConcurrentSkipListMapData) o;
         assertAll("ConcurrentSkipListMap",

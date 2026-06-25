@@ -9,21 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Currency;
 import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Assertions;
 
-public class CurrencyData implements BinaryHandlerTestData {
+public class CurrencyData implements BinaryHandlerTestData
+{
 
     Currency currency;
 
@@ -38,7 +37,8 @@ public class CurrencyData implements BinaryHandlerTestData {
     private Currency xtsTestCurrency;
 
     @Override
-    public CurrencyData fillSampleData() {
+    public CurrencyData fillSampleData()
+    {
         currency = Currency.getInstance(Locale.CANADA);
 
         // ===== proposed edge-cases =====
@@ -50,30 +50,36 @@ public class CurrencyData implements BinaryHandlerTestData {
         return this;
     }
 
-    public Currency getCurrency() {
+    public Currency getCurrency()
+    {
         return currency;
     }
 
     // ===== proposed edge-cases — getters =====
 
-    public Currency getEurCurrency() {
+    public Currency getEurCurrency()
+    {
         return eurCurrency;
     }
 
-    public Currency getJpyCurrency() {
+    public Currency getJpyCurrency()
+    {
         return jpyCurrency;
     }
 
-    public Currency getBhdCurrency() {
+    public Currency getBhdCurrency()
+    {
         return bhdCurrency;
     }
 
-    public Currency getXtsTestCurrency() {
+    public Currency getXtsTestCurrency()
+    {
         return xtsTestCurrency;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         CurrencyData copy = (CurrencyData) o;
         assertAll("Currency tests",

@@ -9,14 +9,12 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 
@@ -103,23 +101,28 @@ public class LocalDateData implements BinaryHandlerTestData
 
     // ===== proposed edge-cases — getters =====
 
-    public LocalDate getMinLocalDate() {
+    public LocalDate getMinLocalDate()
+    {
         return minLocalDate;
     }
 
-    public LocalDate getMaxLocalDate() {
+    public LocalDate getMaxLocalDate()
+    {
         return maxLocalDate;
     }
 
-    public LocalDate getEpochDate() {
+    public LocalDate getEpochDate()
+    {
         return epochDate;
     }
 
-    public LocalDate getLeapDay() {
+    public LocalDate getLeapDay()
+    {
         return leapDay;
     }
 
-    public LocalDate getNegativeYear() {
+    public LocalDate getNegativeYear()
+    {
         return negativeYear;
     }
 }

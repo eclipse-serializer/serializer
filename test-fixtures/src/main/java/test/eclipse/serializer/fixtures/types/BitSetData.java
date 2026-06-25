@@ -9,20 +9,17 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.BitSet;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class BitSetData implements BinaryHandlerTestData {
+public class BitSetData implements BinaryHandlerTestData
+{
 
     // basic value
     private BitSet basicBitSet;
@@ -51,7 +48,8 @@ public class BitSetData implements BinaryHandlerTestData {
     private BitSet maxIntBit;               // bit at Integer.MAX_VALUE / 64 boundary area
 
     @Override
-    public BinaryHandlerTestData fillSampleData() {
+    public BinaryHandlerTestData fillSampleData()
+    {
         // basic value
         basicBitSet = new BitSet();
         basicBitSet.set(1);
@@ -162,7 +160,8 @@ public class BitSetData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         // basic: add and remove bits
         basicBitSet.clear(1);
         basicBitSet.set(2);
@@ -245,31 +244,119 @@ public class BitSetData implements BinaryHandlerTestData {
     }
 
     // --- getters ---
-    public BitSet getBasicBitSet() { return basicBitSet; }
-    public BitSet getEmptyBitSet() { return emptyBitSet; }
-    public BitSet getNullBitSet() { return nullBitSet; }
-    public BitSet getSingleBitZero() { return singleBitZero; }
-    public BitSet getSingleBitHigh() { return singleBitHigh; }
-    public BitSet getAllBitsInWord() { return allBitsInWord; }
-    public BitSet getCrossWordBoundary() { return crossWordBoundary; }
-    public BitSet getSparseBitSet() { return sparseBitSet; }
-    public BitSet getDenseBitSet() { return denseBitSet; }
-    public BitSet getLargeBitSet() { return largeBitSet; }
-    public BitSet getFromByteArray() { return fromByteArray; }
-    public BitSet getFromLongArray() { return fromLongArray; }
-    public BitSet getAlternatingBits() { return alternatingBits; }
-    public BitSet getEvenBitsOnly() { return evenBitsOnly; }
-    public BitSet getOddBitsOnly() { return oddBitsOnly; }
-    public BitSet getNegatedPattern() { return negatedPattern; }
-    public BitSet getAndResult() { return andResult; }
-    public BitSet getOrResult() { return orResult; }
-    public BitSet getXorResult() { return xorResult; }
-    public BitSet getPreAllocatedEmpty() { return preAllocatedEmpty; }
-    public BitSet getClearedAfterSet() { return clearedAfterSet; }
-    public BitSet getMaxIntBit() { return maxIntBit; }
+    public BitSet getBasicBitSet()
+    {
+        return basicBitSet;
+    }
+
+    public BitSet getEmptyBitSet()
+    {
+        return emptyBitSet;
+    }
+
+    public BitSet getNullBitSet()
+    {
+        return nullBitSet;
+    }
+
+    public BitSet getSingleBitZero()
+    {
+        return singleBitZero;
+    }
+
+    public BitSet getSingleBitHigh()
+    {
+        return singleBitHigh;
+    }
+
+    public BitSet getAllBitsInWord()
+    {
+        return allBitsInWord;
+    }
+
+    public BitSet getCrossWordBoundary()
+    {
+        return crossWordBoundary;
+    }
+
+    public BitSet getSparseBitSet()
+    {
+        return sparseBitSet;
+    }
+
+    public BitSet getDenseBitSet()
+    {
+        return denseBitSet;
+    }
+
+    public BitSet getLargeBitSet()
+    {
+        return largeBitSet;
+    }
+
+    public BitSet getFromByteArray()
+    {
+        return fromByteArray;
+    }
+
+    public BitSet getFromLongArray()
+    {
+        return fromLongArray;
+    }
+
+    public BitSet getAlternatingBits()
+    {
+        return alternatingBits;
+    }
+
+    public BitSet getEvenBitsOnly()
+    {
+        return evenBitsOnly;
+    }
+
+    public BitSet getOddBitsOnly()
+    {
+        return oddBitsOnly;
+    }
+
+    public BitSet getNegatedPattern()
+    {
+        return negatedPattern;
+    }
+
+    public BitSet getAndResult()
+    {
+        return andResult;
+    }
+
+    public BitSet getOrResult()
+    {
+        return orResult;
+    }
+
+    public BitSet getXorResult()
+    {
+        return xorResult;
+    }
+
+    public BitSet getPreAllocatedEmpty()
+    {
+        return preAllocatedEmpty;
+    }
+
+    public BitSet getClearedAfterSet()
+    {
+        return clearedAfterSet;
+    }
+
+    public BitSet getMaxIntBit()
+    {
+        return maxIntBit;
+    }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         assertNotNull(o);
         BitSetData copy = (BitSetData) o;
 
@@ -304,7 +391,8 @@ public class BitSetData implements BinaryHandlerTestData {
      * When expected is null, actual must also be null.
      * When expected is non-null, verifies equality, cardinality, length, and underlying long array.
      */
-    private static void assertBitSetNullSafe(BitSet expected, BitSet actual, String label) {
+    private static void assertBitSetNullSafe(BitSet expected, BitSet actual, String label)
+    {
         if (expected == null) {
             assertNull(actual, label + " should be null");
             return;

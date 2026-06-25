@@ -9,19 +9,18 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-public class BigDecimalData implements BinaryHandlerTestData {
+public class BigDecimalData implements BinaryHandlerTestData
+{
 
     private BigDecimal bigDecimalValue;
 
@@ -45,7 +44,8 @@ public class BigDecimalData implements BinaryHandlerTestData {
     private BigDecimal bigDecimalMulResult;         // result of multiply
 
     @Override
-    public BinaryHandlerTestData fillSampleData() {
+    public BinaryHandlerTestData fillSampleData()
+    {
         bigDecimalValue = new BigDecimal(456);
 
         // corner-case initializations
@@ -77,7 +77,8 @@ public class BigDecimalData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         bigDecimalValue = new BigDecimal(555);
 
         // corner-case updates
@@ -102,31 +103,93 @@ public class BigDecimalData implements BinaryHandlerTestData {
         return this;
     }
 
-    public BigDecimal getBigDecimalValue() { return bigDecimalValue; }
+    public BigDecimal getBigDecimalValue()
+    {
+        return bigDecimalValue;
+    }
 
     // getters for corner-case fields
-    public BigDecimal getBigDecimalNull() { return bigDecimalNull; }
-    public BigDecimal getBigDecimalZero() { return bigDecimalZero; }
-    public BigDecimal getBigDecimalNegative() { return bigDecimalNegative; }
-    public BigDecimal getBigDecimalLarge() { return bigDecimalLarge; }
-    public BigDecimal getBigDecimalHighScale() { return bigDecimalHighScale; }
-    public BigDecimal getBigDecimalDifferentScale() { return bigDecimalDifferentScale; }
-    public BigDecimal getBigDecimalNegativeZero() { return bigDecimalNegativeZero; }
-    public BigDecimal getBigDecimalWithExponent() { return bigDecimalWithExponent; }
+    public BigDecimal getBigDecimalNull()
+    {
+        return bigDecimalNull;
+    }
+
+    public BigDecimal getBigDecimalZero()
+    {
+        return bigDecimalZero;
+    }
+
+    public BigDecimal getBigDecimalNegative()
+    {
+        return bigDecimalNegative;
+    }
+
+    public BigDecimal getBigDecimalLarge()
+    {
+        return bigDecimalLarge;
+    }
+
+    public BigDecimal getBigDecimalHighScale()
+    {
+        return bigDecimalHighScale;
+    }
+
+    public BigDecimal getBigDecimalDifferentScale()
+    {
+        return bigDecimalDifferentScale;
+    }
+
+    public BigDecimal getBigDecimalNegativeZero()
+    {
+        return bigDecimalNegativeZero;
+    }
+
+    public BigDecimal getBigDecimalWithExponent()
+    {
+        return bigDecimalWithExponent;
+    }
 
     // getters for typical usage
-    public BigDecimal getBigDecimalFromDouble() { return bigDecimalFromDouble; }
-    public BigDecimal getBigDecimalValueOfDouble() { return bigDecimalValueOfDouble; }
-    public BigDecimal getBigDecimalStripTrailing() { return bigDecimalStripTrailing; }
-    public BigDecimal getBigDecimalNegativeScale() { return bigDecimalNegativeScale; }
-    public BigDecimal getBigDecimalDivideRepeating() { return bigDecimalDivideRepeating; }
-    public BigDecimal getBigDecimalAddResult() { return bigDecimalAddResult; }
-    public BigDecimal getBigDecimalMulResult() { return bigDecimalMulResult; }
+    public BigDecimal getBigDecimalFromDouble()
+    {
+        return bigDecimalFromDouble;
+    }
+
+    public BigDecimal getBigDecimalValueOfDouble()
+    {
+        return bigDecimalValueOfDouble;
+    }
+
+    public BigDecimal getBigDecimalStripTrailing()
+    {
+        return bigDecimalStripTrailing;
+    }
+
+    public BigDecimal getBigDecimalNegativeScale()
+    {
+        return bigDecimalNegativeScale;
+    }
+
+    public BigDecimal getBigDecimalDivideRepeating()
+    {
+        return bigDecimalDivideRepeating;
+    }
+
+    public BigDecimal getBigDecimalAddResult()
+    {
+        return bigDecimalAddResult;
+    }
+
+    public BigDecimal getBigDecimalMulResult()
+    {
+        return bigDecimalMulResult;
+    }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         assertNotNull(o);
-        BigDecimalData copy = (BigDecimalData)o;
+        BigDecimalData copy = (BigDecimalData) o;
         // original simple check for primary value uses equals (null-safe)
         assertEquals(this.getBigDecimalValue(), copy.getBigDecimalValue(), "BigDecimal");
 

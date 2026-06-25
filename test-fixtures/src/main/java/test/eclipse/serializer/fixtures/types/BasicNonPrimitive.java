@@ -9,14 +9,15 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BasicNonPrimitive implements BinaryHandlerTestData {
+public class BasicNonPrimitive implements BinaryHandlerTestData
+{
     private static final Byte SAMPLE_BYTE = 100;
     private static final Short SAMPLE_SHORT = 50;
     private static final Integer SAMPLE_INT = 5401;
@@ -78,7 +79,8 @@ public class BasicNonPrimitive implements BinaryHandlerTestData {
     private String stringWith4ByteUtf8;
 
     @Override
-    public BasicNonPrimitive fillSampleData() {
+    public BasicNonPrimitive fillSampleData()
+    {
         byteValue = SAMPLE_BYTE;
         shortValue = SAMPLE_SHORT;
         intValue = SAMPLE_INT;
@@ -135,20 +137,21 @@ public class BasicNonPrimitive implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         byteValue = 50;
         shortValue = 50;
         intValue = 55;
-        longValue = SAMPLE_LONG-10;
-        floatValue = SAMPLE_FLOAT-10;
-        doubleValue = SAMPLE_DOUBLE-10;
+        longValue = SAMPLE_LONG - 10;
+        floatValue = SAMPLE_FLOAT - 10;
+        doubleValue = SAMPLE_DOUBLE - 10;
         booleanValue = Boolean.FALSE;
         characterValue = 'x';
         stringValue = SAMPLE_STRING + SAMPLE_STRING;
 
         // corner-case updates
-        byteValueNull = (byte)-1;
-        shortValueNull = (short)-2;
+        byteValueNull = (byte) -1;
+        shortValueNull = (short) -2;
         if (intValueMax != null) intValueMax = intValueMax - 1;
         if (intValueMin != null) intValueMin = intValueMin + 1;
         if (longValueMax != null) longValueMax = longValueMax - 1;
@@ -165,86 +168,238 @@ public class BasicNonPrimitive implements BinaryHandlerTestData {
         return this;
     }
 
-    public Byte getByteValue() {
+    public Byte getByteValue()
+    {
         return byteValue;
     }
 
-    public Short getShortValue() {
+    public Short getShortValue()
+    {
         return shortValue;
     }
 
-    public Integer getIntValue() {
+    public Integer getIntValue()
+    {
         return intValue;
     }
 
-    public Long getLongValue() {
+    public Long getLongValue()
+    {
         return longValue;
     }
 
-    public Float getFloatValue() {
+    public Float getFloatValue()
+    {
         return floatValue;
     }
 
-    public Double getDoubleValue() {
+    public Double getDoubleValue()
+    {
         return doubleValue;
     }
 
-    public Boolean getBooleanValue() {
+    public Boolean getBooleanValue()
+    {
         return booleanValue;
     }
 
-    public Character getCharacterValue() {
+    public Character getCharacterValue()
+    {
         return characterValue;
     }
 
-    public String getStringValue() {
+    public String getStringValue()
+    {
         return stringValue;
     }
 
     // getters for corner-case fields
-    public Byte getByteValueNull() { return byteValueNull; }
-    public Short getShortValueNull() { return shortValueNull; }
-    public Integer getIntValueMax() { return intValueMax; }
-    public Integer getIntValueMin() { return intValueMin; }
-    public Long getLongValueMax() { return longValueMax; }
-    public Long getLongValueMin() { return longValueMin; }
-    public Float getFloatNaN() { return floatNaN; }
-    public Float getFloatInfinite() { return floatInfinite; }
-    public Double getDoubleNaN() { return doubleNaN; }
-    public Double getDoubleInfinite() { return doubleInfinite; }
-    public String getEmptyString() { return emptyString; }
-    public String getWhitespaceString() { return whitespaceString; }
-    public String getUnicodeString() { return unicodeString; }
-    public String getLongString() { return longString; }
-    public Boolean getBooleanNull() { return booleanNull; }
-    public Character getCharacterNull() { return characterNull; }
+    public Byte getByteValueNull()
+    {
+        return byteValueNull;
+    }
+
+    public Short getShortValueNull()
+    {
+        return shortValueNull;
+    }
+
+    public Integer getIntValueMax()
+    {
+        return intValueMax;
+    }
+
+    public Integer getIntValueMin()
+    {
+        return intValueMin;
+    }
+
+    public Long getLongValueMax()
+    {
+        return longValueMax;
+    }
+
+    public Long getLongValueMin()
+    {
+        return longValueMin;
+    }
+
+    public Float getFloatNaN()
+    {
+        return floatNaN;
+    }
+
+    public Float getFloatInfinite()
+    {
+        return floatInfinite;
+    }
+
+    public Double getDoubleNaN()
+    {
+        return doubleNaN;
+    }
+
+    public Double getDoubleInfinite()
+    {
+        return doubleInfinite;
+    }
+
+    public String getEmptyString()
+    {
+        return emptyString;
+    }
+
+    public String getWhitespaceString()
+    {
+        return whitespaceString;
+    }
+
+    public String getUnicodeString()
+    {
+        return unicodeString;
+    }
+
+    public String getLongString()
+    {
+        return longString;
+    }
+
+    public Boolean getBooleanNull()
+    {
+        return booleanNull;
+    }
+
+    public Character getCharacterNull()
+    {
+        return characterNull;
+    }
 
     // ===== proposed edge-cases — getters =====
-    public Byte getByteBoxedMin() { return byteBoxedMin; }
-    public Byte getByteBoxedMax() { return byteBoxedMax; }
-    public Short getShortBoxedMin() { return shortBoxedMin; }
-    public Short getShortBoxedMax() { return shortBoxedMax; }
-    public Float getFloatNegativeInfinity() { return floatNegativeInfinity; }
-    public Float getFloatBoxedMin() { return floatBoxedMin; }
-    public Float getFloatBoxedMax() { return floatBoxedMax; }
-    public Float getFloatBoxedMinNormal() { return floatBoxedMinNormal; }
-    public Float getFloatBoxedNegZero() { return floatBoxedNegZero; }
-    public Float getFloatBoxedPosZero() { return floatBoxedPosZero; }
-    public Double getDoublePositiveInfinity() { return doublePositiveInfinity; }
-    public Double getDoubleBoxedMin() { return doubleBoxedMin; }
-    public Double getDoubleBoxedMax() { return doubleBoxedMax; }
-    public Double getDoubleBoxedMinNormal() { return doubleBoxedMinNormal; }
-    public Double getDoubleBoxedNegZero() { return doubleBoxedNegZero; }
-    public Double getDoubleBoxedPosZero() { return doubleBoxedPosZero; }
-    public Character getCharacterNul() { return characterNul; }
-    public Character getCharacterMaxBmp() { return characterMaxBmp; }
-    public String getStringWithNul() { return stringWithNul; }
-    public String getStringWith4ByteUtf8() { return stringWith4ByteUtf8; }
+    public Byte getByteBoxedMin()
+    {
+        return byteBoxedMin;
+    }
+
+    public Byte getByteBoxedMax()
+    {
+        return byteBoxedMax;
+    }
+
+    public Short getShortBoxedMin()
+    {
+        return shortBoxedMin;
+    }
+
+    public Short getShortBoxedMax()
+    {
+        return shortBoxedMax;
+    }
+
+    public Float getFloatNegativeInfinity()
+    {
+        return floatNegativeInfinity;
+    }
+
+    public Float getFloatBoxedMin()
+    {
+        return floatBoxedMin;
+    }
+
+    public Float getFloatBoxedMax()
+    {
+        return floatBoxedMax;
+    }
+
+    public Float getFloatBoxedMinNormal()
+    {
+        return floatBoxedMinNormal;
+    }
+
+    public Float getFloatBoxedNegZero()
+    {
+        return floatBoxedNegZero;
+    }
+
+    public Float getFloatBoxedPosZero()
+    {
+        return floatBoxedPosZero;
+    }
+
+    public Double getDoublePositiveInfinity()
+    {
+        return doublePositiveInfinity;
+    }
+
+    public Double getDoubleBoxedMin()
+    {
+        return doubleBoxedMin;
+    }
+
+    public Double getDoubleBoxedMax()
+    {
+        return doubleBoxedMax;
+    }
+
+    public Double getDoubleBoxedMinNormal()
+    {
+        return doubleBoxedMinNormal;
+    }
+
+    public Double getDoubleBoxedNegZero()
+    {
+        return doubleBoxedNegZero;
+    }
+
+    public Double getDoubleBoxedPosZero()
+    {
+        return doubleBoxedPosZero;
+    }
+
+    public Character getCharacterNul()
+    {
+        return characterNul;
+    }
+
+    public Character getCharacterMaxBmp()
+    {
+        return characterMaxBmp;
+    }
+
+    public String getStringWithNul()
+    {
+        return stringWithNul;
+    }
+
+    public String getStringWith4ByteUtf8()
+    {
+        return stringWith4ByteUtf8;
+    }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         assertNotNull(o);
-        BasicNonPrimitive copy = (BasicNonPrimitive)o;
+        BasicNonPrimitive copy = (BasicNonPrimitive) o;
         assertAll("Basic non primitive Types tests",
                 () -> assertEquals(this.getByteValue(), copy.getByteValue(), "Byte"),
                 () -> assertEquals(this.getShortValue(), copy.getShortValue(), "Short"),

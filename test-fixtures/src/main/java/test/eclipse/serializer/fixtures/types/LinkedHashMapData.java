@@ -9,23 +9,19 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.LinkedHashMap;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-public class LinkedHashMapData implements BinaryHandlerTestData {
+public class LinkedHashMapData implements BinaryHandlerTestData
+{
     private LinkedHashMap<Integer, Integer> intMap = new LinkedHashMap<>();
     private LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, PrimitiveTypes>>> threeMap = new LinkedHashMap<>();
     private LinkedHashMap<Integer, PrimitiveTypes> primitiveTypeLinkedHashMap = new LinkedHashMap<>();
@@ -40,7 +36,8 @@ public class LinkedHashMapData implements BinaryHandlerTestData {
     private LinkedHashMap<String, String> nullValueLinkedHashMap = new LinkedHashMap<>();
 
     @Override
-    public LinkedHashMapData fillSampleData() {
+    public LinkedHashMapData fillSampleData()
+    {
         intMap = createIntMap();
         threeMap = createThreeMap();
         primitiveTypeLinkedHashMap = new LinkedHashMap<>();
@@ -95,13 +92,15 @@ public class LinkedHashMapData implements BinaryHandlerTestData {
         return this;
     }
 
-    LinkedHashMap<Integer, Integer> createIntMap() {
+    LinkedHashMap<Integer, Integer> createIntMap()
+    {
         LinkedHashMap<Integer, Integer> intMap = new LinkedHashMap<>();
         intMap.put(100, 6);
         return intMap;
     }
 
-    LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, PrimitiveTypes>>> createThreeMap() {
+    LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, PrimitiveTypes>>> createThreeMap()
+    {
         LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, PrimitiveTypes>>> map = new LinkedHashMap<>();
 
         LinkedHashMap<Integer, PrimitiveTypes> primitive = new LinkedHashMap<>();
@@ -114,22 +113,26 @@ public class LinkedHashMapData implements BinaryHandlerTestData {
         return map;
     }
 
-    LinkedHashMap<Integer, Integer> getIntMap() {
+    LinkedHashMap<Integer, Integer> getIntMap()
+    {
         return intMap;
     }
 
-    LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, PrimitiveTypes>>> getThreeMap() {
+    LinkedHashMap<Integer, LinkedHashMap<Integer, LinkedHashMap<Integer, PrimitiveTypes>>> getThreeMap()
+    {
         return threeMap;
     }
 
-    LinkedHashMap<Integer, PrimitiveTypes> getPrimitiveTypeLinkedHashMap() {
+    LinkedHashMap<Integer, PrimitiveTypes> getPrimitiveTypeLinkedHashMap()
+    {
         return primitiveTypeLinkedHashMap;
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
-        LinkedHashMapData copy = (LinkedHashMapData)o;
+        LinkedHashMapData copy = (LinkedHashMapData) o;
 
         assertAll("Array list Tests", //
                 () -> assertIterableEquals(this.getIntMap().entrySet(), copy.getIntMap().entrySet()), //

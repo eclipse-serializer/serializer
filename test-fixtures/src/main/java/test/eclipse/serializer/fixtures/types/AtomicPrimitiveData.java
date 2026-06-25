@@ -9,23 +9,20 @@ package test.eclipse.serializer.fixtures.types;
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  * #L%
  */
 
-import org.junit.jupiter.api.Assertions;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicLongArray;
-
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AtomicPrimitiveData implements BinaryHandlerTestData {
+import java.util.concurrent.atomic.*;
+
+import org.junit.jupiter.api.Assertions;
+
+public class AtomicPrimitiveData implements BinaryHandlerTestData
+{
     private AtomicBoolean atomicBoolean = new AtomicBoolean(false);
     private AtomicInteger atomicInteger = new AtomicInteger(0);
     private AtomicIntegerArray atomicIntegerArray = new AtomicIntegerArray(0);
@@ -49,7 +46,8 @@ public class AtomicPrimitiveData implements BinaryHandlerTestData {
     private AtomicLongArray largeAtomicLongArray = new AtomicLongArray(0);
 
     @Override
-    public BinaryHandlerTestData fillSampleData() {
+    public BinaryHandlerTestData fillSampleData()
+    {
         atomicBoolean = new AtomicBoolean(true);
         atomicInteger = new AtomicInteger(42);
         atomicIntegerArray = new AtomicIntegerArray(10);
@@ -80,12 +78,13 @@ public class AtomicPrimitiveData implements BinaryHandlerTestData {
     }
 
     @Override
-    public BinaryHandlerTestData updateSampleData() {
+    public BinaryHandlerTestData updateSampleData()
+    {
         atomicBoolean.set(false);
         atomicInteger.set(100);
-        atomicIntegerArray.set(0,100);
+        atomicIntegerArray.set(0, 100);
         atomicLong.set(50);
-        atomicLongArray.set(0,50);
+        atomicLongArray.set(0, 50);
 
         // corner-case updates
         atomicIntegerNegative.set(Integer.MIN_VALUE);
@@ -100,13 +99,14 @@ public class AtomicPrimitiveData implements BinaryHandlerTestData {
     }
 
     @Override
-    public void proveResults(Object o) {
+    public void proveResults(Object o)
+    {
         Assertions.assertNotNull(o);
         AtomicPrimitiveData copy = (AtomicPrimitiveData) o;
         assertAll("Atomic types Tests", //
                 () -> assertEquals(this.atomicBoolean.get(), copy.atomicBoolean.get()),
                 () -> assertEquals(this.atomicInteger.get(), copy.atomicInteger.get()),
-                () -> assertEquals( this.atomicIntegerArray.length(), copy.atomicIntegerArray.length()),
+                () -> assertEquals(this.atomicIntegerArray.length(), copy.atomicIntegerArray.length()),
                 () -> assertEquals(this.atomicLong.get(), copy.atomicLong.get()),
                 () -> assertEquals(this.atomicLongArray.length(), copy.atomicLongArray.length()),
 
@@ -141,14 +141,16 @@ public class AtomicPrimitiveData implements BinaryHandlerTestData {
     }
 
     // ===== proposed edge-cases — element-wise array comparison =====
-    private static void assertEqualContents(AtomicIntegerArray a, AtomicIntegerArray b, String label) {
+    private static void assertEqualContents(AtomicIntegerArray a, AtomicIntegerArray b, String label)
+    {
         assertEquals(a.length(), b.length(), label + " length");
         for (int i = 0; i < a.length(); i++) {
             assertEquals(a.get(i), b.get(i), label + "[" + i + "]");
         }
     }
 
-    private static void assertEqualContents(AtomicLongArray a, AtomicLongArray b, String label) {
+    private static void assertEqualContents(AtomicLongArray a, AtomicLongArray b, String label)
+    {
         assertEquals(a.length(), b.length(), label + " length");
         for (int i = 0; i < a.length(); i++) {
             assertEquals(a.get(i), b.get(i), label + "[" + i + "]");
