@@ -57,6 +57,7 @@
 		<module>communication</module>
 		<module>persistence</module>
 		<module>serializer</module>
+		<module>test-fixtures</module>
 	</modules>
 
 	<scm>
@@ -334,6 +335,12 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<id>IT</id>
+			<modules>
+				<module>integration-tests</module>
+			</modules>
+		</profile>
 		<profile>
 			<id>deploy</id>
 			<build>
