@@ -279,9 +279,14 @@ public class ComTypeMappingResolver
 				+ " exceeds the maximum of " + MAX_TYPE_COUNT);
 		}
 
-		// every declared type definition requires at least one body byte; reject inconsistent headers
+		/*
+		 * The declared type count and body length must be consistent: zero types means an empty
+		 * body (length == header size), and every declared type definition requires at least one
+		 * body byte. Otherwise a declared-but-unconsumed body would be left in the stream and
+		 * desynchronize the channel (only the body is read when count > 0, see below).
+		 */
 		final int bodyLength = length - LENGTH_CHAR_COUNT - LENGTH_CHAR_COUNT;
-		if(count > bodyLength)
+		if(count == 0 ? bodyLength != 0 : count > bodyLength)
 		{
 			throw new ComException("Type mapping type count " + count
 				+ " is inconsistent with the declared body length " + bodyLength);
