@@ -143,7 +143,7 @@ public interface BinaryReferenceTraverser
 			if(covered > 0)
 			{
 				// fixed-layout: constant advance, so a single bound check suffices
-				if(a + covered > bound)
+				if((long)covered > bound - a)
 				{
 					throw new BinaryPersistenceException(
 						"Reference traversal of " + covered + " bytes at " + a + " exceeds the valid data bound "
