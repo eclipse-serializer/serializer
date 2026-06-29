@@ -111,21 +111,21 @@ public class ComTypeMappingResolver
 	////////////
 	
 	/**
-	 * Handle the client's side of the communication type mapping during connection initialization phase.
-	 * This is collection all type definition that belong to the clients classes that needs to be mapped by the host
+	 * Handle the client's side of the communication type mapping during the connection initialization phase.
+	 * This is a collection of all type definitions that belong to the client classes that need to be mapped by the host
 	 * and transferring those to the host.
 	 */
 	public void resolveClient()
 	{
 		logger.debug("resolving client type mappings ");
 		
-		this.sendNewTypeDefintionsToHost(
+		this.sendNewTypeDefinitionsToHost(
 			this.assembleTypeDefinitions(
 				this.findHostTypeDefinitions()));
 	}
 	
 	/**
-	 * Handle the host's side of the communication type mapping during connection initialization phase.
+	 * Handle the host's side of the communication type mapping during the connection initialization phase.
 	 * This is receiving the client's type definitions and creating the required legacy type handlers.
 	 */
 	public void resolveHost()
@@ -134,12 +134,12 @@ public class ComTypeMappingResolver
 		
 		this.applyHostTypeMapping(
 			this.parseClientTypeDefinitions(
-				this.receiveUpdatedDefintionsfromClient()));
+				this.receiveUpdatedDefinitionsFromClient()));
 	}
 	
-	private void sendNewTypeDefintionsToHost(final byte[] assembledTypeDefinitions)
+	private void sendNewTypeDefinitionsToHost(final byte[] assembledTypeDefinitions)
 	{
-		logger.trace("transfering new type defintions to host");
+		logger.trace("transferring new type definitions to host");
 		
 		final ByteBuffer dbb = XMemory.allocateDirectNative(assembledTypeDefinitions.length);
 		final long dbbAddress = XMemory.getDirectByteBufferAddress(dbb);
@@ -158,7 +158,7 @@ public class ComTypeMappingResolver
 		.add(String.format("%08d", newDefinitions.intSize()));
 		
 		newDefinitions.forEach(definition -> {
-			vs.add(this.assembleTypeDefintion(definition));
+			vs.add(this.assembleTypeDefinition(definition));
 		});
 		
 		final char[] lengthString = XChars.readChars(XChars.String(vs.length()));
@@ -167,7 +167,7 @@ public class ComTypeMappingResolver
 		return vs.encode();
 	}
 
-	private VarString assembleTypeDefintion(final PersistenceTypeDescription definition)
+	private VarString assembleTypeDefinition(final PersistenceTypeDescription definition)
 	{
 		final VarString vc = VarString.New();
 		this.typeDictionaryAssembler.assembleTypeDescription(vc, definition);
@@ -198,8 +198,8 @@ public class ComTypeMappingResolver
 			buffer.position(1);
 			final char[] typeDefinitionsChars = XChars.standardCharset().decode(buffer).array();
 		
-			final String typeDefintions = XChars.String(typeDefinitionsChars);
-			final XGettingSequence<PersistenceTypeDefinition> newTypeDescriptions = this.typeDefinitionBuilder.buildTypeDefinitions(typeDefintions);
+			final String typeDefinitions = XChars.String(typeDefinitionsChars);
+			final XGettingSequence<PersistenceTypeDefinition> newTypeDescriptions = this.typeDefinitionBuilder.buildTypeDefinitions(typeDefinitions);
 			
 			logger.debug("received {} types from client", newTypeDescriptions.size());
 			return newTypeDescriptions;
@@ -209,16 +209,16 @@ public class ComTypeMappingResolver
 		return BulkList.New();
 	}
 
-	private ByteBuffer receiveUpdatedDefintionsfromClient()
+	private ByteBuffer receiveUpdatedDefinitionsFromClient()
 	{
-		logger.trace("receiving new type defintions from client");
+		logger.trace("receiving new type definitions from client");
 
 		final int length = this.readHeaderField("length");
 		final int count  = this.readHeaderField("count");
 
 		this.validateTypeMappingHeader(length, count);
 
-		if(count > 0 )
+		if(count > 0)
 		{
 			final int bodyLength = length - LENGTH_CHAR_COUNT - LENGTH_CHAR_COUNT;
 			final ByteBuffer typeDefinitionsBuffer = XMemory.allocateDirectNative(bodyLength);
@@ -282,7 +282,7 @@ public class ComTypeMappingResolver
 		/*
 		 * The declared type count and body length must be consistent: zero types means an empty
 		 * body (length == header size), and every declared type definition requires at least one
-		 * body byte. Otherwise a declared-but-unconsumed body would be left in the stream and
+		 * body byte. Otherwise, a declared-but-unconsumed body would be left in the stream and
 		 * desynchronize the channel (only the body is read when count > 0, see below).
 		 */
 		final int bodyLength = length - LENGTH_CHAR_COUNT - LENGTH_CHAR_COUNT;
