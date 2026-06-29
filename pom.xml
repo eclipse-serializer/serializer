@@ -45,7 +45,6 @@
 		<license.licenceFile>${basedir}/LICENSE</license.licenceFile>
 		<api.version>1</api.version>
 		<javadoc.failed.on.error>false</javadoc.failed.on.error>
-		<failsafe.rerunFailingTestsCount>2</failsafe.rerunFailingTestsCount>
 		<surefire.rerunFailingTestsCount>2</surefire.rerunFailingTestsCount>
 		<slf4j.version>2.0.17</slf4j.version>
 	</properties>
@@ -58,6 +57,7 @@
 		<module>communication</module>
 		<module>persistence</module>
 		<module>serializer</module>
+		<module>test-fixtures</module>
 	</modules>
 
 	<scm>
@@ -308,6 +308,11 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.5.5</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-site-plugin</artifactId>
 					<version>4.0.0-M16</version>
 				</plugin>
@@ -330,6 +335,12 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<id>IT</id>
+			<modules>
+				<module>integration-tests</module>
+			</modules>
+		</profile>
 		<profile>
 			<id>deploy</id>
 			<build>
