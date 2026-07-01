@@ -60,11 +60,12 @@ public class BasicSerializerTest
                 .registerEntityTypes(type.getClass());
         final Serializer<byte[]> serializer = Serializer.Bytes(foundation);
 
-        final byte[] bytes = serializer.serialize(type.getOriginal());
+        final var original = type.getOriginal();
+        final byte[] bytes = serializer.serialize(original);
         Object copy;
         copy = serializer.deserialize(bytes);
 
-        type.getOriginal().proveResults(copy);
+        original.proveResults(copy);
     }
 
     @ParameterizedTest
@@ -81,11 +82,12 @@ public class BasicSerializerTest
                 .registerEntityTypes(type.getClass());
         final Serializer<byte[]> serializer = Serializer.Bytes(foundation);
 
-        final byte[] bytes = serializer.serialize(type.getOriginal());
+        final var original = type.getOriginal();
+        final byte[] bytes = serializer.serialize(original);
         Object copy;
         copy = serializer.deserialize(bytes);
 
-        type.getOriginal().proveResults(copy);
+        original.proveResults(copy);
     }
 
 
