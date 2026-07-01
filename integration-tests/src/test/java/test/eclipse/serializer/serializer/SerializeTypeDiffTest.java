@@ -47,10 +47,11 @@ public class SerializeTypeDiffTest
     public void serializerTest(TypeEnum type)
     {
 
-        byte[] data = serializer.serialize(type.getOriginal());
+        final var original = type.getOriginal();
+        byte[] data = serializer.serialize(original);
 
         Object o = deserializer.deserialize(data);
-        type.getOriginal().proveResults(o);
+        original.proveResults(o);
     }
 
     @ParameterizedTest
@@ -59,9 +60,10 @@ public class SerializeTypeDiffTest
     public void serializerTestJava26(TypeEnum type)
     {
 
-        byte[] data = serializer.serialize(type.getOriginal());
+        final var original = type.getOriginal();
+        byte[] data = serializer.serialize(original);
 
         Object o = deserializer.deserialize(data);
-        type.getOriginal().proveResults(o);
+        original.proveResults(o);
     }
 }

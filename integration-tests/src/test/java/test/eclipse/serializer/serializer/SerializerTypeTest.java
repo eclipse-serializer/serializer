@@ -33,13 +33,13 @@ public class SerializerTypeTest
 
         final SerializerFoundation<?> foundation = SerializerFoundation.New();
 
+        final var original = type.getOriginal();
         final Serializer<byte[]> serializer = Serializer.Bytes(foundation);
-        byte[] data = serializer.serialize(type.getOriginal());
+        byte[] data = serializer.serialize(original);
 
         final Serializer<byte[]> deserializer = Serializer.Bytes(foundation);
         Object o = deserializer.deserialize(data);
-        type.getOriginal()
-                .proveResults(o);
+        original.proveResults(o);
     }
 
     @ParameterizedTest
@@ -49,13 +49,13 @@ public class SerializerTypeTest
 
         final SerializerFoundation<?> foundation = SerializerFoundation.New();
 
+        final var original = type.getOriginal();
         final Serializer<Binary> serializer = Serializer.Binary(foundation);
-        Binary data = serializer.serialize(type.getOriginal());
+        Binary data = serializer.serialize(original);
 
         final Serializer<Binary> deserializer = Serializer.Binary(foundation);
         Object o = deserializer.deserialize(data);
-        type.getOriginal()
-                .proveResults(o);
+        original.proveResults(o);
     }
 
 }
