@@ -15,6 +15,7 @@ package org.eclipse.serializer.persistence.binary.types;
  */
 
 import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
@@ -26,6 +27,7 @@ import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -143,6 +145,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private int    hashRange;
 		private long   itemCount;
 		private long   pinCount ; // subset of itemCount: pure retention entries (see PinItem), no store payload.
+
+		/*
+		 * Object ids this storer writes into the data as references while trusting that the referenced
+		 * entity already exists in the target (global registry hits and unloaded Lazy references' cached
+		 * ids). Null when capturing is disabled, so the feature has zero overhead in that case.
+		 * At commit, ids that are also stored by the commit itself are pruned; the remainder is attached
+		 * to the written Binary for the target to validate. Guarded by objectRegistryMonitor.
+		 */
+		private final Set_long trustedObjectIds;
 		
 		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
 		
@@ -180,6 +191,31 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final Persister                             persister
 		)
 		{
+			this(
+				objectManager     ,
+				objectRetriever   ,
+				typeManager       ,
+				target            ,
+				bufferSizeProvider,
+				channelCount      ,
+				switchByteOrder   ,
+				persister         ,
+				false
+			);
+		}
+
+		protected Default(
+			final PersistenceObjectManager<Binary>      objectManager          ,
+			final ObjectSwizzling                       objectRetriever        ,
+			final PersistenceTypeHandlerManager<Binary> typeManager            ,
+			final PersistenceTarget<Binary>             target                 ,
+			final BufferSizeProviderIncremental         bufferSizeProvider     ,
+			final int                                   channelCount           ,
+			final boolean                               switchByteOrder        ,
+			final Persister                             persister              ,
+			final boolean                               captureTrustedObjectIds
+		)
+		{
 			super();
 			this.objectManager         = notNull(objectManager)               ;
 			this.objectRegistryMonitor = objectManager.objectRegistryMonitor();
@@ -190,6 +226,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			this.chunksHashRange       =         channelCount - 1             ;
 			this.switchByteOrder       =         switchByteOrder              ;
 			this.persister             = mayNull(persister)                   ;
+			this.trustedObjectIds      = captureTrustedObjectIds ? Set_long.New() : null;
 
 			this.defaultInitialize();
 		}
@@ -330,6 +367,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				// must be clear instead of just reset to avoid memory leaks
 				this.commitListeners.clear();
 				this.persistenceObjectRegistrationListener.clear();
+
+				if(this.trustedObjectIds != null)
+				{
+					this.trustedObjectIds.clear();
+				}
 			}
 		}
 		
@@ -681,6 +723,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					this.typeManager.checkForPendingRootInstances();
 					this.typeManager.checkForPendingRootsStoring(this);
 					writeData = this.synchComplete();
+
+					final long[] trustedObjectIds = this.synchYieldTrustedObjectIds();
+					if(trustedObjectIds != null)
+					{
+						writeData.setTrustedObjectIds(trustedObjectIds);
+					}
 				}
 
 				// very costly IO-operation does not need to occupy the lock
@@ -718,6 +766,48 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			return null;
 		}
 		
+		/**
+		 * Yields the trusted object ids of the current commit as an array, pruned by the ids the commit
+		 * stores itself: an id that is both referenced and stored in the same commit is guaranteed, not
+		 * trusted (e.g. {@code storeAll(parent, child)} re-storing a registry-known child, or an eager
+		 * storer's items). Returns {@code null} if capturing is disabled or nothing remains after pruning.
+		 * <p>
+		 * Must be called under {@code objectRegistryMonitor}.
+		 */
+		private long[] synchYieldTrustedObjectIds()
+		{
+			if(this.trustedObjectIds == null || this.trustedObjectIds.isEmpty())
+			{
+				return null;
+			}
+
+			final Set_long storedObjectIds = Set_long.New();
+			for(Item e = this.head; (e = e.next) != null;)
+			{
+				if(!isSkipItem(e))
+				{
+					storedObjectIds.add(e.oid);
+				}
+			}
+
+			final long[] buffer = new long[(int)this.trustedObjectIds.size()];
+			final int[]  count  = {0};
+			this.trustedObjectIds.iterate(objectId ->
+			{
+				if(!storedObjectIds.contains(objectId))
+				{
+					buffer[count[0]++] = objectId;
+				}
+			});
+
+			return count[0] == 0
+				? null
+				: count[0] == buffer.length
+					? buffer
+					: Arrays.copyOf(buffer, count[0])
+			;
+		}
+
 		public final long lookupOid(final Object object)
 		{
 			/*
@@ -887,6 +977,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 */
 			synchronized(this.objectRegistryMonitor)
 			{
+				// the skipped id is also a "trusted reference": referenced but not stored in this
+				// commit - record it so the persistence target can validate its existence.
+				this.noteTrustedReference(objectId);
+
 				// any existing local entry (regular, skip or pin) already holds the instance strongly
 				if(Swizzling.isFoundId(this.lookupOidLazyApplicable(instance)))
 				{
@@ -894,6 +988,22 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				}
 
 				this.synchRegisterItem(instance, null, objectId, true);
+			}
+		}
+
+		@Override
+		public final void noteTrustedReference(final long objectId)
+		{
+			// only data object ids can dangle; TIDs/CIDs/null are resolved at runtime, not via entities.
+			if(this.trustedObjectIds == null || !Persistence.IdType.OID.isInRange(objectId))
+			{
+				return;
+			}
+
+			// reentrant from the registerSkippedOptional path; the Lazy handler path acquires it fresh.
+			synchronized(this.objectRegistryMonitor)
+			{
+				this.trustedObjectIds.add(objectId);
 			}
 		}
 
@@ -1133,7 +1243,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final Persister                             persister
 		)
 		{
-			super(
+			this(
 				objectManager     ,
 				objectRetriever   ,
 				typeManager       ,
@@ -1141,7 +1251,33 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				bufferSizeProvider,
 				channelCount      ,
 				switchByteOrder   ,
-				persister
+				persister         ,
+				false
+			);
+		}
+
+		Eager(
+			final PersistenceObjectManager<Binary>      objectManager          ,
+			final ObjectSwizzling                       objectRetriever        ,
+			final PersistenceTypeHandlerManager<Binary> typeManager            ,
+			final PersistenceTarget<Binary>             target                 ,
+			final BufferSizeProviderIncremental         bufferSizeProvider     ,
+			final int                                   channelCount           ,
+			final boolean                               switchByteOrder        ,
+			final Persister                             persister              ,
+			final boolean                               captureTrustedObjectIds
+		)
+		{
+			super(
+				objectManager          ,
+				objectRetriever        ,
+				typeManager            ,
+				target                 ,
+				bufferSizeProvider     ,
+				channelCount           ,
+				switchByteOrder        ,
+				persister              ,
+				captureTrustedObjectIds
 			);
 		}
 		
@@ -1233,27 +1369,29 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private final Object commitLock = new Object();
 
 		Batching(
-			final PersistenceObjectManager<Binary>      objectManager     ,
-			final ObjectSwizzling                       objectRetriever   ,
-			final PersistenceTypeHandlerManager<Binary> typeManager       ,
-			final PersistenceTarget<Binary>             target            ,
-			final BufferSizeProviderIncremental         bufferSizeProvider,
-			final int                                   channelCount      ,
-			final boolean                               switchByteOrder   ,
-			final Persister                             persister         ,
-			final BatchStorer.Controller                controller        ,
-			final Duration                              checkInterval
+			final PersistenceObjectManager<Binary>      objectManager          ,
+			final ObjectSwizzling                       objectRetriever        ,
+			final PersistenceTypeHandlerManager<Binary> typeManager            ,
+			final PersistenceTarget<Binary>             target                 ,
+			final BufferSizeProviderIncremental         bufferSizeProvider     ,
+			final int                                   channelCount           ,
+			final boolean                               switchByteOrder        ,
+			final Persister                             persister              ,
+			final BatchStorer.Controller                controller             ,
+			final Duration                              checkInterval          ,
+			final boolean                               captureTrustedObjectIds
 		)
 		{
 			super(
-				objectManager     ,
-				objectRetriever   ,
-				typeManager       ,
-				target            ,
-				bufferSizeProvider,
-				channelCount      ,
-				switchByteOrder   ,
-				persister
+				objectManager          ,
+				objectRetriever        ,
+				typeManager            ,
+				target                 ,
+				bufferSizeProvider     ,
+				channelCount           ,
+				switchByteOrder        ,
+				persister              ,
+				captureTrustedObjectIds
 			);
 			this.controller = notNull(controller);
 
@@ -1646,9 +1784,31 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		final boolean                    switchByteOrder
 	)
 	{
+		return Creator(channelCountProvider, switchByteOrder, false);
+	}
+
+	/**
+	 * Creates a new default {@link BinaryStorer.Creator}.
+	 *
+	 * @param channelCountProvider    supplies the number of channels each created storer will partition its
+	 *                                chunk buffers across.
+	 * @param switchByteOrder         whether persisted values should use a non-native byte order.
+	 * @param captureTrustedObjectIds whether created storers collect the object ids they reference without
+	 *                                storing (see {@link Binary#trustedObjectIds()}) so the persistence
+	 *                                target can validate their existence.
+	 *
+	 * @return the newly created storer creator.
+	 */
+	public static BinaryStorer.Creator Creator(
+		final BinaryChannelCountProvider channelCountProvider   ,
+		final boolean                    switchByteOrder        ,
+		final boolean                    captureTrustedObjectIds
+	)
+	{
 		return new BinaryStorer.Creator.Default(
 			notNull(channelCountProvider),
-			        switchByteOrder
+			        switchByteOrder      ,
+			        captureTrustedObjectIds
 		);
 	}
 
@@ -1703,8 +1863,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			////////////////////
 
 
-			private final BinaryChannelCountProvider channelCountProvider;
-			private final boolean                    switchByteOrder     ;
+			private final BinaryChannelCountProvider channelCountProvider   ;
+			private final boolean                    switchByteOrder        ;
+			private final boolean                    captureTrustedObjectIds;
 
 
 
@@ -1717,25 +1878,40 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				final boolean                    switchByteOrder
 			)
 			{
-				super();
-				this.channelCountProvider = channelCountProvider;
-				this.switchByteOrder      = switchByteOrder     ;
+				this(channelCountProvider, switchByteOrder, false);
 			}
 
-			
-			
+			protected Abstract(
+				final BinaryChannelCountProvider channelCountProvider   ,
+				final boolean                    switchByteOrder        ,
+				final boolean                    captureTrustedObjectIds
+			)
+			{
+				super();
+				this.channelCountProvider    = channelCountProvider   ;
+				this.switchByteOrder         = switchByteOrder        ;
+				this.captureTrustedObjectIds = captureTrustedObjectIds;
+			}
+
+
+
 			///////////////////////////////////////////////////////////////////////////
 			// methods //
 			////////////
-			
+
 			protected int channelCount()
 			{
 				return this.channelCountProvider.getChannelCount();
 			}
-			
+
 			protected boolean switchByteOrder()
 			{
 				return this.switchByteOrder;
+			}
+
+			protected boolean captureTrustedObjectIds()
+			{
+				return this.captureTrustedObjectIds;
 			}
 
 		}
@@ -1753,7 +1929,16 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				final boolean                    switchByteOrder
 			)
 			{
-				super(channelCountProvider, switchByteOrder);
+				this(channelCountProvider, switchByteOrder, false);
+			}
+
+			Default(
+				final BinaryChannelCountProvider channelCountProvider   ,
+				final boolean                    switchByteOrder        ,
+				final boolean                    captureTrustedObjectIds
+			)
+			{
+				super(channelCountProvider, switchByteOrder, captureTrustedObjectIds);
 			}
 
 			@Override
@@ -1769,14 +1954,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.validateIsStoring(target);
 				
 				final BinaryStorer.Default storer = new BinaryStorer.Default(
-					objectManager         ,
-					objectRetriever       ,
-					typeManager           ,
-					target                ,
-					bufferSizeProvider    ,
-					this.channelCount()   ,
-					this.switchByteOrder(),
-					persister
+					objectManager                 ,
+					objectRetriever               ,
+					typeManager                   ,
+					target                        ,
+					bufferSizeProvider            ,
+					this.channelCount()           ,
+					this.switchByteOrder()        ,
+					persister                     ,
+					this.captureTrustedObjectIds()
 				);
 				objectManager.registerLocalRegistry(storer);
 				
@@ -1795,14 +1981,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.validateIsStoring(target);
 				
 				final BinaryStorer.Eager storer = new BinaryStorer.Eager(
-					objectManager         ,
-					objectRetriever       ,
-					typeManager           ,
-					target                ,
-					bufferSizeProvider    ,
-					this.channelCount()   ,
-					this.switchByteOrder(),
-					persister
+					objectManager                 ,
+					objectRetriever               ,
+					typeManager                   ,
+					target                        ,
+					bufferSizeProvider            ,
+					this.channelCount()           ,
+					this.switchByteOrder()        ,
+					persister                     ,
+					this.captureTrustedObjectIds()
 				);
 				objectManager.registerLocalRegistry(storer);
 				
@@ -1824,16 +2011,17 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.validateIsStoring(target);
 
 				final BinaryStorer.Batching storer = new BinaryStorer.Batching(
-					objectManager         ,
-					objectRetriever       ,
-					typeManager           ,
-					target                ,
-					bufferSizeProvider    ,
-					this.channelCount()   ,
-					this.switchByteOrder(),
-					persister             ,
-					controller            ,
-					checkInterval
+					objectManager                 ,
+					objectRetriever               ,
+					typeManager                   ,
+					target                        ,
+					bufferSizeProvider            ,
+					this.channelCount()           ,
+					this.switchByteOrder()        ,
+					persister                     ,
+					controller                    ,
+					checkInterval                 ,
+					this.captureTrustedObjectIds()
 				);
 				objectManager.registerLocalRegistry(storer);
 

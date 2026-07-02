@@ -83,6 +83,19 @@ public interface PersistenceStoreHandler<D> extends PersistenceFunction, Storer
 	public void registerCommitListener(PersistenceCommitListener listener);
 
 	/**
+	 * Reports an object id that this handler writes into the data as a reference without the referenced
+	 * instance being available to be stored in the same commit (e.g. an unloaded {@link org.eclipse.serializer.reference.Lazy}
+	 * reference's cached id). Implementations may record the id to have its existence validated by the
+	 * persistence target before the data referencing it is committed.
+	 *
+	 * @param objectId the referenced object id that is trusted to already exist in the target.
+	 */
+	public default void noteTrustedReference(final long objectId)
+	{
+		// no-op by default
+	}
+
+	/**
 	 * The retriever used to resolve referenced ids when handlers need to read pre-existing data while
 	 * storing.
 	 *

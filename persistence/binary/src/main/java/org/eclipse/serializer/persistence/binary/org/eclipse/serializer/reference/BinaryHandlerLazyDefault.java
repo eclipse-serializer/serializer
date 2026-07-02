@@ -107,6 +107,12 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 								"Persisting it would result in data loss."
 				);
 			}
+
+			if(referenceOid != 0)
+			{
+				// cached id of an unloaded referent: referenced but not stored in this commit.
+				handler.noteTrustedReference(referenceOid);
+			}
 		}
 		else
 		{
