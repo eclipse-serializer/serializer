@@ -48,8 +48,17 @@ public interface UsageMarkable
 	 */
 	public int unmarkUsedFor(Object instance);
 	
+	/**
+	 * Returns whether at least one usage mark is currently registered.
+	 * <p>
+	 * A used-marked {@link Lazy} reference is exempt from evaluator-driven clearing
+	 * (see {@link Lazy#clear(Lazy.ClearingEvaluator)}): the marks signal that the referent
+	 * carries state that must not be dropped, e.g. changes that have not been persisted yet.
+	 *
+	 * @return <code>true</code> if any usage mark is registered, <code>false</code> otherwise.
+	 */
 	public boolean isUsed();
-	
+
 	/**
 	 * Clears ALL usage marks.
 	 * 
