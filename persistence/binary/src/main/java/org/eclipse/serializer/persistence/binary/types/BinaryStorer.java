@@ -368,40 +368,40 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		@Override
 		public <T> long apply(final T instance)
 		{
-			// concurrency: lookupOid() and ensureObjectId() lock internally, the rest is thread-local
-			
+			// concurrency: lookupOidLazyApplicable() and ensureObjectId() lock internally, the rest is thread-local
+
 			if(instance == null)
 			{
 				return Swizzling.nullId();
 			}
-			
+
 			final long objectIdLocal;
-			if(Swizzling.isFoundId(objectIdLocal = this.lookupOid(instance)))
+			if(Swizzling.isFoundId(objectIdLocal = this.lookupOidLazyApplicable(instance)))
 			{
 				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
 				return objectIdLocal;
 			}
-			
+
 			return this.register(instance);
 		}
-		
+
 		@Override
 		public <T> long apply(final T instance, final PersistenceTypeHandler<Binary, T> localTypeHandler)
 		{
-			// concurrency: lookupOid() and ensureObjectId() lock internally, the rest is thread-local
-			
+			// concurrency: lookupOidLazyApplicable() and ensureObjectId() lock internally, the rest is thread-local
+
 			if(instance == null)
 			{
 				return Swizzling.nullId();
 			}
-			
+
 			final long objectIdLocal;
-			if(Swizzling.isFoundId(objectIdLocal = this.lookupOid(instance)))
+			if(Swizzling.isFoundId(objectIdLocal = this.lookupOidLazyApplicable(instance)))
 			{
 				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
 				return objectIdLocal;
 			}
-			
+
 			return this.objectManager.ensureObjectId(instance, this, localTypeHandler);
 		}
 		
@@ -664,6 +664,34 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					 * referenced instances.
 					 */
 					if(e.instance == object && !isPinItem(e))
+					{
+						return e.oid;
+					}
+				}
+
+				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
+				return Swizzling.notFoundId();
+			}
+		}
+
+		/**
+		 * Variant of {@link #lookupOid(Object)} for lazy apply logic ONLY: pin items are considered
+		 * a valid local hit here, since a pin records the instance's globally registered objectId -
+		 * exactly the value {@code ensureObjectId} would return for it. This turns the pin into a
+		 * local cache and saves the global registry round trip for repeated references to already
+		 * stored instances.
+		 * <p>
+		 * Must NEVER be used by explicit stores ({@code internalStore}) or eager applies: for those,
+		 * a local hit means "already handled by this storer" and a pin hit would silently suppress
+		 * the required (re-)serialization (see {@link PinItem} and {@link #lookupOid(Object)}).
+		 */
+		private long lookupOidLazyApplicable(final Object object)
+		{
+			synchronized(this.objectRegistryMonitor)
+			{
+				for(Item e = this.hashSlots[identityHashCode(object) & this.hashRange]; e != null; e = e.link)
+				{
+					if(e.instance == object)
 					{
 						return e.oid;
 					}
