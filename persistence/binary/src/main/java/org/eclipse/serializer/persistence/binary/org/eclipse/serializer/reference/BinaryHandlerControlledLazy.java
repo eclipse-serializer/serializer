@@ -95,8 +95,15 @@ public final class BinaryHandlerControlledLazy extends AbstractBinaryHandlerCust
 			referenceOid = handler.apply(referent);
 		}
 
-		// link to object supplier (internal logic can either update, discard or throw exception on mismatch)
-		instance.$link(referenceOid, handler.getObjectRetriever());
+		/*
+		 * Link to object supplier (internal logic can either update, discard or throw exception on
+		 * mismatch) - but DEFERRED to the successful commit, so a failed commit cannot leave a
+		 * stale, never-persisted objectId on the instance (see BinaryHandlerLazyDefault#store).
+		 */
+		final ObjectSwizzling objectRetriever = handler.getObjectRetriever();
+		handler.registerCommitListener(() ->
+			instance.$link(referenceOid, objectRetriever)
+		);
 
 		// lazy reference instance must be stored in any case
 		data.storeEntityHeader(Binary.referenceBinaryLength(1), this.typeId(), objectId);

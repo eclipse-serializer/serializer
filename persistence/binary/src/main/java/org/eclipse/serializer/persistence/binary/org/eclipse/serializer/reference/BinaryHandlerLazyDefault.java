@@ -113,8 +113,22 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 			referenceOid = handler.apply(referent);
 		}
 
-		// link to object supplier (internal logic can either update, discard or throw exception on mismatch)
-		instance.$link(referenceOid, handler.getObjectRetriever());
+		/*
+		 * Link to object supplier (internal logic can either update, discard or throw exception on
+		 * mismatch) - but DEFERRED to the successful commit: linking here would flip isStored() to
+		 * true although nothing has been persisted yet. If the commit write fails, the objectId is
+		 * never merged into the object registry and the referent's data never reaches the storage,
+		 * but the instance would keep reporting a stale, never-persisted objectId. An isStored()-
+		 * gated clear (e.g. by the LazyReferenceManager under memory pressure) would then drop the
+		 * referent, and a later successful store would persist the stale objectId as a dangling
+		 * reference (missing entity on load). Commit listeners run only after the write succeeded
+		 * and the object registry merged, so on a failed commit the instance simply remains in its
+		 * previous state (unstored and thus not clearable, or linked to its prior valid objectId).
+		 */
+		final ObjectSwizzling objectRetriever = handler.getObjectRetriever();
+		handler.registerCommitListener(() ->
+			instance.$link(referenceOid, objectRetriever)
+		);
 
 		// lazy reference instance must be stored in any case
 		data.storeEntityHeader(Binary.referenceBinaryLength(1), this.typeId(), objectId);
