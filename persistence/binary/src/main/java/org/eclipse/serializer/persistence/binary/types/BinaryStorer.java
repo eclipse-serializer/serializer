@@ -657,7 +657,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			{
 				for(Item e = this.hashSlots[identityHashCode(object) & this.hashRange]; e != null; e = e.link)
 				{
-					if(e.instance == object)
+					/*
+					 * Pin items are pure GC-protection entries for skipped referents and must be invisible
+					 * here: a lookup hit means "this storer already handled the instance", which would make
+					 * explicit stores (internalStore) and eager applies silently no-ops for merely
+					 * referenced instances.
+					 */
+					if(e.instance == object && !isPinItem(e))
 					{
 						return e.oid;
 					}
@@ -667,10 +673,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return Swizzling.notFoundId();
 			}
 		}
-		
+
 		private static boolean isSkipItem(final Item item)
 		{
 			return item.typeHandler == null;
+		}
+
+		private static boolean isPinItem(final Item item)
+		{
+			return item instanceof PinItem;
 		}
 		
 		@Override
@@ -751,7 +762,52 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			// default is lazy logic, so no-op
 		}
-		
+
+		@Override
+		public <T> void registerSkippedOptional(
+			final long                              objectId       ,
+			final T                                 instance       ,
+			final PersistenceTypeHandler<Binary, T> optionalHandler
+		)
+		{
+			/*
+			 * Pin the skipped referent: its objectId gets written into this storer's chunk, but since the
+			 * instance is already globally known, no Item would be created and this storer would hold no
+			 * strong reference to it. If the application drops its last strong reference between store and
+			 * commit, the object registry's weak entry gets reaped and the storage GC deletes the entity
+			 * while the chunk referencing it is not yet committed - the commit would then persist a
+			 * dangling reference (missing entity on later loads).
+			 * A PinItem holds the instance strongly until commit()/clear(), keeping its object registry
+			 * entry populated so the GC's live-objectId safety net protects the entity. Pin items are
+			 * never part of the item chain (not serialized, not merged) and are invisible to lookupOid,
+			 * so explicit stores and eager applies of the instance still get processed normally.
+			 */
+			synchronized(this.objectRegistryMonitor)
+			{
+				// any existing local entry (regular, skip or pin) already holds the instance strongly
+				for(Item e = this.hashSlots[identityHashCode(instance) & this.hashRange]; e != null; e = e.link)
+				{
+					if(e.instance == instance)
+					{
+						return;
+					}
+				}
+
+				if(++this.itemCount >= this.hashRange)
+				{
+					this.synchRebuildStoreItems();
+				}
+
+				this.hashSlots[identityHashCode(instance) & this.hashRange] =
+					new PinItem(
+						instance,
+						objectId,
+						this.hashSlots[identityHashCode(instance) & this.hashRange]
+					)
+				;
+			}
+		}
+
 		protected final long register(final Object instance)
 		{
 			/* Note:
@@ -1419,7 +1475,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 	}
 
-	static final class Item
+	static class Item
 	{
 		final PersistenceTypeHandler<Binary, Object> typeHandler;
 		final Object                                 instance   ;
@@ -1438,6 +1494,22 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			this.oid         = oid        ;
 			this.typeHandler = typeHandler;
 			this.link        = link       ;
+		}
+
+	}
+
+	/**
+	 * Pure pin entry for a skipped referent (see {@code Default#registerSkippedOptional}): holds the
+	 * instance strongly until commit/clear so the storage GC cannot delete the referenced entity while
+	 * the chunk referencing it is not yet committed. Never part of the item chain (not serialized, not
+	 * merged) and invisible to {@code lookupOid}, so explicit stores and eager applies still process
+	 * the instance normally.
+	 */
+	static final class PinItem extends Item
+	{
+		PinItem(final Object instance, final long oid, final Item link)
+		{
+			super(instance, oid, null, link);
 		}
 
 	}
