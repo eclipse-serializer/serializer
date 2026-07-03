@@ -653,25 +653,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		
 		public final long lookupOid(final Object object)
 		{
-			synchronized(this.objectRegistryMonitor)
-			{
-				for(Item e = this.hashSlots[identityHashCode(object) & this.hashRange]; e != null; e = e.link)
-				{
-					/*
-					 * Pin items are pure GC-protection entries for skipped referents and must be invisible
-					 * here: a lookup hit means "this storer already handled the instance", which would make
-					 * explicit stores (internalStore) and eager applies silently no-ops for merely
-					 * referenced instances.
-					 */
-					if(e.instance == object && !isPinItem(e))
-					{
-						return e.oid;
-					}
-				}
-
-				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
-				return Swizzling.notFoundId();
-			}
+			/*
+			 * Pin items are pure GC-protection entries for skipped referents and must be invisible
+			 * here: a lookup hit means "this storer already handled the instance", which would make
+			 * explicit stores (internalStore) and eager applies silently no-ops for merely
+			 * referenced instances.
+			 */
+			return this.lookupOid(object, false);
 		}
 
 		/**
@@ -687,11 +675,17 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 */
 		private long lookupOidLazyApplicable(final Object object)
 		{
+			return this.lookupOid(object, true);
+		}
+
+		private long lookupOid(final Object object, final boolean includePins)
+		{
 			synchronized(this.objectRegistryMonitor)
 			{
 				for(Item e = this.hashSlots[identityHashCode(object) & this.hashRange]; e != null; e = e.link)
 				{
-					if(e.instance == object)
+					// note: a pin hit may not end the search, a regular item for the instance may still follow.
+					if(e.instance == object && (includePins || !isPinItem(e)))
 					{
 						return e.oid;
 					}
@@ -813,26 +807,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			synchronized(this.objectRegistryMonitor)
 			{
 				// any existing local entry (regular, skip or pin) already holds the instance strongly
-				for(Item e = this.hashSlots[identityHashCode(instance) & this.hashRange]; e != null; e = e.link)
+				if(Swizzling.isFoundId(this.lookupOidLazyApplicable(instance)))
 				{
-					if(e.instance == instance)
-					{
-						return;
-					}
+					return;
 				}
 
-				if(++this.itemCount >= this.hashRange)
-				{
-					this.synchRebuildStoreItems();
-				}
-
-				this.hashSlots[identityHashCode(instance) & this.hashRange] =
-					new PinItem(
-						instance,
-						objectId,
-						this.hashSlots[identityHashCode(instance) & this.hashRange]
-					)
-				;
+				this.synchRegisterItem(instance, null, objectId, true);
 			}
 		}
 
@@ -905,18 +885,27 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final long                                      objectId
 		)
 		{
+			return this.synchRegisterItem(instance, (PersistenceTypeHandler<Binary, Object>)typeHandler, objectId, false);
+		}
+
+		private Item synchRegisterItem(
+			final Object                                 instance   ,
+			final PersistenceTypeHandler<Binary, Object> typeHandler,
+			final long                                   objectId   ,
+			final boolean                                pin
+		)
+		{
 			if(++this.itemCount >= this.hashRange)
 			{
 				this.synchRebuildStoreItems();
 			}
 
-			return this.hashSlots[identityHashCode(instance) & this.hashRange] =
-				new Item(
-					instance,
-					objectId,
-					(PersistenceTypeHandler<Binary, Object>)typeHandler,
-					this.hashSlots[identityHashCode(instance) & this.hashRange]
-				)
+			// slot index may only be computed AFTER the potential rebuild changed the hash range.
+			final int slotIndex = identityHashCode(instance) & this.hashRange;
+
+			return this.hashSlots[slotIndex] = pin
+				? new PinItem(instance, objectId, this.hashSlots[slotIndex])
+				: new Item(instance, objectId, typeHandler, this.hashSlots[slotIndex])
 			;
 		}
 
