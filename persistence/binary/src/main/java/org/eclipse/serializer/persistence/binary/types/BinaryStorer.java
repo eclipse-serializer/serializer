@@ -15,9 +15,11 @@ package org.eclipse.serializer.persistence.binary.types;
  */
 
 import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.collections.HashMapIdObject;
 import org.eclipse.serializer.collections.Set_long;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
+import org.eclipse.serializer.persistence.exceptions.PersistenceDanglingReferences;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.types.*;
 import org.eclipse.serializer.reference.ObjectSwizzling;
@@ -101,6 +103,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			return 1024; // anything below 1024 doesn't pay of
 		}
 
+		/**
+		 * Maximum recursion depth for dangling-reference healing: a healing storer's own commit may
+		 * transitively heal at depth + 1. A missing chain deeper than this indicates something is
+		 * systematically wrong; healing then gives up and the target's rejection is rethrown.
+		 */
+		protected static final int MAX_HEAL_DEPTH = 4;
+
 		
 
 		///////////////////////////////////////////////////////////////////////////
@@ -149,12 +158,21 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		/*
 		 * Object ids this storer writes into the data as references while trusting that the referenced
 		 * entity already exists in the target (global registry hits and unloaded Lazy references' cached
-		 * ids). Null when capturing is disabled, so the feature has zero overhead in that case.
+		 * ids), mapped to the referenced instance where one is available (null for Lazy cached ids -
+		 * unhealable). Null when capturing is disabled, so the feature has zero overhead in that case.
 		 * At commit, ids that are also stored by the commit itself are pruned; the remainder is attached
 		 * to the written Binary for the target to validate. Guarded by objectRegistryMonitor.
 		 */
-		private final Set_long trustedObjectIds;
-		
+		private final HashMapIdObject<Object> trustedObjectIds;
+
+		/*
+		 * Whether a write rejected by the target for dangling references is automatically healed:
+		 * re-store the captured instances under their existing object ids, then retry the write.
+		 * healDepth guards recursive healing (a healing storer's own commit may heal transitively).
+		 */
+		private final boolean healDanglingReferences;
+		private final int     healDepth;
+
 		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
 		
 		private final BulkList<PersistenceObjectRegistrationListener> persistenceObjectRegistrationListener = BulkList.New(0);
@@ -216,17 +234,48 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final boolean                               captureTrustedObjectIds
 		)
 		{
+			this(
+				objectManager          ,
+				objectRetriever        ,
+				typeManager            ,
+				target                 ,
+				bufferSizeProvider     ,
+				channelCount           ,
+				switchByteOrder        ,
+				persister              ,
+				captureTrustedObjectIds,
+				false                  ,
+				0
+			);
+		}
+
+		protected Default(
+			final PersistenceObjectManager<Binary>      objectManager          ,
+			final ObjectSwizzling                       objectRetriever        ,
+			final PersistenceTypeHandlerManager<Binary> typeManager            ,
+			final PersistenceTarget<Binary>             target                 ,
+			final BufferSizeProviderIncremental         bufferSizeProvider     ,
+			final int                                   channelCount           ,
+			final boolean                               switchByteOrder        ,
+			final Persister                             persister              ,
+			final boolean                               captureTrustedObjectIds,
+			final boolean                               healDanglingReferences ,
+			final int                                   healDepth
+		)
+		{
 			super();
-			this.objectManager         = notNull(objectManager)               ;
-			this.objectRegistryMonitor = objectManager.objectRegistryMonitor();
-			this.objectRetriever       = notNull(objectRetriever)             ;
-			this.typeManager           = notNull(typeManager)                 ;
-			this.target                = notNull(target)                      ;
-			this.bufferSizeProvider    = notNull(bufferSizeProvider)          ;
-			this.chunksHashRange       =         channelCount - 1             ;
-			this.switchByteOrder       =         switchByteOrder              ;
-			this.persister             = mayNull(persister)                   ;
-			this.trustedObjectIds      = captureTrustedObjectIds ? Set_long.New() : null;
+			this.objectManager          = notNull(objectManager)               ;
+			this.objectRegistryMonitor  = objectManager.objectRegistryMonitor();
+			this.objectRetriever        = notNull(objectRetriever)             ;
+			this.typeManager            = notNull(typeManager)                 ;
+			this.target                 = notNull(target)                      ;
+			this.bufferSizeProvider     = notNull(bufferSizeProvider)          ;
+			this.chunksHashRange        =         channelCount - 1             ;
+			this.switchByteOrder        =         switchByteOrder              ;
+			this.persister              = mayNull(persister)                   ;
+			this.trustedObjectIds       = captureTrustedObjectIds ? HashMapIdObject.New() : null;
+			this.healDanglingReferences = healDanglingReferences               ;
+			this.healDepth              = healDepth                            ;
 
 			this.defaultInitialize();
 		}
@@ -717,11 +766,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				// must validate here, too, in case the WriteController disabled writing during the storer's existence.
 				this.target.validateIsStoringEnabled();
 
-				final Binary writeData;
+				final Binary         writeData;
+				final ChunksBuffer[] chunks   ;
 				synchronized(this.objectRegistryMonitor)
 				{
 					this.typeManager.checkForPendingRootInstances();
 					this.typeManager.checkForPendingRootsStoring(this);
+					chunks    = this.chunks;
 					writeData = this.synchComplete();
 
 					final long[] trustedObjectIds = this.synchYieldTrustedObjectIds();
@@ -732,7 +783,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				}
 
 				// very costly IO-operation does not need to occupy the lock
-				this.target.write(writeData);
+				this.writeToTarget(writeData, chunks);
 
 				/*
 				 * mergeEntries acquires the object registry, which is the same monitor we use as
@@ -767,6 +818,159 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 		
 		/**
+		 * Writes the commit's data to the target, transparently healing dangling references when enabled:
+		 * a write the target rejects because it references object ids without existing entities is
+		 * repaired by re-storing the captured instances under their existing object ids in a compensating
+		 * commit, rewinding the (rolled back, byte-identical) chunk buffers and retrying the write.
+		 * <p>
+		 * The healing commit is separate from (not atomic with) the retried commit: should the retry fail
+		 * for an unrelated reason, the healed entities are simply unreachable and get collected by the
+		 * target's garbage collection. Unhealable ids (no captured instance, e.g. an unloaded Lazy
+		 * reference's cached id), exhausted attempts/recursion depth or lack of progress rethrow the
+		 * target's original exception.
+		 */
+		private void writeToTarget(final Binary writeData, final ChunksBuffer[] chunks)
+		{
+			if(!this.healDanglingReferences)
+			{
+				this.target.write(writeData);
+				return;
+			}
+
+			final Set_long healedObjectIds = Set_long.New();
+
+			// checkForProblems surfaces only the FIRST failing channel, so healing may need one round
+			// per channel holding missing ids.
+			final int maxAttempts = this.chunksHashRange + 2; // channelCount + 1
+
+			for(int attempt = 1; ; attempt++)
+			{
+				try
+				{
+					this.target.write(writeData);
+					return;
+				}
+				catch(final RuntimeException e)
+				{
+					final PersistenceDanglingReferences danglingReferences = findDanglingReferences(e);
+					if(danglingReferences == null || attempt >= maxAttempts || this.healDepth >= MAX_HEAL_DEPTH)
+					{
+						throw e;
+					}
+
+					final long[]   missingObjectIds = danglingReferences.missingObjectIds();
+					final Object[] instances        = new Object[missingObjectIds.length];
+					for(int i = 0; i < missingObjectIds.length; i++)
+					{
+						if(healedObjectIds.contains(missingObjectIds[i]))
+						{
+							// an id reported missing again after being healed: no progress, give up.
+							throw e;
+						}
+						if((instances[i] = this.synchLookupTrustedInstance(missingObjectIds[i])) == null)
+						{
+							logger.error(
+								"Cannot heal dangling reference to objectId {}: no instance available"
+								+ " (e.g. an unloaded lazy reference's cached id - the data is genuinely gone).",
+								missingObjectIds[i]
+							);
+							throw e;
+						}
+					}
+
+					logger.warn(
+						"Healing {} dangling reference(s) {} (attempt {}/{}, depth {}):"
+						+ " re-storing the referenced instances under their existing object ids.",
+						missingObjectIds.length,
+						Arrays.toString(missingObjectIds),
+						attempt,
+						maxAttempts,
+						this.healDepth
+					);
+
+					final BinaryStorer.Default healingStorer = this.createHealingStorer();
+					for(int i = 0; i < missingObjectIds.length; i++)
+					{
+						// forced re-serialization under the SAME object id, so the retried data stays valid.
+						healingStorer.store(instances[i], missingObjectIds[i]);
+					}
+					// may itself heal transitive dangling references, at depth + 1.
+					healingStorer.commit();
+
+					for(final long missingObjectId : missingObjectIds)
+					{
+						healedObjectIds.add(missingObjectId);
+					}
+
+					// channels that wrote before the rejection consumed their buffers' positions;
+					// the on-disk writes were rolled back, so rewinding restores the exact pre-write state.
+					for(final ChunksBuffer chunk : chunks)
+					{
+						chunk.rewindBuffers();
+					}
+				}
+			}
+		}
+
+		private Object synchLookupTrustedInstance(final long objectId)
+		{
+			synchronized(this.objectRegistryMonitor)
+			{
+				return this.trustedObjectIds == null ? null : this.trustedObjectIds.get(objectId);
+			}
+		}
+
+		private BinaryStorer.Default createHealingStorer()
+		{
+			final BinaryStorer.Default healingStorer = new BinaryStorer.Default(
+				this.objectManager        ,
+				this.objectRetriever      ,
+				this.typeManager          ,
+				this.target               ,
+				this.bufferSizeProvider   ,
+				this.chunksHashRange + 1  ,
+				this.switchByteOrder      ,
+				this.persister            ,
+				true                      , // capture: transitive dangling references must be healable too
+				true                      , // heal recursively
+				this.healDepth + 1
+			);
+			this.objectManager.registerLocalRegistry(healingStorer);
+
+			return healingStorer;
+		}
+
+		private static PersistenceDanglingReferences findDanglingReferences(final Throwable throwable)
+		{
+			// walk the cause chain, guarded against cause cycles.
+			Throwable slow = throwable, fast = throwable;
+			while(fast != null)
+			{
+				if(fast instanceof PersistenceDanglingReferences)
+				{
+					return (PersistenceDanglingReferences)fast;
+				}
+				fast = fast.getCause();
+				if(fast == null)
+				{
+					break;
+				}
+				if(fast instanceof PersistenceDanglingReferences)
+				{
+					return (PersistenceDanglingReferences)fast;
+				}
+				fast = fast.getCause();
+				slow = slow.getCause();
+				if(fast == slow)
+				{
+					break; // cause cycle
+				}
+			}
+
+			return null;
+		}
+
+		/**
 		 * Yields the trusted object ids of the current commit as an array, pruned by the ids the commit
 		 * stores itself: an id that is both referenced and stored in the same commit is guaranteed, not
 		 * trusted (e.g. {@code storeAll(parent, child)} re-storing a registry-known child, or an eager
@@ -776,7 +980,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 */
 		private long[] synchYieldTrustedObjectIds()
 		{
-			if(this.trustedObjectIds == null || this.trustedObjectIds.isEmpty())
+			if(this.trustedObjectIds == null || this.trustedObjectIds.size() == 0)
 			{
 				return null;
 			}
@@ -799,7 +1003,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 
 			final long[] buffer = new long[(int)this.trustedObjectIds.size()];
 			final int[]  count  = {0};
-			this.trustedObjectIds.iterate(objectId ->
+			this.trustedObjectIds.iterateIds(objectId ->
 			{
 				if(!storedObjectIds.contains(objectId))
 				{
@@ -984,9 +1188,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 */
 			synchronized(this.objectRegistryMonitor)
 			{
-				// the skipped id is also a "trusted reference": referenced but not stored in this
-				// commit - record it so the persistence target can validate its existence.
-				this.noteTrustedReference(objectId);
+				// the skipped id is also a "trusted reference": referenced but not stored in this commit.
+				// Record it with its instance so the persistence target can validate its existence and,
+				// when healing is enabled, re-store it; put() wins over a null from the Lazy path.
+				if(this.trustedObjectIds != null && Persistence.IdType.OID.isInRange(objectId))
+				{
+					this.trustedObjectIds.put(objectId, instance);
+				}
 
 				// any existing local entry (regular, skip or pin) already holds the instance strongly
 				if(Swizzling.isFoundId(this.lookupOidLazyApplicable(instance)))
@@ -1007,10 +1215,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return;
 			}
 
-			// reentrant from the registerSkippedOptional path; the Lazy handler path acquires it fresh.
+			// the Lazy handler path acquires the monitor fresh.
 			synchronized(this.objectRegistryMonitor)
 			{
-				this.trustedObjectIds.add(objectId);
+				// no instance available (unloaded Lazy cached id): unhealable if missing. add() never
+				// overwrites an instance recorded by registerSkippedOptional for the same id.
+				this.trustedObjectIds.add(objectId, null);
 			}
 		}
 
@@ -1275,6 +1485,33 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final boolean                               captureTrustedObjectIds
 		)
 		{
+			this(
+				objectManager          ,
+				objectRetriever        ,
+				typeManager            ,
+				target                 ,
+				bufferSizeProvider     ,
+				channelCount           ,
+				switchByteOrder        ,
+				persister              ,
+				captureTrustedObjectIds,
+				false
+			);
+		}
+
+		Eager(
+			final PersistenceObjectManager<Binary>      objectManager          ,
+			final ObjectSwizzling                       objectRetriever        ,
+			final PersistenceTypeHandlerManager<Binary> typeManager            ,
+			final PersistenceTarget<Binary>             target                 ,
+			final BufferSizeProviderIncremental         bufferSizeProvider     ,
+			final int                                   channelCount           ,
+			final boolean                               switchByteOrder        ,
+			final Persister                             persister              ,
+			final boolean                               captureTrustedObjectIds,
+			final boolean                               healDanglingReferences
+		)
+		{
 			super(
 				objectManager          ,
 				objectRetriever        ,
@@ -1284,7 +1521,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				channelCount           ,
 				switchByteOrder        ,
 				persister              ,
-				captureTrustedObjectIds
+				captureTrustedObjectIds,
+				healDanglingReferences ,
+				0
 			);
 		}
 		
@@ -1386,7 +1625,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final Persister                             persister              ,
 			final BatchStorer.Controller                controller             ,
 			final Duration                              checkInterval          ,
-			final boolean                               captureTrustedObjectIds
+			final boolean                               captureTrustedObjectIds,
+			final boolean                               healDanglingReferences
 		)
 		{
 			super(
@@ -1398,7 +1638,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				channelCount           ,
 				switchByteOrder        ,
 				persister              ,
-				captureTrustedObjectIds
+				captureTrustedObjectIds,
+				healDanglingReferences ,
+				0
 			);
 			this.controller = notNull(controller);
 
@@ -1812,10 +2054,36 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		final boolean                    captureTrustedObjectIds
 	)
 	{
+		return Creator(channelCountProvider, switchByteOrder, captureTrustedObjectIds, false);
+	}
+
+	/**
+	 * Creates a new default {@link BinaryStorer.Creator}.
+	 *
+	 * @param channelCountProvider    supplies the number of channels each created storer will partition its
+	 *                                chunk buffers across.
+	 * @param switchByteOrder         whether persisted values should use a non-native byte order.
+	 * @param captureTrustedObjectIds whether created storers collect the object ids they reference without
+	 *                                storing (see {@link Binary#trustedObjectIds()}) so the persistence
+	 *                                target can validate their existence.
+	 * @param healDanglingReferences  whether created storers automatically heal a write the target rejects
+	 *                                for dangling references, by re-storing the captured instances under
+	 *                                their existing object ids and retrying.
+	 *
+	 * @return the newly created storer creator.
+	 */
+	public static BinaryStorer.Creator Creator(
+		final BinaryChannelCountProvider channelCountProvider   ,
+		final boolean                    switchByteOrder        ,
+		final boolean                    captureTrustedObjectIds,
+		final boolean                    healDanglingReferences
+	)
+	{
 		return new BinaryStorer.Creator.Default(
 			notNull(channelCountProvider),
 			        switchByteOrder      ,
-			        captureTrustedObjectIds
+			        captureTrustedObjectIds,
+			        healDanglingReferences
 		);
 	}
 
@@ -1873,6 +2141,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			private final BinaryChannelCountProvider channelCountProvider   ;
 			private final boolean                    switchByteOrder        ;
 			private final boolean                    captureTrustedObjectIds;
+			private final boolean                    healDanglingReferences ;
 
 
 
@@ -1885,7 +2154,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				final boolean                    switchByteOrder
 			)
 			{
-				this(channelCountProvider, switchByteOrder, false);
+				this(channelCountProvider, switchByteOrder, false, false);
 			}
 
 			protected Abstract(
@@ -1894,10 +2163,21 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				final boolean                    captureTrustedObjectIds
 			)
 			{
+				this(channelCountProvider, switchByteOrder, captureTrustedObjectIds, false);
+			}
+
+			protected Abstract(
+				final BinaryChannelCountProvider channelCountProvider   ,
+				final boolean                    switchByteOrder        ,
+				final boolean                    captureTrustedObjectIds,
+				final boolean                    healDanglingReferences
+			)
+			{
 				super();
 				this.channelCountProvider    = channelCountProvider   ;
 				this.switchByteOrder         = switchByteOrder        ;
 				this.captureTrustedObjectIds = captureTrustedObjectIds;
+				this.healDanglingReferences  = healDanglingReferences ;
 			}
 
 
@@ -1921,6 +2201,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return this.captureTrustedObjectIds;
 			}
 
+			protected boolean healDanglingReferences()
+			{
+				return this.healDanglingReferences;
+			}
+
 		}
 		
 		/**
@@ -1936,7 +2221,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				final boolean                    switchByteOrder
 			)
 			{
-				this(channelCountProvider, switchByteOrder, false);
+				this(channelCountProvider, switchByteOrder, false, false);
 			}
 
 			Default(
@@ -1945,7 +2230,17 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				final boolean                    captureTrustedObjectIds
 			)
 			{
-				super(channelCountProvider, switchByteOrder, captureTrustedObjectIds);
+				this(channelCountProvider, switchByteOrder, captureTrustedObjectIds, false);
+			}
+
+			Default(
+				final BinaryChannelCountProvider channelCountProvider   ,
+				final boolean                    switchByteOrder        ,
+				final boolean                    captureTrustedObjectIds,
+				final boolean                    healDanglingReferences
+			)
+			{
+				super(channelCountProvider, switchByteOrder, captureTrustedObjectIds, healDanglingReferences);
 			}
 
 			@Override
@@ -1969,7 +2264,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					this.channelCount()           ,
 					this.switchByteOrder()        ,
 					persister                     ,
-					this.captureTrustedObjectIds()
+					this.captureTrustedObjectIds(),
+					this.healDanglingReferences() ,
+					0
 				);
 				objectManager.registerLocalRegistry(storer);
 				
@@ -1996,7 +2293,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					this.channelCount()           ,
 					this.switchByteOrder()        ,
 					persister                     ,
-					this.captureTrustedObjectIds()
+					this.captureTrustedObjectIds(),
+					this.healDanglingReferences()
 				);
 				objectManager.registerLocalRegistry(storer);
 				
@@ -2028,7 +2326,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					persister                     ,
 					controller                    ,
 					checkInterval                 ,
-					this.captureTrustedObjectIds()
+					this.captureTrustedObjectIds(),
+					this.healDanglingReferences()
 				);
 				objectManager.registerLocalRegistry(storer);
 
