@@ -17,6 +17,7 @@ package org.eclipse.serializer.persistence.binary.types;
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.hashing.XHashing;
 import org.eclipse.serializer.math.XMath;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.types.*;
 import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reference.Swizzling;
@@ -603,9 +604,49 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			this.persistenceObjectRegistrationListener.add(listener);
 		}
 		
-		protected void notifyCommitListeners()
+		/**
+		 * Notifies all registered commit listeners, fault-isolating each one: commit listeners run
+		 * AFTER the point of durability (target write and object registry merge), so a listener
+		 * fault must neither prevent the remaining listeners from running (e.g. the deferred Lazy
+		 * linking of the same commit), nor skip the storer cleanup, nor masquerade as a commit
+		 * failure to the caller — the store IS committed at this point.
+		 *
+		 * @return {@code null} if all listeners completed normally, otherwise a
+		 *         {@link PersistenceException} stating that the store was committed successfully,
+		 *         with the first listener fault as its cause and any further faults suppressed.
+		 *         {@link #commit()} rethrows it AFTER the storer cleanup.
+		 */
+		protected PersistenceException notifyCommitListeners()
 		{
-			this.commitListeners.iterate(PersistenceCommitListener::onAfterCommit);
+			final BulkList<Exception> faults = BulkList.New(0);
+			this.commitListeners.iterate(listener ->
+			{
+				try
+				{
+					listener.onAfterCommit();
+				}
+				catch(final Exception e)
+				{
+					logger.error("Commit listener failed after successful commit", e);
+					faults.add(e);
+				}
+			});
+
+			if(faults.isEmpty())
+			{
+				return null;
+			}
+
+			final PersistenceException fault = new PersistenceException(
+				"The store was committed successfully, but " + faults.size() + " commit listener(s) failed.",
+				faults.first()
+			);
+			for(long i = 1; i < faults.size(); i++)
+			{
+				fault.addSuppressed(faults.at(i));
+			}
+
+			return fault;
 		}
 
 		@Override
@@ -642,8 +683,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.typeManager.clearStorePendingRoots();
 				this.objectManager.mergeEntries(this);
 			}
-			this.notifyCommitListeners();
+			// fault-isolated: the store is durable at this point, cleanup must happen in any case
+			final PersistenceException listenerFault = this.notifyCommitListeners();
 			this.clear();
+
+			if(listenerFault != null)
+			{
+				// distinct from a commit (write/durability) failure - see #notifyCommitListeners
+				throw listenerFault;
+			}
 
 			logger.debug("Commit finished successfully");
 
