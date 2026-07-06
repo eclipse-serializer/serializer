@@ -20,11 +20,12 @@ package org.eclipse.serializer.persistence.types;
  * (e.g. enqueuing the instance for the next storage iteration) onto the id-assignment step without having to
  * inspect the registry afterwards.
  * <p>
- * The three callbacks model the storage strategies the caller may want to express. {@code registerGuaranteed}
+ * The callbacks model the storage strategies the caller may want to express. {@code registerGuaranteed}
  * always fires &mdash; the storer must process the instance unconditionally. {@code registerLazyOptional} and
  * {@code registerEagerOptional} are dispatched only by the lazy and eager storer implementations
  * respectively, so a storer can declare its intent by which method it overrides and use the {@link NoOp}
- * default for the others.
+ * default for the others. {@code registerSkippedOptional} fires when an instance is already globally known
+ * and therefore skipped &mdash; only its object id gets referenced, no serialization happens.
  * <p>
  * For visitors that only need the bare object id (without instance or handler), implement
  * {@link PersistenceObjectIdAcceptor} instead.
@@ -82,6 +83,31 @@ public interface PersistenceObjectIdRequestor<D>
 		T                            instance       ,
 		PersistenceTypeHandler<D, T> optionalHandler
 	);
+
+	/**
+	 * Optional hook fired when the passed instance is already globally known (registered in the object
+	 * registry) and is therefore skipped by lazy storing logic: only its object id gets referenced, the
+	 * instance itself is not serialized. Default is a no-op.
+	 * <p>
+	 * Storers can use this to retain a strong reference to the skipped instance until commit. Without it,
+	 * the application may drop its last strong reference to the instance between store and commit; the
+	 * instance's object registry entry gets reaped and the storage garbage collector can delete the
+	 * referenced entity while the chunk referencing it is not yet committed, so the commit would persist
+	 * a dangling reference (missing entity on later loads).
+	 *
+	 * @param <T>             the instance type.
+	 * @param objectId        the object id the instance is already registered with.
+	 * @param instance        the skipped instance.
+	 * @param optionalHandler the type handler responsible for {@code instance}, or {@code null} if not known.
+	 */
+	public default <T> void registerSkippedOptional(
+		final long                         objectId       ,
+		final T                            instance       ,
+		final PersistenceTypeHandler<D, T> optionalHandler
+	)
+	{
+		// no-op by default
+	}
 
 
 

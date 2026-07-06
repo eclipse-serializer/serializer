@@ -315,7 +315,19 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 					// lazy logic means only apply if not yet globally known (= something new / "store required").
 					objectIdRequestor.registerLazyOptional(objectId, object, optionalHandler);
 				}
-				
+				else
+				{
+					/*
+					 * Already globally known means lazy storing logic skips the instance: only its objectId
+					 * gets referenced in the store, the instance itself is not serialized. The requestor
+					 * (storer) must get the chance to retain the skipped instance, otherwise the application
+					 * can drop its last strong reference between store and commit, the registry's weak entry
+					 * gets reaped and the storage GC deletes the entity while the chunk referencing it is
+					 * not yet committed - the commit would then persist a dangling reference.
+					 */
+					objectIdRequestor.registerSkippedOptional(objectId, object, optionalHandler);
+				}
+
 				// eager logic means ALWAYS apply, even if already globally known (= "store full").
 				objectIdRequestor.registerEagerOptional(objectId, object, optionalHandler);
 
