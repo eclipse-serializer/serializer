@@ -618,6 +618,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * fault must neither prevent the remaining listeners from running (e.g. the deferred Lazy
 		 * linking of the same commit), nor skip the storer cleanup, nor masquerade as a commit
 		 * failure to the caller — the store IS committed at this point.
+		 * <p>
+		 * Isolation covers {@link Exception}s. An {@link Error} signals a fatal JVM condition and
+		 * is intentionally NOT swallowed: it aborts the remaining notifications and propagates,
+		 * but the storer cleanup is still guaranteed by {@link #commit()}'s try/finally.
 		 *
 		 * @return {@code null} if all listeners completed normally, otherwise a
 		 *         {@link PersistenceException} stating that the store was committed successfully,
@@ -635,7 +639,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				}
 				catch(final Exception e)
 				{
-					logger.error("Commit listener failed after successful commit", e);
+					logger.error("Commit listener {} failed after successful commit", listener, e);
 					faults.add(e);
 				}
 			});
@@ -692,8 +696,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.objectManager.mergeEntries(this);
 			}
 			// fault-isolated: the store is durable at this point, cleanup must happen in any case
-			final PersistenceException listenerFault = this.notifyCommitListeners();
-			this.clear();
+			final PersistenceException listenerFault;
+			try
+			{
+				listenerFault = this.notifyCommitListeners();
+			}
+			finally
+			{
+				this.clear();
+			}
 
 			if(listenerFault != null)
 			{
