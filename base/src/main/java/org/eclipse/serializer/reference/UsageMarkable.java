@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 import org.eclipse.serializer.collections.HashEnum;
 import org.eclipse.serializer.collections.types.XGettingCollection;
 import org.eclipse.serializer.collections.types.XGettingEnum;
+import org.eclipse.serializer.util.X;
 
 public interface UsageMarkable
 {
@@ -66,6 +67,17 @@ public interface UsageMarkable
 	 */
 	public int markUnused();
 
+	/**
+	 * Executes the passed logic with the internal usage marks collection.
+	 * <p>
+	 * <b>Lock-order constraint:</b> the logic runs while holding the internal marks monitor.
+	 * It must not call back into synchronized methods of the marked instance (for a {@link Lazy},
+	 * e.g. {@code peek()}, {@code get()}, {@code clear(...)}): evaluator-driven lazy clearing
+	 * acquires the instance monitor first and queries {@link #isUsed()} (the marks monitor)
+	 * second — a callback from here into the instance inverts that order and can deadlock.
+	 *
+	 * @param logic the logic to execute with the usage marks collection.
+	 */
 	public void accessUsageMarks(Consumer<? super XGettingEnum<Object>> logic);
 
 	
@@ -157,9 +169,15 @@ public interface UsageMarkable
         @Override
         public int unmarkUsedFor(final Object instance)
         {
+            // never marked: nothing to remove, nothing to allocate (see isUsed()).
+            final HashEnum<Object> usageMarks = this.usageMarks;
+            if(usageMarks == null)
+            {
+                return 0;
+            }
+
             // lock internal instance to avoid side effect deadlocks
-            final HashEnum<Object> usageMarks;
-            synchronized((usageMarks = this.usageMarks()))
+            synchronized(usageMarks)
             {
                 final boolean removed = usageMarks.removeOne(instance);
 
@@ -193,9 +211,15 @@ public interface UsageMarkable
         @Override
         public int markUnused()
         {
+            // never marked: nothing to clear, nothing to allocate (see isUsed()).
+            final HashEnum<Object> usageMarks = this.usageMarks;
+            if(usageMarks == null)
+            {
+                return 0;
+            }
+
             // lock internal instance to avoid side effect deadlocks
-            final HashEnum<Object> usageMarks;
-            synchronized((usageMarks = this.usageMarks()))
+            synchronized(usageMarks)
             {
                 final int currentSize = usageMarks.intSize();
                 usageMarks.clear();
@@ -207,11 +231,20 @@ public interface UsageMarkable
         @Override
         public void accessUsageMarks(final Consumer<? super XGettingEnum<Object>> logic)
         {
-            // lock internal instance to avoid side effect deadlocks
-            final HashEnum<Object> usageMarks;
-            synchronized((usageMarks = this.usageMarks()))
+            /*
+             * Never marked: the logic still gets a (shared immutable empty) collection so it can
+             * notice the no-marks case, but the instance's own marks storage is not allocated.
+             */
+            final HashEnum<Object> usageMarks = this.usageMarks;
+            if(usageMarks == null)
             {
-                // no null check to give logic a chance to notice no-marks case.
+                logic.accept(X.empty());
+                return;
+            }
+
+            // lock internal instance to avoid side effect deadlocks
+            synchronized(usageMarks)
+            {
                 logic.accept(usageMarks);
             }
         }
