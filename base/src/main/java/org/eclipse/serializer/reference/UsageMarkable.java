@@ -170,9 +170,21 @@ public interface UsageMarkable
         @Override
         public boolean isUsed()
         {
+            /*
+             * Deliberately NOT via usageMarks(): that would ALLOCATE the marks collection for
+             * every instance this is called on. isUsed() is queried by evaluator-driven lazy
+             * clearing for every stored+loaded reference in every check cycle - never-marked
+             * instances (the vast majority) must answer false without any allocation.
+             * The field is volatile: a null read means no mark was ever registered.
+             */
+            final HashEnum<Object> usageMarks = this.usageMarks;
+            if(usageMarks == null)
+            {
+                return false;
+            }
+
             // lock internal instance to avoid side effect deadlocks
-            final HashEnum<Object> usageMarks;
-            synchronized((usageMarks = this.usageMarks()))
+            synchronized(usageMarks)
             {
                 return !usageMarks.isEmpty();
             }
