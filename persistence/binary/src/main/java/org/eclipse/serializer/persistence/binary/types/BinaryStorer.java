@@ -141,6 +141,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private Item[] hashSlots;
 		private int    hashRange;
 		private long   itemCount;
+		private long   pinCount ; // subset of itemCount: pure retention entries (see PinItem), no store payload.
 		
 		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
 		
@@ -230,7 +231,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			synchronized(this.objectRegistryMonitor)
 			{
-				return this.itemCount;
+				/*
+				 * Pin entries are pure retention entries, not store payload: they must not count into
+				 * the storer's reported size. Otherwise count-based flush controllers (see Batching)
+				 * would flush prematurely for mere references to already stored instances, and a
+				 * pins-only storer would report non-empty and commit an empty chunk.
+				 */
+				return this.itemCount - this.pinCount;
 			}
 		}
 		
@@ -310,6 +317,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			synchronized(this.objectRegistryMonitor)
 			{
 				this.itemCount = 0;
+				this.pinCount  = 0;
 				this.hashSlots = new Item[hashLength];
 				this.hashRange = hashLength - 1;
 
@@ -719,12 +727,18 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				{
 					if(e.instance == object)
 					{
-						if(isSkipItem(e))
+						/*
+						 * Pin entries are checked explicitly, NOT via the skip-item criterion they
+						 * happen to satisfy as well (null typeHandler): semantically, a skip is a
+						 * user assertion while a pin is a retention entry - a future change to
+						 * either criterion must not silently expose pins to peer storers here.
+						 */
+						if(isPinItem(e) || isSkipItem(e))
 						{
-							// skip-entry for this storer, so it can offer nothing to the receiver.
+							// local-only entry for this storer, so it can offer nothing to the receiver.
 							break;
 						}
-						
+
 						// found a local entry in the current storer, transfer object<->id association to the receiver.
 						objectIdRequestor.registerGuaranteed(e.oid, object, optionalHandler);
 						return e.oid;
@@ -895,6 +909,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final boolean                                pin
 		)
 		{
+			// pins occupy a hash slot entry (hence itemCount for the rebuild threshold), but are no payload (see size()).
+			if(pin)
+			{
+				++this.pinCount;
+			}
 			if(++this.itemCount >= this.hashRange)
 			{
 				this.synchRebuildStoreItems();
@@ -1092,7 +1111,21 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			// default is eager logic.
 			this.registerGuaranteed(objectId, instance, optionalHandler);
 		}
-		
+
+		@Override
+		public <T> void registerSkippedOptional(
+			final long                              objectId       ,
+			final T                                 instance       ,
+			final PersistenceTypeHandler<Binary, T> optionalHandler
+		)
+		{
+			/*
+			 * No-op: an eager storer processes every encountered instance via registerEagerOptional
+			 * (-> registerGuaranteed), creating a regular item that both retains the instance strongly
+			 * and serializes it. A pin would only duplicate that entry.
+			 */
+		}
+
 	}
 
 	/**
@@ -1519,8 +1552,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 	 * Pure pin entry for a skipped referent (see {@code Default#registerSkippedOptional}): holds the
 	 * instance strongly until commit/clear so the storage GC cannot delete the referenced entity while
 	 * the chunk referencing it is not yet committed. Never part of the item chain (not serialized, not
-	 * merged) and invisible to {@code lookupOid}, so explicit stores and eager applies still process
-	 * the instance normally.
+	 * merged), invisible to {@code lookupOid}, so explicit stores and eager applies still process
+	 * the instance normally, and not counted into {@code size()}/{@code isEmpty()} (pins are retention
+	 * entries, not store payload).
 	 */
 	static final class PinItem extends Item
 	{
