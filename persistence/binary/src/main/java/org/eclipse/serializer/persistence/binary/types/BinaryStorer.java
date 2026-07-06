@@ -368,40 +368,40 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		@Override
 		public <T> long apply(final T instance)
 		{
-			// concurrency: lookupOid() and ensureObjectId() lock internally, the rest is thread-local
-			
+			// concurrency: lookupOidLazyApplicable() and ensureObjectId() lock internally, the rest is thread-local
+
 			if(instance == null)
 			{
 				return Swizzling.nullId();
 			}
-			
+
 			final long objectIdLocal;
-			if(Swizzling.isFoundId(objectIdLocal = this.lookupOid(instance)))
+			if(Swizzling.isFoundId(objectIdLocal = this.lookupOidLazyApplicable(instance)))
 			{
 				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
 				return objectIdLocal;
 			}
-			
+
 			return this.register(instance);
 		}
-		
+
 		@Override
 		public <T> long apply(final T instance, final PersistenceTypeHandler<Binary, T> localTypeHandler)
 		{
-			// concurrency: lookupOid() and ensureObjectId() lock internally, the rest is thread-local
-			
+			// concurrency: lookupOidLazyApplicable() and ensureObjectId() lock internally, the rest is thread-local
+
 			if(instance == null)
 			{
 				return Swizzling.nullId();
 			}
-			
+
 			final long objectIdLocal;
-			if(Swizzling.isFoundId(objectIdLocal = this.lookupOid(instance)))
+			if(Swizzling.isFoundId(objectIdLocal = this.lookupOidLazyApplicable(instance)))
 			{
 				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
 				return objectIdLocal;
 			}
-			
+
 			return this.objectManager.ensureObjectId(instance, this, localTypeHandler);
 		}
 		
@@ -653,17 +653,39 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		
 		public final long lookupOid(final Object object)
 		{
+			/*
+			 * Pin items are pure GC-protection entries for skipped referents and must be invisible
+			 * here: a lookup hit means "this storer already handled the instance", which would make
+			 * explicit stores (internalStore) and eager applies silently no-ops for merely
+			 * referenced instances.
+			 */
+			return this.lookupOid(object, false);
+		}
+
+		/**
+		 * Variant of {@link #lookupOid(Object)} for lazy apply logic ONLY: pin items are considered
+		 * a valid local hit here, since a pin records the instance's globally registered objectId -
+		 * exactly the value {@code ensureObjectId} would return for it. This turns the pin into a
+		 * local cache and saves the global registry round trip for repeated references to already
+		 * stored instances.
+		 * <p>
+		 * Must NEVER be used by explicit stores ({@code internalStore}) or eager applies: for those,
+		 * a local hit means "already handled by this storer" and a pin hit would silently suppress
+		 * the required (re-)serialization (see {@link PinItem} and {@link #lookupOid(Object)}).
+		 */
+		private long lookupOidLazyApplicable(final Object object)
+		{
+			return this.lookupOid(object, true);
+		}
+
+		private long lookupOid(final Object object, final boolean includePins)
+		{
 			synchronized(this.objectRegistryMonitor)
 			{
 				for(Item e = this.hashSlots[identityHashCode(object) & this.hashRange]; e != null; e = e.link)
 				{
-					/*
-					 * Pin items are pure GC-protection entries for skipped referents and must be invisible
-					 * here: a lookup hit means "this storer already handled the instance", which would make
-					 * explicit stores (internalStore) and eager applies silently no-ops for merely
-					 * referenced instances.
-					 */
-					if(e.instance == object && !isPinItem(e))
+					// note: a pin hit may not end the search, a regular item for the instance may still follow.
+					if(e.instance == object && (includePins || !isPinItem(e)))
 					{
 						return e.oid;
 					}
@@ -785,26 +807,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			synchronized(this.objectRegistryMonitor)
 			{
 				// any existing local entry (regular, skip or pin) already holds the instance strongly
-				for(Item e = this.hashSlots[identityHashCode(instance) & this.hashRange]; e != null; e = e.link)
+				if(Swizzling.isFoundId(this.lookupOidLazyApplicable(instance)))
 				{
-					if(e.instance == instance)
-					{
-						return;
-					}
+					return;
 				}
 
-				if(++this.itemCount >= this.hashRange)
-				{
-					this.synchRebuildStoreItems();
-				}
-
-				this.hashSlots[identityHashCode(instance) & this.hashRange] =
-					new PinItem(
-						instance,
-						objectId,
-						this.hashSlots[identityHashCode(instance) & this.hashRange]
-					)
-				;
+				this.synchRegisterItem(instance, null, objectId, true);
 			}
 		}
 
@@ -877,18 +885,27 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final long                                      objectId
 		)
 		{
+			return this.synchRegisterItem(instance, (PersistenceTypeHandler<Binary, Object>)typeHandler, objectId, false);
+		}
+
+		private Item synchRegisterItem(
+			final Object                                 instance   ,
+			final PersistenceTypeHandler<Binary, Object> typeHandler,
+			final long                                   objectId   ,
+			final boolean                                pin
+		)
+		{
 			if(++this.itemCount >= this.hashRange)
 			{
 				this.synchRebuildStoreItems();
 			}
 
-			return this.hashSlots[identityHashCode(instance) & this.hashRange] =
-				new Item(
-					instance,
-					objectId,
-					(PersistenceTypeHandler<Binary, Object>)typeHandler,
-					this.hashSlots[identityHashCode(instance) & this.hashRange]
-				)
+			// slot index may only be computed AFTER the potential rebuild changed the hash range.
+			final int slotIndex = identityHashCode(instance) & this.hashRange;
+
+			return this.hashSlots[slotIndex] = pin
+				? new PinItem(instance, objectId, this.hashSlots[slotIndex])
+				: new Item(instance, objectId, typeHandler, this.hashSlots[slotIndex])
 			;
 		}
 
