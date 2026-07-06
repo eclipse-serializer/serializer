@@ -141,6 +141,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private Item[] hashSlots;
 		private int    hashRange;
 		private long   itemCount;
+		private long   pinCount ; // subset of itemCount: pure retention entries (see PinItem), no store payload.
 		
 		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
 		
@@ -230,7 +231,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			synchronized(this.objectRegistryMonitor)
 			{
-				return this.itemCount;
+				/*
+				 * Pin entries are pure retention entries, not store payload: they must not count into
+				 * the storer's reported size. Otherwise count-based flush controllers (see Batching)
+				 * would flush prematurely for mere references to already stored instances, and a
+				 * pins-only storer would report non-empty and commit an empty chunk.
+				 */
+				return this.itemCount - this.pinCount;
 			}
 		}
 		
@@ -310,6 +317,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			synchronized(this.objectRegistryMonitor)
 			{
 				this.itemCount = 0;
+				this.pinCount  = 0;
 				this.hashSlots = new Item[hashLength];
 				this.hashRange = hashLength - 1;
 
@@ -368,40 +376,40 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		@Override
 		public <T> long apply(final T instance)
 		{
-			// concurrency: lookupOid() and ensureObjectId() lock internally, the rest is thread-local
-			
+			// concurrency: lookupOidLazyApplicable() and ensureObjectId() lock internally, the rest is thread-local
+
 			if(instance == null)
 			{
 				return Swizzling.nullId();
 			}
-			
+
 			final long objectIdLocal;
-			if(Swizzling.isFoundId(objectIdLocal = this.lookupOid(instance)))
+			if(Swizzling.isFoundId(objectIdLocal = this.lookupOidLazyApplicable(instance)))
 			{
 				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
 				return objectIdLocal;
 			}
-			
+
 			return this.register(instance);
 		}
-		
+
 		@Override
 		public <T> long apply(final T instance, final PersistenceTypeHandler<Binary, T> localTypeHandler)
 		{
-			// concurrency: lookupOid() and ensureObjectId() lock internally, the rest is thread-local
-			
+			// concurrency: lookupOidLazyApplicable() and ensureObjectId() lock internally, the rest is thread-local
+
 			if(instance == null)
 			{
 				return Swizzling.nullId();
 			}
-			
+
 			final long objectIdLocal;
-			if(Swizzling.isFoundId(objectIdLocal = this.lookupOid(instance)))
+			if(Swizzling.isFoundId(objectIdLocal = this.lookupOidLazyApplicable(instance)))
 			{
 				// returning 0 is a valid case: an instance registered to be skipped by using the null-OID.
 				return objectIdLocal;
 			}
-			
+
 			return this.objectManager.ensureObjectId(instance, this, localTypeHandler);
 		}
 		
@@ -653,11 +661,39 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		
 		public final long lookupOid(final Object object)
 		{
+			/*
+			 * Pin items are pure GC-protection entries for skipped referents and must be invisible
+			 * here: a lookup hit means "this storer already handled the instance", which would make
+			 * explicit stores (internalStore) and eager applies silently no-ops for merely
+			 * referenced instances.
+			 */
+			return this.lookupOid(object, false);
+		}
+
+		/**
+		 * Variant of {@link #lookupOid(Object)} for lazy apply logic ONLY: pin items are considered
+		 * a valid local hit here, since a pin records the instance's globally registered objectId -
+		 * exactly the value {@code ensureObjectId} would return for it. This turns the pin into a
+		 * local cache and saves the global registry round trip for repeated references to already
+		 * stored instances.
+		 * <p>
+		 * Must NEVER be used by explicit stores ({@code internalStore}) or eager applies: for those,
+		 * a local hit means "already handled by this storer" and a pin hit would silently suppress
+		 * the required (re-)serialization (see {@link PinItem} and {@link #lookupOid(Object)}).
+		 */
+		private long lookupOidLazyApplicable(final Object object)
+		{
+			return this.lookupOid(object, true);
+		}
+
+		private long lookupOid(final Object object, final boolean includePins)
+		{
 			synchronized(this.objectRegistryMonitor)
 			{
 				for(Item e = this.hashSlots[identityHashCode(object) & this.hashRange]; e != null; e = e.link)
 				{
-					if(e.instance == object)
+					// note: a pin hit may not end the search, a regular item for the instance may still follow.
+					if(e.instance == object && (includePins || !isPinItem(e)))
 					{
 						return e.oid;
 					}
@@ -667,10 +703,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return Swizzling.notFoundId();
 			}
 		}
-		
+
 		private static boolean isSkipItem(final Item item)
 		{
 			return item.typeHandler == null;
+		}
+
+		private static boolean isPinItem(final Item item)
+		{
+			return item instanceof PinItem;
 		}
 		
 		@Override
@@ -686,12 +727,26 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				{
 					if(e.instance == object)
 					{
+						/*
+						 * Pin entries are checked explicitly, NOT via the skip-item criterion they
+						 * happen to satisfy as well (null typeHandler): semantically, a skip is a
+						 * user assertion while a pin is a retention entry - a future change to
+						 * either criterion must not silently expose pins to peer storers here.
+						 * A pin is ignored but must NOT terminate the search: a hash rebuild reverses
+						 * the slot chain order, so a pin can precede a regular item for the same
+						 * instance (lazy skip pinned it, a later explicit store created the item) -
+						 * that item's association must still be offered to the receiver.
+						 */
+						if(isPinItem(e))
+						{
+							continue;
+						}
 						if(isSkipItem(e))
 						{
 							// skip-entry for this storer, so it can offer nothing to the receiver.
 							break;
 						}
-						
+
 						// found a local entry in the current storer, transfer object<->id association to the receiver.
 						objectIdRequestor.registerGuaranteed(e.oid, object, optionalHandler);
 						return e.oid;
@@ -751,7 +806,38 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		{
 			// default is lazy logic, so no-op
 		}
-		
+
+		@Override
+		public <T> void registerSkippedOptional(
+			final long                              objectId       ,
+			final T                                 instance       ,
+			final PersistenceTypeHandler<Binary, T> optionalHandler
+		)
+		{
+			/*
+			 * Pin the skipped referent: its objectId gets written into this storer's chunk, but since the
+			 * instance is already globally known, no Item would be created and this storer would hold no
+			 * strong reference to it. If the application drops its last strong reference between store and
+			 * commit, the object registry's weak entry gets reaped and the storage GC deletes the entity
+			 * while the chunk referencing it is not yet committed - the commit would then persist a
+			 * dangling reference (missing entity on later loads).
+			 * A PinItem holds the instance strongly until commit()/clear(), keeping its object registry
+			 * entry populated so the GC's live-objectId safety net protects the entity. Pin items are
+			 * never part of the item chain (not serialized, not merged) and are invisible to lookupOid,
+			 * so explicit stores and eager applies of the instance still get processed normally.
+			 */
+			synchronized(this.objectRegistryMonitor)
+			{
+				// any existing local entry (regular, skip or pin) already holds the instance strongly
+				if(Swizzling.isFoundId(this.lookupOidLazyApplicable(instance)))
+				{
+					return;
+				}
+
+				this.synchRegisterItem(instance, null, objectId, true);
+			}
+		}
+
 		protected final long register(final Object instance)
 		{
 			/* Note:
@@ -821,18 +907,32 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final long                                      objectId
 		)
 		{
+			return this.synchRegisterItem(instance, (PersistenceTypeHandler<Binary, Object>)typeHandler, objectId, false);
+		}
+
+		private Item synchRegisterItem(
+			final Object                                 instance   ,
+			final PersistenceTypeHandler<Binary, Object> typeHandler,
+			final long                                   objectId   ,
+			final boolean                                pin
+		)
+		{
+			// pins occupy a hash slot entry (hence itemCount for the rebuild threshold), but are no payload (see size()).
+			if(pin)
+			{
+				++this.pinCount;
+			}
 			if(++this.itemCount >= this.hashRange)
 			{
 				this.synchRebuildStoreItems();
 			}
 
-			return this.hashSlots[identityHashCode(instance) & this.hashRange] =
-				new Item(
-					instance,
-					objectId,
-					(PersistenceTypeHandler<Binary, Object>)typeHandler,
-					this.hashSlots[identityHashCode(instance) & this.hashRange]
-				)
+			// slot index may only be computed AFTER the potential rebuild changed the hash range.
+			final int slotIndex = identityHashCode(instance) & this.hashRange;
+
+			return this.hashSlots[slotIndex] = pin
+				? new PinItem(instance, objectId, this.hashSlots[slotIndex])
+				: new Item(instance, objectId, typeHandler, this.hashSlots[slotIndex])
 			;
 		}
 
@@ -1019,7 +1119,21 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			// default is eager logic.
 			this.registerGuaranteed(objectId, instance, optionalHandler);
 		}
-		
+
+		@Override
+		public <T> void registerSkippedOptional(
+			final long                              objectId       ,
+			final T                                 instance       ,
+			final PersistenceTypeHandler<Binary, T> optionalHandler
+		)
+		{
+			/*
+			 * No-op: an eager storer processes every encountered instance via registerEagerOptional
+			 * (-> registerGuaranteed), creating a regular item that both retains the instance strongly
+			 * and serializes it. A pin would only duplicate that entry.
+			 */
+		}
+
 	}
 
 	/**
@@ -1419,7 +1533,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		}
 	}
 
-	static final class Item
+	static class Item
 	{
 		final PersistenceTypeHandler<Binary, Object> typeHandler;
 		final Object                                 instance   ;
@@ -1438,6 +1552,23 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			this.oid         = oid        ;
 			this.typeHandler = typeHandler;
 			this.link        = link       ;
+		}
+
+	}
+
+	/**
+	 * Pure pin entry for a skipped referent (see {@code Default#registerSkippedOptional}): holds the
+	 * instance strongly until commit/clear so the storage GC cannot delete the referenced entity while
+	 * the chunk referencing it is not yet committed. Never part of the item chain (not serialized, not
+	 * merged), invisible to {@code lookupOid}, so explicit stores and eager applies still process
+	 * the instance normally, and not counted into {@code size()}/{@code isEmpty()} (pins are retention
+	 * entries, not store payload).
+	 */
+	static final class PinItem extends Item
+	{
+		PinItem(final Object instance, final long oid, final Item link)
+		{
+			super(instance, oid, null, link);
 		}
 
 	}
