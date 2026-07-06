@@ -732,10 +732,18 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 						 * happen to satisfy as well (null typeHandler): semantically, a skip is a
 						 * user assertion while a pin is a retention entry - a future change to
 						 * either criterion must not silently expose pins to peer storers here.
+						 * A pin is ignored but must NOT terminate the search: a hash rebuild reverses
+						 * the slot chain order, so a pin can precede a regular item for the same
+						 * instance (lazy skip pinned it, a later explicit store created the item) -
+						 * that item's association must still be offered to the receiver.
 						 */
-						if(isPinItem(e) || isSkipItem(e))
+						if(isPinItem(e))
 						{
-							// local-only entry for this storer, so it can offer nothing to the receiver.
+							continue;
+						}
+						if(isSkipItem(e))
+						{
+							// skip-entry for this storer, so it can offer nothing to the receiver.
 							break;
 						}
 
