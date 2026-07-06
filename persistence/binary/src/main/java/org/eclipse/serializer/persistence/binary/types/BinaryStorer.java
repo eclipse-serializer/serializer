@@ -781,7 +781,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return null;
 			}
 
-			final Set_long storedObjectIds = Set_long.New();
+			// presized to the item count (upper bound of the chain length) to avoid repeated rehashing.
+			final Set_long storedObjectIds = Set_long.New(
+				XHashing.padHashLength(Math.max((int)this.itemCount, 1))
+			);
 			for(Item e = this.head; (e = e.next) != null;)
 			{
 				if(!isSkipItem(e))
