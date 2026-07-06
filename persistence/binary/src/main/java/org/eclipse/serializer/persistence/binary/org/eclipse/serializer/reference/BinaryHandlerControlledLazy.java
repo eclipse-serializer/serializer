@@ -16,12 +16,14 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.referen
 
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
 import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.reference.ControlledLazyReference;
 import org.eclipse.serializer.reference.Lazy;
 import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.reflect.XReflect;
 
 import java.lang.reflect.Constructor;
@@ -93,6 +95,16 @@ public final class BinaryHandlerControlledLazy extends AbstractBinaryHandlerCust
 		{
 			// OID validation or updating is done by linking logic
 			referenceOid = handler.apply(referent);
+
+			// fail BEFORE anything is written (see BinaryHandlerLazyDefault#store)
+			if(Swizzling.isFoundId(instance.objectId()) && instance.objectId() != referenceOid)
+			{
+				throw new PersistenceException(
+						"Cannot persist a lazy reference that is already linked to a different objectId. " +
+								"Linked: " + instance.objectId() + ", resolved in this context: " + referenceOid + ". " +
+								"The lazy reference most likely belongs to another storage."
+				);
+			}
 		}
 
 		/*
