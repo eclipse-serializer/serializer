@@ -24,6 +24,7 @@ import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.reference.Lazy;
 import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.reflect.XReflect;
 
 
@@ -111,10 +112,41 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 		{
 			// OID validation or updating is done by linking logic
 			referenceOid = handler.apply(referent);
+
+			/*
+			 * Fail BEFORE anything is written: the deferred link below performs the identical
+			 * validation, but it runs only after the commit's write succeeded. A mismatch - the
+			 * lazy reference is already linked to a different objectId, e.g. because it was
+			 * loaded from one storage and is being persisted into another, where the referent
+			 * resolves to a different objectId - must abort the store cleanly instead of
+			 * surfacing only after the data is already durable.
+			 */
+			if(Swizzling.isFoundId(instance.objectId()) && instance.objectId() != referenceOid)
+			{
+				throw new PersistenceException(
+						"Cannot persist a lazy reference that is already linked to a different objectId. " +
+								"Linked: " + instance.objectId() + ", resolved in this context: " + referenceOid + ". " +
+								"The lazy reference most likely belongs to another storage."
+				);
+			}
 		}
 
-		// link to object supplier (internal logic can either update, discard or throw exception on mismatch)
-		instance.$link(referenceOid, handler.getObjectRetriever());
+		/*
+		 * Link to object supplier (internal logic can either update, discard or throw exception on
+		 * mismatch) - but DEFERRED to the successful commit: linking here would flip isStored() to
+		 * true although nothing has been persisted yet. If the commit write fails, the objectId is
+		 * never merged into the object registry and the referent's data never reaches the storage,
+		 * but the instance would keep reporting a stale, never-persisted objectId. An isStored()-
+		 * gated clear (e.g. by the LazyReferenceManager under memory pressure) would then drop the
+		 * referent, and a later successful store would persist the stale objectId as a dangling
+		 * reference (missing entity on load). Commit listeners run only after the write succeeded
+		 * and the object registry merged, so on a failed commit the instance simply remains in its
+		 * previous state (unstored and thus not clearable, or linked to its prior valid objectId).
+		 */
+		final ObjectSwizzling objectRetriever = handler.getObjectRetriever();
+		handler.registerCommitListener(() ->
+			instance.$link(referenceOid, objectRetriever)
+		);
 
 		// lazy reference instance must be stored in any case
 		data.storeEntityHeader(Binary.referenceBinaryLength(1), this.typeId(), objectId);
