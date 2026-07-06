@@ -259,6 +259,15 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	private long    capacity    ; // upper rebuild threshold.
 	private long    minCapacity ; // minimum capacity
 	private long    size        ;
+
+	/*
+	 * Monotonically increasing counter of new objectId<->instance association insertions
+	 * (see PersistenceObjectRegistry#registrationVersion). Written only inside synchronized(mutex)
+	 * sections (single writer at a time), read lock-free (volatile) by the storage garbage
+	 * collector to detect registrations that happened after its live-OID mark seed ran.
+	 * Lookups, updates of existing entries and removals do not change it.
+	 */
+	private volatile long registrationVersion;
 	
 	// integrated special constants registry
 	private EqHashTable<Long, Object> constantsHotRegistry = EqHashTable.New();
@@ -419,6 +428,13 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		{
 			return this.size == 0;
 		}
+	}
+
+	@Override
+	public final long registrationVersion()
+	{
+		// deliberately unsynchronized: volatile read, snapshot comparison semantics (see interface javadoc).
+		return this.registrationVersion;
 	}
 
 	@Override
@@ -751,6 +767,9 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		{
 			this.synchIncreaseStorage();
 		}
+
+		// single choke point for ALL new association insertions; see field comment.
+		this.registrationVersion++;
 	}
 	
 	private boolean synchAddCheck(final long objectId, final Object object)

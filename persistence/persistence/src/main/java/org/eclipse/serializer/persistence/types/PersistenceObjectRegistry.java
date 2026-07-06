@@ -325,7 +325,30 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 		//by default do nothing
 		return;
 	}
-	
+
+	/**
+	 * A monotonically increasing counter of new {@code (objectId, instance)} association insertions.
+	 * The value changes ONLY when a new association is inserted (registering an object or constant
+	 * that creates a new entry, including re-binding an objectId whose previous weak entry was
+	 * cleared). Lookups, updates of existing entries and entry removals do NOT change it. Readers
+	 * compare snapshots for equality; the absolute value carries no meaning.
+	 * <p>
+	 * The storage garbage collector uses this to detect registrations that happened after its
+	 * live-OID mark seed ran but before the sweep &mdash; such registrations must re-arm the seed, or
+	 * entities referenced only from a freshly registered instance's persisted binary (e.g. an
+	 * unloaded lazy reference's target) would be swept while the registered instance survives.
+	 * <p>
+	 * The default implementation returns a constant {@code 0}, meaning "registrations are never
+	 * observable". Implementations that can gain entries at runtime MUST override this, otherwise
+	 * the storage GC's mid-cycle registration re-seed is disabled for them.
+	 *
+	 * @return the current registration version.
+	 */
+	public default long registrationVersion()
+	{
+		return 0L;
+	}
+
 	/**
 	 * Creates a new empty {@link DefaultObjectRegistry} with default hash density and capacity.
 	 *
