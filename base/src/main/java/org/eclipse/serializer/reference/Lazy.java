@@ -91,9 +91,15 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 	
 	/**
 	 * Clears the reference if the {@link ClearingEvaluator} decides so.
-	 * 
+	 * <p>
+	 * A reference that is currently marked as used (see {@link UsageMarkable#markUsedFor(Object)} and
+	 * {@link UsageMarkable#isUsed()}) is never cleared by this method, without consulting the evaluator:
+	 * a usage mark signals that the referent carries state that must not be dropped (e.g. not yet
+	 * persisted changes), so evaluator-driven eviction must leave it untouched. The explicit
+	 * {@link #clear()} and {@link #forceClear()} calls are not affected by usage marks.
+	 *
 	 * @param clearingEvaluator evaluator to decide if the clearing should take place
-	 * 
+	 *
 	 * @return <code>true</code> if this lazy reference was cleared, <code>false</code> otherwise
 	 */
 	public boolean clear(Lazy.ClearingEvaluator clearingEvaluator);
@@ -407,8 +413,8 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 		@Override
 		public synchronized boolean clear(final ClearingEvaluator clearingEvaluator)
 		{
-			// must be stored and not already cleared to even consider asking the evaluator
-			if(this.isStored() && this.subject != null && clearingEvaluator.needsClearing(this))
+			// must be stored, not already cleared and not marked as used to even consider asking the evaluator
+			if(this.isStored() && this.subject != null && !this.isUsed() && clearingEvaluator.needsClearing(this))
 			{
 				this.internalClear();
 				return true;
