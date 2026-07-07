@@ -18,6 +18,20 @@ import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfe
 
 public interface PersistenceTarget<D> extends PersistenceWriteController
 {
+	/**
+	 * Writes the passed data to this target.
+	 * <p>
+	 * <b>Buffer contract:</b> implementations may consume the data buffers' <i>positions</i> while
+	 * writing, but must not modify their <i>limits</i> or otherwise restructure them (no
+	 * {@code flip()}, {@code clear()}, {@code limit(...)}). The storer relies on this for
+	 * failure recovery: after a rejected write it may rewind the buffer positions and retry the
+	 * byte-identical data (e.g. after healing dangling references). A target that alters limits
+	 * would make such a retry silently write truncated or corrupted data.
+	 *
+	 * @param data the data to write.
+	 *
+	 * @throws PersistenceExceptionTransfer if the write fails.
+	 */
 	public void write(D data) throws PersistenceExceptionTransfer;
 	
 	/**

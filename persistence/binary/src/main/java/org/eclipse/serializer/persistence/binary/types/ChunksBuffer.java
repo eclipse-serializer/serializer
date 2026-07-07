@@ -324,6 +324,31 @@ public class ChunksBuffer extends Binary implements MemoryRangeReader
 		return this;
 	}
 
+	/**
+	 * Resets every buffer of this completed chunk to {@code position} 0 so the identical data can be
+	 * written to a target again. A completed buffer's {@code limit} marks its content length and is
+	 * never modified by writing, so rewinding the positions restores the exact pre-write state — e.g.
+	 * for retrying a store whose first write attempt was rejected and rolled back by the target.
+	 *
+	 * @throws IllegalStateException if this chunk has not been {@link #complete() completed} yet.
+	 */
+	public final void rewindBuffers()
+	{
+		if(this.currentBuffer != null)
+		{
+			throw new IllegalStateException("Cannot rewind an incomplete chunk.");
+		}
+
+		final ByteBuffer[] buffers = this.buffers;
+		for(int i = 0; i <= this.currentBuffersIndex; i++)
+		{
+			if(buffers[i] != null)
+			{
+				buffers[i].position(0);
+			}
+		}
+	}
+
 	private void compactDuplicates()
 	{
 		final ByteBuffer[] oldBuffers     = this.buffers;
