@@ -844,8 +844,14 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 
 			final Set_long healedObjectIds = Set_long.New();
 
-			// checkForProblems surfaces only the FIRST failing channel, so healing may need one round
-			// per channel holding missing ids.
+			/*
+			 * checkForProblems surfaces only the FIRST failing channel, so healing may need one round
+			 * per channel holding missing ids. Contract with the target side: each rejection reports
+			 * ALL missing ids of its failing channel at once (the storage-side validation collects the
+			 * complete per-channel miss list before throwing). A target reporting ids one at a time
+			 * would exhaust the attempts early - fail-safe (the rejection is rethrown), but with
+			 * healable ids given up prematurely.
+			 */
 			final int maxAttempts = this.chunksHashRange + 2; // channelCount + 1
 
 			for(int attempt = 1; ; attempt++)
@@ -893,14 +899,27 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 						this.healDepth
 					);
 
-					final BinaryStorer.Default healingStorer = this.createHealingStorer();
-					for(int i = 0; i < missingObjectIds.length; i++)
+					try
 					{
-						// forced re-serialization under the SAME object id, so the retried data stays valid.
-						healingStorer.store(instances[i], missingObjectIds[i]);
+						final BinaryStorer.Default healingStorer = this.createHealingStorer();
+						for(int i = 0; i < missingObjectIds.length; i++)
+						{
+							// forced re-serialization under the SAME object id, so the retried data stays valid.
+							healingStorer.store(instances[i], missingObjectIds[i]);
+						}
+						// may itself heal transitive dangling references, at depth + 1.
+						healingStorer.commit();
 					}
-					// may itself heal transitive dangling references, at depth + 1.
-					healingStorer.commit();
+					catch(final RuntimeException healingFailure)
+					{
+						/*
+						 * The healing commit failed for a reason of its own (e.g. an IO error). It must
+						 * not mask the original rejection - the operator needs the missing ids to
+						 * diagnose the root cause.
+						 */
+						healingFailure.addSuppressed(e);
+						throw healingFailure;
+					}
 
 					for(final long missingObjectId : missingObjectIds)
 					{
