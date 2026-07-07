@@ -469,6 +469,14 @@ public abstract class Binary implements Chunk
 	long address;
 
 	private HelperEntry helperEntry;
+
+	/**
+	 * Transient store-transport metadata, never part of the persisted data itself: the object ids this
+	 * data references without containing the corresponding entities, trusting that they already exist
+	 * in the persistence target. Set by the storer on commit; the target may validate their existence
+	 * before committing the data.
+	 */
+	private long[] trustedObjectIds;
 	
 	
 	
@@ -2791,10 +2799,44 @@ public abstract class Binary implements Chunk
 	}
 	
 
+	/**
+	 * Sets the transient store-transport metadata of object ids referenced but not contained by this data.
+	 * <p>
+	 * COMMIT-scope metadata, not per-chunk state: it is set exactly once, on the representative
+	 * {@code Binary} instance the storer passes to {@code PersistenceTarget#write}, and covers the
+	 * ENTIRE commit across all channels. Consumers read it from that instance and partition per
+	 * channel themselves; per-channel chunk views deliberately do not carry it.
+	 *
+	 * @param trustedObjectIds the referenced object ids whose entities are trusted to already exist in the target.
+	 *
+	 * @see #trustedObjectIds()
+	 */
+	public final void setTrustedObjectIds(final long[] trustedObjectIds)
+	{
+		this.trustedObjectIds = trustedObjectIds;
+	}
+
+	/**
+	 * The object ids this data references without containing the corresponding entities, i.e. ids whose
+	 * entities the storer trusted to already exist in the persistence target. {@code null} if no such ids
+	 * were collected (capturing disabled or nothing to report).
+	 * <p>
+	 * Commit-scope metadata: only present on the representative instance passed to
+	 * {@code PersistenceTarget#write}, covering the entire commit across all channels
+	 * (see {@link #setTrustedObjectIds(long[])}).
+	 *
+	 * @return the trusted object ids, or {@code null}.
+	 */
+	public final long[] trustedObjectIds()
+	{
+		return this.trustedObjectIds;
+	}
+
+
 	///////////////////////////////////////////////////////////////////////////
 	// Helper //
 	///////////
-	
+
 	/**
 	 * Helper instances can be used as temporary additional state for the duration of the building process.
 	 * E.g.: JDK hash collections cannot properly collect elements during the building process as the element instances

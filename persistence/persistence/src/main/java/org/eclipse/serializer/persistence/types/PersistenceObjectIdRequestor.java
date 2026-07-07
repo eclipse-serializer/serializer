@@ -94,6 +94,9 @@ public interface PersistenceObjectIdRequestor<D>
 	 * instance's object registry entry gets reaped and the storage garbage collector can delete the
 	 * referenced entity while the chunk referencing it is not yet committed, so the commit would persist
 	 * a dangling reference (missing entity on later loads).
+	 * <p>
+	 * Storers may additionally record the object id to have its existence validated by the persistence
+	 * target before the data referencing it is committed (see the trusted-id validation).
 	 *
 	 * @param <T>             the instance type.
 	 * @param objectId        the object id the instance is already registered with.

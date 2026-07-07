@@ -324,6 +324,8 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 					 * can drop its last strong reference between store and commit, the registry's weak entry
 					 * gets reaped and the storage GC deletes the entity while the chunk referencing it is
 					 * not yet committed - the commit would then persist a dangling reference.
+					 * Requestors may also record the id to have its existence validated by the persistence
+					 * target before the data referencing it is committed (trusted-id validation).
 					 */
 					objectIdRequestor.registerSkippedOptional(objectId, object, optionalHandler);
 				}
