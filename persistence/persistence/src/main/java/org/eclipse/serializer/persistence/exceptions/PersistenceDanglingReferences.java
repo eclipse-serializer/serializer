@@ -15,9 +15,10 @@ package org.eclipse.serializer.persistence.exceptions;
  */
 
 /**
- * Implemented by exceptions a {@link org.eclipse.serializer.persistence.types.PersistenceTarget}
- * (or its underlying engine) throws when data handed to it references object ids for which no
- * entity exists in the target — dangling references.
+ * Implemented by exceptions thrown by a
+ * {@link org.eclipse.serializer.persistence.types.PersistenceTarget} (or its underlying engine)
+ * when data handed to it references object ids for which no entity exists in the target —
+ * dangling references.
  * <p>
  * Storers that captured the referenced instances can use the reported ids to attempt automatic
  * healing: re-storing the still-live instances under their existing object ids and retrying the

@@ -273,7 +273,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			this.chunksHashRange        =         channelCount - 1             ;
 			this.switchByteOrder        =         switchByteOrder              ;
 			this.persister              = mayNull(persister)                   ;
-			this.trustedObjectIds       = captureTrustedObjectIds ? HashMapIdObject.New() : null;
+			// healing implies capture: without the id->instance capture the healer could never
+			// resolve a missing id to its live instance and healing would silently do nothing.
+			this.trustedObjectIds       = captureTrustedObjectIds || healDanglingReferences
+				? HashMapIdObject.New()
+				: null
+			;
 			this.healDanglingReferences = healDanglingReferences               ;
 			this.healDepth              = healDepth                            ;
 
