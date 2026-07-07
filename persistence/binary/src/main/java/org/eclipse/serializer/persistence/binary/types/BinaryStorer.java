@@ -781,9 +781,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				return null;
 			}
 
-			// presized to the item count (upper bound of the chain length) to avoid repeated rehashing.
+			/*
+			 * Presized to the exact item chain length to avoid rehashing: pins occupy hash slot
+			 * entries (itemCount) but are never chained, so the chain holds itemCount - pinCount
+			 * entries (skip items are chained but rare; their exclusion below costs no rebuild).
+			 */
 			final Set_long storedObjectIds = Set_long.New(
-				XHashing.padHashLength(Math.max((int)this.itemCount, 1))
+				XHashing.padHashLength(Math.max((int)(this.itemCount - this.pinCount), 1))
 			);
 			for(Item e = this.head; (e = e.next) != null;)
 			{
