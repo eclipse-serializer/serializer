@@ -70,7 +70,7 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 	 * Clears the reference, leaving the option to reload it again intact, and returns the subject that was
 	 * referenced prior to clearing.
 	 * <p>
-	 * This method should only be used if this lazy reference was stored before, othewise an {@link IllegalStateException} is thrown.
+	 * This method should only be used if this lazy reference was stored before, otherwise an {@link IllegalStateException} is thrown.
 	 * To circumvent this check use {@link #forceClear()} instead.
 	 *
 	 * @return the subject referenced prior to clearing the reference.
