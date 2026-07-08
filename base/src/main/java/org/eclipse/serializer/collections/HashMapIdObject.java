@@ -25,7 +25,8 @@ import org.eclipse.serializer.typing.KeyValue;
 import java.util.function.Consumer;
 
 /**
- * Primitive (read: fast) synchronized pseudo map implementation that maps long id values to weakly referenced objects.
+ * Primitive (read: fast) pseudo map implementation that maps long id values to strongly referenced objects.
+ * Not thread-safe: concurrent use must be synchronized externally.
  *
  */
 public final class HashMapIdObject<E> implements Sized, Composition
