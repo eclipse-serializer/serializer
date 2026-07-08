@@ -182,7 +182,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * healing commit would link Lazies over durable-but-unreachable data, making them clearable
 		 * and - once the target's GC reclaims that data - their cached ids unhealable: lost objects.
 		 */
-		private final BinaryStorer commitListenerSink;
+		private final Storer commitListenerSink;
 
 		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
 		
@@ -273,7 +273,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final boolean                               captureTrustedObjectIds,
 			final boolean                               healDanglingReferences ,
 			final int                                   healDepth              ,
-			final BinaryStorer                          commitListenerSink
+			final Storer                                commitListenerSink
 		)
 		{
 			super();
