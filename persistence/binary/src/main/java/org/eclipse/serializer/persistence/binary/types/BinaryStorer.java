@@ -173,6 +173,17 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private final boolean healDanglingReferences;
 		private final int     healDepth;
 
+		/*
+		 * Where commit listener registrations are routed (null = this storer collects its own).
+		 * Healing storers route to the root storer whose commit they compensate: a healing commit
+		 * is durable, but its success does not imply the enclosing store's success - the retried
+		 * write may still fail terminally. Deferred commit effects (most importantly the Lazy $link
+		 * listeners) must fire only with the OUTERMOST commit's success; firing them from the
+		 * healing commit would link Lazies over durable-but-unreachable data, making them clearable
+		 * and - once the target's GC reclaims that data - their cached ids unhealable: lost objects.
+		 */
+		private final Storer commitListenerSink;
+
 		private final BulkList<PersistenceCommitListener>  commitListeners = BulkList.New(0);
 		
 		private final BulkList<PersistenceObjectRegistrationListener> persistenceObjectRegistrationListener = BulkList.New(0);
@@ -245,7 +256,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				persister              ,
 				captureTrustedObjectIds,
 				false                  ,
-				0
+				0                      ,
+				null
 			);
 		}
 
@@ -260,7 +272,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			final Persister                             persister              ,
 			final boolean                               captureTrustedObjectIds,
 			final boolean                               healDanglingReferences ,
-			final int                                   healDepth
+			final int                                   healDepth              ,
+			final Storer                                commitListenerSink
 		)
 		{
 			super();
@@ -281,6 +294,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			;
 			this.healDanglingReferences = healDanglingReferences               ;
 			this.healDepth              = healDepth                            ;
+			this.commitListenerSink     = mayNull(commitListenerSink)          ;
 
 			this.defaultInitialize();
 		}
@@ -699,6 +713,19 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		@Override
 		public void registerCommitListener(final PersistenceCommitListener listener)
 		{
+			/*
+			 * A healing storer's commit is durable, but the store it compensates for may still fail
+			 * terminally on the retried write. Its commit listeners (most importantly the deferred
+			 * Lazy $link registrations) are therefore routed to the root storer and fire only with
+			 * the outermost commit's success - firing them from the healing commit would link Lazies
+			 * over durable-but-unreachable data, making them clearable and, once the target's GC
+			 * reclaims that data, their cached ids unhealable: lost objects.
+			 */
+			if(this.commitListenerSink != null)
+			{
+				this.commitListenerSink.registerCommitListener(listener);
+				return;
+			}
 			this.commitListeners.add(listener);
 		}
 
@@ -723,6 +750,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 *         {@link PersistenceException} stating that the store was committed successfully,
 		 *         with the first listener fault as its cause and any further faults suppressed.
 		 *         {@link #commit()} rethrows it AFTER the storer cleanup.
+		 *         Healing storers never carry local listeners (registrations are routed to the root
+		 *         storer, see {@link #registerCommitListener(PersistenceCommitListener)}), so a
+		 *         listener fault can never masquerade as a healing failure and abort a salvageable
+		 *         retry.
 		 */
 		protected PersistenceException notifyCommitListeners()
 		{
@@ -833,6 +864,18 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * target's garbage collection. Unhealable ids (no captured instance, e.g. an unloaded Lazy
 		 * reference's cached id), exhausted attempts/recursion depth or lack of progress rethrow the
 		 * target's original exception.
+		 * <p>
+		 * Deferred commit effects are coupled to the OUTERMOST commit's outcome, not the healing
+		 * commit's: a healing storer routes its commit listener registrations (most importantly the
+		 * deferred Lazy {@code $link}s of the healed subgraph) to the root storer - see
+		 * {@link #registerCommitListener(PersistenceCommitListener)}. Consequently a healing commit
+		 * itself never carries local listeners, so it cannot fail with a post-durability listener
+		 * fault that would falsely abort a salvageable retry. The healing commit's object registry
+		 * merge, in contrast, is deliberately immediate: after a terminal failure it leaves
+		 * associations to the unreachable healed entities behind, which is benign - registry
+		 * knowledge alone makes no Lazy clearable, and a later store that trusts such an id either
+		 * finds the data still present or gets rejected and heals it again from the re-captured
+		 * instance.
 		 */
 		private void writeToTarget(final Binary writeData, final ChunksBuffer[] chunks)
 		{
@@ -957,7 +1000,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.persister            ,
 				true                      , // capture: transitive dangling references must be healable too
 				true                      , // heal recursively
-				this.healDepth + 1
+				this.healDepth + 1        ,
+				// route commit listeners to the ROOT storer (transitive healing flattens to the same
+				// root), so deferred effects fire only with the outermost commit's success.
+				this.commitListenerSink != null ? this.commitListenerSink : this
 			);
 			this.objectManager.registerLocalRegistry(healingStorer);
 
@@ -1004,7 +1050,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 */
 		private long[] synchYieldTrustedObjectIds()
 		{
-			if(this.trustedObjectIds == null || this.trustedObjectIds.size() == 0)
+			if(this.trustedObjectIds == null || this.trustedObjectIds.isEmpty())
 			{
 				return null;
 			}
@@ -1399,7 +1445,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 * - handle all registered graph objects recursively (but transformed to an iteration).
 			 * Note that this is NOT the same as apply, which does NOT store if the instance is already registry-known.
 			 */
-			long rootOid;
+			final long rootOid;
 			if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
 			{
 				return rootOid;
@@ -1547,7 +1593,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				persister              ,
 				captureTrustedObjectIds,
 				healDanglingReferences ,
-				0
+				0                      ,
+				null
 			);
 		}
 		
@@ -1664,7 +1711,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				persister              ,
 				captureTrustedObjectIds,
 				healDanglingReferences ,
-				0
+				0                      ,
+				null
 			);
 			this.controller = notNull(controller);
 
@@ -2290,10 +2338,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					persister                     ,
 					this.captureTrustedObjectIds(),
 					this.healDanglingReferences() ,
-					0
+					0                             ,
+					null
 				);
 				objectManager.registerLocalRegistry(storer);
-				
+
 				return storer;
 			}
 			@Override
