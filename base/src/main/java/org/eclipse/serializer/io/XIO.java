@@ -14,6 +14,27 @@ package org.eclipse.serializer.io;
  * #L%
  */
 
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.BulkList;
@@ -23,19 +44,6 @@ import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.util.UtilStackTrace;
 import org.eclipse.serializer.util.X;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.*;
-import java.util.Arrays;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
 
 public final class XIO
 {
@@ -1236,7 +1244,7 @@ public final class XIO
 		while(targetBuffer.hasRemaining())
 		{
 			final int iterationReadCount = fileChannel.read(targetBuffer, fileOffset);
-			if(iterationReadCount < 0)
+			if(iterationReadCount <= 0)
 			{
 				// EOF (e.g. the file shrank below fileOffset due to a concurrent truncation):
 				// -1 must not be added to readCount, so return the short count instead.
