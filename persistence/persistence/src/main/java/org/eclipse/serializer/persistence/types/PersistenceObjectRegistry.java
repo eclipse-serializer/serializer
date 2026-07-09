@@ -303,17 +303,35 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 	public XGettingTable<String, ? extends HashStatistics> createHashStatistics();
 	
 	/**
-	 * 
-	 * @param processor the object id processor
-	 * @return <code>true</code> on success, <code>false</code> if lock rejected.
+	 * Processes the currently live (registered) object ids with the passed processor, under the
+	 * implementation's internal consistency lock.
+	 * <p>
+	 * Contract: an implementation MAY reject the call by returning {@code false} when it cannot
+	 * safely acquire its lock — callers must be prepared to retry later (the storage garbage
+	 * collector, for example, retries the sweep on its next housekeeping attempt). The default
+	 * implementation never rejects: it always processes under its internal mutex — deliberately
+	 * NOT the registry-instance monitor that a loading process holds across a whole load, so no
+	 * deadlock with loading is possible — and blocks concurrent registrations for the duration
+	 * of the processing.
+	 *
+	 * @param processor the object id processor.
+	 *
+	 * @return {@code true} if the ids were processed, {@code false} if the implementation
+	 *         rejected the call (lock not acquirable); the caller should retry later.
 	 */
 	public boolean processLiveObjectIds(ObjectIdsProcessor processor);
 
 	// for bulk processing of objectIds. Most efficient way for server mode, inefficient for embedded mode.
 	/**
-	 * 
-	 * @param objectIdsBaseSet the ids to select
-	 * @return null if lock rejected
+	 * Filters the passed set down to the object ids that are currently live (registered), under
+	 * the implementation's internal consistency lock. Same rejection contract as
+	 * {@link #processLiveObjectIds(ObjectIdsProcessor)}: an implementation MAY return
+	 * {@code null} to reject the call when its lock is not safely acquirable; the default
+	 * implementation never rejects.
+	 *
+	 * @param objectIdsBaseSet the ids to select from.
+	 *
+	 * @return the live subset, or {@code null} if the implementation rejected the call.
 	 */
 	public Set_long selectLiveObjectIds(Set_long objectIdsBaseSet);
 	
