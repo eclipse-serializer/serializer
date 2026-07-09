@@ -14,6 +14,27 @@ package org.eclipse.serializer.io;
  * #L%
  */
 
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.BulkList;
@@ -23,19 +44,6 @@ import org.eclipse.serializer.functional.XFunc;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.util.UtilStackTrace;
 import org.eclipse.serializer.util.X;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.*;
-import java.util.Arrays;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
 
 public final class XIO
 {
@@ -1235,7 +1243,15 @@ public final class XIO
 		long readCount = 0;
 		while(targetBuffer.hasRemaining())
 		{
-			readCount += fileChannel.read(targetBuffer, fileOffset);
+			final int iterationReadCount = fileChannel.read(targetBuffer, fileOffset);
+			if(iterationReadCount <= 0)
+			{
+				// EOF (e.g. the file shrank below fileOffset due to a concurrent truncation):
+				// -1 must not be added to readCount, so return the short count instead.
+				break;
+			}
+
+			readCount += iterationReadCount;
 			fileOffset = filePosition + readCount;
 		}
 
@@ -1334,7 +1350,7 @@ public final class XIO
 		throws IOException
 	{
 		long position   = targetPosition;
-		long remaining  = sourceChannel.size();
+		long remaining  = sourceChannel.size() - sourceChannel.position();
 		long totalBytes = 0;
 		long transferredBytes = 0;
 								
@@ -1353,11 +1369,17 @@ public final class XIO
 				position   += transferredBytes;
 				totalBytes += transferredBytes;
 			}
+			else
+			{
+				// zero progress (e.g. the source shrank below its read position due to a
+				// concurrent truncation) would otherwise spin forever; return the short count instead.
+				break;
+			}
 		}
-		
+
 		return totalBytes;
 	}
-	
+
 	public static long copyFile(
 		final FileChannel sourceChannel ,
 		final long        sourcePosition,
@@ -1405,9 +1427,15 @@ public final class XIO
 				remaining -= transferredBytes;
 				position  += transferredBytes;
 			}
+			else
+			{
+				// zero progress (e.g. the source shrank below position due to a concurrent
+				// truncation) would otherwise spin forever; return the short count instead.
+				break;
+			}
 		}
-		
-		
+
+
 		return position - sourcePosition;
 	}
 	
@@ -1432,19 +1460,21 @@ public final class XIO
 		long position  = targetPosition;
 		long remaining = length;
 		long transferredBytes = 0;
-						
-		//ensure that no more bytes are requested for transfer then available
-		if((sourceChannel.size() - position) < remaining)
+
+		//ensure that no more bytes are requested for transfer than available from the source
+		//channel's current position (this overload reads from there, not from targetPosition).
+		final long sourceAvailable = sourceChannel.size() - sourceChannel.position();
+		if(sourceAvailable < remaining)
 		{
-			remaining = sourceChannel.size() - position;
+			remaining = sourceAvailable;
 		}
-		
+
 		//Don't transfer data if the write position is greater than the target channel size.
 		if(position > targetChannel.size())
 		{
 			return 0;
 		}
-		
+
 		while(remaining > 0)
 		{
 			transferredBytes = targetChannel.transferFrom(sourceChannel, position, remaining);
@@ -1453,8 +1483,14 @@ public final class XIO
 				remaining -= transferredBytes;
 				position  += transferredBytes;
 			}
+			else
+			{
+				// zero progress (e.g. the source shrank below its read position due to a
+				// concurrent truncation) would otherwise spin forever; return the short count instead.
+				break;
+			}
 		}
-		
+
 		return position - targetPosition;
 	}
 	
