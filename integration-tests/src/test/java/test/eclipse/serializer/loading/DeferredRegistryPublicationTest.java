@@ -75,6 +75,17 @@ public class DeferredRegistryPublicationTest
 		{
 			this.persistenceManager.close();
 		}
+
+		// the copied chunk buffers are test-owned: release them explicitly instead of
+		// relying on GC/cleaner timing for direct memory.
+		for(final Binary chunk : this.recordedChunks)
+		{
+			for(final ByteBuffer buffer : chunk.buffers())
+			{
+				XMemory.deallocateDirectByteBuffer(buffer);
+			}
+		}
+		this.recordedChunks.clear();
 	}
 
 	private PersistenceManager<Binary> createPersistenceManager(final ProbeHandler probeHandler)

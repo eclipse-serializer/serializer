@@ -287,9 +287,10 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			 *
 			 * Otherwise, the locally created instance becomes the effective instance for this
 			 * build, but it is NOT published to the object registry here: a freshly created
-			 * instance is not in a consistent state until after #update or even after #complete,
-			 * so registering it at this point would expose a blank instance to concurrent
-			 * lock-free readers (e.g. PersistenceManager#lookupObject). Publication is deferred
+			 * instance is not in a consistent state until after the handler's #initializeState
+			 * or even only after its #complete (e.g. hash collections), so registering it at
+			 * this point would expose a blank instance to concurrent lock-free readers
+			 * (e.g. PersistenceManager#lookupObject). Publication is deferred
 			 * to #registerBuiltInstances, which runs after #completeInstances. Intra-build
 			 * references resolve via the loader-local build items map (#getBuildInstance), so
 			 * the graph is wired correctly regardless.
