@@ -26,6 +26,7 @@ import org.eclipse.serializer.math.XMath;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerSingleton;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistencyUnhandledTypeId;
 import org.eclipse.serializer.persistence.types.*;
 import org.eclipse.serializer.util.logging.Logging;
@@ -282,71 +283,23 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 
 		private Object getEffectiveInstance(final BinaryLoadItem entry)
 		{
-			/* tricky concurrent part:
-			 * if a proper existing instance already was registered, simply use that.
+			/* if a proper existing instance already was registered, simply use that.
 			 *
-			 * Otherwise:
-			 * try to register the thread-locally created instance as the context instance for the OID at this point and in
-			 * the process use a meanwhile created and registered context instance instead and ignore the own local one
-			 *
-			 * This way, every thread will use the same instance for a given OID even if multiple threads
-			 * are loading and creating different instances for the same OID concurrently.
-			 * The only requirement is that the registry's register method is thread-safe.
-			 *
-			 * Note that the context field is still a thread-local field, just one that points to an instance
-			 * known by the context. The only true multi-thread-ly used part is the context itself.
+			 * Otherwise, the locally created instance becomes the effective instance for this
+			 * build, but it is NOT published to the object registry here: a freshly created
+			 * instance is not in a consistent state until after #update or even after #complete,
+			 * so registering it at this point would expose a blank instance to concurrent
+			 * lock-free readers (e.g. PersistenceManager#lookupObject). Publication is deferred
+			 * to #registerBuiltInstances, which runs after #completeInstances. Intra-build
+			 * references resolve via the loader-local build items map (#getBuildInstance), so
+			 * the graph is wired correctly regardless.
+			 * (This resolves the long-standing "not safe" TODO that used to live here.)
 			 *
 			 * Note on instance type: both ways that set instances here (local and context),
 			 * namely registry and type handler, are trusted to provide (instantiate or know) instances of the
 			 * correct type.
 			 */
 			
-			/* (03.09.2019 TM)TODO: priv#141: existingInstance and createdInstance redundant?
-			 * Aren't these two unnecessary?
-			 * ExistingInstance is a potentially already existing one.
-			 * CreatedInstance is a preliminarily created instance that might be discarded in preference of a
-			 * meanwhile created instance (which is kind of a race condition, isn't it?).
-			 * 
-			 * This could be consolidated to a single "instance" field with the following logic:
-			 * - initially null
-			 * - in here, a "this.registry.ensureInstance(entry, this)" is called that either returns the existing
-			 *   instance or creates a new instance under the protection of its internal lock.
-			 * - the entry would have to implement a proper interface of course. The implementation of its method
-			 *   does what currently is "buildItem.handler.create(buildItem, this);"
-			 *   Something like "this.handler.create(this, loader);"
-			 * 
-			 * This way, there would be only one instance, no discarded preliminary instance and precisely one point
-			 * in time where the proper instance is (selected) or (created and registered).
-			 * 
-			 * (11.11.2019 TM)NOTE:
-			 * Not a good idea. The concept of the two instances was:
-			 * If a new instance has to be created, it is not in a consistent state until after #update
-			 * oder even after #complete. Until then, it may not be publicly available via the object registry.
-			 * Funnily, this code does exactly that, nonetheless:
-			 * - new instance instance is created locally (safe)
-			 * - new instance gets registered in the object Registry (not safe)
-			 * - THEN it gets updated
-			 * - And completed even later.
-			 * 
-			 * Hm.
-			 * So either the concept can/must be changed to
-			 * "a single and early registered instance is okay because it is the application logic's concurrency responsibility"
-			 * (a little shady)
-			 * OR the registration process must be shifted to behind complete or at least to behind update.
-			 * 
-			 * The point below did already handle that.
-			 * 
-			 * Addon to the point above
-			 * Albeit: what about globally registering an instance before it is completely built?
-			 * Couldn't that cause race conditions and inconsistencies?
-			 * And if not: Why not determine (select or created&register) the instance right away when creating
-			 * the build item? Maybe the whole process of created all required build items should happen under
-			 * one big lock of the objectRegistry?
-			 * 
-			 * This would all have to be thought through, researched and tested with the appropriate time and care
-			 * which, currently, is not available.
-			 */
-
 			// (26.08.2019 TM)NOTE: paradigm change: #create may return null. Required for handling deleted enums.
 			if(entry.existingInstance != null)
 			{
@@ -357,11 +310,22 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 				return null;
 			}
 			
-			// this makes the locally created instance the "officially existing" instance for the registry's context.
-			return entry.existingInstance = this.objectRegistry.optionalRegisterObject(
-				entry.getBuildItemObjectId(),
-				entry.createdInstance
-			);
+			/*
+			 * An instance may have been registered since build item creation by the loading
+			 * thread itself, e.g. the legacy roots path BinaryHandlerPersistenceRootsDefault
+			 * #updateState registering resolved root/constant instances mid-build. Such an
+			 * instance takes precedence and gets updated; the local blank one is discarded.
+			 * (This relies on the roots build item always being the first in the build chain,
+			 * see #readLoadOnce, so its #updateState runs before any other item is resolved.)
+			 */
+			final Object registeredInstance = this.objectRegistry.lookupObject(entry.getBuildItemObjectId());
+			if(registeredInstance != null)
+			{
+				return entry.existingInstance = registeredInstance;
+			}
+
+			// the locally created instance becomes the effective instance for this build.
+			return entry.existingInstance = entry.createdInstance;
 		}
 
 		protected void loadReferences(final BinaryLoadItem entry)
@@ -440,6 +404,46 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 		{
 			this.buildInstances();
 			this.completeInstances();
+			this.registerBuiltInstances();
+		}
+
+		private void registerBuiltInstances()
+		{
+			/*
+			 * Only after #complete are locally created instances fully built (e.g. hash
+			 * collections get their contents only in #complete), so only now may they be
+			 * published to the object registry for other threads to see. See the note in
+			 * #getEffectiveInstance.
+			 */
+			for(BinaryLoadItem entry = this.buildItemsHead.next; entry != null; entry = entry.next)
+			{
+				if(entry.createdInstance == null || entry.existingInstance != entry.createdInstance)
+				{
+					// skip items, pre-existing / meanwhile-registered instances, deleted enums.
+					continue;
+				}
+
+				final Object registered = this.objectRegistry.optionalRegisterObject(
+					entry.getBuildItemObjectId(),
+					entry.createdInstance
+				);
+				if(registered != entry.createdInstance)
+				{
+					/*
+					 * Cannot happen for legit paths: the entire build holds the objectRegistry
+					 * monitor, all legit registry mutations run under that same monitor, and
+					 * mid-build registrations by the loading thread itself are picked up by
+					 * #getEffectiveInstance. Reaching here means a competing instance was
+					 * registered for an objectId whose locally created instance is already
+					 * wired into the built graph - a hard consistency error.
+					 */
+					throw new PersistenceExceptionConsistencyObject(
+						entry.getBuildItemObjectId(),
+						registered,
+						entry.createdInstance
+					);
+				}
+			}
 		}
 
 		private void buildInstances()
