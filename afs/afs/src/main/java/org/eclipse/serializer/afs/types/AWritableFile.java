@@ -150,6 +150,17 @@ public interface AWritableFile extends AReadableFile
 	}
 
 	/**
+	 * Forces all previously written bytes of this file (and its length metadata) to physical
+	 * storage, i.e. an fsync/{@link java.nio.channels.FileChannel#force(boolean) force} barrier.
+	 * Backends whose write acknowledgement is already durable may implement this as a no-op.
+	 */
+	public default void synchronize()
+	{
+		// synchronization handled by IoHandler.
+		this.actual().fileSystem().ioHandler().synchronize(this);
+	}
+
+	/**
 	 * Creates the underlying physical file. The file must not already exist; use
 	 * {@link #ensureExists()} for create-if-missing semantics.
 	 */

@@ -453,6 +453,14 @@ public interface AIoHandler extends WriteController
 	public long writeBytes(AWritableFile targetFile, Iterable<? extends ByteBuffer> sourceBuffers);
 
 	/**
+	 * Forces all buffered writes of {@code file} to physical storage. No-op for backends that are
+	 * already durable on write acknowledgement.
+	 *
+	 * @param file the writable handle to synchronize.
+	 */
+	public void synchronize(AWritableFile file);
+
+	/**
 	 * Moves the underlying physical file from {@code sourceFile} to {@code targetFile}, notifying
 	 * the relevant {@link AFile.Observer}s and {@link ADirectory.Observer}s.
 	 *
@@ -1419,11 +1427,34 @@ public interface AIoHandler extends WriteController
 				targetFile.iterateObservers(o ->
 					o.onAfterFileWrite(targetFile, sourceBuffers, writeCount)
 				);
-				
+
 				return writeCount;
 			}
 		}
-		
+
+		@Override
+		public void synchronize(final AWritableFile file)
+		{
+			this.validateHandledWritableFile(file);
+
+			synchronized(file.actual())
+			{
+				this.validateIsWritable();
+				this.specificSynchronize(this.typeWritableFile.cast(file));
+			}
+		}
+
+		/**
+		 * No-op by default: a backend with no separate physical write buffer (e.g. a blob store that
+		 * is durable on PUT acknowledgement) needs no barrier. Buffered-write backends override this.
+		 *
+		 * @param file the writable handle to synchronize.
+		 */
+		protected void specificSynchronize(final W file)
+		{
+			// no-op
+		}
+
 		@Override
 		public void moveFile(
 			final AWritableFile sourceFile,
