@@ -453,12 +453,19 @@ public interface AIoHandler extends WriteController
 	public long writeBytes(AWritableFile targetFile, Iterable<? extends ByteBuffer> sourceBuffers);
 
 	/**
-	 * Forces all buffered writes of {@code file} to physical storage. No-op for backends that are
-	 * already durable on write acknowledgement.
+	 * Forces all buffered writes of {@code file} to physical storage, including the file's length
+	 * metadata (on file-channel backends, {@link java.nio.channels.FileChannel#force(boolean) force(true)}).
+	 * No-op for backends that are already durable on write acknowledgement.
+	 * <p>
+	 * Default no-op for source/binary backward compatibility; {@link AIoHandler.Abstract} overrides
+	 * this with the validated, locked dispatch to {@code specificSynchronize}.
 	 *
 	 * @param file the writable handle to synchronize.
 	 */
-	public void synchronize(AWritableFile file);
+	public default void synchronize(final AWritableFile file)
+	{
+		// no-op; see AIoHandler.Abstract for the effective implementation
+	}
 
 	/**
 	 * Moves the underlying physical file from {@code sourceFile} to {@code targetFile}, notifying
