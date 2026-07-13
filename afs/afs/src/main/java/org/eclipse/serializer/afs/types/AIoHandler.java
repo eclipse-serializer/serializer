@@ -453,6 +453,21 @@ public interface AIoHandler extends WriteController
 	public long writeBytes(AWritableFile targetFile, Iterable<? extends ByteBuffer> sourceBuffers);
 
 	/**
+	 * Forces all buffered writes of {@code file} to physical storage, including the file's length
+	 * metadata (on file-channel backends, {@link java.nio.channels.FileChannel#force(boolean) force(true)}).
+	 * No-op for backends that are already durable on write acknowledgement.
+	 * <p>
+	 * Default no-op for source/binary backward compatibility; {@link AIoHandler.Abstract} overrides
+	 * this with the validated, locked dispatch to {@code specificSynchronize}.
+	 *
+	 * @param file the writable handle to synchronize.
+	 */
+	public default void synchronize(final AWritableFile file)
+	{
+		// no-op; see AIoHandler.Abstract for the effective implementation
+	}
+
+	/**
 	 * Moves the underlying physical file from {@code sourceFile} to {@code targetFile}, notifying
 	 * the relevant {@link AFile.Observer}s and {@link ADirectory.Observer}s.
 	 *
@@ -1419,11 +1434,34 @@ public interface AIoHandler extends WriteController
 				targetFile.iterateObservers(o ->
 					o.onAfterFileWrite(targetFile, sourceBuffers, writeCount)
 				);
-				
+
 				return writeCount;
 			}
 		}
-		
+
+		@Override
+		public void synchronize(final AWritableFile file)
+		{
+			this.validateHandledWritableFile(file);
+
+			synchronized(file.actual())
+			{
+				this.validateIsWritable();
+				this.specificSynchronize(this.typeWritableFile.cast(file));
+			}
+		}
+
+		/**
+		 * No-op by default: a backend with no separate physical write buffer (e.g. a blob store that
+		 * is durable on PUT acknowledgement) needs no barrier. Buffered-write backends override this.
+		 *
+		 * @param file the writable handle to synchronize.
+		 */
+		protected void specificSynchronize(final W file)
+		{
+			// no-op
+		}
+
 		@Override
 		public void moveFile(
 			final AWritableFile sourceFile,
