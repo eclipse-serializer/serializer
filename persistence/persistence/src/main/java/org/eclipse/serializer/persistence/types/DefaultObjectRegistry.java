@@ -527,6 +527,32 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
         }
     }
 
+    @Override
+    public boolean containsConstant(final long objectId)
+    {
+        synchronized(this.mutex)
+        {
+            // constants live in the hot registry during normal operation and in the cold-storage
+            // arrays after a clear/truncate cycle; exactly one of the two is populated at a time.
+            if(this.constantsHotRegistry != null)
+            {
+                return this.constantsHotRegistry.get(objectId) != null;
+            }
+            final long[] coldIds = this.constantsColdStorageObjectIds;
+            if(coldIds != null)
+            {
+                for(int i = 0; i < coldIds.length; i++)
+                {
+                    if(coldIds[i] == objectId)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
     private boolean synchContainsObjectId(final long objectId)
 	{
 		for(Entry e = this.oidHashTable[(int)objectId & this.hashRange]; e != null; e = e.oidNext)

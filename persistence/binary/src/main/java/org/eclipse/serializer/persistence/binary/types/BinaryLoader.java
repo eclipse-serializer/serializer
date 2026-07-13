@@ -315,9 +315,11 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			 * An instance may have been registered since build item creation by the loading
 			 * thread itself, e.g. the legacy roots path BinaryHandlerPersistenceRootsDefault
 			 * #updateState registering resolved root/constant instances mid-build. Such an
-			 * instance takes precedence and gets updated; the local blank one is discarded.
-			 * (This relies on the roots build item always being the first in the build chain,
-			 * see #readLoadOnce, so its #updateState runs before any other item is resolved.)
+			 * instance takes precedence and gets updated; the local copy is discarded.
+			 * If the registration instead happens AFTER this item was resolved to its local copy
+			 * (build-chain ordering is not guaranteed to place roots before every referrer of a
+			 * constant), the conflict is reconciled by adopting the registered instance in
+			 * #registerBuiltInstances - see the note there (issue #87).
 			 */
 			final Object registeredInstance = this.objectRegistry.lookupObject(entry.getBuildItemObjectId());
 			if(registeredInstance != null)
@@ -431,18 +433,33 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 				if(registered != entry.createdInstance)
 				{
 					/*
-					 * Cannot happen for legit paths: the entire build holds the objectRegistry
-					 * monitor, all legit registry mutations run under that same monitor, and
-					 * mid-build registrations by the loading thread itself are picked up by
-					 * #getEffectiveInstance. Reaching here means a competing instance was
-					 * registered for an objectId whose locally created instance is already
-					 * wired into the built graph - a hard consistency error.
+					 * A different instance is already registered for this objectId. No other thread can
+					 * have registered it: the entire build holds the objectRegistry instance monitor, and
+					 * every registry mutation path (other loaders' builds, the object manager's
+					 * id-ensuring and storer merges, root registration) acquires that same monitor. So the
+					 * registration was made by THIS thread during THIS build.
+					 *
+					 * The only such registration that legitimately targets an objectId this loader also
+					 * built a provisional local copy for is the roots/constants resolution registering a
+					 * canonical CONSTANT (see BinaryHandlerPersistenceRootsDefault#updateState ->
+					 * registerConstant, and the "unnecessarily created instance that gets discarded" note
+					 * in that handler's #create). Constants are canonical and value-equal to the discarded
+					 * local copy, so adopting the registered instance is safe - this is the adoption the
+					 * pre-deferral optionalRegisterObject in #getEffectiveInstance performed implicitly
+					 * (issue #87 regression fix for issue #72 / #299).
+					 *
+					 * Any OTHER (non-constant) competing registration is genuinely unexpected and would
+					 * risk an identity split on a mutable instance, so it remains a hard consistency error.
 					 */
-					throw new PersistenceExceptionConsistencyObject(
-						entry.getBuildItemObjectId(),
-						registered,
-						entry.createdInstance
-					);
+					if(!this.objectRegistry.containsConstant(entry.getBuildItemObjectId()))
+					{
+						throw new PersistenceExceptionConsistencyObject(
+							entry.getBuildItemObjectId(),
+							registered,
+							entry.createdInstance
+						);
+					}
+					entry.existingInstance = registered;
 				}
 			}
 		}

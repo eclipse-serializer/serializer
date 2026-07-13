@@ -109,6 +109,20 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
     public boolean containsClearedObject(long objectId);
 
 	/**
+	 * Whether the passed object id is registered as a <em>constant</em> (see
+	 * {@link #registerConstant(long, Object)}). The default implementation conservatively returns
+	 * {@code false}; {@link DefaultObjectRegistry} reports the actual constant registration.
+	 *
+	 * @param objectId the object id to check.
+	 *
+	 * @return {@code true} if a constant is registered for {@code objectId}.
+	 */
+    public default boolean containsConstant(final long objectId)
+    {
+    	return false;
+    }
+
+	/**
 	 * Iterates every live registered entry, invoking {@code acceptor} once per {@code (objectId, instance)}
 	 * pair.
 	 *
