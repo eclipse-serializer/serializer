@@ -45,6 +45,9 @@ public class EqConstListData implements BinaryHandlerTestData
         Assertions.assertNotNull(o);
         EqConstListData copy = (EqConstListData) o;
         assertIterableEquals(this.getValue(), copy.getValue(), "EqConstList");
+
+        // the equalator reference is stored in the handler's leading header slot, so verify it survived the round trip
+        Assertions.assertInstanceOf(IntegerEquality.class, copy.getValue().equality(), "EqConstList equalator");
     }
 
     static class IntegerEquality implements Equalator<Integer>
