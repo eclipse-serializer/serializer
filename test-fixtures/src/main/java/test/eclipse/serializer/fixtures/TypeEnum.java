@@ -46,6 +46,7 @@ public enum TypeEnum
     Date(() -> new DateData().fillSampleData(), DateData::new),
     EqBulkList(() -> new EqBulkListData().fillSampleData(), EqBulkListData::new),
     EqConstHashEnum(() -> new EqConstHashEnumData().fillSampleData(), EqConstHashEnumData::new),
+    EqConstList(() -> new EqConstListData().fillSampleData(), EqConstListData::new),
     EqConstHashTable(() -> new EqConstHashTableData().fillSampleData(), EqConstHashTableData::new),
     EqHashEnum(() -> new EqHashEnumData().fillSampleData(), EqHashEnumData::new),
     File(() -> new FileData().fillSampleData(), FileData::new),

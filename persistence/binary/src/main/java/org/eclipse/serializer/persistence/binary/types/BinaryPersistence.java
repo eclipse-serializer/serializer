@@ -108,6 +108,7 @@ import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collecti
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerConstHashTable;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerConstList;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqBulkList;
+import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqConstList;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqConstHashEnum;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqConstHashTable;
 import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collections.BinaryHandlerEqHashEnum;
@@ -443,6 +444,7 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerBulkList.New(controller)   ,
 				BinaryHandlerLimitList.New(controller)  ,
 				BinaryHandlerConstList.New()            ,
+				BinaryHandlerEqConstList.New()          ,
 				BinaryHandlerEqBulkList.New(controller) ,
 				BinaryHandlerHashEnum.New()             ,
 				BinaryHandlerConstHashEnum.New()        ,

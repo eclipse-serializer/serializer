@@ -32,6 +32,7 @@ final class XCollectionsInternals
 		OFFSET_ConstList_data            = getFieldOffset(ConstList       .class, "data"         ),
 		OFFSET_EqBulkList_data           = getFieldOffset(EqBulkList      .class, "data"         ),
 		OFFSET_EqBulkList_size           = getFieldOffset(EqBulkList      .class, "size"         ),
+		OFFSET_EqConstList_data          = getFieldOffset(EqConstList     .class, "data"         ),
 		OFFSET_EqConstHashEnum_size      = getFieldOffset(EqConstHashEnum .class, "size"         ),
 		OFFSET_EqConstHashTable_size     = getFieldOffset(EqConstHashTable.class, "size"         ),
 		OFFSET_EqHashEnum_size           = getFieldOffset(EqHashEnum      .class, "size"         ),
@@ -117,6 +118,11 @@ final class XCollectionsInternals
 	public static Object[] getData(final EqBulkList<?> instance)
 	{
 		return (Object[])XMemory.getObject(instance, OFFSET_EqBulkList_data);
+	}
+
+	public static Object[] getData(final EqConstList<?> instance)
+	{
+		return (Object[])XMemory.getObject(instance, OFFSET_EqConstList_data);
 	}
 	
 	public static Object[] getData(final LimitList<?> instance)
