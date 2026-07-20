@@ -46,8 +46,13 @@ public class EqConstListData implements BinaryHandlerTestData
         EqConstListData copy = (EqConstListData) o;
         assertIterableEquals(this.getValue(), copy.getValue(), "EqConstList");
 
-        // the equalator reference is stored in the handler's leading header slot, so verify it survived the round trip
-        Assertions.assertInstanceOf(IntegerEquality.class, copy.getValue().equality(), "EqConstList equalator");
+        // The equalator reference is stored in the handler's leading header slot; verify it survived when the list is
+        // populated (serializer round-trip test). This fixture is also reused by the store reloader test, where the
+        // root is reset to its stored empty state and the value is null - skip the equalator check in that case.
+        if(copy.getValue() != null)
+        {
+            Assertions.assertInstanceOf(IntegerEquality.class, copy.getValue().equality(), "EqConstList equalator");
+        }
     }
 
     static class IntegerEquality implements Equalator<Integer>
