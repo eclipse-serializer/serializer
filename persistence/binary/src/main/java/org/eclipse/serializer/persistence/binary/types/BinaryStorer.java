@@ -28,6 +28,7 @@ import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
+import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -1669,7 +1670,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			Integer.MAX_VALUE - (256L * 1024 * 1024);
 
 		private final BatchStorer.Controller   controller        ;
-		private final ScheduledExecutorService scheduler         ;
+		private final BackgroundFlusher        flusher           ;
 		private long                           pendingSinceNanos ;
 		private volatile boolean               closed            ;
 
@@ -1724,20 +1725,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				);
 			}
 
-			// Validate before creating the executor so a bad checkInterval does not
-			// leak a daemon thread (the constructor would throw after start()).
-			this.scheduler = Executors.newSingleThreadScheduledExecutor(r ->
-			{
-				final Thread t = new Thread(r, "batch-storer-flush");
-				t.setDaemon(true);
-				return t;
-			});
-			this.scheduler.scheduleWithFixedDelay(
-				this::backgroundFlush,
-				millis,
-				millis,
-				TimeUnit.MILLISECONDS
-			);
+			// Validate before creating the flusher so a bad checkInterval does not
+			// leak a daemon thread (the flusher starts its executor in its constructor).
+			this.flusher = new BackgroundFlusher(this, millis);
 		}
 
 		@Override
@@ -1959,23 +1949,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.closed = true;
 			}
 
-			this.scheduler.shutdown();
-			try
-			{
-				if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
-				{
-					this.scheduler.shutdownNow();
-					if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
-					{
-						logger.warn("Background flush thread did not terminate within timeout");
-					}
-				}
-			}
-			catch(final InterruptedException e)
-			{
-				this.scheduler.shutdownNow();
-				Thread.currentThread().interrupt();
-			}
+			this.flusher.shutdown();
 
 			// Final flush takes commitLock internally via commit(); must not be held here.
 			if(!this.isEmpty())
@@ -2048,6 +2022,84 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			logger.debug("Flushing batch storer with size = {}", this.size());
 			// pendingSinceNanos is reset inside commit() -> Batching.clear(); no reset needed here.
 			this.commit();
+		}
+
+		/**
+		 * Owns the batch storer's single background-flush thread and holds the storer
+		 * {@link WeakReference weakly}. The periodic task retained by the executor's work queue
+		 * references only this flusher, not the storer, so the executor's (GC-root) worker thread no
+		 * longer pins the storer. An abandoned storer &mdash; dropped without {@link Batching#close()}
+		 * &mdash; therefore becomes collectable together with its chunk buffers, hash slots and
+		 * trusted-object-id set; the next tick then observes the cleared referent and shuts the
+		 * executor down, reclaiming the daemon thread.
+		 * <p>
+		 * Mirrors {@code EvictionManager.IntervalThread} and the JVector {@code BackgroundTaskManager}:
+		 * a strong self-referencing scheduled task would leak the storer for the JVM lifetime.
+		 */
+		private static final class BackgroundFlusher implements Runnable
+		{
+			private final WeakReference<Batching>  storerRef;
+			private final ScheduledExecutorService scheduler;
+
+			BackgroundFlusher(
+				final Batching storer        ,
+				final long     intervalMillis
+			)
+			{
+				super();
+				this.storerRef = new WeakReference<>(storer);
+				this.scheduler = Executors.newSingleThreadScheduledExecutor(r ->
+				{
+					final Thread t = new Thread(r, "batch-storer-flush");
+					t.setDaemon(true);
+					return t;
+				});
+				this.scheduler.scheduleWithFixedDelay(
+					this,
+					intervalMillis,
+					intervalMillis,
+					TimeUnit.MILLISECONDS
+				);
+			}
+
+			@Override
+			public void run()
+			{
+				/*
+				 * Resolve the weakly-held storer. If it has been collected, the storer was abandoned
+				 * without close(): self-terminate so the daemon thread is reclaimed. This runs ON the
+				 * executor thread, so it must NOT awaitTermination() (that would dead-lock).
+				 * The strong reference is not retained in a field, so the next tick can observe a cleared referent.
+				 */
+				final Batching storer = this.storerRef.get();
+				if(storer == null)
+				{
+					this.scheduler.shutdown();
+					return;
+				}
+				storer.backgroundFlush();
+			}
+
+			void shutdown()
+			{
+				this.scheduler.shutdown();
+				try
+				{
+					if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+					{
+						this.scheduler.shutdownNow();
+						if(!this.scheduler.awaitTermination(5, TimeUnit.SECONDS))
+						{
+							logger.warn("Background flush thread did not terminate within timeout");
+						}
+					}
+				}
+				catch(final InterruptedException e)
+				{
+					this.scheduler.shutdownNow();
+					Thread.currentThread().interrupt();
+				}
+			}
 		}
 	}
 
