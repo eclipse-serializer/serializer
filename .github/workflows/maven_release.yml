@@ -50,22 +50,53 @@ jobs:
     if: github.event.release.prerelease == false
     permissions:
       contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION:  ${{ github.event.release.tag_name }}
+      BASE:     ${{ github.event.repository.default_branch }}
     steps:
-      # The release event checks out the tag by default, so ask for the branch we want to commit to.
+      # The release event checks out the tag by default, so ask for the branch the pull request targets.
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
 
       # Updates the version of the dependency snippet in the "Usage" section.
       - name: Update dependency version in README
+        id: readme
         run: |
-          sed -i -E "s|^(\s*)<version>[0-9][^<]*</version>|\1<version>${{ github.event.release.tag_name }}</version>|" README.md
+          sed -i -E "s|^(\s*)<version>[0-9][^<]*</version>|\1<version>${VERSION}</version>|" README.md
+          if git diff --quiet -- README.md; then
+            echo "README is already at version ${VERSION}, nothing to do."
+          else
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
 
-      - name: Commit and push
+      # The base branch is protected and accepts signed commits only, so the change cannot be pushed
+      # to it directly. The commit is created through the API instead of with "git commit", because
+      # the API signs it with GitHub's web-flow key, which an unattended workflow cannot do itself.
+      - name: Open a pull request with the new version
+        if: steps.readme.outputs.changed == 'true'
         run: |
-          git config user.name  'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add README.md
-          git diff --quiet --cached || git commit -m "Update README to version ${{ github.event.release.tag_name }}"
-          git push
+          BRANCH="readme-version-${VERSION}"
+
+          if gh api "/repos/${GITHUB_REPOSITORY}/git/ref/heads/${BRANCH}" --silent 2>/dev/null; then
+            echo "Branch ${BRANCH} already exists, assuming the pull request was opened by an earlier run."
+            exit 0
+          fi
+
+          gh api --method POST "/repos/${GITHUB_REPOSITORY}/git/refs" --silent \
+            --field ref="refs/heads/${BRANCH}" \
+            --field sha="$(git rev-parse HEAD)"
+
+          gh api --method PUT "/repos/${GITHUB_REPOSITORY}/contents/README.md" --silent \
+            --field message="Update README to version ${VERSION}" \
+            --field content="$(base64 -w0 README.md)" \
+            --field sha="$(git rev-parse HEAD:README.md)" \
+            --field branch="${BRANCH}"
+
+          gh pr create --base "${BASE}" --head "${BRANCH}" \
+            --title "Update README to version ${VERSION}" \
+            --body "Sets the version of the dependency snippet in the README to the freshly released ${VERSION}. Opened automatically by the release workflow."
 
