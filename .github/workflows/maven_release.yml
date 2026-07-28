@@ -44,3 +44,28 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.ORG_GPG_PASSPHRASE }}
           MAVEN_GPG_KEY: ${{ secrets.ORG_GPG_PRIVATE_KEY }}
 
+  update-readme:
+    runs-on: ubuntu-latest
+    needs: publish
+    if: github.event.release.prerelease == false
+    permissions:
+      contents: write
+    steps:
+      # The release event checks out the tag by default, so ask for the branch we want to commit to.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      # Updates the version of the dependency snippet in the "Usage" section.
+      - name: Update dependency version in README
+        run: |
+          sed -i -E "s|^(\s*)<version>[0-9][^<]*</version>|\1<version>${{ github.event.release.tag_name }}</version>|" README.md
+
+      - name: Commit and push
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git diff --quiet --cached || git commit -m "Update README to version ${{ github.event.release.tag_name }}"
+          git push
+
