@@ -20,7 +20,6 @@
 	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 
 	<properties>
-		<maven.deploy.skip>true</maven.deploy.skip>
 		<junit-jupiter.version>6.0.3</junit-jupiter.version>
 	</properties>
 
@@ -149,6 +148,13 @@
 						--add-opens java.base/sun.util.calendar=ALL-UNNAMED
 						--add-exports java.base/jdk.internal.misc=ALL-UNNAMED
 					</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<configuration>
+					<skipPublishing>true</skipPublishing>
 				</configuration>
 			</plugin>
 		</plugins>
