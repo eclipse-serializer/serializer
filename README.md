@@ -47,9 +47,11 @@ Classes evolve over time. Therefore, Eclipse Serializer provides a legacy type m
 
 ```xml
 <dependency>
-  <groupId>org.eclipse.serializer</groupId>
-  <artifactId>serializer</artifactId>
-  <version>4.0.1</version>
+    <groupId>org.eclipse.serializer</groupId>
+    <artifactId>serializer</artifactId>
+    <!-- replace with the latest version, see
+       https://github.com/eclipse-serializer/serializer/releases/latest -->
+    <version>${serializer.version}</version>
 </dependency>
 ```
 
