@@ -18,6 +18,7 @@ import static org.eclipse.serializer.util.X.ConstList;
 import static org.eclipse.serializer.util.X.mayNull;
 import static org.eclipse.serializer.util.X.notNull;
 
+import java.lang.ref.Reference;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
@@ -1944,11 +1945,21 @@ public abstract class Binary implements Chunk
 	)
 	{
 		final long targetAddress = this.calculateAddress(directByteBuffer, offset);
-		
-		long address = this.loadItemEntityContentAddress();
-		for(int i = 0; i < setters.length; i++)
+
+		try
 		{
-			address = setters[i].setValueToMemory(address, null, targetAddress + targetOffsets[i], null);
+			long address = this.loadItemEntityContentAddress();
+			for(int i = 0; i < setters.length; i++)
+			{
+				address = setters[i].setValueToMemory(address, null, targetAddress + targetOffsets[i], null);
+			}
+		}
+		finally
+		{
+			/* the buffer must stay strongly reachable while its raw memory is written via the calculated
+			 * address, or a GC may collect it and free the off-heap memory mid-iteration.
+			 */
+			Reference.reachabilityFence(directByteBuffer);
 		}
 	}
 	
