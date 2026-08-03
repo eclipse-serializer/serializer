@@ -14,13 +14,26 @@ package org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collect
  * #L%
  */
 
-import org.eclipse.serializer.collections.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+import org.eclipse.serializer.collections.BulkList;
+import org.eclipse.serializer.collections.ConstHashEnum;
+import org.eclipse.serializer.collections.ConstHashTable;
+import org.eclipse.serializer.collections.ConstList;
+import org.eclipse.serializer.collections.EqBulkList;
+import org.eclipse.serializer.collections.EqConstHashEnum;
+import org.eclipse.serializer.collections.EqConstHashTable;
+import org.eclipse.serializer.collections.EqConstList;
+import org.eclipse.serializer.collections.EqHashEnum;
+import org.eclipse.serializer.collections.EqHashTable;
+import org.eclipse.serializer.collections.HashEnum;
+import org.eclipse.serializer.collections.HashTable;
+import org.eclipse.serializer.collections.LimitList;
+import org.eclipse.serializer.collections.Singleton;
 import org.eclipse.serializer.hashing.HashEqualator;
 import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.reflect.XReflect;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 final class XCollectionsInternals
 {
@@ -41,9 +54,9 @@ final class XCollectionsInternals
 		OFFSET_EqHashTable_keys          = getFieldOffset(EqHashTable     .class, "keys"         ),
 		OFFSET_EqHashTable_values        = getFieldOffset(EqHashTable     .class, "values"       ),
 		OFFSET_HashEnum_size             = getFieldOffset(HashEnum        .class, "size"         ),
-		OFFSET_HashTable_size            = getFieldOffset(EqHashTable     .class, "size"         ),
-		OFFSET_HashTable_keys            = getFieldOffset(EqHashTable     .class, "keys"         ),
-		OFFSET_HashTable_values          = getFieldOffset(EqHashTable     .class, "values"       ),
+		OFFSET_HashTable_size            = getFieldOffset(HashTable       .class, "size"         ),
+		OFFSET_HashTable_keys            = getFieldOffset(HashTable       .class, "keys"         ),
+		OFFSET_HashTable_values          = getFieldOffset(HashTable       .class, "values"       ),
 		OFFSET_LimitList_data            = getFieldOffset(LimitList       .class, "data"         ),
 		OFFSET_LimitList_size            = getFieldOffset(LimitList       .class, "size"         ),
 		OFFSET_Singleton_element         = getFieldOffset(Singleton       .class, "element"      )
