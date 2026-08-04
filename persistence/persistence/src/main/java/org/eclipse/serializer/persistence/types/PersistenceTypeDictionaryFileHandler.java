@@ -19,20 +19,21 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.nio.ByteBuffer;
 
-import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.afs.types.ADirectory;
+import org.eclipse.serializer.afs.types.AFS;
 import org.eclipse.serializer.afs.types.AFile;
-import org.eclipse.serializer.afs.types.AReadableFile;
 import org.eclipse.serializer.afs.types.AWritableFile;
 import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.io.XIO;
+import org.eclipse.serializer.memory.XMemory;
 import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionSource;
 
 /**
  * File-backed {@link PersistenceTypeDictionaryIoHandler} reading and writing the textual type dictionary
  * to a single {@link AFile} (typically located in the same directory as the persistent storage and named
- * after {@link Persistence#defaultFilenameTypeDictionary()}).
+ * after {@link Persistence#defaultFilenameTypeDictionary()}). Writes are crash-safe via a temporary
+ * sibling file, see {@link #writeTypeDictionary(AFile, String)}.
  * <p>
  * Optionally forwards every successful write to a delegate {@link PersistenceTypeDictionaryStorer} for backup
  * or replication purposes.
@@ -61,8 +62,30 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 	}
 
 	/**
+	 * Suffix of the temporary sibling file (same parent directory, named
+	 * {@code <live file identifier> + suffix}) used by {@link #writeTypeDictionary(AFile, String)} to
+	 * write the dictionary crash-safely before swapping it in place of the live file.
+	 *
+	 * @return the temporary dictionary file suffix.
+	 */
+	public static String temporaryFileSuffix()
+	{
+		return ".tmp";
+	}
+
+	private static AFile temporaryFile(final AFile file)
+	{
+		return file.parent().ensureFile(file.identifier() + temporaryFileSuffix());
+	}
+
+	/**
 	 * Reads the textual type dictionary from {@code file}, returning {@code defaultString} if the file does
 	 * not exist.
+	 * <p>
+	 * If {@code file} does not exist but its temporary sibling does, the sibling is read instead: it is a
+	 * complete dictionary export whose swap was interrupted before the move, see
+	 * {@link #writeTypeDictionary(AFile, String)}. A - possibly torn - temporary file alongside an
+	 * existing live file is ignored.
 	 *
 	 * @param file          the dictionary file.
 	 * @param defaultString the value to return when the file does not exist.
@@ -75,23 +98,18 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 	{
 		try
 		{
-			if(!file.exists())
+			if(file.exists())
 			{
-				return defaultString;
+				return readFileContent(file);
 			}
-			
-			final AReadableFile rFile = file.useReading();
-			
-			try
+
+			final AFile temporaryFile = temporaryFile(file);
+			if(temporaryFile.exists())
 			{
-				final ByteBuffer bb = rFile.readBytes();
-				
-				return XChars.String(bb, Persistence.standardCharset());
+				return readFileContent(temporaryFile);
 			}
-			finally
-			{
-				rFile.release();
-			}
+
+			return defaultString;
 		}
 		catch(final Exception e)
 		{
@@ -99,9 +117,24 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 		}
 	}
 
+	private static String readFileContent(final AFile file)
+	{
+		return AFS.apply(file, rFile ->
+			XChars.String(rFile.readBytes(), Persistence.standardCharset())
+		);
+	}
+
 	/**
-	 * Writes the textual type dictionary to {@code file}, truncating any pre-existing content and creating the
-	 * file if it does not exist yet. Bytes are encoded in {@link Persistence#standardCharset()}.
+	 * Writes the textual type dictionary to {@code file}, creating it if it does not exist yet.
+	 * Bytes are encoded in {@link Persistence#standardCharset()}.
+	 * <p>
+	 * The write is crash-safe: an existing dictionary file is never modified in place. The new content is
+	 * first written and synchronized to the temporary sibling file (see {@link #temporaryFileSuffix()}),
+	 * which then replaces the live file (delete + move). A process or power failure at any point leaves
+	 * either the previous or the complete new dictionary readable via
+	 * {@link #readTypeDictionary(AFile, String)} - never a truncated dictionary as the only copy.
+	 * Residual limitation: the swap's file system metadata (delete + move) cannot be explicitly forced on
+	 * every backend, so a power loss may revert to the previous, complete dictionary.
 	 *
 	 * @param file                 the dictionary file.
 	 * @param typeDictionaryString the dictionary text to write.
@@ -112,31 +145,77 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 	{
 		try
 		{
-			final AWritableFile wFile = file.useWriting();
-			if(wFile.exists())
-			{
-				wFile.truncate(0);
-			}
-			else
-			{
-				wFile.create();
-			}
-			
-			try
-			{
-				final byte[] bytes = typeDictionaryString.getBytes(Persistence.standardCharset());
-				final ByteBuffer dbb = XIO.wrapInDirectByteBuffer(bytes);
-				wFile.writeBytes(X.List(dbb));
-			}
-			finally
-			{
-				wFile.release();
-			}
+			AFS.executeWriting(file, wFile ->
+				AFS.executeWriting(temporaryFile(file), wTemporaryFile ->
+					writeTypeDictionary(wFile, wTemporaryFile, typeDictionaryString)
+				)
+			);
+		}
+		catch(final PersistenceException e)
+		{
+			// pass through untranslated instead of wrapping again (e.g. the swap's delete failure)
+			throw e;
 		}
 		catch(final Exception t)
 		{
 			throw new PersistenceException(t);
 		}
+	}
+
+	private static void writeTypeDictionary(
+		final AWritableFile wFile         ,
+		final AWritableFile wTemporaryFile,
+		final String        typeDictionaryString
+	)
+	{
+		if(!wFile.exists())
+		{
+			if(!wTemporaryFile.exists())
+			{
+				// initial write: no previous dictionary to protect yet, write directly.
+				writeContent(wFile, typeDictionaryString);
+
+				return;
+			}
+
+			/*
+			 * Crash healing: a sole temporary file is a completely written export whose swap was
+			 * interrupted before the move. It must become the live file before being overwritten,
+			 * or the rewrite below would destroy the only copy of the dictionary.
+			 */
+			wTemporaryFile.moveTo(wFile);
+		}
+
+		// the previous dictionary stays intact until the replacement is durably complete on the medium
+		writeContent(wTemporaryFile, typeDictionaryString);
+
+		if(!wFile.delete())
+		{
+			throw new PersistenceException(
+				"Could not delete type dictionary file " + wFile.toPathString() + " to swap in its replacement."
+			);
+		}
+		wTemporaryFile.moveTo(wFile);
+
+		// commits the swap's file system metadata (delete + move) where the backend supports it; without
+		// this, a power loss could revert to the previous dictionary although a later data commit survived.
+		wFile.synchronize();
+	}
+
+	private static void writeContent(final AWritableFile wFile, final String typeDictionaryString)
+	{
+		if(!wFile.ensureExists())
+		{
+			wFile.truncate(0);
+		}
+
+		final ByteBuffer dbb = XIO.wrapInDirectByteBuffer(
+			typeDictionaryString.getBytes(Persistence.standardCharset())
+		);
+		wFile.writeBytes(dbb);
+		XMemory.deallocateDirectByteBuffer(dbb);
+
+		wFile.synchronize();
 	}
 	
 	/**
