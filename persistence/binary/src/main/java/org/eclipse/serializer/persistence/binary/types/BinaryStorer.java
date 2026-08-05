@@ -819,6 +819,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					}
 				}
 
+				// The on-disk type dictionary must always contain every type the data about to be written
+				// references (data files carry only type ids). Type registrations during this commit's
+				// serialization only marked the dictionary as changed; export it here, once, right before
+				// the data becomes durable, so a crash can never leave committed data whose types are
+				// missing from the dictionary.
+				this.typeManager.exportPendingTypeDictionaryChanges();
+
 				// very costly IO-operation does not need to occupy the lock
 				this.writeToTarget(writeData, chunks);
 

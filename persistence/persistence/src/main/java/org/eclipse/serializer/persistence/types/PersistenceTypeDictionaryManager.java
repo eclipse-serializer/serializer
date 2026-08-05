@@ -287,10 +287,14 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 	
 	
 	/**
-	 * {@link PersistenceTypeDictionaryManager} that, on top of the underlying dictionary, mirrors every
-	 * successful registration through a {@link PersistenceTypeDictionaryExporter} so that the persistent
-	 * textual form stays in sync. A {@code changed} flag is used to coalesce export work to one call per
-	 * batch.
+	 * {@link PersistenceTypeDictionaryManager} that, on top of the underlying dictionary, mirrors
+	 * registrations through a {@link PersistenceTypeDictionaryExporter} so that the persistent textual
+	 * form stays in sync. Exports are coalesced to one per store barrier rather than performed
+	 * synchronously with each registration: registration methods only mark a {@code changed} flag, and
+	 * the exporter runs once when {@link #synchUpdateExport()} is invoked by the persistence layer,
+	 * right before the store's data is written. This keeps the crash-safe export cost (temp-file write
+	 * + fsync + swap) independent of how many types a single store discovers, while guaranteeing the
+	 * on-disk dictionary always contains every type the durable data references.
 	 */
 	public final class Exporting extends PersistenceTypeDictionaryManager.Abstract<PersistenceTypeDictionary>
 	{
@@ -352,10 +356,21 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 		/**
 		 * Exports the dictionary if and only if a change has been recorded since the last export, then clears
 		 * the change flag.
+		 * <p>
+		 * Registration methods ({@link #registerTypeDefinition(PersistenceTypeDefinition)} and siblings) only
+		 * mark the dictionary as changed; the actual (crash-safe) export is deferred until this method is
+		 * invoked. It is the single coalescing flush point and must be called by the persistence layer once
+		 * per store barrier, before the store's data is written, so that a burst of type registrations
+		 * performed while a store is serialized produces exactly one dictionary export instead of one per
+		 * registered type.
+		 * <p>
+		 * Synchronized to make the check-export-reset sequence atomic against concurrent
+		 * {@code register*} calls: a concurrent registration can otherwise have its fresh change mark
+		 * wiped by another caller's reset, silently leaving that type off the disk dictionary.
 		 *
 		 * @return this manager, for fluent chaining.
 		 */
-		public final PersistenceTypeDictionaryManager.Exporting synchUpdateExport()
+		public final synchronized PersistenceTypeDictionaryManager.Exporting synchUpdateExport()
 		{
 			if(this.hasChanged())
 			{
@@ -384,7 +399,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;
@@ -399,7 +413,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;
@@ -414,7 +427,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;
@@ -430,7 +442,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;

@@ -169,6 +169,23 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 	 */
 	public PersistenceTypeDictionary typeDictionary();
 
+	/**
+	 * Flushes pending type dictionary changes to the persistent exporter, coalesced to a single export.
+	 * <p>
+	 * Registration methods only mark the dictionary as changed; the (crash-safe) exporter is invoked once
+	 * per call to this method. The persistence layer must call this once per store barrier, before the
+	 * store's data is written (e.g. just before {@code storeRoot}/{@code storeAll} hands its data to the
+	 * target), so a burst of type registrations discovered while a store is serialized yields exactly one
+	 * dictionary export instead of one per registered type. Flushing before durability guarantees the
+	 * on-disk dictionary never trails the data files that reference its type ids.
+	 * Implementations that do not export (e.g. transient, immutable or read-only managers) treat this as a
+	 * no-op.
+	 */
+	public default void exportPendingTypeDictionaryChanges()
+	{
+		// default: no-op for managers that do not persist a textual type dictionary.
+	}
+
 	@Override
 	public long ensureTypeId(Class<?> type);
 
@@ -483,6 +500,15 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		public PersistenceTypeDictionary typeDictionary()
 		{
 			return this.typeDictionaryManager.provideTypeDictionary();
+		}
+
+		@Override
+		public void exportPendingTypeDictionaryChanges()
+		{
+			if(this.typeDictionaryManager instanceof PersistenceTypeDictionaryManager.Exporting exporting)
+			{
+				exporting.synchUpdateExport();
+			}
 		}
 
 		@Override
