@@ -132,7 +132,15 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 	 * first written and synchronized to the temporary sibling file (see {@link #temporaryFileSuffix()}),
 	 * which then replaces the live file (delete + move). A process or power failure at any point leaves
 	 * either the previous or the complete new dictionary readable via
-	 * {@link #readTypeDictionary(AFile, String)} - never a truncated dictionary as the only copy.
+	 * {@link #readTypeDictionary(AFile, String)} - never a truncated dictionary as the only copy of a
+	 * dictionary that data was committed against.
+	 * <p>
+	 * The very first write (neither a live nor a temporary file exists yet) goes directly to the live
+	 * file and can be left torn by a crash. This is deliberate: it keeps the invariant that a SOLE
+	 * temporary file is always a complete export (which the crash healing above relies on), and it is
+	 * harmless - the export runs before the data commit that introduces the types, so at that point no
+	 * data has ever been committed against any dictionary; a restart fails loudly on an empty storage.
+	 * <p>
 	 * Residual limitation: the swap's file system metadata (delete + move) cannot be explicitly forced on
 	 * every backend, so a power loss may revert to the previous, complete dictionary.
 	 *
@@ -212,8 +220,14 @@ public class PersistenceTypeDictionaryFileHandler implements PersistenceTypeDict
 		final ByteBuffer dbb = XIO.wrapInDirectByteBuffer(
 			typeDictionaryString.getBytes(Persistence.standardCharset())
 		);
-		wFile.writeBytes(dbb);
-		XMemory.deallocateDirectByteBuffer(dbb);
+		try
+		{
+			wFile.writeBytes(dbb);
+		}
+		finally
+		{
+			XMemory.deallocateDirectByteBuffer(dbb);
+		}
 
 		wFile.synchronize();
 	}
