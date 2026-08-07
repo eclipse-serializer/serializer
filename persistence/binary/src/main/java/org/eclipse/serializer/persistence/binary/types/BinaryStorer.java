@@ -819,6 +819,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					}
 				}
 
+				/*
+				 * Entities are written with type ids only, so those ids must be resolvable from the
+				 * persisted dictionary once this data exists on the medium. Serialization merely flagged
+				 * the types it registered; they are written here, in one export for the whole commit and
+				 * still ahead of the data. A dictionary entry whose commit then fails stays behind unused,
+				 * which loading ignores.
+				 */
+				this.typeManager.exportPendingTypeDictionaryChanges();
+
 				// very costly IO-operation does not need to occupy the lock
 				this.writeToTarget(writeData, chunks);
 

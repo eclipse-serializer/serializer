@@ -287,10 +287,12 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 	
 	
 	/**
-	 * {@link PersistenceTypeDictionaryManager} that, on top of the underlying dictionary, mirrors every
-	 * successful registration through a {@link PersistenceTypeDictionaryExporter} so that the persistent
-	 * textual form stays in sync. A {@code changed} flag is used to coalesce export work to one call per
-	 * batch.
+	 * {@link PersistenceTypeDictionaryManager} that maintains the persistent textual form of its dictionary
+	 * through a {@link PersistenceTypeDictionaryExporter}. Registrations set a {@code changed} flag rather
+	 * than writing on the spot; {@link #synchUpdateExport()} then covers all of them with one export when
+	 * the persistence layer flushes, which happens per store and before that store's data is written. One
+	 * export per store keeps the cost of the crash-safe write (temporary file, fsync, swap) off the
+	 * individual registration, without ever letting the persisted dictionary fall behind the data.
 	 */
 	public final class Exporting extends PersistenceTypeDictionaryManager.Abstract<PersistenceTypeDictionary>
 	{
@@ -352,10 +354,19 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 		/**
 		 * Exports the dictionary if and only if a change has been recorded since the last export, then clears
 		 * the change flag.
+		 * <p>
+		 * The {@code register*} methods record their change without exporting, which makes this the single
+		 * place where the persistent form is rewritten. The persistence layer reaches it once per store and
+		 * ahead of that store's data write, so the dictionary on the medium never trails the type ids the
+		 * data uses.
+		 * <p>
+		 * Synchronized because testing the flag, exporting and clearing it must not interleave with a
+		 * {@code register*} call: a mark set between the export and the reset would be cleared although its
+		 * type was never written.
 		 *
 		 * @return this manager, for fluent chaining.
 		 */
-		public final PersistenceTypeDictionaryManager.Exporting synchUpdateExport()
+		public final synchronized PersistenceTypeDictionaryManager.Exporting synchUpdateExport()
 		{
 			if(this.hasChanged())
 			{
@@ -384,7 +395,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;
@@ -399,7 +409,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;
@@ -414,7 +423,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;
@@ -430,7 +438,6 @@ public interface PersistenceTypeDictionaryManager extends PersistenceTypeDiction
 			if(hasChanged)
 			{
 				this.markChanged();
-				this.synchUpdateExport();
 			}
 			
 			return hasChanged;

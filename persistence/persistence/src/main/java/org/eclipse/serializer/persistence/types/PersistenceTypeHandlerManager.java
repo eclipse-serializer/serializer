@@ -169,6 +169,22 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 	 */
 	public PersistenceTypeDictionary typeDictionary();
 
+	/**
+	 * Writes the type dictionary to its persistent form if registrations have marked it as changed,
+	 * covering all of them with a single export.
+	 * <p>
+	 * Call this per store, before that store's data is handed to the target: entities carry type ids
+	 * alone, so a dictionary lagging behind its data would leave those ids unresolvable after a crash.
+	 * Gathering the registrations of one store into one export keeps the price of the crash-safe write
+	 * independent of how many types that store happens to encounter.
+	 * <p>
+	 * Managers without a persistent dictionary form do nothing.
+	 */
+	public default void exportPendingTypeDictionaryChanges()
+	{
+		// nothing to write without a persistent dictionary.
+	}
+
 	@Override
 	public long ensureTypeId(Class<?> type);
 
@@ -483,6 +499,15 @@ public interface PersistenceTypeHandlerManager<D> extends PersistenceTypeManager
 		public PersistenceTypeDictionary typeDictionary()
 		{
 			return this.typeDictionaryManager.provideTypeDictionary();
+		}
+
+		@Override
+		public void exportPendingTypeDictionaryChanges()
+		{
+			if(this.typeDictionaryManager instanceof PersistenceTypeDictionaryManager.Exporting exporting)
+			{
+				exporting.synchUpdateExport();
+			}
 		}
 
 		@Override
