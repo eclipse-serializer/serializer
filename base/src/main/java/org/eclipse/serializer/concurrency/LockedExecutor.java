@@ -150,11 +150,15 @@ public interface LockedExecutor
 	/**
 	 * Pseudo-constructor method to create a new {@link LockedExecutor} with the given locking policy.
 	 * <p>
-	 * A fair executor grants access to the longest-waiting thread and therefore cannot starve any
-	 * thread, but its throughput is considerably lower because every hand-over has to unpark the next
-	 * thread instead of letting an already running one barge in. A non-fair executor lets arriving
-	 * threads barge ahead of waiting ones, which yields a much higher throughput but provides no
-	 * ordering guarantee at all.
+	 * A fair executor hands the lock over in approximate arrival order, so a waiting thread is not
+	 * overtaken indefinitely, but its throughput is considerably lower because every hand-over has to
+	 * unpark the next thread instead of letting an already running one barge in. A non-fair executor
+	 * lets arriving threads barge ahead of waiting ones, which yields a much higher throughput but
+	 * provides no ordering guarantee at all.
+	 * <p>
+	 * Note that the fairness of a lock does not extend to the scheduling of threads, as documented on
+	 * {@link ReentrantLock}. A fair policy orders the hand-over of the lock itself; it cannot prevent
+	 * the JVM or the operating system from scheduling the contending threads unevenly.
 	 * <p>
 	 * Reentrancy is unaffected by this choice: a thread that already holds the lock is always let
 	 * through, in both policies.
