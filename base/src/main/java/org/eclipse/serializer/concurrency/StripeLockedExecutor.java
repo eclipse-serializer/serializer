@@ -180,6 +180,11 @@ public interface StripeLockedExecutor
 	 * <p>
 	 * Reentrancy is unaffected by this choice: a thread that already holds a stripe's lock is always
 	 * let through, in both policies.
+	 * <p>
+	 * The locks of all stripes are created together, the first time the executor is used. The stripe
+	 * count should therefore be sized like a degree of parallelism - the default of
+	 * {@link Runtime#availableProcessors()} used by {@link StripeLockScope} is a good yardstick - and
+	 * not like the number of mutexes the executor will ever see.
 	 *
 	 * @param stripeCount maximum number of stripes, must be positive
 	 * @param fair <code>true</code> to use a fair locking policy, <code>false</code> for a non-fair one
