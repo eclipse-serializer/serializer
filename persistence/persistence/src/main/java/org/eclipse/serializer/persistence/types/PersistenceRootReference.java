@@ -18,7 +18,9 @@ import static org.eclipse.serializer.util.X.mayNull;
 
 import java.util.function.Supplier;
 
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.reference.Reference;
+import org.eclipse.serializer.reflect.XReflect;
 
 /**
  * Mutable reference to the application's user-defined root instance. The reference itself is what the
@@ -52,11 +54,44 @@ public interface PersistenceRootReference extends PersistenceRootReferencing, Re
 	 * @param newRoot the new root instance; may be {@code null}.
 	 *
 	 * @return the previously referenced root (resolved via the previous supplier).
+	 *
+	 * @throws PersistenceException if {@code newRoot} is a value instance.
 	 */
 	public default Object setRoot(final Object newRoot)
 	{
+		validateRootInstance(newRoot);
+
 		return this.setRootSupplier(() ->
 			newRoot
+		);
+	}
+
+	/**
+	 * Guarantees that {@code rootInstance} can serve as an explicitly set root.
+	 * <p>
+	 * A value instance cannot: setting a root means the persisted state is applied to the very
+	 * instance the application holds, which is impossible without identity, so the persisted state
+	 * would be dropped without any indication. Rejecting the root is the only way to not lose it
+	 * silently.
+	 * <p>
+	 * This applies to an <i>explicitly set</i> root only. A root that is merely loaded needs no state
+	 * applied to it, so a persisted value root resolves like any other instance.
+	 *
+	 * @param rootInstance the instance to be validated; may be {@code null}.
+	 *
+	 * @throws PersistenceException if {@code rootInstance} is a value instance.
+	 */
+	public static void validateRootInstance(final Object rootInstance)
+	{
+		if(!XReflect.isValueInstance(rootInstance))
+		{
+			return;
+		}
+
+		throw new PersistenceException(
+			"A value instance cannot be used as a root: " + rootInstance.getClass().getName()
+			+ " has no identity, so its persisted state could not be applied to it on loading."
+			+ " Use an identity type as root and hold the value instance in one of its fields."
 		);
 	}
 

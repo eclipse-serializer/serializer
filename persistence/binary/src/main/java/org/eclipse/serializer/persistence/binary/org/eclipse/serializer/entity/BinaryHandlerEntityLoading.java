@@ -112,6 +112,24 @@ public interface BinaryHandlerEntityLoading<T> extends BinaryTypeHandler<T>
 		}
 
 		@Override
+		public boolean isValueClassType()
+		{
+			return this.delegate.isValueClassType();
+		}
+
+		@Override
+		public boolean isCreationDeferred()
+		{
+			return this.delegate.isCreationDeferred();
+		}
+
+		@Override
+		public void prepareLoadItem(final Binary data)
+		{
+			this.delegate.prepareLoadItem(data);
+		}
+
+		@Override
 		public boolean isValidEntityType(final Class<? extends T> type)
 		{
 			return this.delegate.isValidEntityType(type);

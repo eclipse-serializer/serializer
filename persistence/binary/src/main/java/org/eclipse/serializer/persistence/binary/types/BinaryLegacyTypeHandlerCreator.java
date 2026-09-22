@@ -19,6 +19,7 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.lang.reflect.Field;
 
+import org.eclipse.serializer.chars.VarString;
 import org.eclipse.serializer.util.X;
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.HashEnum;
@@ -115,6 +116,20 @@ public interface BinaryLegacyTypeHandlerCreator extends PersistenceLegacyTypeHan
 		// methods //
 		////////////
 
+		/** The members' simple names, so a failed construction can say which ones were defaulted. */
+		private static String memberNames(
+			final XGettingEnum<? extends PersistenceTypeDefinitionMember> members
+		)
+		{
+			final VarString vs = VarString.New();
+			for(final PersistenceTypeDefinitionMember member : members)
+			{
+				vs.add(vs.isEmpty() ? "" : ", ").add(member.name());
+			}
+
+			return vs.toString();
+		}
+
 		private static HashTable<PersistenceTypeDefinitionMember, Long> createBinaryOffsetMap(
 			final XGettingEnum<? extends PersistenceTypeDefinitionMember> members
 		)
@@ -199,6 +214,28 @@ public interface BinaryLegacyTypeHandlerCreator extends PersistenceLegacyTypeHan
 				);
 			}
 
+			if(currentTypeHandler instanceof BinaryHandlerGenericValueClass)
+			{
+				/* A value class is constructed from its members rather than populated, so it can read the
+				 * persisted layout directly instead of having the bytes rewritten into the current one
+				 * first - which is also the only way a member that was referenced and is now inlined can be
+				 * read at all, since resolving it needs the load handler a rewrite does not have.
+				 */
+				@SuppressWarnings("unchecked")
+				final BinaryHandlerGenericValueClass<T> valueClassHandler =
+					(BinaryHandlerGenericValueClass<T>)currentTypeHandler
+				;
+
+				return BinaryLegacyTypeHandlerValueClass.New(
+					mappingResult.legacyTypeDefinition()                  ,
+					valueClassHandler                                     ,
+					mappingResult.legacyToCurrentMembers()                ,
+					this.valueTranslatorProvider.provideRefactoringResolver(),
+					this.legacyTypeHandlingListener                       ,
+					this.switchByteOrder
+				);
+			}
+
 			final HashTable<PersistenceTypeDefinitionMember, Long> targetMemberOffsets = createBinaryOffsetMap(
 				mappingResult.currentTypeHandler().instanceMembers()
 			);
@@ -212,10 +249,11 @@ public interface BinaryLegacyTypeHandlerCreator extends PersistenceLegacyTypeHan
 			);
 
 			final BinaryLegacyTypeHandlerRerouting<T> reroutingTypeHandler = BinaryLegacyTypeHandlerRerouting.New(
-				mappingResult.legacyTypeDefinition(),
-				currentTypeHandler                  ,
-				translatorsWithTargetOffsets        ,
-				this.legacyTypeHandlingListener     ,
+				mappingResult.legacyTypeDefinition()         ,
+				currentTypeHandler                           ,
+				translatorsWithTargetOffsets                 ,
+				this.legacyTypeHandlingListener              ,
+				memberNames(mappingResult.newCurrentMembers()),
 				this.switchByteOrder
 			);
 

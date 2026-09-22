@@ -48,7 +48,11 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerCreator;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
 import org.eclipse.serializer.persistence.types.PersistenceTypeInstantiatorProvider;
 import org.eclipse.serializer.persistence.types.PersistenceTypeResolver;
+import org.eclipse.serializer.persistence.types.PersistenceValueInliningResolver;
 import org.eclipse.serializer.reference.Referencing;
+import org.eclipse.serializer.reflect.XReflect;
+import org.eclipse.serializer.util.logging.Logging;
+import org.slf4j.Logger;
 
 
 public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<Binary>
@@ -90,6 +94,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 		final PersistenceTypeInstantiatorProvider<Binary>        instantiatorProvider      ,
 		final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager        ,
 		final BinaryFieldHandlerProvider                         fieldHandlerProvider      ,
+		final PersistenceValueInliningResolver                   inliningResolver          ,
 		final boolean                                            switchByteOrder
 	)
 	{
@@ -101,6 +106,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 			notNull(instantiatorProvider)      ,
 			notNull(typeHandlerManager)        ,
 			notNull(fieldHandlerProvider)      ,
+			notNull(inliningResolver)          ,
 			switchByteOrder
 		);
 	}
@@ -113,11 +119,14 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 		// instance fields //
 		////////////////////
 		
+		private final static Logger logger = Logging.getLogger(BinaryTypeHandlerCreator.class);
+
 		final PersistenceTypeInstantiatorProvider<Binary>        instantiatorProvider    ;
 		final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager      ;
 		final boolean                                            switchByteOrder         ;
 		      EntityTypeHandlerManager entityTypeHandlerManager;
 		final private BinaryFieldHandlerProvider                 fieldHandlerProvider    ;
+		final private PersistenceValueInliningResolver           inliningResolver        ;
 		
 		
 		///////////////////////////////////////////////////////////////////////////
@@ -132,6 +141,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 			final PersistenceTypeInstantiatorProvider<Binary>        instantiatorProvider      ,
 			final Referencing<PersistenceTypeHandlerManager<Binary>> typeHandlerManager        ,
 			final BinaryFieldHandlerProvider                         fieldHandlerProvider      ,
+			final PersistenceValueInliningResolver                   inliningResolver          ,
 			final boolean                                            switchByteOrder
 		)
 		{
@@ -139,6 +149,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 			this.instantiatorProvider = instantiatorProvider;
 			this.typeHandlerManager   = typeHandlerManager  ;
 			this.fieldHandlerProvider = fieldHandlerProvider;
+			this.inliningResolver     = inliningResolver    ;
 			this.switchByteOrder      = switchByteOrder     ;
 		}
 
@@ -242,6 +253,40 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 			 * 
 			 */
 			
+			/* Value instances cannot be allocated blank and populated afterwards, so they need a
+			 * handler constructing them from their persisted state. That includes stateless ones,
+			 * hence the check before the emptiness shortcut below.
+			 */
+			if(XReflect.isValueClass(type))
+			{
+				if(!BinaryHandlerGenericValueClass.isConstructorModuleProtected(type, persistableFields))
+				{
+					return BinaryHandlerGenericValueClass.New(
+						type,
+						this.deriveTypeName(type),
+						persistableFields,
+						persisterFields,
+						this.lengthResolver(),
+						this.eagerStoringFieldEvaluator(),
+						this.fieldHandlerProvider        ,
+						this.inliningResolver            ,
+						this.switchByteOrder
+					);
+				}
+
+				/* Reported because such a type keeps being allocated blank and populated, which an
+				 * immutable instance does not support and only works as long as the memory accessor
+				 * tolerates it. The remedy is a custom handler using the type's public API.
+				 */
+				logger.warn(
+					"Value class {} is handled reflectively: its constructor cannot be made accessible"
+					+ " because its module does not open the package. Its instances are created blank and"
+					+ " populated, which an immutable instance does not support.",
+					type.getName()
+				);
+			}
+
+
 			if(persistableFields.isEmpty())
 			{
 				return this.internalCreateTypeHandlerGenericStateless(type);
@@ -257,6 +302,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 				this.eagerStoringFieldEvaluator(),
 				this.instantiatorProvider.provideTypeInstantiator(type),
 				this.fieldHandlerProvider        ,
+				this.inliningResolver            ,
 				this.switchByteOrder
 			);
 		}
@@ -340,7 +386,7 @@ public interface BinaryTypeHandlerCreator extends PersistenceTypeHandlerCreator<
 				this.switchByteOrder
 			);
 		}
-		
+
 		@Override
 		protected <T> PersistenceTypeHandler<Binary, T> internalCreateTypeHandlerEntity(
 			final Class<T> type

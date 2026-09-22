@@ -64,11 +64,20 @@ import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlDate;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTime;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryHandlerSqlTimestamp;
 import org.eclipse.serializer.persistence.binary.java.sql.BinaryLegacyTypeHandlerSqlTimestamp;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerDuration;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerInstant;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerLocalDate;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerLocalDateTime;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerLocalTime;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerMonthDay;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerOffsetDateTime;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerOffsetTime;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerPeriod;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerYear;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerYearMonth;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerZonedDateTime;
 import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerZoneOffset;
+import org.eclipse.serializer.persistence.binary.java.time.BinaryHandlerZoneRegion;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayDeque;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerArrayList;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerBitSet;
@@ -86,6 +95,7 @@ import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedHa
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedHashSet;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLinkedList;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerLocale;
+import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptional;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptionalDouble;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptionalInt;
 import org.eclipse.serializer.persistence.binary.java.util.BinaryHandlerOptionalLong;
@@ -330,6 +340,15 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerYearMonth.New(),
 				BinaryHandlerMonthDay.New(),
 
+				/* Self-contained java.time types whose instances, as value classes, cannot be populated
+				 * after creation. The reference-holding java.time types are registered with the
+				 * referencing-type handlers below.
+				 */
+				BinaryHandlerLocalTime.New(),
+				BinaryHandlerYear.New()     ,
+				BinaryHandlerInstant.New()  ,
+				BinaryHandlerDuration.New() ,
+
 			/* (12.11.2019 TM)NOTE:
 			 * One might think that "empty" implementations of a collection interface would have no fields, anyway.
 			 * But no, those classes extends 5 other classes, some of which bring along several times
@@ -420,8 +439,20 @@ public final class BinaryPersistence extends Persistence
 				
 				BinaryHandlerLazyDefault.New(),
 
-				// the way Optional is implemented, only a generically (low-level) working handler can handle it correctly
-				typeHandlerCreator.createTypeHandlerGeneric(Optional.class)
+				/* Optional holds its content in a single reference. A generic handler would create it empty
+				 * and populate it afterwards, which does not take on a value class.
+				 */
+				BinaryHandlerOptional.New(),
+
+				/* The java.time types holding their parts in references. Not value-type handlers: their
+				 * creation resolves references, which a plugin reusing the value-type handlers (e.g. the
+				 * REST viewer) cannot provide.
+				 */
+				BinaryHandlerLocalDateTime.New() ,
+				BinaryHandlerOffsetTime.New()    ,
+				BinaryHandlerOffsetDateTime.New(),
+				BinaryHandlerZonedDateTime.New() ,
+				BinaryHandlerZoneRegion.New()
 		);
 
 		return nativeHandlers;

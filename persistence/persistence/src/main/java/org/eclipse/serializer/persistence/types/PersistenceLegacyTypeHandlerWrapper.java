@@ -116,6 +116,13 @@ public class PersistenceLegacyTypeHandlerWrapper<D, T> extends PersistenceLegacy
 	}
 
 	@Override
+	public void prepareLoadItem(final D data)
+	{
+		// the wrapped handler's layout is the persisted one in this case, so preparation applies as-is.
+		this.typeHandler.prepareLoadItem(data);
+	}
+
+	@Override
 	public T create(final D data, final PersistenceLoadHandler handler)
 	{
 		return this.typeHandler.create(data, handler);
@@ -143,6 +150,20 @@ public class PersistenceLegacyTypeHandlerWrapper<D, T> extends PersistenceLegacy
 	public final Class<T> type()
 	{
 		return this.typeHandler.type();
+	}
+
+	@Override
+	public boolean isValueClassType()
+	{
+		// Must pass through all default methods to be a correct wrapper.
+		return this.typeHandler.isValueClassType();
+	}
+
+	@Override
+	public boolean isCreationDeferred()
+	{
+		// Must pass through all default methods to be a correct wrapper.
+		return this.typeHandler.isCreationDeferred();
 	}
 	
 	

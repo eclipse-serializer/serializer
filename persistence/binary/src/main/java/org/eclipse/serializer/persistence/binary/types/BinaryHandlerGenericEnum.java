@@ -33,6 +33,7 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMember;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberEnumConstant;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinitionMemberFieldReflective;
+import org.eclipse.serializer.persistence.types.PersistenceValueInliningResolver;
 import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.XTypes;
 
@@ -186,7 +187,8 @@ public final class BinaryHandlerGenericEnum<T extends Enum<T>> extends AbstractB
 		final boolean                               switchByteOrder
 	)
 	{
-		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, fieldHandlerProvider, switchByteOrder);
+		// an enum constant is an identity object, so its fields are never inlined into it
+		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, fieldHandlerProvider, PersistenceValueInliningResolver.Disabled(), switchByteOrder);
 				
 		// these are instance members in persistent order. Not to be mixed up with members in declared order
 		this.allMembers = this.deriveAllMembers(this.instanceMembers());
@@ -204,10 +206,18 @@ public final class BinaryHandlerGenericEnum<T extends Enum<T>> extends AbstractB
 	@Override
 	protected BinaryValueSetter deriveSetter(final PersistenceTypeDefinitionMemberFieldReflective member)
 	{
-		return this.isUnsettableField(member)
-			? BinaryValueFunctions.getObjectValueSettingSkipper(member.type())
-			: BinaryValueFunctions.getObjectValueSetter(member.type(), this.isSwitchedByteOrder())
-		;
+		if(this.isUnsettableField(member))
+		{
+			return BinaryValueFunctions.getObjectValueSettingSkipper(member.type());
+		}
+
+		if(XReflect.isValueClass(member.type()))
+		{
+			// a value may be laid out inside its owner, where its offset holds no object reference
+			return BinaryValueHandleFunctions.provideReferenceSetter(member.field(), this.isSwitchedByteOrder());
+		}
+
+		return BinaryValueFunctions.getObjectValueSetter(member.type(), this.isSwitchedByteOrder());
 	}
 			
 	@Override
