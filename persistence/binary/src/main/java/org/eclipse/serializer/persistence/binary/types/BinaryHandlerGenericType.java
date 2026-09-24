@@ -23,6 +23,7 @@ import org.eclipse.serializer.persistence.types.PersistenceEagerStoringFieldEval
 import org.eclipse.serializer.persistence.types.PersistenceFieldLengthResolver;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceTypeInstantiator;
+import org.eclipse.serializer.persistence.types.PersistenceValueInliningResolver;
 
 public final class BinaryHandlerGenericType<T> extends AbstractBinaryHandlerReflective<T>
 {
@@ -35,6 +36,7 @@ public final class BinaryHandlerGenericType<T> extends AbstractBinaryHandlerRefl
 		final PersistenceEagerStoringFieldEvaluator  eagerStoringFieldEvaluator ,
 		final PersistenceTypeInstantiator<Binary, T> persistenceTypeInstantiator,
 		final BinaryFieldHandlerProvider             fieldHandlerProvider       ,
+		final PersistenceValueInliningResolver       inliningResolver           ,
 		final boolean                                switchByteOrder
 	)
 	{
@@ -47,6 +49,7 @@ public final class BinaryHandlerGenericType<T> extends AbstractBinaryHandlerRefl
 			eagerStoringFieldEvaluator ,
 			persistenceTypeInstantiator,
 			fieldHandlerProvider       ,
+			inliningResolver           ,
 			switchByteOrder
 		);
 	}
@@ -74,10 +77,11 @@ public final class BinaryHandlerGenericType<T> extends AbstractBinaryHandlerRefl
 		final PersistenceEagerStoringFieldEvaluator  eagerStoringFieldEvaluator,
 		final PersistenceTypeInstantiator<Binary, T> instantiator              ,
 		final BinaryFieldHandlerProvider             fieldHandlerProvider      ,
+		final PersistenceValueInliningResolver       inliningResolver          ,
 		final boolean                                switchByteOrder
 	)
 	{
-		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, fieldHandlerProvider, switchByteOrder);
+		super(type, typeName, persistableFields, persisterFields, lengthResolver, eagerStoringFieldEvaluator, fieldHandlerProvider, inliningResolver, switchByteOrder);
 		this.instantiator = notNull(instantiator);
 	}
 

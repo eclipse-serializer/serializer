@@ -76,6 +76,13 @@ public interface PersistenceTypeDescriptionMemberAppender extends Consumer<Persi
 	public void appendTypeMemberDescription(PersistenceTypeDescriptionMemberFieldGenericComplex typeMember);
 
 	/**
+	 * Appends the description of an inlined field, followed by the block describing its inlined layout.
+	 *
+	 * @param typeMember the member to append.
+	 */
+	public void appendTypeMemberDescription(PersistenceTypeDescriptionMemberFieldValueStruct typeMember);
+
+	/**
 	 * Renders a {@linkplain PersistenceTypeDescriptionMemberPrimitiveDefinition primitive bit-layout
 	 * definition} entry, prefixed with the {@code primitive} keyword.
 	 *
@@ -110,6 +117,7 @@ public interface PersistenceTypeDescriptionMemberAppender extends Consumer<Persi
 		// primitive definition special case char sequence
 		private static final char[] PRIMITIVE_ = (KEYWORD_PRIMITIVE + ' ').toCharArray();
 		private static final char[] ENUM_      = (KEYWORD_ENUM + ' ')     .toCharArray();
+		private static final char[] VALUE_     = (KEYWORD_VALUE + ' ')    .toCharArray();
 
 
 
@@ -205,6 +213,21 @@ public interface PersistenceTypeDescriptionMemberAppender extends Consumer<Persi
 			this.appendField(typeMember);
 			this.vs.add(MEMBER_COMPLEX_DEF_START).lf();
 			final XGettingSequence<? extends PersistenceTypeDescriptionMemberFieldGeneric> members = typeMember.members();
+			final PersistenceTypeDescriptionMemberAppender appender = members.iterate(
+				new TypeDictionaryAppenderBuilder(this.vs, this.level + 1)
+			).yield();
+			members.iterate(appender);
+			this.indentMember();
+			this.vs.add(MEMBER_COMPLEX_DEF_END);
+		}
+
+		@Override
+		public void appendTypeMemberDescription(final PersistenceTypeDescriptionMemberFieldValueStruct typeMember)
+		{
+			this.vs.add(VALUE_);
+			this.appendField(typeMember);
+			this.vs.add(MEMBER_COMPLEX_DEF_START).lf();
+			final XGettingSequence<? extends PersistenceTypeDescriptionMemberField> members = typeMember.members();
 			final PersistenceTypeDescriptionMemberAppender appender = members.iterate(
 				new TypeDictionaryAppenderBuilder(this.vs, this.level + 1)
 			).yield();
