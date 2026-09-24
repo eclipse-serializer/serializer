@@ -222,7 +222,14 @@ extends AbstractBinaryHandlerCustom<PersistenceRoots.Default>
 					);
 				}
 				
-				this.rootResolverProvider.rootReference().set(customRoot);
+				/*
+				 * Deliberately not #set: that rejects a value instance because an explicitly set root
+				 * could never receive its persisted state. This root is that state already, so it is
+				 * installed as it stands, like the loaded default root below.
+				 */
+				this.rootResolverProvider.rootReference().setRootSupplier(() ->
+					customRoot
+				);
 				resolvedRoots.add(Persistence.customRootIdentifier(), null);
 				
 				return true;

@@ -98,6 +98,11 @@ public interface PersistenceRootReference extends PersistenceRootReferencing, Re
 	/**
 	 * Replaces the supplier that resolves the root instance. Use this overload when the root cannot be
 	 * eagerly created (e.g. because doing so would trigger class-loading order issues).
+	 * <p>
+	 * This is also how a root resolved from persisted state is installed, and the only way to do so:
+	 * unlike {@link #setRoot(Object)} it applies no {@linkplain #validateRootInstance(Object)
+	 * validation}, which is correct for a loaded root - it receives no state, it <i>is</i> the state,
+	 * so it may be a value instance.
 	 *
 	 * @param rootSupplier the new supplier; may be {@code null}.
 	 *
