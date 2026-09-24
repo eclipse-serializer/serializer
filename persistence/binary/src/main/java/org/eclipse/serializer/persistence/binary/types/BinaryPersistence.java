@@ -1,6 +1,9 @@
 package org.eclipse.serializer.persistence.binary.types;
 
 import java.lang.reflect.Field;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
@@ -146,6 +149,7 @@ import org.eclipse.serializer.persistence.types.PersistenceTypeHandlerManager;
 import org.eclipse.serializer.persistence.types.PersistenceTypeIdLookup;
 import org.eclipse.serializer.reference.Referencing;
 import org.eclipse.serializer.reference.Swizzling;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.XTypes;
 import org.eclipse.serializer.util.VMInfo;
 
@@ -340,14 +344,12 @@ public final class BinaryPersistence extends Persistence
 				BinaryHandlerYearMonth.New(),
 				BinaryHandlerMonthDay.New(),
 
-				/* Self-contained java.time types whose instances, as value classes, cannot be populated
-				 * after creation. The reference-holding java.time types are registered with the
-				 * referencing-type handlers below.
+				/* A self-contained java.time type whose instances, as value classes, cannot be populated
+				 * after creation. The reference-holding ones are registered with the referencing-type
+				 * handlers below, those whose factory canonicalizes its result by
+				 * #platformDependentHandlers.
 				 */
-				BinaryHandlerLocalTime.New(),
-				BinaryHandlerYear.New()     ,
-				BinaryHandlerInstant.New()  ,
-				BinaryHandlerDuration.New() ,
+				BinaryHandlerYear.New(),
 
 			/* (12.11.2019 TM)NOTE:
 			 * One might think that "empty" implementations of a collection interface would have no fields, anyway.
@@ -515,7 +517,8 @@ public final class BinaryPersistence extends Persistence
 	
 	/**
 	 * @return the catalogue of handlers whose registration depends on the current runtime platform (for
-	 *         instance, handlers skipped on Android due to absent JDK classes).
+	 *         instance, handlers skipped on Android due to absent JDK classes, or handlers that may only
+	 *         be used where the JDK type they handle is a value class).
 	 */
 	@SuppressWarnings("unchecked")
 	public static final XGettingSequence<? extends PersistenceTypeHandler<Binary, ?>> platformDependentHandlers()
@@ -527,6 +530,25 @@ public final class BinaryPersistence extends Persistence
 		if(!vmInfo.isAnyAndroid())
 		{
 			platformDependentHandlers.add(BinaryHandlerSetFromMap.New());
+		}
+		
+		/* These three types are constructed from their persisted state, which a value class requires and
+		 * an identity class must not have: their factories answer a shared instance for certain values -
+		 * LocalTime.of for a whole hour, Instant.EPOCH, Duration.ZERO - so two entities holding such a
+		 * value would build one instance, which cannot be registered under both their object ids. Where
+		 * the type has identity, the generic handler populates one instance per entity, as before.
+		 */
+		if(XReflect.isValueClass(LocalTime.class))
+		{
+			platformDependentHandlers.add(BinaryHandlerLocalTime.New());
+		}
+		if(XReflect.isValueClass(Instant.class))
+		{
+			platformDependentHandlers.add(BinaryHandlerInstant.New());
+		}
+		if(XReflect.isValueClass(Duration.class))
+		{
+			platformDependentHandlers.add(BinaryHandlerDuration.New());
 		}
 		
 		return platformDependentHandlers;
