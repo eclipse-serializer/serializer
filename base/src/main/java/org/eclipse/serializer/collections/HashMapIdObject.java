@@ -296,6 +296,11 @@ public final class HashMapIdObject<E> implements Sized, Composition
 	@Override
 	public final String toString()
 	{
+		if(this.size == 0)
+		{
+			return "{}";
+		}
+
 		final VarString vc = VarString.New().add('{');
 		for(Entry<E> entry : this.hashSlots)
 		{
