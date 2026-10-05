@@ -1433,6 +1433,55 @@ public abstract class Binary implements Chunk
 
 		this.storeReferencesAsList(binaryOffset, persister, array, arrayOffset, arrayLength);
 	}
+
+	/**
+	 * Variant of
+	 * {@link #storeReferences(long, long, long, PersistenceFunction, Object[], int, int)} that can
+	 * reference an element by the object id a previous store assigned to it.
+	 *
+	 * @param typeId          the entity's type id.
+	 * @param objectId        the entity's object id.
+	 * @param binaryOffset    the offset to write the reference list at.
+	 * @param handler         the store handler to hand the elements to.
+	 * @param array           the elements to be referenced.
+	 * @param arrayOffset     the first element's index.
+	 * @param arrayLength     the number of elements.
+	 * @param storedReferents the element a previous store wrote per slot, overwritten with the one
+	 *                        written now. Indexed absolutely, see
+	 *                        {@link #storeReferencesAsList(long, PersistenceStoreHandler, Object[], int, int, Object[], long[])}.
+	 * @param storedObjectIds the object id it was written under, overwritten with the one written
+	 *                        now. Either array being {@literal null} applies every element.
+	 *
+	 * @see #storeReferencesAsList(long, PersistenceStoreHandler, Object[], int, int, Object[], long[])
+	 */
+	public final void storeReferences(
+		final long                            typeId         ,
+		final long                            objectId       ,
+		final long                            binaryOffset   ,
+		final PersistenceStoreHandler<Binary> handler        ,
+		final Object[]                        array          ,
+		final int                             arrayOffset    ,
+		final int                             arrayLength    ,
+		final Object[]                        storedReferents,
+		final long[]                          storedObjectIds
+	)
+	{
+		this.storeEntityHeader(
+			binaryOffset + calculateReferenceListTotalBinaryLength(arrayLength),
+			typeId,
+			objectId
+		);
+
+		this.storeReferencesAsList(
+			binaryOffset,
+			handler,
+			array,
+			arrayOffset,
+			arrayLength,
+			storedReferents,
+			storedObjectIds
+		);
+	}
 	
 	public final void storeFixedSize(
 		final PersistenceStoreHandler<Binary> handler      ,
@@ -1834,7 +1883,7 @@ public abstract class Binary implements Chunk
 	)
 	{
 		long nonNullCount = 0L;
-		
+
 		final long binaryElementsStartAddress = this.binaryListElementsAddress(binaryOffset);
 		for(int i = 0; i < target.length; i++)
 		{
@@ -1845,8 +1894,29 @@ public abstract class Binary implements Chunk
 				nonNullCount++;
 			}
 		}
-		
+
 		return nonNullCount;
+	}
+
+	/**
+	 * Reads the object ids of a reference list without resolving them, so a caller that collected the
+	 * elements themselves can record which id each of them came from.
+	 *
+	 * @param binaryOffset the offset of the list to read.
+	 * @param target       receives one id per element, and defines how many are read.
+	 *
+	 * @see #storeReferencesAsList(long, PersistenceStoreHandler, Object[], int, int, Object[], long[])
+	 */
+	public final void collectElementObjectIds(
+		final long   binaryOffset,
+		final long[] target
+	)
+	{
+		final long binaryElementsStartAddress = this.binaryListElementsAddress(binaryOffset);
+		for(int i = 0; i < target.length; i++)
+		{
+			target[i] = this.get_longFromAddress(binaryElementsStartAddress + referenceBinaryLength(i));
+		}
 	}
 
 	public final int collectListObjectReferences(
@@ -2096,8 +2166,96 @@ public abstract class Binary implements Chunk
 		final int bound = offset + length;
 		for(int i = offset; i < bound; i++)
 		{
-			this.set_longToAddress(elementsDataAddress + referenceBinaryLength(i), persister.apply(array[i]));
+			this.set_longToAddress(
+				elementsDataAddress + referenceBinaryLength(i),
+				persister.apply(array[i])
+			);
 		}
+	}
+
+	/**
+	 * Variant of {@link #storeReferencesAsList(long, PersistenceFunction, Object[], int, int)} that can
+	 * reference an element by the object id a previous store assigned to it instead of applying it
+	 * again, which is what spares an identity-less element a superseded copy per store.
+	 * <p>
+	 * The two passed arrays describe what a previous store wrote into this very list: element and
+	 * object id per slot. A slot whose element is still the same one is referenced by its recorded id,
+	 * every other slot is applied. Both arrays are overwritten with what this store writes, so they
+	 * describe the previous store again once it is committed - and must therefore not be the arrays a
+	 * previous store is still described by: a store that is not committed may not change what the
+	 * persisted form of this entity references.
+	 * <p>
+	 * Both are indexed like {@code array} itself, by the absolute element index rather than relative
+	 * to {@code offset}, so each has to be at least {@code offset + length} long.
+	 * <p>
+	 * Only applicable while the entity holding this list still references the recorded ids, which is
+	 * what keeps their entities reachable.
+	 *
+	 * @param memoryOffset    the offset to write the list at.
+	 * @param handler         the store handler to hand the elements to.
+	 * @param array           the elements to be referenced.
+	 * @param offset          the first element's index.
+	 * @param length          the number of elements.
+	 * @param storedReferents the element a previous store wrote per slot, overwritten with the one
+	 *                        written now.
+	 * @param storedObjectIds the object id it was written under, overwritten with the one written
+	 *                        now. Either array being {@literal null} applies every element.
+	 */
+	public final void storeReferencesAsList(
+		final long                            memoryOffset   ,
+		final PersistenceStoreHandler<Binary> handler        ,
+		final Object[]                        array          ,
+		final int                             offset         ,
+		final int                             length         ,
+		final Object[]                        storedReferents,
+		final long[]                          storedObjectIds
+	)
+	{
+		if(storedReferents == null || storedObjectIds == null)
+		{
+			this.storeReferencesAsList(memoryOffset, handler, array, offset, length);
+			return;
+		}
+
+		this.storeListHeader(
+			memoryOffset,
+			referenceBinaryLength(length),
+			length
+		);
+
+		final long elementsDataAddress = this.address + memoryOffset + LIST_OFFSET_ELEMENTS;
+
+		final int bound = offset + length;
+		for(int i = offset; i < bound; i++)
+		{
+			this.set_longToAddress(
+				elementsDataAddress + referenceBinaryLength(i),
+				storeReference(handler, array[i], storedReferents, storedObjectIds, i)
+			);
+		}
+	}
+
+	private static long storeReference(
+		final PersistenceStoreHandler<Binary> handler        ,
+		final Object                          element        ,
+		final Object[]                        storedReferents,
+		final long[]                          storedObjectIds,
+		final int                             index
+	)
+	{
+		/* The id describes the element that was written under it, not the slot, so it may only be
+		 * reused for that very element. Comparing the two is what makes the record self-validating:
+		 * a slot written at any point since - including while this store was in flight - simply
+		 * fails to match and is applied.
+		 */
+		final long knownObjectId = storedReferents[index] == element
+			? storedObjectIds[index]
+			: Swizzling.notFoundId()
+		;
+
+		storedReferents[index] = element;
+
+		return storedObjectIds[index] = handler.applyKnown(element, knownObjectId);
 	}
 	
 	

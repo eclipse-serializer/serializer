@@ -17,6 +17,9 @@ package org.eclipse.serializer.reflect;
 import static org.eclipse.serializer.util.X.notEmpty;
 import static org.eclipse.serializer.util.X.notNull;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -56,6 +59,32 @@ import org.eclipse.serializer.util.X;
  */
 public final class XReflect
 {
+	///////////////////////////////////////////////////////////////////////////
+	// constants //
+	//////////////
+
+	// null on a JVM without value class support (JEP 401). See #isValueClass.
+	private static final MethodHandle CLASS_IS_VALUE = resolveClassIsValue();
+
+	/* Any one of the JDK's cached-constant wrapper types being a value class is enough, and
+	 * deliberately so - see #isValueClassEnabledRuntime. Must be declared after CLASS_IS_VALUE,
+	 * static initializers running in declaration order.
+	 */
+	private static final boolean VALUE_CLASSES_ENABLED =
+		isValueClass(Boolean.class)
+		|| isValueClass(Byte.class)
+		|| isValueClass(Short.class)
+		|| isValueClass(Character.class)
+		|| isValueClass(Integer.class)
+		|| isValueClass(Long.class)
+	;
+
+
+
+	///////////////////////////////////////////////////////////////////////////
+	// static methods //
+	///////////////////
+
 	public static <T> T defaultInstantiate(final Class<T> type)
 		throws NoSuchMethodRuntimeException, InstantiationRuntimeException
 	{
@@ -272,6 +301,107 @@ public final class XReflect
 	public static boolean isDeclaredEnum(final Class<?> c)
 	{
 		return c != null && c.isEnum();
+	}
+
+	/**
+	 * Tests whether the passed {@link Class} is a value class (JEP 401), i.e. a class whose instances
+	 * have no identity.
+	 * <p>
+	 * Value instances must never be used where identity is required: they cannot be referenced by a
+	 * {@link java.lang.ref.WeakReference} and cannot be synchronized on (both throw
+	 * {@code java.lang.IdentityException}), while {@code ==} and
+	 * {@link System#identityHashCode(Object)} compare their content instead of their identity.
+	 * <p>
+	 * The check is done reflectively via {@code Class#isValue}, since the compile baseline does not
+	 * have that method. On a JVM without value class support, this method returns {@literal false}.
+	 *
+	 * @param c the {@link Class} to be tested, may be {@literal null}.
+	 *
+	 * @return whether the passed {@link Class} is a value class.
+	 */
+	public static boolean isValueClass(final Class<?> c)
+	{
+		/* A primitive and an interface both report themselves as value types, which they are in the type
+		 * system's terms but not in the sense the callers ask about: neither declares fields or a
+		 * constructor, and an interface-typed field holds a reference, never a value laid out in its owner.
+		 */
+		if(c == null || c.isPrimitive() || c.isInterface() || CLASS_IS_VALUE == null)
+		{
+			return false;
+		}
+
+		try
+		{
+			return (boolean)CLASS_IS_VALUE.invoke(c);
+		}
+		catch(final Throwable t)
+		{
+			// the handle is resolved from and invoked on java.lang.Class, so a failure is unrecoverable.
+			throw new Error("Failed to determine value class state of " + c.getName(), t);
+		}
+	}
+
+	/**
+	 * Tests whether the passed instance is a value instance.
+	 *
+	 * @param instance the instance to be tested, may be {@literal null}.
+	 *
+	 * @return whether the passed instance is an instance of a value class.
+	 *
+	 * @see #isValueClass(Class)
+	 */
+	public static boolean isValueInstance(final Object instance)
+	{
+		return instance != null && isValueClass(instance.getClass());
+	}
+
+	/**
+	 * Whether value classes are enabled in this runtime. Useful to skip logic that can only ever
+	 * apply where an identity-less instance can exist at all.
+	 * <p>
+	 * Deliberately not the mere presence of {@code Class#isValue}: that method exists on every JDK
+	 * since JEP 401 became a preview feature and reports {@literal false} for everything unless the
+	 * JVM was started with {@code --enable-preview}. The wrapper types answer the actual state, since
+	 * a user-defined value class is a preview class file that cannot be loaded without that flag.
+	 * <p>
+	 * <b>Any</b> of them suffices, not all, and the asymmetry is the point. The reader with something
+	 * at stake is the constant registry: it holds its entries weakly, so registering one wrapper
+	 * constant that is a value instance throws {@code IdentityException} and the storage does not
+	 * open. Answering {@literal true} while they are all still identity classes costs nothing - their
+	 * constant ids are then resolved arithmetically instead of from the registry, and over the cached
+	 * range that yields the very same instances. So the expensive mistake is answering
+	 * {@literal false} too readily, and one migrated wrapper is enough to rule it out.
+	 * <p>
+	 * For that reader this is exact. For the other kind - "can an identity-less instance exist at
+	 * all", which is what a {@code GigaMap} segment asks before keeping a stored-state record - it
+	 * stays a proxy: a JDK enabling value classes without migrating the wrappers would answer
+	 * {@literal false} while a user's value class worked. That costs such an entity a fresh object id
+	 * per store, nothing more.
+	 *
+	 * @return whether an instance without identity can exist in this JVM.
+	 *
+	 * @see #isValueClass(Class)
+	 */
+	public static boolean isValueClassEnabledRuntime()
+	{
+		return VALUE_CLASSES_ENABLED;
+	}
+
+	private static MethodHandle resolveClassIsValue()
+	{
+		try
+		{
+			return MethodHandles.publicLookup().findVirtual(
+				Class.class,
+				"isValue",
+				MethodType.methodType(boolean.class)
+			);
+		}
+		catch(final ReflectiveOperationException e)
+		{
+			// no value class support in this JVM.
+			return null;
+		}
 	}
 	
 	public static boolean isSubEnum(final Class<?> c)

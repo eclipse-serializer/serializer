@@ -15,6 +15,7 @@ package org.eclipse.serializer.persistence.types;
  */
 
 import org.eclipse.serializer.reference.ObjectSwizzling;
+import org.eclipse.serializer.reference.Swizzling;
 
 /**
  * Per-instance callback handed to {@link PersistenceTypeHandler}s during storing. Combines the storer-side
@@ -78,6 +79,49 @@ public interface PersistenceStoreHandler<D> extends PersistenceFunction, Storer
 	 * @return the assigned object id.
 	 */
 	public <T> long applyEager(T instance, PersistenceTypeHandler<D, T> localTypeHandler);
+
+	/**
+	 * Variant of {@link #apply(Object)} for an instance the caller already knows an object id for: the
+	 * instance is unchanged since it was stored under {@code knownObjectId}, and the entity of that id
+	 * still exists in the target. Referencing it is then equivalent to storing it again, and avoids the
+	 * superseded copy an identity-less instance would leave behind - it has no object registry entry,
+	 * so {@link #apply(Object)} assigns it a fresh object id every single time.
+	 * <p>
+	 * Passing an id is a statement about the caller's own state, so the implementation treats it like
+	 * any other reference it writes without storing the referent: it reports the id for the target to
+	 * validate, together with the instance, so a target that repairs a missing entity can re-store it.
+	 * <p>
+	 * The id is ignored - and the instance applied - when it is {@link Swizzling#notFoundId()}, when the
+	 * instance is {@literal null}, and whenever {@link #isEagerStoring()} holds, an eager store having
+	 * to reach every instance regardless of what the caller knows about it.
+	 *
+	 * @param <T>           the instance type.
+	 * @param instance      the instance to reference, may be {@literal null}.
+	 * @param knownObjectId the object id the instance was last stored under,
+	 *                      {@link Swizzling#notFoundId()} if none is known.
+	 *
+	 * @return the object id to reference the instance by.
+	 */
+	public default <T> long applyKnown(final T instance, final long knownObjectId)
+	{
+		return this.apply(instance);
+	}
+
+	/**
+	 * Whether this handler stores every encountered instance instead of skipping already known ones.
+	 * <p>
+	 * Relevant to handlers that may skip storing a referent: skipping is only valid while the storing
+	 * logic is lazy, since an eager store's purpose is to reach everything the referent references,
+	 * whether the referent itself needs storing or not.
+	 * <p>
+	 * The default implementation returns {@literal false}.
+	 *
+	 * @return whether every encountered instance is stored.
+	 */
+	public default boolean isEagerStoring()
+	{
+		return false;
+	}
 
 	@Override
 	public void registerCommitListener(PersistenceCommitListener listener);

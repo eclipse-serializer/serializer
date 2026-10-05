@@ -869,12 +869,14 @@ public interface PersistenceTypeDictionary
 
 		protected static final transient String KEYWORD_PRIMITIVE                = "primitive";
 		protected static final transient String KEYWORD_ENUM                     = XReflect.typename_enum();
+		protected static final transient String KEYWORD_VALUE                    = "value"    ;
 		protected static final transient String TYPE_CHARS                       = "[char]"   ;
 		protected static final transient String TYPE_BYTES                       = "[byte]"   ;
 		protected static final transient String TYPE_COMPLEX                     = "[list]"   ;
 
 		protected static final transient char[] ARRAY_KEYWORD_PRIMITIVE          = KEYWORD_PRIMITIVE.toCharArray();
 		protected static final transient char[] ARRAY_KEYWORD_ENUM               = KEYWORD_ENUM     .toCharArray();
+		protected static final transient char[] ARRAY_KEYWORD_VALUE              = KEYWORD_VALUE    .toCharArray();
 		protected static final transient char[] ARRAY_TYPE_CHARS                 = TYPE_CHARS       .toCharArray();
 		protected static final transient char[] ARRAY_TYPE_BYTES                 = TYPE_BYTES       .toCharArray();
 		protected static final transient char[] ARRAY_TYPE_COMPLEX               = TYPE_COMPLEX     .toCharArray();

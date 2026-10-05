@@ -18,8 +18,10 @@ import static org.eclipse.serializer.util.X.notNull;
 
 import java.lang.reflect.Field;
 
+import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.XUtilsCollection;
 import org.eclipse.serializer.collections.types.XGettingSequence;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 
 /**
  * Visitor that lifts a {@link PersistenceTypeDescriptionMember} into its runtime-bound
@@ -82,6 +84,18 @@ public interface PersistenceTypeDefinitionMemberCreator
 	 */
 	public PersistenceTypeDefinitionMemberFieldReflective createDefinitionMember(
 		PersistenceTypeDescriptionMemberFieldReflective description
+	);
+
+	/**
+	 * Lifts an {@linkplain PersistenceTypeDescriptionMemberFieldValueStruct inlined field} into its
+	 * definition counterpart, lifting the members describing the inlined layout along with it.
+	 *
+	 * @param description the description to lift.
+	 *
+	 * @return the runtime-bound definition member.
+	 */
+	public PersistenceTypeDefinitionMemberFieldValueStruct createDefinitionMember(
+		PersistenceTypeDescriptionMemberFieldValueStruct description
 	);
 
 	/**
@@ -290,6 +304,50 @@ public interface PersistenceTypeDefinitionMemberCreator
 				description.isReference()            ,
 				description.persistentMinimumLength(),
 				description.persistentMaximumLength()
+			);
+		}
+
+		@Override
+		public PersistenceTypeDefinitionMemberFieldValueStruct createDefinitionMember(
+			final PersistenceTypeDescriptionMemberFieldValueStruct description
+		)
+		{
+			final Class<?> currentType = this.tryResolveCurrentType(description.typeName());
+
+			final String runtimeDeclaringType = this.resolveRuntimeTypeName(description.declaringTypeName());
+
+			// same rationale as for a plain reflective field: a renamed declaring type must not bind a field
+			final Field field = description.declaringTypeName().equals(runtimeDeclaringType)
+				? this.resolveField(runtimeDeclaringType, description.name())
+				: null
+			;
+
+			final BulkList<PersistenceTypeDefinitionMemberField> members = BulkList.New();
+			for(final PersistenceTypeDescriptionMemberField member : description.members())
+			{
+				// double dispatch, so a nested member that is itself inlined lifts as one
+				final PersistenceTypeDefinitionMember lifted = member.createDefinitionMember(this);
+				if(!(lifted instanceof PersistenceTypeDefinitionMemberField))
+				{
+					throw new PersistenceException(
+						"Inlined layout of " + description.identifier() + " contains a non-field member: "
+						+ lifted.identifier()
+					);
+				}
+				members.add((PersistenceTypeDefinitionMemberField)lifted);
+			}
+
+			return PersistenceTypeDefinitionMemberFieldValueStruct.New(
+				runtimeDeclaringType           ,
+				field == null
+					? null
+					: field.getDeclaringClass(),
+				field                          ,
+				currentType                    ,
+				description.typeName()         ,
+				description.name()             ,
+				description.declaringTypeName(),
+				members
 			);
 		}
 

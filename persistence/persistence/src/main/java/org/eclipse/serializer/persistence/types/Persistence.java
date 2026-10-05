@@ -137,6 +137,14 @@ public class Persistence
 	static final long START_CID_REAL = START_CID_BASE +    10_000L; // first 10K reserved for JLS constants
 	static final long START_TID_REAL = START_TID_BASE + 1_000_000L; // first new type gets 1M1 assigned.
 
+	/* Read from XReflect rather than probed here, so the two cannot drift apart: this decides whether
+	 * #registerJavaConstants registers the wrapper constants at all, and registering a single value
+	 * instance throws IdentityException out of the registry's weak entry. That probe covers every
+	 * wrapper type registered below, any one of which is enough - see #isValueClassEnabledRuntime for
+	 * why "any" and not "all".
+	 */
+	static final boolean JAVA_CONSTANTS_ARE_VALUE_INSTANCES = XReflect.isValueClassEnabledRuntime();
+
 	// CHECKSTYLE.OFF: ConstantName: type names are intentionally unchanged
 
 	// java.lang and basic types.
@@ -577,6 +585,15 @@ public class Persistence
 	 */
 	public static final <R extends PersistenceObjectRegistry> R registerJavaConstants(final R registry)
 	{
+		/* Value class wrappers have no identity, so they can neither be weakly referenced by the
+		 * registry nor looked up in it. Their constant ids are resolved arithmetically instead,
+		 * see #resolveJavaConstantInstance and #lookupJavaConstantId.
+		 */
+		if(areJavaConstantsValueInstances())
+		{
+			return registry;
+		}
+
 		long
 			oidByte      = START_CID_BYTE     ,
 			oidBoolean   = START_CID_BOOLEAN  ,
@@ -608,6 +625,141 @@ public class Persistence
 		}
 
 		return registry;
+	}
+
+	/**
+	 * Whether the JDK constants covered by {@link #registerJavaConstants(PersistenceObjectRegistry)}
+	 * are value instances on the current JVM and therefore cannot be held by an object registry.
+	 * <p>
+	 * The wrapper types are migrated as a group, so {@link Boolean} is representative for all of them.
+	 *
+	 * @return whether the JDK constants must be resolved arithmetically instead of via the registry.
+	 *
+	 * @see #resolveJavaConstantInstance(long)
+	 * @see #lookupJavaConstantId(Object)
+	 */
+	public static final boolean areJavaConstantsValueInstances()
+	{
+		return JAVA_CONSTANTS_ARE_VALUE_INSTANCES;
+	}
+
+	/**
+	 * Resolves the constant id of a JDK constant covered by
+	 * {@link #registerJavaConstants(PersistenceObjectRegistry)} arithmetically, i.e. without an object
+	 * registry lookup. Constant ids are a deterministic function of type and value, so the mapping is
+	 * identical to the registered one and stays stable across JVMs.
+	 *
+	 * @param instance the instance to look up, may be {@literal null}.
+	 *
+	 * @return the reserved constant id, or {@link Swizzling#notFoundId()} if the passed instance is
+	 *         not such a constant.
+	 *
+	 * @see #resolveJavaConstantInstance(long)
+	 */
+	public static final long lookupJavaConstantId(final Object instance)
+	{
+		if(instance instanceof Boolean)
+		{
+			return START_CID_BOOLEAN + (((Boolean)instance).booleanValue() ? 1L : 0L);
+		}
+		if(instance instanceof Byte)
+		{
+			// the whole byte value range is covered by the JLS cache range.
+			return START_CID_BYTE + ((Byte)instance).byteValue() - JSL_CACHE_INTEGER_START;
+		}
+		if(instance instanceof Short)
+		{
+			return cachedNumberConstantId(START_CID_SHORT, ((Short)instance).shortValue());
+		}
+		if(instance instanceof Integer)
+		{
+			return cachedNumberConstantId(START_CID_INTEGER, ((Integer)instance).intValue());
+		}
+		if(instance instanceof Long)
+		{
+			final long value = ((Long)instance).longValue();
+
+			return value >= JSL_CACHE_INTEGER_START && value < JSL_CACHE_INTEGER_BOUND
+				? START_CID_LONG + value - JSL_CACHE_INTEGER_START
+				: Swizzling.notFoundId()
+			;
+		}
+		if(instance instanceof Character)
+		{
+			final char value = ((Character)instance).charValue();
+
+			return value < JSL_CACHE_CHARACTER_BOUND
+				? START_CID_CHARACTER + value - JSL_CACHE_CHARACTER_START
+				: Swizzling.notFoundId()
+			;
+		}
+
+		return Swizzling.notFoundId();
+	}
+
+	private static long cachedNumberConstantId(final long startCid, final long value)
+	{
+		return value >= JSL_CACHE_INTEGER_START && value < JSL_CACHE_INTEGER_BOUND
+			? startCid + value - JSL_CACHE_INTEGER_START
+			: Swizzling.notFoundId()
+		;
+	}
+
+	/**
+	 * Reverse of {@link #lookupJavaConstantId(Object)}: resolves the instance a reserved JDK constant
+	 * id stands for. Note that the returned instance is the canonical cached one, so for value
+	 * instances it is substitutable with any equal instance by definition.
+	 *
+	 * @param objectId the constant id to resolve.
+	 *
+	 * @return the constant instance, or {@literal null} if the passed id is not a reserved JDK
+	 *         constant id.
+	 *
+	 * @see #lookupJavaConstantId(Object)
+	 */
+	public static final Object resolveJavaConstantInstance(final long objectId)
+	{
+		// fast exit for the common case: all reserved JDK constant ids are inside this range.
+		if(objectId < START_CID_BYTE || objectId >= START_CID_REAL)
+		{
+			return null;
+		}
+
+		long offset;
+
+		if((offset = objectId - START_CID_BOOLEAN) >= 0 && offset < 2)
+		{
+			return offset == 0 ? Boolean.FALSE : Boolean.TRUE;
+		}
+		if(isCachedNumberOffset(offset = objectId - START_CID_BYTE))
+		{
+			return Byte.valueOf((byte)(JSL_CACHE_INTEGER_START + offset));
+		}
+		if(isCachedNumberOffset(offset = objectId - START_CID_SHORT))
+		{
+			return Short.valueOf((short)(JSL_CACHE_INTEGER_START + offset));
+		}
+		if(isCachedNumberOffset(offset = objectId - START_CID_INTEGER))
+		{
+			return Integer.valueOf((int)(JSL_CACHE_INTEGER_START + offset));
+		}
+		if(isCachedNumberOffset(offset = objectId - START_CID_LONG))
+		{
+			return Long.valueOf(JSL_CACHE_INTEGER_START + offset);
+		}
+		if((offset = objectId - START_CID_CHARACTER) >= 0
+			&& offset < JSL_CACHE_CHARACTER_BOUND - JSL_CACHE_CHARACTER_START
+		)
+		{
+			return Character.valueOf((char)(JSL_CACHE_CHARACTER_START + offset));
+		}
+
+		return null;
+	}
+
+	private static boolean isCachedNumberOffset(final long offset)
+	{
+		return offset >= 0 && offset < JSL_CACHE_INTEGER_BOUND - JSL_CACHE_INTEGER_START;
 	}
 
 

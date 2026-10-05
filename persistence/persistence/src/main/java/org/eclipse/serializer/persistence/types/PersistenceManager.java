@@ -15,6 +15,7 @@ package org.eclipse.serializer.persistence.types;
  */
 
 import org.eclipse.serializer.collections.Set_long;
+import org.eclipse.serializer.reference.Swizzling;
 import org.eclipse.serializer.util.BufferSizeProviderIncremental;
 import org.eclipse.serializer.util.X;
 
@@ -507,13 +508,36 @@ ByteOrderTargeting<PersistenceManager<D>>
 		@Override
 		public final long lookupObjectId(final Object object)
 		{
-			return this.objectRegistry.lookupObjectId(object);
+			final long objectId = this.objectRegistry.lookupObjectId(object);
+			if(Swizzling.isProperId(objectId) || !Persistence.areJavaConstantsValueInstances())
+			{
+				return objectId;
+			}
+
+			/* A JDK constant that is a value instance is never registry-resident, but its id is
+			 * deterministic and reserved, so the lookup can and must still answer it: it is the id
+			 * every store references the constant by. Purely arithmetic, so the lock-free contract
+			 * of this lookup is unaffected.
+			 */
+			final long constantId = Persistence.lookupJavaConstantId(object);
+
+			return Swizzling.isFoundId(constantId)
+				? constantId
+				: objectId
+			;
 		}
 
 		@Override
 		public final Object lookupObject(final long objectId)
 		{
-			return this.objectRegistry.lookupObject(objectId);
+			final Object object = this.objectRegistry.lookupObject(objectId);
+			if(object != null || !Persistence.areJavaConstantsValueInstances())
+			{
+				return object;
+			}
+
+			// see #lookupObjectId: the reverse direction of the same reserved constant ids.
+			return Persistence.resolveJavaConstantInstance(objectId);
 		}
 		
 		@Override
