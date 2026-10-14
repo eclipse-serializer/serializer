@@ -23,6 +23,10 @@ package org.eclipse.serializer.persistence.types;
  * handler is used (after structural validation and typeId initialization) and no automatic mapping is
  * performed. This is the escape hatch for handlers that need full manual control over how legacy data
  * is read &mdash; e.g. when a structurally non-trivial migration must be performed.
+ * <p>
+ * A type with several released legacy layouts ships one legacy handler per layout through
+ * {@link #getLegacyTypeHandlers()}; the mapper picks the one whose structure equals the stored type
+ * definition.
  *
  * @param <D> the data target (persistence implementation) type.
  * @param <T> the runtime type the legacy data should be re-bound to.
@@ -35,4 +39,15 @@ public interface PersistenceLegacyTypeHandlerSupplier<D,T>
 	 * @return the legacy handler shipped alongside this current handler.
 	 */
 	PersistenceLegacyTypeHandler<D,T> getLegacyTypeHandler();
+
+	/**
+	 * The legacy handlers shipped alongside this current handler, one per legacy layout. The default is
+	 * the single handler of {@link #getLegacyTypeHandler()}.
+	 *
+	 * @return the legacy handlers, in no particular order; their structures must differ.
+	 */
+	public default Iterable<PersistenceLegacyTypeHandler<D,T>> getLegacyTypeHandlers()
+	{
+		return java.util.List.of(this.getLegacyTypeHandler());
+	}
 }

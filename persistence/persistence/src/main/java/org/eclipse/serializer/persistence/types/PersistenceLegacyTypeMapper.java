@@ -492,14 +492,35 @@ public interface PersistenceLegacyTypeMapper<D>
 			final PersistenceTypeHandler<D, T> currentTypeHandler
 		)
 		{
-			//check for supplied handler
-			if(currentTypeHandler instanceof PersistenceLegacyTypeHandlerSupplier supplier) 
+			//check for supplied handler(s): a current handler may ship one per released legacy layout
+			if(currentTypeHandler instanceof PersistenceLegacyTypeHandlerSupplier supplier)
 			{
 				@SuppressWarnings("unchecked")
-				PersistenceLegacyTypeHandler<D, T> legacyTypeHandler = supplier.getLegacyTypeHandler();
-				validateLegacyTypeHandler(legacyTypeDefinition.type(), legacyTypeDefinition, legacyTypeHandler);
-				return legacyTypeHandler.initialize(legacyTypeDefinition.typeId());
-			} 
+				final Iterable<PersistenceLegacyTypeHandler<D, T>> supplied = supplier.getLegacyTypeHandlers();
+				PersistenceLegacyTypeHandler<D, T> single = null;
+				int count = 0;
+				for(final PersistenceLegacyTypeHandler<D, T> legacyTypeHandler : supplied)
+				{
+					count++;
+					single = legacyTypeHandler;
+					if(PersistenceTypeDescription.equalStructure(legacyTypeHandler, legacyTypeDefinition))
+					{
+						validateLegacyTypeHandler(legacyTypeDefinition.type(), legacyTypeDefinition, legacyTypeHandler);
+						return legacyTypeHandler.initialize(legacyTypeDefinition.typeId());
+					}
+				}
+				// one handler that does not match is the consistency error it always was; among several, the
+				// structure selects, so a layout none of them describes is reported as such
+				if(count == 1)
+				{
+					validateLegacyTypeHandler(legacyTypeDefinition.type(), legacyTypeDefinition, single);
+					return single.initialize(legacyTypeDefinition.typeId());
+				}
+				throw new PersistenceExceptionTypeConsistency(
+					"None of the " + count + " supplied legacy type handlers matches the structure of "
+					+ legacyTypeDefinition.toTypeIdentifier()
+				);
+			}
 			
 			
 			// check for a custom handler with matching structure
