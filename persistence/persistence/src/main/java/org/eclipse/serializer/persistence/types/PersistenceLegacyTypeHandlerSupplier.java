@@ -48,6 +48,8 @@ public interface PersistenceLegacyTypeHandlerSupplier<D,T>
 	 */
 	public default Iterable<PersistenceLegacyTypeHandler<D,T>> getLegacyTypeHandlers()
 	{
-		return java.util.List.of(this.getLegacyTypeHandler());
+		// A list that admits null: a supplier without a handler for the layout still reaches the mapper's structure
+		// check, which reports it as a type consistency error, as it did before there could be several handlers.
+		return java.util.Collections.singletonList(this.getLegacyTypeHandler());
 	}
 }

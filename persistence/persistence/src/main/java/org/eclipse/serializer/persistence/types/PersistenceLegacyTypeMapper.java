@@ -497,6 +497,13 @@ public interface PersistenceLegacyTypeMapper<D>
 			{
 				@SuppressWarnings("unchecked")
 				final Iterable<PersistenceLegacyTypeHandler<D, T>> supplied = supplier.getLegacyTypeHandlers();
+				if(supplied == null)
+				{
+					throw new PersistenceExceptionTypeConsistency(
+						"The current type handler supplies no legacy type handler for "
+						+ legacyTypeDefinition.toTypeIdentifier()
+					);
+				}
 				PersistenceLegacyTypeHandler<D, T> single = null;
 				int count = 0;
 				for(final PersistenceLegacyTypeHandler<D, T> legacyTypeHandler : supplied)
