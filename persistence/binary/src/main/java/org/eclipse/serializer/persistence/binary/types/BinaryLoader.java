@@ -29,6 +29,7 @@ import org.eclipse.serializer.persistence.binary.org.eclipse.serializer.collecti
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionConsistencyObject;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTypeHandlerConsistencyUnhandledTypeId;
 import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.util.logging.Logging;
 import org.slf4j.Logger;
 
@@ -257,9 +258,23 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 		private void createBuildItem(final BinaryLoadItem loadItem)
 		{
 			loadItem.handler = this.lookupTypeHandler(loadItem.getBuildItemTypeId());
+
+			// must happen before the item's references are read, see PersistenceTypeHandler#prepareLoadItem.
+			loadItem.handler.prepareLoadItem(loadItem);
+
 			if((loadItem.existingInstance = this.objectRegistry.lookupObject(loadItem.getBuildItemObjectId())) == null)
 			{
-				loadItem.createdInstance = loadItem.handler.create(loadItem, this);
+				if(loadItem.handler.isCreationDeferred())
+				{
+					/* Such an instance is created from its resolved references, which cannot be
+					 * resolved yet at this point. See #ensureDeferredInstance.
+					 */
+					loadItem.deferredCreationPending = true;
+				}
+				else
+				{
+					loadItem.createdInstance = loadItem.handler.create(loadItem, this);
+				}
 			}
 			
 			// register build item
@@ -306,6 +321,10 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 			{
 				return entry.existingInstance;
 			}
+			if(entry.deferredCreationPending)
+			{
+				this.ensureDeferredInstance(entry);
+			}
 			if(entry.createdInstance == null)
 			{
 				return null;
@@ -327,6 +346,42 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 
 			// the locally created instance becomes the effective instance for this build.
 			return entry.existingInstance = entry.createdInstance;
+		}
+
+		/**
+		 * Creates a pending deferred instance, on demand and hence in dependency order: creating it
+		 * resolves its references, which creates every deferred instance it references first.
+		 * <p>
+		 * Non-deferred instances referenced by it are already created at this point, but only a
+		 * handler that creates complete instances guarantees usable state; a blank one suffices when
+		 * only the reference itself is needed.
+		 * <p>
+		 * A deferred instance can only ever reference deferred instances that existed before it, so
+		 * the recursion is finite for consistent data. An inconsistent cycle is detected and reported
+		 * instead of overflowing the stack.
+		 *
+		 * @param entry the build item whose deferred instance is to be created.
+		 */
+		private void ensureDeferredInstance(final BinaryLoadItem entry)
+		{
+			if(entry.deferredCreationActive)
+			{
+				throw new BinaryPersistenceException(
+					"Cyclic reference detected while deferring creation for objectId "
+					+ entry.getBuildItemObjectId() + " of type " + entry.handler.typeName() + "."
+				);
+			}
+
+			entry.deferredCreationActive = true;
+			try
+			{
+				entry.createdInstance = entry.handler.create(entry, this);
+			}
+			finally
+			{
+				entry.deferredCreationActive  = false;
+				entry.deferredCreationPending = false;
+			}
 		}
 
 		protected void loadReferences(final BinaryLoadItem entry)
@@ -373,6 +428,15 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 		
 		private void registerRoot(final Object rootInstance, final long rootObjectId)
 		{
+			// value instances may not be published to the registry, see #isValueClassType.
+			if(XReflect.isValueInstance(rootInstance))
+			{
+				/* A root is reached by its identifier, not by a registry lookup, so skipping this costs
+				 * nothing. The registration would throw IdentityException and leave the storage unopenable.
+				 */
+				return;
+			}
+
 			// root instances are global, so it is appropriate and required to register it globally right away
 			this.objectRegistry.registerObject(rootObjectId, rootInstance);
 		}
@@ -421,6 +485,12 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 				if(entry.createdInstance == null || entry.existingInstance != entry.createdInstance)
 				{
 					// skip items, pre-existing / meanwhile-registered instances, deleted enums.
+					continue;
+				}
+
+				// value items may not be published to the registry, see #isValueClassType.
+				if(entry.handler.isValueClassType())
+				{
 					continue;
 				}
 
@@ -655,7 +725,17 @@ public interface BinaryLoader extends PersistenceLoader, PersistenceLoadHandler
 				this.putSkipItem(objectId, instance);
 				return true;
 			}
-			
+
+			/* JDK constants are not registry-resident if they are value instances, but their ids are
+			 * still reserved and never resolvable as entities, so they must be resolved arithmetically.
+			 */
+			final Object javaConstant;
+			if((javaConstant = Persistence.resolveJavaConstantInstance(objectId)) != null)
+			{
+				this.putSkipItem(objectId, javaConstant);
+				return true;
+			}
+
 			// reaching here means the reference is really required to be resolved (loaded)
 			return false;
 		}

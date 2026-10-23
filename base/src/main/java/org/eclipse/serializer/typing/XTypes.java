@@ -180,6 +180,29 @@ public final class XTypes
 		return c == String.class || c == char.class || c == Character.class;
 	}
 	
+	/**
+	 * Whether instances of the passed type are to be <i>handled</i> as values: by their state, rather than by
+	 * which instance they are. The set is closed apart from the {@link ValueType} marker, which is the only
+	 * way to add to it from outside this module.
+	 * <p>
+	 * This is a handling policy, not the JVM's notion of a value: a JEP 401 {@code value class} is
+	 * deliberately <b>not</b> recognised here (see {@link org.eclipse.serializer.reflect.XReflect#isValueClass}
+	 * for that question). For a value class whose fields are all primitives the distinction is invisible,
+	 * because {@code ==} is then substitutability and {@code System.identityHashCode} is derived from state -
+	 * so identity handling already behaves as value handling. It becomes visible for a value class holding a
+	 * field of an identity type, where identity handling compares that field by reference while value
+	 * handling would compare it by {@code equals}.
+	 * <p>
+	 * The reader with persistence-visible consequences is {@code BinaryHandlerGenericEnum}: a {@code final}
+	 * enum field of a value type is treated as a value constant and is therefore <i>not</i> written back
+	 * when the enum is loaded.
+	 *
+	 * @param c the type to be checked.
+	 *
+	 * @return whether instances of that type are to be handled as values.
+	 *
+	 * @see ValueType
+	 */
 	public static boolean isValueType(final Class<?> c)
 	{
 		// all value types, ordered in common use probability
@@ -228,9 +251,15 @@ public final class XTypes
 	/**
 	 * Checks if the type of the passed instance is an immutable special value type of the java language.
 	 * This includes all primitive wrappers and {@link String}.
+	 * <p>
+	 * As with {@link #isValueType(Class)}, a JEP 401 value instance is not recognised here; see there for
+	 * why that is invisible in most cases and where it is not. Note also that this variant does not cover
+	 * {@link java.lang.reflect.Field}, which the {@link Class} variant does.
 	 *
 	 * @param o the instance to be checked
 	 * @return {@code true} if the type of the passed instance is an immutable special value type.
+	 *
+	 * @see #isValueType(Class)
 	 */
 	public static boolean isValueType(final Object o)
 	{

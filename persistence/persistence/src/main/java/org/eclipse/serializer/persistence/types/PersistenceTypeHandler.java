@@ -86,6 +86,43 @@ public interface PersistenceTypeHandler<D, T> extends PersistenceTypeDefinition,
 	public Class<T> type();
 
 	/**
+	 * Whether this handler's instances are value instances (JEP 401), i.e. have no identity.
+	 * <p>
+	 * Such instances must never be registered in a {@link PersistenceObjectRegistry}: it holds its
+	 * entries by {@link java.lang.ref.WeakReference}, which is not applicable to them. They are
+	 * consequently assigned a new objectId per store and reconstructed per load, which is invisible
+	 * to the application because equal value instances are indistinguishable by definition.
+	 * <p>
+	 * The default implementation returns {@literal false}, so handlers that cannot or need not
+	 * determine their type are treated as identity handlers.
+	 *
+	 * @return whether instances handled by this handler have no identity.
+	 */
+	public default boolean isValueClassType()
+	{
+		return false;
+	}
+
+	/**
+	 * Whether {@link #create} may only be called once every reference it resolves is resolvable, i.e.
+	 * after all of a load's build items exist.
+	 * <p>
+	 * Required by a handler that builds its instances from resolved references instead of creating
+	 * them blank and populating them afterwards: a value instance cannot be populated at all, and an
+	 * identity instance whose creation needs another instance's <i>state</i> (not merely the
+	 * reference) must wait until that instance can be provided completely.
+	 * <p>
+	 * The default implementation returns {@link #isValueClassType()}, since a value class handler is
+	 * exactly such a handler.
+	 *
+	 * @return whether the loader must defer this handler's instance creation.
+	 */
+	public default boolean isCreationDeferred()
+	{
+		return this.isValueClassType();
+	}
+
+	/**
 	 * Tests whether the passed entity type is valid input for this handler. Default implementation
 	 * accepts {@code type} when it is assignable to {@link #type()} &mdash; i.e. a sub-type of the
 	 * handled type. Sub-type acceptance (rather than identity) is required because some classes must
@@ -166,9 +203,37 @@ public interface PersistenceTypeHandler<D, T> extends PersistenceTypeDefinition,
 	public void store(D data, T instance, long objectId, PersistenceStoreHandler<D> handler);
 
 	/**
+	 * Prepares the passed persisted form before anything else reads it, in particular before
+	 * {@link #iterateLoadableReferences} determines which references have to be loaded.
+	 * <p>
+	 * Required by handlers that rewrite the persisted data, e.g. a legacy handler translating an
+	 * outdated layout into the current one: the reference offsets those handlers report belong to
+	 * the rewritten data, so the rewrite may not be deferred to {@link #create}.
+	 * <p>
+	 * The default implementation does nothing.
+	 *
+	 * @param data the persisted form of an instance of the handled type.
+	 */
+	public default void prepareLoadItem(final D data)
+	{
+		// no preparation needed by default.
+	}
+
+	/**
 	 * Allocates and returns a fresh, uninitialized {@code T} from the passed persisted form. The
 	 * returned instance must already be of the right runtime type but does not yet need its fields
 	 * populated &mdash; field population happens in {@link #initializeState} or {@link #updateState}.
+	 * <p>
+	 * <b>References must not be resolved here.</b> This method is called for every entity of a load
+	 * before any of them is populated, so {@link PersistenceLoadHandler#lookupObject} would return
+	 * {@literal null} for anything not yet created. Resolving a reference is only valid from
+	 * {@link #initializeState} / {@link #updateState} onwards.
+	 * <p>
+	 * The one exception is a handler reporting {@link #isCreationDeferred()}: it builds its instances
+	 * from resolved references, so the loader defers its creation until they can be resolved. Note
+	 * that a resolved reference is guaranteed to exist but not to be populated yet, unless its own
+	 * handler reports {@link #isCreationDeferred()} as well or creates complete instances to begin
+	 * with.
 	 *
 	 * @param data    the persisted form to read identity-information from.
 	 * @param handler receives nested-reference resolution requests.
@@ -505,9 +570,12 @@ public interface PersistenceTypeHandler<D, T> extends PersistenceTypeDefinition,
 
 		// basic type swizzling //
 		private final Class<T> type;
-		
+
 		// differs from Class#getName to properly identify synthetic classes instead using of those "$1,2,3..." names.
 		private final String typeName;
+
+		// determined once since it is queried per stored and per loaded instance. See #isValueClassType.
+		private final boolean isValueClassType;
 		
 		// effectively final / immutable: gets only initialized once later on and is never mutated again. initially 0.
 		private long typeId = Swizzling.notFoundId();
@@ -526,8 +594,9 @@ public interface PersistenceTypeHandler<D, T> extends PersistenceTypeDefinition,
 		protected Abstract(final Class<T> type, final String typeName)
 		{
 			super();
-			this.type     = notNull(type)    ;
-			this.typeName = notNull(typeName);
+			this.type             = notNull(type)          ;
+			this.typeName         = notNull(typeName)      ;
+			this.isValueClassType = XReflect.isValueClass(type);
 		}
 
 
@@ -549,6 +618,12 @@ public interface PersistenceTypeHandler<D, T> extends PersistenceTypeDefinition,
 		public final Class<T> type()
 		{
 			return this.type;
+		}
+
+		@Override
+		public final boolean isValueClassType()
+		{
+			return this.isValueClassType;
 		}
 
 		@Override

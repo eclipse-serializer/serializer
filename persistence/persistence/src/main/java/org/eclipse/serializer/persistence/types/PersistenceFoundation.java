@@ -253,6 +253,8 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 	
 	public PersistenceEagerStoringFieldEvaluator getReferenceFieldEagerEvaluator();
 
+	public PersistenceValueInliningResolver getValueInliningResolver();
+
 	public BufferSizeProviderIncremental getBufferSizeProvider();
 
 	public PersistenceFieldEvaluator getFieldEvaluatorPersistable();
@@ -434,6 +436,17 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 
 	public F setReferenceFieldEagerEvaluator(PersistenceEagerStoringFieldEvaluator evaluator);
 
+	/**
+	 * Sets the resolver deciding which fields are written into their owner instead of being referenced by an
+	 * object id. The default inlines every eligible field of an application-declared value type; pass
+	 * {@link PersistenceValueInliningResolver#Disabled()} to keep every value field referenced.
+	 *
+	 * @param resolver the resolver to use.
+	 *
+	 * @return this foundation.
+	 */
+	public F setValueInliningResolver(PersistenceValueInliningResolver resolver);
+
 	public F setRootResolverProvider(PersistenceRootResolverProvider rootResolverProvider);
 	
 	public F setRootReferenceProvider(PersistenceRootReferenceProvider<D> rootReferenceProvider);
@@ -594,6 +607,7 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 		private PersistenceFieldEvaluator                      fieldEvaluatorEnum              ;
 		private PersistenceFieldEvaluator                      fieldEvaluatorCollection        ;
 		private PersistenceEagerStoringFieldEvaluator          eagerStoringFieldEvaluator      ;
+		private PersistenceValueInliningResolver               valueInliningResolver           ;
 
 		// (14.09.2018 TM)NOTE: that type handling stuff grows to a size where it could use its own foundation.
 		private PersistenceTypeManager                         typeManager                     ;
@@ -1291,7 +1305,18 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 			
 			return this.eagerStoringFieldEvaluator;
 		}
-		
+
+		@Override
+		public PersistenceValueInliningResolver getValueInliningResolver()
+		{
+			if(this.valueInliningResolver == null)
+			{
+				this.valueInliningResolver = this.dispatch(this.ensureValueInliningResolver());
+			}
+
+			return this.valueInliningResolver;
+		}
+
 		@Override
 		public PersistenceRootResolverProvider getRootResolverProvider()
 		{
@@ -1966,6 +1991,13 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 			this.eagerStoringFieldEvaluator = evaluator;
 			return this.$();
 		}
+
+		@Override
+		public F setValueInliningResolver(final PersistenceValueInliningResolver resolver)
+		{
+			this.valueInliningResolver = resolver;
+			return this.$();
+		}
 		
 		@Override
 		public F setRootResolverProvider(final PersistenceRootResolverProvider rootResolverProvider)
@@ -2422,6 +2454,11 @@ extends Cloneable<PersistenceFoundation<D, F>>,
 			return Persistence.defaultFieldEvaluatorCollection();
 		}
 		
+		protected PersistenceValueInliningResolver ensureValueInliningResolver()
+		{
+			return PersistenceValueInliningResolver.New(this.getTypeAnalyzer());
+		}
+
 		protected PersistenceEagerStoringFieldEvaluator ensureReferenceFieldEagerEvaluator()
 		{
 			return Persistence.defaultReferenceFieldEagerEvaluator();
