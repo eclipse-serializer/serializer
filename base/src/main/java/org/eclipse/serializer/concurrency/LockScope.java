@@ -48,13 +48,29 @@ public abstract class LockScope
 			{
 				if((executor = this.executor) == null)
 				{
-					executor = this.executor = LockedExecutor.New();
+					executor = this.executor = this.createExecutor();
 				}
 			}
 		}
 		return executor;
 	}
-	
+
+	/**
+	 * Creates the {@link LockedExecutor} used by this scope.
+	 * <p>
+	 * Override to control the executor's configuration, e.g. to request a fair locking policy via
+	 * {@link LockedExecutor#New(boolean)}.
+	 * <p>
+	 * This method is called while the monitor of this instance is held. It must therefore return
+	 * quickly and must not acquire any other lock, otherwise it can deadlock the scope.
+	 *
+	 * @return a newly created {@link LockedExecutor}
+	 */
+	protected LockedExecutor createExecutor()
+	{
+		return LockedExecutor.New();
+	}
+
 	/**
 	 * Executes an operation protected by a read lock.
 	 *
