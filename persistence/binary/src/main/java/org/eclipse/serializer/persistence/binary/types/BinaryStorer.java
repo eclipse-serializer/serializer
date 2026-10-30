@@ -198,6 +198,13 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		protected boolean isProcessingItems;
 
 		/*
+		 * First failure of item processing. A failed store leaves partially serialized data (unprocessed items,
+		 * a half-written entity, commit listeners of the failed store), so the storer must not store or commit
+		 * until it is cleared. Guarded by objectRegistryMonitor.
+		 */
+		private Throwable storeFailure;
+
+		/*
 		 * item hashing structures get initialized lazily for the following reasons:
 		 * - the storer instance can commit (be cleared) and be reinitialized multiple times.
 		 * - the storer instance can be explicitly initialized to a certain capacity.
@@ -426,6 +433,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.itemCount = 0;
 				this.pinCount  = 0;
 				this.hashSlots = new Item[hashLength];
+				this.storeFailure = null;
 				this.hashRange = hashLength - 1;
 
 				// initializing/clearing item chain
@@ -603,27 +611,24 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 * - handle all registered graph objects recursively (but transformed to an iteration).
 			 * Note that this is NOT the same as apply, which does NOT store if the instance is already registry-known.
 			 */
+			if(!this.isProcessingItems)
+			{
+				this.validateNoFailedStore();
+			}
+
 			long rootOid;
 			if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
 			{
 				return rootOid;
 			}
-			
+
 			// initial registration. After that, storing adds via recursion the graph and processing items iteratively.
 			rootOid = this.registerGuaranteed(notNull(root));
 
 			// repeatedly calling #store to add an instance to the item chain is fine, but processing may only happen once.
 			if(!this.isProcessingItems)
 			{
-				try
-				{
-					this.isProcessingItems = true;
-					this.processItems();
-				}
-				finally
-				{
-					this.isProcessingItems = false;
-				}
+				this.processItemsOutermost();
 			}
 
 			return rootOid;
@@ -664,6 +669,65 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				chunk = this.synchLookupChunk(item.oid);
 			}
 			item.typeHandler.store(chunk, item.instance, item.oid, this);
+		}
+
+		/**
+		 * Processes the item chain as the outermost store call and records the first failure.
+		 */
+		protected final void processItemsOutermost()
+		{
+			try
+			{
+				this.isProcessingItems = true;
+				this.processItems();
+			}
+			catch(final Throwable t)
+			{
+				synchronized(this.objectRegistryMonitor)
+				{
+					if(this.storeFailure == null)
+					{
+						this.storeFailure = t;
+					}
+				}
+				throw t;
+			}
+			finally
+			{
+				this.isProcessingItems = false;
+			}
+		}
+
+		/**
+		 * Rejects storing and committing after a failed store: committing would persist the partially
+		 * serialized graph. Only {@link #clear()} resets the storer.
+		 * <p>
+		 * Must be called under {@code objectRegistryMonitor} and not during item processing.
+		 */
+		protected final void synchValidateNoFailedStore()
+		{
+			if(this.storeFailure != null)
+			{
+				throw new PersistenceException(
+					"A store of this storer failed and left partially serialized data."
+					+ " Committing it would persist an inconsistent object graph."
+					+ " The storer must be cleared before it can be used again.",
+					this.storeFailure
+				);
+			}
+		}
+
+		protected final Throwable synchStoreFailure()
+		{
+			return this.storeFailure;
+		}
+
+		protected final void validateNoFailedStore()
+		{
+			synchronized(this.objectRegistryMonitor)
+			{
+				this.synchValidateNoFailedStore();
+			}
 		}
 
 		@Override
@@ -796,6 +860,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				"Committing {} object(s)",
 				LazyArg(this::size)   // use lazy here, #size() locks
 			);
+
+			// before anything is written, merged or notified: the storer keeps its state until cleared
+			this.validateNoFailedStore();
 
 			// isEmpty locks internally
 			if(!this.isEmpty())
@@ -1455,29 +1522,26 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 * - handle all registered graph objects recursively (but transformed to an iteration).
 			 * Note that this is NOT the same as apply, which does NOT store if the instance is already registry-known.
 			 */
+			if(!this.isProcessingItems)
+			{
+				this.validateNoFailedStore();
+			}
+
 			final long rootOid;
 			if(Swizzling.isFoundId(rootOid = this.lookupOid(root)))
 			{
 				return rootOid;
 			}
-			
+
 			// initial registration. After that, storing adds via recursion the graph and processing items iteratively.
 			//rootOid = this.registerGuaranteed(notNull(root));
-			
+
 			this.registerGuaranteed(objectId, root, null);
 
 			// repeatedly calling #store to add an instance to the item chain is fine, but processing may only happen once.
 			if(!this.isProcessingItems)
 			{
-				try
-				{
-					this.isProcessingItems = true;
-					this.processItems();
-				}
-				finally
-				{
-					this.isProcessingItems = false;
-				}
+				this.processItemsOutermost();
 			}
 
 			return objectId;
@@ -1489,7 +1553,12 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		public void forceRootStore(final PersistenceRoots pendingStoreRoot) {
 			
 			logger.debug("Storing updated root");
-			
+
+			if(!this.isProcessingItems)
+			{
+				this.validateNoFailedStore();
+			}
+
 			long rootOid;
 			if(Swizzling.isFoundId(rootOid = this.lookupOid(pendingStoreRoot)))
 			{
@@ -1499,18 +1568,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			{
 				rootOid = this.registerGuaranteed(notNull(pendingStoreRoot));
 			}
-									
+
 			if(!this.isProcessingItems)
 			{
-				try
-				{
-					this.isProcessingItems = true;
-					this.processItems();
-				}
-				finally
-				{
-					this.isProcessingItems = false;
-				}
+				this.processItemsOutermost();
 			}
 		}
 						
@@ -1681,6 +1742,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		private final BatchStorer.Controller   controller        ;
 		private final BackgroundFlusher        flusher           ;
 		private long                           pendingSinceNanos ;
+		private boolean                        failureReported   ;
 		private volatile boolean               closed            ;
 
 		/*
@@ -1761,19 +1823,15 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				{
 					throw new IllegalStateException("BatchStorer is already closed.");
 				}
+				if(!this.isProcessingItems)
+				{
+					this.validateNoFailedStore();
+				}
 				this.registerGuaranteed(objectId, instance, null);
 
 				if(!this.isProcessingItems)
 				{
-					try
-					{
-						this.isProcessingItems = true;
-						super.processItems();
-					}
-					finally
-					{
-						this.isProcessingItems = false;
-					}
+					this.processItemsOutermost();
 				}
 			}
 
@@ -1850,6 +1908,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				{
 					throw new IllegalStateException("BatchStorer is already closed.");
 				}
+				if(!this.isProcessingItems)
+				{
+					this.validateNoFailedStore();
+				}
 
 				final long localOid = this.lookupOid(root);
 
@@ -1868,15 +1930,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 
 				if(!this.isProcessingItems)
 				{
-					try
-					{
-						this.isProcessingItems = true;
-						super.processItems();
-					}
-					finally
-					{
-						this.isProcessingItems = false;
-					}
+					this.processItemsOutermost();
 				}
 			}
 
@@ -1908,10 +1962,33 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		@Override
 		public void clear()
 		{
-			synchronized(this.objectRegistryMonitor)
+			// commitLock: an in-flight store of another thread must not continue into the cleared chain and chunks
+			synchronized(this.commitLock)
 			{
-				super.clear();
-				this.pendingSinceNanos = 0L;
+				synchronized(this.objectRegistryMonitor)
+				{
+					super.clear();
+					this.pendingSinceNanos = 0L;
+					this.failureReported   = false;
+				}
+			}
+		}
+
+		@Override
+		public PersistenceStorer reinitialize()
+		{
+			synchronized(this.commitLock)
+			{
+				return super.reinitialize();
+			}
+		}
+
+		@Override
+		public PersistenceStorer reinitialize(final long initialCapacity)
+		{
+			synchronized(this.commitLock)
+			{
+				return super.reinitialize(initialCapacity);
 			}
 		}
 
@@ -1992,6 +2069,18 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			{
 				if(this.closed || this.isEmpty())
 				{
+					return;
+				}
+
+				// a failed store blocks committing until clear(): report it once instead of failing on every tick
+				final Throwable storeFailure = this.synchStoreFailure();
+				if(storeFailure != null)
+				{
+					if(!this.failureReported)
+					{
+						this.failureReported = true;
+						logger.error("Batch not flushed: a store failed, the pending data is kept until clear()", storeFailure);
+					}
 					return;
 				}
 
