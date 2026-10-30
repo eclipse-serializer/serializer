@@ -700,6 +700,11 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 			{
 				this.pendingStore = null;
 			}
+			else
+			{
+				// a later store exists: this commit may have overwritten its newer data, store again
+				this.modified = true;
+			}
 		}
 		
 		//required by BinaryHandlerLazyHashMap

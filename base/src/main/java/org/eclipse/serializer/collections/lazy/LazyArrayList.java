@@ -1132,6 +1132,11 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 			{
 				this.pendingStore = null;
 			}
+			else
+			{
+				// a later store exists: this commit may have overwritten its newer data, store again
+				this.modified = true;
+			}
 		}
 		
 		private void setOffset(final int offset)
