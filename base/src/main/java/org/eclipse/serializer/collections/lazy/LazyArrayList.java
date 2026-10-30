@@ -1094,7 +1094,7 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 		}
 		
 		@Override
-		public boolean isModified()
+		public synchronized boolean isModified()
 		{
 			return this.modified || this.pendingStore != null;
 		}
@@ -1114,7 +1114,7 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 
 		//required by BinaryHandlerLazyArrayList
 		@SuppressWarnings("unused")
-		private Object beginStore()
+		private synchronized Object beginStore()
 		{
 			final Object token = new Object();
 			this.pendingStore = token;
@@ -1124,9 +1124,10 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 
 		//required by BinaryHandlerLazyArrayList
 		@SuppressWarnings("unused")
-		private void commitStore(final Object token)
+		private synchronized void commitStore(final Object token)
 		{
-			// a later store of the segment replaced the token, only its commit may clean the segment
+			// a later store of the segment replaced the token, only its commit may clean the segment.
+			// synchronized: commit listeners run on the committing thread, possibly concurrent to another store
 			if(this.pendingStore == token)
 			{
 				this.pendingStore = null;

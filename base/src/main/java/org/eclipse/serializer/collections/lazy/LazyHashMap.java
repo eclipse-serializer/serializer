@@ -668,7 +668,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 		}
 		
 		@Override
-		public boolean isModified()
+		public synchronized boolean isModified()
 		{
 			return this.modified || this.pendingStore != null;
 		}
@@ -682,7 +682,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 		
 		//required by BinaryHandlerLazyHashMap
 		@SuppressWarnings("unused")
-		private Object beginStore()
+		private synchronized Object beginStore()
 		{
 			final Object token = new Object();
 			this.pendingStore = token;
@@ -692,9 +692,10 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 
 		//required by BinaryHandlerLazyHashMap
 		@SuppressWarnings("unused")
-		private void commitStore(final Object token)
+		private synchronized void commitStore(final Object token)
 		{
-			// a later store of the segment replaced the token, only its commit may clean the segment
+			// a later store of the segment replaced the token, only its commit may clean the segment.
+			// synchronized: commit listeners run on the committing thread, possibly concurrent to another store
 			if(this.pendingStore == token)
 			{
 				this.pendingStore = null;
