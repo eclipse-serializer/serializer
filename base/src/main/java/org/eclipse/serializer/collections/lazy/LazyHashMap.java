@@ -617,6 +617,8 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 		private int max;
 		private int segmentSize;
 		private transient boolean modified;
+		// set while a store of the segment awaits its commit, the segment stays dirty until then
+		private transient Object pendingStore;
 		private boolean allowUnloading = true;
 
 		
@@ -666,9 +668,9 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 		}
 		
 		@Override
-		public boolean isModified()
+		public synchronized boolean isModified()
 		{
-			return this.modified;
+			return this.modified || this.pendingStore != null;
 		}
 
 		@Override
@@ -680,9 +682,29 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 		
 		//required by BinaryHandlerLazyHashMap
 		@SuppressWarnings("unused")
-		private void cleanModified()
+		private synchronized Object beginStore()
 		{
-			this.modified = false;
+			final Object token = new Object();
+			this.pendingStore = token;
+			this.modified     = false;
+			return token;
+		}
+
+		//required by BinaryHandlerLazyHashMap
+		@SuppressWarnings("unused")
+		private synchronized void commitStore(final Object token)
+		{
+			// a later store of the segment replaced the token, only its commit may clean the segment.
+			// synchronized: commit listeners run on the committing thread, possibly concurrent to another store
+			if(this.pendingStore == token)
+			{
+				this.pendingStore = null;
+			}
+			else
+			{
+				// a later store exists: this commit may have overwritten its newer data, store again
+				this.modified = true;
+			}
 		}
 		
 		//required by BinaryHandlerLazyHashMap
@@ -835,7 +857,7 @@ public final class LazyHashMap<K, V> implements Map<K, V>
 		@Override
 		public boolean allowClear()
 		{
-			return !this.modified;
+			return !this.isModified();
 		}
 
 		/**

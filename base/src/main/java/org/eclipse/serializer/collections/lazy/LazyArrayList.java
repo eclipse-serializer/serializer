@@ -1019,6 +1019,8 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 		private int                                         offset     ;
 		private int                                         segmentSize;
 		private transient boolean                           modified   ;
+		// set while a store of the segment awaits its commit, the segment stays dirty until then
+		private transient Object                            pendingStore;
 		private final ControlledLazyReference<ArrayList<E>> data       ;
 		private boolean allowUnloading = true;
 		
@@ -1092,9 +1094,9 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 		}
 		
 		@Override
-		public boolean isModified()
+		public synchronized boolean isModified()
 		{
-			return this.modified;
+			return this.modified || this.pendingStore != null;
 		}
 		
 		@Override
@@ -1107,14 +1109,34 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 		@Override
 		public boolean allowClear()
 		{
-			return !this.modified;
+			return !this.isModified();
 		}
 
 		//required by BinaryHandlerLazyArrayList
 		@SuppressWarnings("unused")
-		private void cleanModified()
+		private synchronized Object beginStore()
 		{
-			this.modified = false;
+			final Object token = new Object();
+			this.pendingStore = token;
+			this.modified     = false;
+			return token;
+		}
+
+		//required by BinaryHandlerLazyArrayList
+		@SuppressWarnings("unused")
+		private synchronized void commitStore(final Object token)
+		{
+			// a later store of the segment replaced the token, only its commit may clean the segment.
+			// synchronized: commit listeners run on the committing thread, possibly concurrent to another store
+			if(this.pendingStore == token)
+			{
+				this.pendingStore = null;
+			}
+			else
+			{
+				// a later store exists: this commit may have overwritten its newer data, store again
+				this.modified = true;
+			}
 		}
 		
 		private void setOffset(final int offset)

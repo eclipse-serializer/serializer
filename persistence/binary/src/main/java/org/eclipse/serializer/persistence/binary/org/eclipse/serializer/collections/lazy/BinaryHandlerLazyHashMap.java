@@ -53,7 +53,8 @@ public final class BinaryHandlerLazyHashMap extends AbstractBinaryHandlerCustomC
 	private static final Method
 	METHOD_Segment_getData          = getDeclaredMethod(LazyHashMap.Segment.class, "getLazyData"),
 	METHOD_Segment_getLazy          = getDeclaredMethod(LazyHashMap.Segment.class, "getLazy"),
-	METHOD_Segement_cleanDirtyFlag  = getDeclaredMethod(LazyHashMap.Segment.class, "cleanModified"),
+	METHOD_Segment_beginStore       = getDeclaredMethod(LazyHashMap.Segment.class, "beginStore"),
+	METHOD_Segment_commitStore      = getDeclaredMethod(LazyHashMap.Segment.class, "commitStore", Object.class),
 	METHOD_LazyHashMap_addSegment   = getDeclaredMethod(LazyHashMap.class, "addSegment", int.class, int.class, int.class, Object.class)
 	;
 	
@@ -189,7 +190,11 @@ public final class BinaryHandlerLazyHashMap extends AbstractBinaryHandlerCustomC
 			if(segment.isLoaded() && segment.isModified())
 			{
 				handler.applyEager(XReflect.invoke(METHOD_Segment_getData, segment));
-				XReflect.invoke(METHOD_Segement_cleanDirtyFlag, segment);
+				// the segment is clean only once this store is committed, a failed or abandoned store keeps it dirty
+				final Object storeToken = XReflect.invoke(METHOD_Segment_beginStore, segment);
+				handler.registerCommitListener(() ->
+					XReflect.invoke(METHOD_Segment_commitStore, segment, storeToken)
+				);
 			}
 		}
 	}
