@@ -52,6 +52,11 @@ public interface Storer extends PersistenceStoring
 	 * <p>
 	 * The method may be called at most once on a fresh storer state. To reuse the storer, call
 	 * {@link #clear()} or {@link #reinitialize()} afterwards.
+	 * <p>
+	 * If a {@code store(...)} call on this storer failed, the accumulated data is incomplete. In that
+	 * case {@code commit()} persists nothing and throws a
+	 * {@link org.eclipse.serializer.persistence.exceptions.PersistenceException} with the store
+	 * failure as its cause, until {@link #clear()} discards the accumulated data.
 	 *
 	 * @return implementation-specific status information about the commit, or {@code null} if the
 	 *         implementation does not provide any.
@@ -69,6 +74,8 @@ public interface Storer extends PersistenceStoring
 	 * This rolls back uncommitted in-memory state only; data already committed by a previous
 	 * {@link #commit()} call is unaffected. After {@code clear()} the storer is ready to start a new
 	 * collection cycle.
+	 * <p>
+	 * After a failed {@code store(...)} call, {@code clear()} is the only way to use the storer again.
 	 *
 	 * @see #commit()
 	 * @see #reinitialize()
@@ -264,6 +271,12 @@ public interface Storer extends PersistenceStoring
 	 * {@link PersistenceObjectRegistry} and nothing is written to the underlying storage layer.
 	 * Calling {@code store(...)} on the same instance multiple times before {@code commit()} has no
 	 * additional effect.
+	 * <p>
+	 * If this call fails, for example because the graph contains an instance that cannot be persisted,
+	 * the data accumulated by this storer is incomplete. Further {@code store(...)} and
+	 * {@link #commit()} calls then throw a
+	 * {@link org.eclipse.serializer.persistence.exceptions.PersistenceException} until
+	 * {@link #clear()} is called.
 	 *
 	 * @see #commit()
 	 * @see #skip(Object)

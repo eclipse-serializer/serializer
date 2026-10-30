@@ -433,8 +433,9 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				this.itemCount = 0;
 				this.pinCount  = 0;
 				this.hashSlots = new Item[hashLength];
-				this.storeFailure = null;
 				this.hashRange = hashLength - 1;
+
+				this.storeFailure = null;
 
 				// initializing/clearing item chain
 				(this.tail = this.head).next = null;
@@ -621,7 +622,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			{
 				return rootOid;
 			}
-
+			
 			// initial registration. After that, storing adds via recursion the graph and processing items iteratively.
 			rootOid = this.registerGuaranteed(notNull(root));
 
@@ -1532,10 +1533,10 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			{
 				return rootOid;
 			}
-
+			
 			// initial registration. After that, storing adds via recursion the graph and processing items iteratively.
 			//rootOid = this.registerGuaranteed(notNull(root));
-
+			
 			this.registerGuaranteed(objectId, root, null);
 
 			// repeatedly calling #store to add an instance to the item chain is fine, but processing may only happen once.
@@ -1553,7 +1554,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		public void forceRootStore(final PersistenceRoots pendingStoreRoot) {
 			
 			logger.debug("Storing updated root");
-
+			
 			if(!this.isProcessingItems)
 			{
 				this.validateNoFailedStore();
@@ -1568,7 +1569,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			{
 				rootOid = this.registerGuaranteed(notNull(pendingStoreRoot));
 			}
-
+									
 			if(!this.isProcessingItems)
 			{
 				this.processItemsOutermost();
