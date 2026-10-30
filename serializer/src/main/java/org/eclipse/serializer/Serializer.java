@@ -207,8 +207,17 @@ public interface Serializer<M> extends AutoCloseable
 		@Override
 		public synchronized M serialize(final Object object)
 		{
-			this.storer.store(object);
-			this.storer.commit();
+			try
+			{
+				this.storer.store(object);
+				this.storer.commit();
+			}
+			catch(final Throwable t)
+			{
+				// the internal storer would carry the partial graph into the next serialize() call
+				this.storer.clear();
+				throw t;
+			}
 			return this.toMedium.apply(this.output);
 		}
 		

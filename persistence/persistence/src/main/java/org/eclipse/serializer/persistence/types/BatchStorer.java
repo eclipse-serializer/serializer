@@ -36,6 +36,14 @@ import static org.eclipse.serializer.util.X.notNull;
  * {@code BatchStorer} implements {@link AutoCloseable}. On close, it flushes any remaining
  * pending data and releases resources.
  * <p>
+ * If a store call fails, the batch holds incomplete data and is not flushed: further store calls,
+ * {@link #flush()}, {@link #commit()} and {@link #close()} throw a
+ * {@link org.eclipse.serializer.persistence.exceptions.PersistenceException}, and the background
+ * flush skips the batch. This affects the whole batch, including data stored by other threads.
+ * {@link #clear()} discards the pending data and makes the {@code BatchStorer} usable again, unless
+ * it was already closed: {@link #close()} releases its resources even when the final flush is
+ * rejected, so a failed batch must be cleared before closing it to keep using it.
+ * <p>
  * Usage:
  * <pre>
  * try (BatchStorer storer = storageManager.batchStorerBuilder()

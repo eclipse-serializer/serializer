@@ -259,8 +259,7 @@ public interface TypedSerializer<M> extends Serializer<M>
 		public synchronized M serialize(final Object object)
 		{
 			//serialize data
-			this.storer.store(object);
-			this.storer.commit();
+			this.storeAndCommit(object);
 			final ByteBuffer[] dataBuffers = this.output.buffers();
 			
 			final ByteBuffer[] typeInfoBuffers = this.updateTypeInfo();
@@ -291,12 +290,26 @@ public interface TypedSerializer<M> extends Serializer<M>
 			return this.toMedium.apply(ChunksWrapper.New(buffers));
 		}
 		
+		private void storeAndCommit(final Object object)
+		{
+			try
+			{
+				this.storer.store(object);
+				this.storer.commit();
+			}
+			catch(final Throwable t)
+			{
+				// the internal storer would carry the partial graph into the next serialize() call
+				this.storer.clear();
+				throw t;
+			}
+		}
+
 		private ByteBuffer[] updateTypeInfo()
 		{
 			if(this.typeInfoStrategy.hasUpdate() || this.typeInfoCache == null)
 			{
-				this.storer.store(this.typeInfoStrategy.get());
-				this.storer.commit();
+				this.storeAndCommit(this.typeInfoStrategy.get());
 				this.typeInfoCache = new TypeInfoCache(
 					this.output.buffers(),
 					System.nanoTime());
