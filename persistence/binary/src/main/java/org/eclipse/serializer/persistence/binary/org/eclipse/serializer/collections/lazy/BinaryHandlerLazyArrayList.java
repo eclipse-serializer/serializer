@@ -28,6 +28,7 @@ import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.eclipse.serializer.reference.ControlledLazyReference;
+import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reflect.XReflect;
 
 public final class BinaryHandlerLazyArrayList extends AbstractBinaryHandlerCustomCollection<LazyArrayList<?>>
@@ -105,7 +106,12 @@ public final class BinaryHandlerLazyArrayList extends AbstractBinaryHandlerCusto
 	public void store(final Binary data, final LazyArrayList<?> instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
 		instance.verifyLoader(handler.getObjectRetriever());
-		instance.link(handler.getObjectRetriever());
+
+		// bound only by a committed store: a failed or cleared store leaves the list free for another storage
+		final ObjectSwizzling objectRetriever = handler.getObjectRetriever();
+		handler.registerCommitListener(() ->
+			instance.link(objectRetriever)
+		);
 
 		final long fieldsLength = Integer.BYTES + Integer.BYTES + Binary.referenceBinaryLength(1);
 		final long segmentLength = Integer.BYTES + Integer.BYTES + Binary.referenceBinaryLength(1);

@@ -26,6 +26,7 @@ import org.eclipse.serializer.persistence.types.PersistenceFunction;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
+import org.eclipse.serializer.reference.ObjectSwizzling;
 import org.eclipse.serializer.reflect.XReflect;
 
 public final class BinaryHandlerLazyHashMap extends AbstractBinaryHandlerCustomCollection<LazyHashMap<?,?>>
@@ -155,7 +156,12 @@ public final class BinaryHandlerLazyHashMap extends AbstractBinaryHandlerCustomC
 	public void store(final Binary data, final LazyHashMap<?, ?> instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
 		instance.verifyLoader(handler.getObjectRetriever());
-		instance.link(handler.getObjectRetriever());
+		
+		// bound only by a committed store: a failed or cleared store leaves the map free for another storage
+		final ObjectSwizzling objectRetriever = handler.getObjectRetriever();
+		handler.registerCommitListener(() ->
+			instance.link(objectRetriever)
+		);
 		
 		final long segmentListContentLength = BINARY_SEGMENT_LENGTH * instance.getSegmentCount();
 		final long segmentListTotalLength = Binary.toBinaryListTotalByteLength(segmentListContentLength);
