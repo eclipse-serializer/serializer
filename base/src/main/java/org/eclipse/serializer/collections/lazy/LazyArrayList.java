@@ -34,6 +34,7 @@ import org.eclipse.serializer.branching.ThrowBreak;
 import org.eclipse.serializer.reference.ControlledLazyReference;
 import org.eclipse.serializer.reference.Lazy;
 import org.eclipse.serializer.reference.LazyClearController;
+import org.eclipse.serializer.reference.ObjectSwizzling;
 
 
 /**
@@ -65,6 +66,7 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 	private final ArrayList<Segment>  segments      ;
 	private int                       size          ;
 	private final LazySegmentUnloader unloader      ;
+	private transient ObjectSwizzling loader        ;
 	
 	///////////////////////////////////////////////////////////////////////////
 	// constructors //
@@ -159,6 +161,38 @@ public final class LazyArrayList<E> extends AbstractList<E> implements LazyList<
 	public int getMaxSegmentSize()
 	{
 		return this.maxSegmentSize;
+	}
+
+	/**
+	 * Links the list to a {@link ObjectSwizzling} instance.
+	 *
+	 * @param objectLoader ObjectSwizzling instance.
+	 */
+	public void link(final ObjectSwizzling objectLoader)
+	{
+		if(this.loader != null)
+		{
+			return;
+		}
+		this.loader = objectLoader;
+	}
+
+	/**
+	 * Throws an IllegalStateException if the current loader is
+	 * not null and is not the provided one.
+	 * <br>
+	 * Use {@link #LazyArrayList(LazyArrayList)} to copy a list into another storage.
+	 *
+	 * @param objectLoader to be verified.
+	 */
+	public void verifyLoader(final ObjectSwizzling objectLoader)
+	{
+		if(this.loader != null && this.loader != objectLoader)
+		{
+			throw new IllegalStateException(
+				"List already bound to another storage! Copy it with new LazyArrayList<>(list) to store it there."
+			);
+		}
 	}
 
 	@Override

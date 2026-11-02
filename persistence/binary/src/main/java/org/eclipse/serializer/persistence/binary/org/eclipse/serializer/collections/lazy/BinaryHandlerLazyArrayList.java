@@ -104,6 +104,9 @@ public final class BinaryHandlerLazyArrayList extends AbstractBinaryHandlerCusto
 	@Override
 	public void store(final Binary data, final LazyArrayList<?> instance, final long objectId, final PersistenceStoreHandler<Binary> handler)
 	{
+		instance.verifyLoader(handler.getObjectRetriever());
+		instance.link(handler.getObjectRetriever());
+
 		final long fieldsLength = Integer.BYTES + Integer.BYTES + Binary.referenceBinaryLength(1);
 		final long segmentLength = Integer.BYTES + Integer.BYTES + Binary.referenceBinaryLength(1);
 		final long segmentListContentLength = segmentLength * instance.getSegmentCount();
@@ -152,6 +155,9 @@ public final class BinaryHandlerLazyArrayList extends AbstractBinaryHandlerCusto
 	@Override
 	public void updateState(final Binary data, final LazyArrayList<?> instance, final PersistenceLoadHandler handler)
 	{
+		instance.verifyLoader(handler.getObjectRetriever());
+		instance.link(handler.getObjectRetriever());
+
 		final int maxSegmentSize = data.read_int(BINARY_OFFSET_MAXSEGMENTSIZE);
 		XMemory.set_int(instance, OFFSET_MaxSegmentSize, maxSegmentSize);
 		

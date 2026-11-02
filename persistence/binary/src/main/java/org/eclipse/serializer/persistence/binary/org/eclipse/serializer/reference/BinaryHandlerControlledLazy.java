@@ -90,6 +90,22 @@ public final class BinaryHandlerControlledLazy extends AbstractBinaryHandlerCust
 		if(referent == null)
 		{
 			referenceOid = instance.objectId();
+
+			// same guard as BinaryHandlerLazyDefault#store: the cached id is only valid in its own storage
+			if(referenceOid != 0 && instance.$getLoader() != handler.getObjectRetriever())
+			{
+				throw new PersistenceException(
+						"Cannot persist an unloaded lazy reference to another storage. " +
+								"The referenced object is not loaded and its state is unknown. " +
+								"Persisting it would result in data loss."
+				);
+			}
+
+			if(referenceOid != 0)
+			{
+				// cached id of an unloaded referent: referenced but not stored in this commit.
+				handler.noteTrustedReference(referenceOid);
+			}
 		}
 		else
 		{
