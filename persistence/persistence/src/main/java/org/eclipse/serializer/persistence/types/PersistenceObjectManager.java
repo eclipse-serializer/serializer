@@ -264,7 +264,22 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 		{
 			synchronized(this.objectRegistry)
 			{
-				return this.objectRegistry.lookupObjectId(object);
+				final long objectId = this.objectRegistry.lookupObjectId(object);
+				if(Swizzling.isProperId(objectId) || !Persistence.areJavaConstantsValueInstances())
+				{
+					return objectId;
+				}
+
+				/* A JDK constant that is a value instance is never registry-resident, but its id is
+				 * deterministic and reserved, so the lookup can and must still answer it: it is the id
+				 * every store references the constant by.
+				 */
+				final long constantId = Persistence.lookupJavaConstantId(object);
+
+				return Swizzling.isFoundId(constantId)
+					? constantId
+					: objectId
+				;
 			}
 		}
 
@@ -276,7 +291,14 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 //			);
 			synchronized(this.objectRegistry)
 			{
-				return this.objectRegistry.lookupObject(objectId);
+				final Object object = this.objectRegistry.lookupObject(objectId);
+				if(object != null || !Persistence.areJavaConstantsValueInstances())
+				{
+					return object;
+				}
+
+				// see #lookupObjectId: the reverse direction of the same reserved constant ids.
+				return Persistence.resolveJavaConstantInstance(objectId);
 			}
 		}
 
@@ -306,6 +328,15 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 				long objectId;
 				if(Swizzling.isNotProperId(objectId = this.objectRegistry.lookupObjectId(object)))
 				{
+					/* Probed only after the registry misses: on a JVM where the JDK constants are value
+					 * instances, they are never registry-resident, so the probe is needed - but only here,
+					 * off the dominant already-registered path.
+					 */
+					if(Swizzling.isFoundId(objectId = this.synchRegisterJavaConstant(object, objectIdRequestor, optionalHandler)))
+					{
+						return objectId;
+					}
+
 					if(Swizzling.isNotProperId(objectId = this.synchCheckLocalRegistries(objectIdRequestor, object, optionalHandler)))
 					{
 						// see below about not globally registering the newly assigned objectId
@@ -368,6 +399,11 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 				long objectId;
 				if(Swizzling.isNotProperId(objectId = this.objectRegistry.lookupObjectId(object)))
 				{
+					if(Swizzling.isFoundId(objectId = this.synchRegisterJavaConstant(object, objectIdRequestor, optionalHandler)))
+					{
+						return objectId;
+					}
+
 					if(Swizzling.isNotProperId(objectId = this.synchCheckLocalRegistries(objectIdRequestor, object, optionalHandler)))
 					{
 						objectId = this.oidProvider.provideNextObjectId();
@@ -381,6 +417,45 @@ extends PersistenceSwizzlingLookup, PersistenceObjectIdHolder, Cloneable<Persist
 			}
 		}
 		
+		/**
+		 * Assigns the reserved constant id of a JDK constant that cannot be registered because it is a
+		 * value instance, and has the requestor skip it.
+		 * <p>
+		 * Skipping is essential, not an optimization: constant ids are deliberately not resolvable as
+		 * storage entities, so an entity must never be written for one. On a JVM that registers those
+		 * constants, the registry lookup yields the same id and the same skipping, so the persisted
+		 * form is identical either way.
+		 *
+		 * @param object            the instance to check.
+		 * @param objectIdRequestor the requestor to notify.
+		 * @param optionalHandler   the type handler responsible for {@code object}, may be {@literal null}.
+		 *
+		 * @param <T> the instance type.
+		 *
+		 * @return the reserved constant id or {@link Swizzling#notFoundId()} if not applicable.
+		 */
+		private <T> long synchRegisterJavaConstant(
+			final T                               object           ,
+			final PersistenceObjectIdRequestor<D> objectIdRequestor,
+			final PersistenceTypeHandler<D, T>    optionalHandler
+		)
+		{
+			if(!Persistence.areJavaConstantsValueInstances())
+			{
+				return Swizzling.notFoundId();
+			}
+
+			final long constantId = Persistence.lookupJavaConstantId(object);
+			if(Swizzling.isNotFoundId(constantId))
+			{
+				return Swizzling.notFoundId();
+			}
+
+			objectIdRequestor.registerSkippedOptional(constantId, object, optionalHandler);
+
+			return constantId;
+		}
+
 		private <T> long synchCheckLocalRegistries(
 			final PersistenceObjectIdRequestor<D> objectIdRequestor,
 			final T                               instance         ,

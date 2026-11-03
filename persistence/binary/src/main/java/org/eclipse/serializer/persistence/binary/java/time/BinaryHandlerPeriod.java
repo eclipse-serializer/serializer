@@ -18,10 +18,12 @@ import java.time.Period;
 
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomNonReferentialFixedLength;
 import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.binary.types.ValidatingBinaryHandler;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
 public final class BinaryHandlerPeriod extends AbstractBinaryHandlerCustomNonReferentialFixedLength<Period>
+implements ValidatingBinaryHandler<Period, Period>
 {
 	static final long BINARY_OFFSET_YEARS  =                                   0L;
 	static final long BINARY_OFFSET_MONTHS = BINARY_OFFSET_YEARS  + Integer.BYTES;
@@ -80,6 +82,11 @@ public final class BinaryHandlerPeriod extends AbstractBinaryHandlerCustomNonRef
 	@Override
 	public final Period create(final Binary data, final PersistenceLoadHandler handler)
 	{
+		return binaryState(data);
+	}
+
+	private static Period binaryState(final Binary data)
+	{
 		return Period.of(
 			data.read_int(BINARY_OFFSET_YEARS),
 			data.read_int(BINARY_OFFSET_MONTHS),
@@ -87,10 +94,27 @@ public final class BinaryHandlerPeriod extends AbstractBinaryHandlerCustomNonRef
 		);
 	}
 
+	/**
+	 * This handler transfers state in {@link #create} alone, so an instance it is handed here was
+	 * created elsewhere and cannot be updated. Validating instead of ignoring keeps a divergence from
+	 * dropping the persisted state silently, e.g. for an explicitly set root.
+	 */
 	@Override
 	public final void updateState(final Binary data, final Period instance, final PersistenceLoadHandler handler)
 	{
-		// no-op
+		this.validateState(data, instance, handler);
+	}
+
+	@Override
+	public final Period getValidationStateFromInstance(final Period instance)
+	{
+		return instance;
+	}
+
+	@Override
+	public final Period getValidationStateFromBinary(final Binary data)
+	{
+		return binaryState(data);
 	}
 
 }

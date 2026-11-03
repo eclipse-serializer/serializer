@@ -94,6 +94,7 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 
 		final Object referent = instance.peek();
 		final long referenceOid;
+		boolean relinkValue = false;
 
 		if(referent == null)
 		{
@@ -112,6 +113,28 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 			{
 				// cached id of an unloaded referent: referenced but not stored in this commit.
 				handler.noteTrustedReference(referenceOid);
+			}
+		}
+		else if(isLinkedValueReferent(instance, referent, handler))
+		{
+			if(handler.isEagerStoring())
+			{
+				/* An eager store must reach everything the referent references, so the referent is applied
+				 * despite being immutable. That assigns a new objectId, hence the link has to move to it -
+				 * which is sound precisely because the two objectIds address indistinguishable state.
+				 */
+				referenceOid = handler.apply(referent);
+				relinkValue  = true;
+			}
+			else
+			{
+				/* A value instance has no identity, so applying it would assign a new objectId on every
+				 * store and invalidate the existing link. That is unnecessary: the referent is immutable,
+				 * so the entity the link points to can never become stale. The established link is kept
+				 * and the referent is referenced instead of stored again, exactly like an unloaded one -
+				 * but with the referent at hand, so a target missing that entity can have it re-stored.
+				 */
+				referenceOid = handler.applyKnown(referent, instance.objectId());
 			}
 		}
 		else
@@ -150,13 +173,40 @@ public final class BinaryHandlerLazyDefault extends AbstractBinaryHandlerCustom<
 		 * previous state (unstored and thus not clearable, or linked to its prior valid objectId).
 		 */
 		final ObjectSwizzling objectRetriever = handler.getObjectRetriever();
+		final boolean         moveLink        = relinkValue;
 		handler.registerCommitListener(() ->
-			instance.$link(referenceOid, objectRetriever)
-		);
+		{
+			if(moveLink)
+			{
+				// the previous link is valid until here, so it may only be released after the commit succeeded.
+				instance.$unlink();
+			}
+			instance.$link(referenceOid, objectRetriever);
+		});
 
 		// lazy reference instance must be stored in any case
 		data.storeEntityHeader(Binary.referenceBinaryLength(1), this.typeId(), objectId);
 		data.store_long(referenceOid);
+	}
+
+	/**
+	 * Whether the referent is a value instance behind an established link, whose store must either
+	 * keep the link (the referent is immutable, so the entity behind it cannot become stale) or, on
+	 * an eager store, apply the referent and move the link to the newly assigned objectId.
+	 */
+	private static boolean isLinkedValueReferent(
+		final Lazy.Default<?>                 instance,
+		final Object                          referent,
+		final PersistenceStoreHandler<Binary> handler
+	)
+	{
+		/* A lazy reference of another storage keeps taking the ordinary path, where a differing
+		 * objectId is a genuine error and is reported as such.
+		 */
+		return Swizzling.isFoundId(instance.objectId())
+			&& XReflect.isValueInstance(referent)
+			&& instance.$getLoader() == handler.getObjectRetriever()
+		;
 	}
 
 	@SuppressWarnings("unchecked")

@@ -115,6 +115,13 @@ public final class BinaryHandlerRootReferenceDefault extends AbstractBinaryHandl
 		final Object rootInstance = this.rootReference.get();
 		if(rootInstance != null)
 		{
+			/* Reached with a value instance only when the root was installed through a supplier, which
+			 * cannot resolve it eagerly and therefore cannot check it. Failing here still fails at
+			 * startup, and with the reason, instead of leaving the JVM to refuse the registration below
+			 * with a bare IdentityException.
+			 */
+			PersistenceRootReference.validateRootInstance(rootInstance);
+
 			/*
 			 * If the singleton instance references a defined root object, it must be registered for the persisted
 			 * objectId, even if the id references a record of different, incompatible, type. This conflict
@@ -161,8 +168,14 @@ public final class BinaryHandlerRootReferenceDefault extends AbstractBinaryHandl
 			/*
 			 * If the instance has no explicit root instance set, a
 			 * generically loaded and instantiated root instance is set.
+			 *
+			 * Deliberately not #setRoot: that rejects a value instance because an explicitly set root
+			 * could never receive its persisted state. A loaded root has nothing to receive - it *is*
+			 * the persisted state - so a persisted value root is resolved here like any other.
 			 */
-			this.rootReference.setRoot(loadedRoot);
+			this.rootReference.setRootSupplier(() ->
+				loadedRoot
+			);
 
 			return;
 		}

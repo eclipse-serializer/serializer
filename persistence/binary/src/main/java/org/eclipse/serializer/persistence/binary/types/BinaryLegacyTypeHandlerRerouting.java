@@ -21,11 +21,13 @@ import java.nio.ByteBuffer;
 
 import org.eclipse.serializer.collections.types.XGettingEnum;
 import org.eclipse.serializer.memory.XMemory;
+import org.eclipse.serializer.persistence.binary.exceptions.BinaryPersistenceException;
 import org.eclipse.serializer.persistence.types.PersistenceLegacyTypeHandlingListener;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
 import org.eclipse.serializer.persistence.types.PersistenceTypeDefinition;
 import org.eclipse.serializer.persistence.types.PersistenceTypeHandler;
+import org.eclipse.serializer.reflect.XReflect;
 import org.eclipse.serializer.typing.KeyValue;
 
 /**
@@ -72,12 +74,44 @@ extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 		final boolean                                         switchByteOrder
 	)
 	{
+		return New(
+			typeDefinition              ,
+			typeHandler                 ,
+			translatorsWithTargetOffsets,
+			listener                    ,
+			""                          ,
+			switchByteOrder
+		);
+	}
+
+	/**
+	 * Like {@link #New(PersistenceTypeDefinition, PersistenceTypeHandler, XGettingEnum, PersistenceLegacyTypeHandlingListener, boolean)},
+	 * additionally naming the current members the persisted layout does not carry.
+	 * <p>
+	 * A handler that builds its instances from the persisted values instead of populating them - a value
+	 * class handler - can legitimately reject what a defaulted member holds, and then that member is what
+	 * the failure is about. It is named where it is known, which is here and not in the handler itself.
+	 *
+	 * @param defaultedMembers the current members that take their type's default, comma-separated; empty if none.
+	 *
+	 * @return the newly created legacy handler.
+	 */
+	public static <T> BinaryLegacyTypeHandlerRerouting<T> New(
+		final PersistenceTypeDefinition                       typeDefinition              ,
+		final PersistenceTypeHandler<Binary, T>               typeHandler                 ,
+		final XGettingEnum<KeyValue<Long, BinaryValueSetter>> translatorsWithTargetOffsets,
+		final PersistenceLegacyTypeHandlingListener<Binary>   listener                    ,
+		final String                                          defaultedMembers            ,
+		final boolean                                         switchByteOrder
+	)
+	{
 		return new BinaryLegacyTypeHandlerRerouting<>(
 			notNull(typeDefinition)                      ,
 			notNull(typeHandler)                         ,
 			toTranslators(translatorsWithTargetOffsets)  ,
 			toTargetOffsets(translatorsWithTargetOffsets),
 			mayNull(listener)                            ,
+			notNull(defaultedMembers)                    ,
 			switchByteOrder
 		);
 	}
@@ -88,6 +122,7 @@ extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 	////////////////////
 
 	private final BinaryReferenceTraverser[] newBinaryLayoutReferenceTraversers;
+	private final String                     defaultedMembers                  ;
 
 
 
@@ -101,10 +136,13 @@ extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 		final BinaryValueSetter[]                           valueTranslators,
 		final long[]                                        targetOffsets   ,
 		final PersistenceLegacyTypeHandlingListener<Binary> listener        ,
+		final String                                        defaultedMembers,
 		final boolean                                       switchByteOrder
 	)
 	{
 		super(typeDefinition, typeHandler, valueTranslators, targetOffsets, listener, switchByteOrder);
+
+		this.defaultedMembers = defaultedMembers;
 
 		/* (01.01.2020 TM)NOTE: Bugfix:
 		 * Moved from AbstractBinaryLegacyTypeHandlerTranslating here as this is only correct for ~Rerouting
@@ -127,8 +165,12 @@ extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 	}
 
 	@Override
-	protected T internalCreate(final Binary rawData, final PersistenceLoadHandler handler)
+	public void prepareLoadItem(final Binary rawData)
 	{
+		/* The rewritten data is what #iterateLoadableReferences describes, so the rewrite has to
+		 * happen before any reference is read out of the load item - which rules out doing it in
+		 * #create, whose execution the loader may defer.
+		 */
 		final long entityContentLength = this.typeHandler().membersPersistedLengthMaximum();
 
 		// kept and new header values
@@ -153,11 +195,38 @@ extends AbstractBinaryLegacyTypeHandlerTranslating<T>
 
 		// registered here to ensure deallocating raw memory at the end of the building process. Neither sooner nor later.
 		rawData.registerHelper(directByteBuffer, directByteBuffer);
+	}
 
-		// the current type handler can now create a new instance with correctly rearranged raw values
-		final T instance = this.typeHandler().create(rawData, handler);
+	@Override
+	protected T internalCreate(final Binary rawData, final PersistenceLoadHandler handler)
+	{
+		// the data has been rearranged by #prepareLoadItem, so the current type handler can read it directly.
+		if(this.defaultedMembers.isEmpty() || !XReflect.isValueClass(this.typeHandler().type()))
+		{
+			/* Every custom-wrapped handler reaches this class, enums included, and only one of them builds
+			 * its instance from the persisted values. For all the others a failure of #create says nothing
+			 * about a defaulted member, so naming one would assert a cause rather than report it - and the
+			 * wrapping would hide the exception type a caller matches on.
+			 */
+			return this.typeHandler().create(rawData, handler);
+		}
 
-		return instance;
+		try
+		{
+			return this.typeHandler().create(rawData, handler);
+		}
+		catch(final RuntimeException e)
+		{
+			/* Naming them is the point: a handler constructing its instance from the persisted values can
+			 * reject what a defaulted member holds, and the persisted layout not carrying it is the reason.
+			 */
+			throw new BinaryPersistenceException(
+				"Reading " + this.legacyTypeDefinition().toTypeIdentifier() + " as "
+				+ this.typeHandler().toRuntimeTypeIdentifier() + " failed, whose persisted layout did not"
+				+ " carry " + this.defaultedMembers + " so it was read with the default.",
+				e
+			);
+		}
 	}
 
 	@Override
