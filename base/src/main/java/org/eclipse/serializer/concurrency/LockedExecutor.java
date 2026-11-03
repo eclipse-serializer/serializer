@@ -26,9 +26,23 @@ import org.eclipse.serializer.functional.Producer;
 
 /**
  * Facility to execute operations with a reentrant mutual exclusion.
- * 
+ * <p>
+ * <b>Reentrancy:</b> a read operation may be nested inside another read operation, a write operation
+ * inside another write operation, and a read operation inside a write operation. Nesting a write
+ * operation inside a read operation is <b>not</b> supported: a {@link ReentrantReadWriteLock} cannot
+ * upgrade a read lock to a write lock, so such an attempt deadlocks the calling thread. This applies
+ * to both fairness policies.
+ * <p>
+ * <b>Fairness:</b> instances created by {@link #New()}, and the instance returned by
+ * {@link #global()}, use the <i>non-fair</i> policy. Arriving threads may barge ahead of threads
+ * that are already waiting, so no acquisition order is guaranteed and an individual thread can be
+ * overtaken an unbounded number of times. This maximizes throughput but permits starvation under
+ * sustained contention. Use {@link #New(boolean)} with <code>true</code> to obtain a fair instance,
+ * which serves waiting threads in approximate arrival order.
+ *
  * @see ReentrantLock
  * @see ReadWriteLock
+ * @see #New(boolean)
  */
 public interface LockedExecutor
 {
@@ -105,35 +119,82 @@ public interface LockedExecutor
 	 * Provides a global {@link LockedExecutor} instance.
 	 * <p>
 	 * Only a single one exists for the whole VM process, meaning it can be used to create VM-wide locks.
-	 * 
+	 * <p>
+	 * The shared instance uses the non-fair locking policy. Because it is shared by otherwise
+	 * unrelated parts of the process, its contention - and therefore its exposure to starvation - is
+	 * the sum of all its users. Prefer a dedicated instance from {@link #New(boolean)} where
+	 * acquisition order matters.
+	 *
 	 * @return a shared {@link LockedExecutor} instance
 	 */
 	public static LockedExecutor global()
 	{
 		return Static.sharedInstance();
 	}
-	
-	
+
+
 	/**
-	 * Pseudo-constructor method to create a new {@link LockedExecutor}.
-	 * 
+	 * Pseudo-constructor method to create a new {@link LockedExecutor} with the non-fair locking policy.
+	 * <p>
+	 * Equivalent to {@link #New(boolean) New(false)}.
+	 *
 	 * @return a newly created {@link LockedExecutor}
+	 * @see #New(boolean)
 	 */
 	public static LockedExecutor New()
 	{
-		return new LockedExecutor.Default();
+		return New(false);
 	}
-	
-	
+
+
+	/**
+	 * Pseudo-constructor method to create a new {@link LockedExecutor} with the given locking policy.
+	 * <p>
+	 * A fair executor hands the lock over in approximate arrival order, so a waiting thread is not
+	 * overtaken indefinitely, but its throughput is considerably lower because every hand-over has to
+	 * unpark the next thread instead of letting an already running one barge in. A non-fair executor
+	 * lets arriving threads barge ahead of waiting ones, which yields a much higher throughput but
+	 * provides no ordering guarantee at all.
+	 * <p>
+	 * Note that the fairness of a lock does not extend to the scheduling of threads, as documented on
+	 * {@link ReentrantLock}. A fair policy orders the hand-over of the lock itself; it cannot prevent
+	 * the JVM or the operating system from scheduling the contending threads unevenly.
+	 * <p>
+	 * Reentrancy is unaffected by this choice: a thread that already holds the lock is always let
+	 * through, in both policies.
+	 *
+	 * @param fair <code>true</code> to use a fair locking policy, <code>false</code> for a non-fair one
+	 * @return a newly created {@link LockedExecutor}
+	 */
+	public static LockedExecutor New(final boolean fair)
+	{
+		return new LockedExecutor.Default(fair);
+	}
+
+
 	public static class Default implements LockedExecutor
 	{
+		private final boolean fair;
+
 		private transient volatile ReentrantReadWriteLock reentrantLock;
 
-		Default()
+		Default(final boolean fair)
 		{
 			super();
+
+			this.fair = fair;
 		}
-		
+
+		/**
+		 * Tells whether this executor's lock uses the fair policy.
+		 *
+		 * @return <code>true</code> if the locking policy is fair
+		 */
+		boolean isFair()
+		{
+			return this.fair;
+		}
+
 		private ReentrantReadWriteLock reentrantLock()
 		{
 			/*
@@ -148,7 +209,7 @@ public interface LockedExecutor
 				{
 					if((reentrantLock = this.reentrantLock) == null)
 					{
-						reentrantLock = this.reentrantLock = new ReentrantReadWriteLock();
+						reentrantLock = this.reentrantLock = new ReentrantReadWriteLock(this.fair);
 					}
 				}
 			}

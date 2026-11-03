@@ -47,6 +47,10 @@
 		<javadoc.failed.on.error>false</javadoc.failed.on.error>
 		<surefire.rerunFailingTestsCount>2</surefire.rerunFailingTestsCount>
 		<slf4j.version>2.0.17</slf4j.version>
+		<junit-jupiter.version>6.0.3</junit-jupiter.version>
+		<commons-io.version>2.21.0</commons-io.version>
+		<javassist.version>3.30.2-GA</javassist.version>
+		<datafaker.version>2.5.3</datafaker.version>
 	</properties>
 
 	<modules>
@@ -80,6 +84,35 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
 				<version>${slf4j.version}</version>
+			</dependency>
+
+			<!-- Test libraries -->
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit-jupiter.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-simple</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.javassist</groupId>
+				<artifactId>javassist</artifactId>
+				<version>${javassist.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.datafaker</groupId>
+				<artifactId>datafaker</artifactId>
+				<version>${datafaker.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
