@@ -18,8 +18,6 @@ import static org.eclipse.serializer.util.X.coalesce;
 
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryUsage;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -1183,27 +1181,14 @@ public final class JdkInternals
 
 	// memory statistics creation //
 
-	private static MemoryStatistics createMemoryStatistics(final MemoryUsage usage)
-	{
-		return MemoryStatistics.New(
-			usage.getMax()      ,
-			usage.getCommitted(),
-			usage.getUsed()
-		);
-	}
-
 	public static MemoryStatistics createHeapMemoryStatistics()
 	{
-		return createMemoryStatistics(
-			ManagementFactory.getMemoryMXBean().getHeapMemoryUsage()
-		);
+		return JdkMemoryStatistics.createHeapMemoryStatistics();
 	}
 
 	public static MemoryStatistics createNonHeapMemoryStatistics()
 	{
-		return createMemoryStatistics(
-			ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage()
-		);
+		return JdkMemoryStatistics.createNonHeapMemoryStatistics();
 	}
 
 

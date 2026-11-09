@@ -25,6 +25,7 @@ import org.eclipse.serializer.functional.DefaultInstantiator;
 import org.eclipse.serializer.memory.MemoryAccessor;
 import org.eclipse.serializer.memory.MemoryStatistics;
 import org.eclipse.serializer.memory.sun.JdkInstantiatorBlank;
+import org.eclipse.serializer.memory.sun.JdkMemoryStatistics;
 import org.eclipse.serializer.typing.XTypes;
 
 
@@ -538,14 +539,12 @@ public class NativeMemoryAccessor implements MemoryAccessor
 	@Override
 	public MemoryStatistics createHeapMemoryStatistics()
 	{
-		notImplemented();
-		return null;
+		return JdkMemoryStatistics.createHeapMemoryStatistics();
 	}
 
 	@Override
 	public MemoryStatistics createNonHeapMemoryStatistics()
 	{
-		notImplemented();
-		return null;
+		return JdkMemoryStatistics.createNonHeapMemoryStatistics();
 	}
 }
