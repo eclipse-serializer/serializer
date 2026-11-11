@@ -72,6 +72,9 @@ public interface LazyReferenceManager
 	 * Replaces the global manager. The new manager takes over all registered references and controllers, and later
 	 * registrations at the previous manager are forwarded to it.
 	 * If the previous manager is running, the new one is started and the previous one is stopped.
+	 * <p>
+	 * This asks the controllers ({@link Controller#mayRun()}) while holding a lock that {@link #startGlobal(Controller)}
+	 * needs as well: neither may be called while holding a lock that a controller's {@code mayRun()} waits for.
 	 *
 	 * @param referenceManager the new global manager
 	 * @return the previous global manager
@@ -90,6 +93,9 @@ public interface LazyReferenceManager
 	 * Adds the passed controller to the global manager and starts it, atomically with {@link #set(LazyReferenceManager)}:
 	 * a manager replaced meanwhile is never started. Meant for the start of a component that allows the manager to run,
 	 * e.g. a storage.
+	 * <p>
+	 * Must not be called while holding a lock that a controller's {@link Controller#mayRun()} waits for: a concurrent
+	 * {@link #set(LazyReferenceManager)} asks the controllers while holding the lock this method needs.
 	 *
 	 * @param controller the controller to add
 	 * @return the global manager
