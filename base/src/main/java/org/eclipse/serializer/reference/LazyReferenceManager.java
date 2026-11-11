@@ -86,6 +86,19 @@ public interface LazyReferenceManager
 		return Static.get();
 	}
 
+	/**
+	 * Adds the passed controller to the global manager and starts it, atomically with {@link #set(LazyReferenceManager)}:
+	 * a manager replaced meanwhile is never started. Meant for the start of a component that allows the manager to run,
+	 * e.g. a storage.
+	 *
+	 * @param controller the controller to add
+	 * @return the global manager
+	 */
+	public static LazyReferenceManager startGlobal(final LazyReferenceManager.Controller controller)
+	{
+		return Static.startGlobal(controller);
+	}
+
 
 	public final class Static
 	{
@@ -159,6 +172,16 @@ public interface LazyReferenceManager
 		static LazyReferenceManager get()
 		{
 			return globalReferenceManager;
+		}
+
+		// under the lock of set(): a separate get() and start() could start a manager that set() retired in between
+		static synchronized LazyReferenceManager startGlobal(final LazyReferenceManager.Controller controller)
+		{
+			final LazyReferenceManager manager = globalReferenceManager;
+			manager.addController(controller);
+			manager.start();
+
+			return manager;
 		}
 
 		
