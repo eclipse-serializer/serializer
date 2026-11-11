@@ -86,25 +86,30 @@ public final class JdkMemoryStatistics
 
 	public static MemoryStatistics createHeapMemoryStatistics()
 	{
-		final MemoryUsage usage     = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-		final long        max       = usage.getMax();
-		final long        committed = usage.getCommitted();
-		final long        used      = usage.getUsed();
 		try
 		{
-			final Beans         beans     = beans();
+			final Beans beans = beans();
+
+			/*
+			 * The post-GC sample first, the current usages after it: a collection in between then makes this check
+			 * underestimate once, instead of counting the garbage it reclaimed as growth since the sample.
+			 */
+			final long         count  = gcCount(beans);
+			final PostGcSample sample = count > 0 ? sample(count, beans) : null;
+
+			final MemoryUsage   usage     = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+			final long          max       = usage.getMax();
+			final long          committed = usage.getCommitted();
+			final long          used      = usage.getUsed();
 			final MemoryUsage[] oldUsages = currentUsages(beans.oldPools);
 			final long          oldMax    = oldGenerationMax(oldUsages);
 			final long          oldUsed   = oldMax < 0 ? -1 : oldGenerationUsedAfterLastGc(beans);
 
-			final long count = gcCount(beans);
-			if(count <= 0)
+			if(sample == null)
 			{
 				// no collection yet (0) or no collection count at all (-1): the instantaneous usage is all there is
 				return MemoryStatistics.New(max, committed, used, used, count, oldUsed, oldMax);
 			}
-
-			final PostGcSample sample = sample(count, beans);
 			if(sample.usedAfterGc < 0)
 			{
 				logFallbackOnce("the garbage collectors provide no usage after collection", null);
@@ -130,7 +135,8 @@ public final class JdkMemoryStatistics
 		{
 			// statistics must never fail: fall back to the instantaneous value, i.e. the behavior without post-GC data.
 			logFallbackOnce("reading the usage after collection failed", e);
-			return MemoryStatistics.New(max, committed, used);
+			final MemoryUsage usage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+			return MemoryStatistics.New(usage.getMax(), usage.getCommitted(), usage.getUsed());
 		}
 	}
 

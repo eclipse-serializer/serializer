@@ -15,6 +15,8 @@ package org.eclipse.serializer.reference;
  */
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.eclipse.serializer.memory.MemoryStatistics;
@@ -118,20 +120,37 @@ public interface LazyReferenceManager
 			{
 				((Default)old).forwardRegistrationsTo(referenceManager);
 			}
-			referenceManager.registerAll(old);
+			try
+			{
+				referenceManager.registerAll(old);
+			}
+			catch(final Throwable t)
+			{
+				// the old manager stays global: it must not forward to the manager that failed to take over
+				if(old instanceof Default)
+				{
+					((Default)old).forwardRegistrationsTo(null);
+				}
+				throw t;
+			}
 			globalReferenceManager = referenceManager;
 
 			// storages start the manager only on their own start: without the handover, clearing would stop silently.
-			// Stop first: the JMX bean name is shared and only free after the old manager has unregistered it.
-			if(old.isRunning())
+			final boolean oldWasRunning = old.isRunning();
+
+			/*
+			 * The old manager is retired in any case: while its controllers disallow running, its thread may still sleep
+			 * and hold the JMX bean. Stop first: the bean name is shared and only free after it has been unregistered.
+			 */
+			old.stop();
+			if(oldWasRunning)
 			{
-				old.stop();
 				referenceManager.start();
-				if(referenceManager instanceof Default)
-				{
-					// a replacement started before set() could not register its JMX bean while the old one held the name
-					((Default)referenceManager).ensureMonitorRegistered();
-				}
+			}
+			if(referenceManager instanceof Default)
+			{
+				// a replacement started before set() could not register its JMX bean while the old one held the name
+				((Default)referenceManager).ensureMonitorRegistered();
 			}
 
 			return old;
@@ -382,7 +401,7 @@ public interface LazyReferenceManager
 		////////////
 		
 
-		final void internalCleanUp(final long nanoTimeBudget, final Lazy.Checker checker)
+		final void internalCleanUp(final Entry start, final long nanoTimeBudget, final Lazy.Checker checker)
 		{
 			/* (22.06.2016 TM)NOTE: full clear does not clear fully
 			 * productive use of the full clear call clears only like 6 of 300 references on a regular basis.
@@ -422,7 +441,7 @@ public interface LazyReferenceManager
 				currentTail = this.tail;
 			}
 
-			Entry last, e = (last = this.cursor).nextLazyManagerEntry;
+			Entry last, e = (last = start).nextLazyManagerEntry;
 
 			// special case check initially, there is only the head with no next entry
 			if(e == null)
@@ -531,7 +550,7 @@ public interface LazyReferenceManager
 				}
 			}
 
-			// outside this lock: the successor takes this manager's lock in registerAll, the reverse order could deadlock
+			// outside this lock: no manager holds its own lock while taking another manager's lock (no lock order to keep)
 			successor.register(lazyReference);
 		}
 
@@ -556,7 +575,7 @@ public interface LazyReferenceManager
 		
 
 		@Override
-		public synchronized LazyReferenceManager registerAll(final LazyReferenceManager other)
+		public LazyReferenceManager registerAll(final LazyReferenceManager other)
 		{
 			if(other == this)
 			{
@@ -564,10 +583,17 @@ public interface LazyReferenceManager
 					"Other " + LazyReferenceManager.class.getSimpleName() + " may not be this."
 				);
 			}
-			
-			other.iterate(lr ->
-				this.register(lr)
-			);
+
+			/*
+			 * A snapshot first: if this manager forwards to the other one, registering while iterating it would never end.
+			 * Not synchronized: this manager's lock is never held while the other one's is taken, in neither order.
+			 */
+			final List<Lazy<?>> references = new ArrayList<>();
+			other.iterate(references::add);
+			for(final Lazy<?> reference : references)
+			{
+				this.register(reference);
+			}
 			
 			other.iterateControllers(ac ->
 				this.addController(ac)
@@ -579,19 +605,20 @@ public interface LazyReferenceManager
 		@Override
 		public void clear()
 		{
-			this.internalCleanUp(Long.MAX_VALUE, CLEARER);
+			// from the head: the cursor of a budgeted cycle may stand anywhere in the list
+			this.internalCleanUp(this.head, Long.MAX_VALUE, CLEARER);
 		}
 
 		@Override
 		public void cleanUp(final long nanoTimeBudget)
 		{
-			this.internalCleanUp(nanoTimeBudget, this.checker);
+			this.internalCleanUp(this.cursor, nanoTimeBudget, this.checker);
 		}
 		
 		@Override
 		public void cleanUp(final long nanoTimeBudget, final Lazy.Checker checker)
 		{
-			this.internalCleanUp(nanoTimeBudget, checker);
+			this.internalCleanUp(this.cursor, nanoTimeBudget, checker);
 		}
 		
 		@Override
@@ -606,9 +633,15 @@ public interface LazyReferenceManager
 			// check for already running condition to avoid starting more than more thread
 			if(!this.running && this.mayRun())
 			{
-				this.running = true;
-				this.cleanupThread = new LazyReferenceCleanupThread(new WeakReference<>(this), this.millitimeCheckIntervalProvider);
-				this.cleanupThread.start();
+				/*
+				 * Running only once the thread is started: a failing start (e.g. "unable to create native thread") must
+				 * not leave the manager marked as running without a thread, which no start() would ever repair.
+				 * The thread waits for this monitor in its loop condition, so the order is safe.
+				 */
+				final Thread thread = new LazyReferenceCleanupThread(new WeakReference<>(this), this.millitimeCheckIntervalProvider);
+				thread.start();
+				this.running       = true  ;
+				this.cleanupThread = thread;
 
 				// registered only while running: the bean name is shared by all managers
 				this.monitorManager.registerMonitor(this.monitor);
