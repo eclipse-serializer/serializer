@@ -22,6 +22,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -124,7 +125,7 @@ public final class JdkMemoryStatistics
 			 *   the instantaneous usage is used.
 			 * The snapshot plus the growth can exceed the current value (e.g. right after a collection freed more).
 			 */
-			final long usedAfterLastGc = isWithoutGcActivity(sample)
+			final long usedAfterLastGc = isWithoutGcActivity(sample, beans)
 				? used
 				: Math.min(sample.usedAfterGc + oldGenerationGrowth(sample, oldUsages), used)
 			;
@@ -223,10 +224,10 @@ public final class JdkMemoryStatistics
 		return defined ? sum : -1;
 	}
 
-	// a sample is taken when the collection count changes, so its age is the time without collector activity
-	private static boolean isWithoutGcActivity(final PostGcSample sample)
+	// measured from the end of the latest collector activity, not from the query that noticed it (may be much later)
+	private static boolean isWithoutGcActivity(final PostGcSample sample, final Beans beans)
 	{
-		return System.currentTimeMillis() - sample.sampledMs >= NO_GC_ACTIVITY_LIMIT_MS;
+		return beans.runtime.getUptime() - sample.lastActivityEndMs >= NO_GC_ACTIVITY_LIMIT_MS;
 	}
 
 	private static PostGcSample sample(final long gcCount, final Beans beans) throws Exception
@@ -252,9 +253,10 @@ public final class JdkMemoryStatistics
 	{
 		final LastGcInfoAccess access = beans.access;
 
-		long                 latestEndTime = Long.MIN_VALUE;
-		long                 latestUsed    = -1            ;
-		Map<?, ?>            latestUsage   = null          ;
+		long                 latestEndTime     = Long.MIN_VALUE;
+		long                 latestUsed        = -1            ;
+		Map<?, ?>            latestUsage       = null          ;
+		long                 lastActivityEndMs = Long.MIN_VALUE;
 		for(final GarbageCollectorMXBean gc : beans.polledCollectors)
 		{
 			final Object gcInfo = access.getLastGcInfo.invoke(gc);
@@ -264,7 +266,10 @@ public final class JdkMemoryStatistics
 				continue;
 			}
 
-			final long      endTime    = (Long)access.getEndTime.invoke(gcInfo);
+			final long endTime = (Long)access.getEndTime.invoke(gcInfo);
+			// activity counts also where the usage values are not used (pause beans reporting no usage)
+			lastActivityEndMs = Math.max(lastActivityEndMs, endTime);
+
 			final Map<?, ?> usageAfter = (Map<?, ?>)access.getMemoryUsageAfterGc.invoke(gcInfo);
 			final long      heapUsed   = sumHeapUsage(usageAfter, beans.heapPoolNames);
 			if(heapUsed > 0 && endTime > latestEndTime)
@@ -272,6 +277,14 @@ public final class JdkMemoryStatistics
 				latestEndTime = endTime   ;
 				latestUsed    = heapUsed  ;
 				latestUsage   = usageAfter;
+			}
+		}
+		for(final GarbageCollectorMXBean gc : beans.activityOnlyCollectors)
+		{
+			final Object gcInfo = access.getLastGcInfo.invoke(gc);
+			if(gcInfo != null)
+			{
+				lastActivityEndMs = Math.max(lastActivityEndMs, (Long)access.getEndTime.invoke(gcInfo));
 			}
 		}
 
@@ -285,7 +298,7 @@ public final class JdkMemoryStatistics
 			oldPoolsAfterGc[i] = poolUsage == null ? -1 : poolUsage.getUsed();
 		}
 
-		return new PostGcSample(gcCount, System.currentTimeMillis(), latestUsed, oldPoolsAfterGc);
+		return new PostGcSample(gcCount, lastActivityEndMs, latestUsed, oldPoolsAfterGc);
 	}
 
 	private static long oldGenerationGrowth(final PostGcSample sample, final MemoryUsage[] oldUsages)
@@ -370,10 +383,10 @@ public final class JdkMemoryStatistics
 		// instance fields //
 		////////////////////
 
-		final long   gcCount        ;
-		final long   sampledMs      ;
-		final long   usedAfterGc    ; // -1 if not available
-		final long[] oldPoolsAfterGc; // per Beans#oldPools, -1 if not available
+		final long   gcCount          ;
+		final long   lastActivityEndMs; // end of the latest collector activity, ms since the JVM start
+		final long   usedAfterGc      ; // -1 if not available
+		final long[] oldPoolsAfterGc  ; // per Beans#oldPools, -1 if not available
 
 
 
@@ -382,17 +395,17 @@ public final class JdkMemoryStatistics
 		/////////////////
 
 		PostGcSample(
-			final long   gcCount        ,
-			final long   sampledMs      ,
-			final long   usedAfterGc    ,
+			final long   gcCount          ,
+			final long   lastActivityEndMs,
+			final long   usedAfterGc      ,
 			final long[] oldPoolsAfterGc
 		)
 		{
 			super();
-			this.gcCount         = gcCount        ;
-			this.sampledMs       = sampledMs      ;
-			this.usedAfterGc     = usedAfterGc    ;
-			this.oldPoolsAfterGc = oldPoolsAfterGc;
+			this.gcCount           = gcCount          ;
+			this.lastActivityEndMs = lastActivityEndMs;
+			this.usedAfterGc       = usedAfterGc      ;
+			this.oldPoolsAfterGc   = oldPoolsAfterGc  ;
 		}
 	}
 
@@ -405,11 +418,13 @@ public final class JdkMemoryStatistics
 		// instance fields //
 		////////////////////
 
-		final List<GarbageCollectorMXBean> collectors      ; // all, for the collection count
-		final List<GarbageCollectorMXBean> polledCollectors; // providing LastGcInfo, without G1 Concurrent GC
-		final Set<String>                  heapPoolNames   ;
-		final List<MemoryPoolMXBean>       oldPools        ; // heap pools only filled by collections or direct allocation
-		final LastGcInfoAccess             access          ; // null if jdk.management is not available
+		final List<GarbageCollectorMXBean> collectors            ; // all, for the collection count
+		final List<GarbageCollectorMXBean> polledCollectors      ; // providing LastGcInfo, without G1 Concurrent GC
+		final List<GarbageCollectorMXBean> activityOnlyCollectors; // providing LastGcInfo, usage not used (G1 Concurrent GC)
+		final Set<String>                  heapPoolNames         ;
+		final List<MemoryPoolMXBean>       oldPools              ; // heap pools only filled by collections or direct allocation
+		final RuntimeMXBean                runtime               ; // uptime, the time base of LastGcInfo
+		final LastGcInfoAccess             access                ; // null if jdk.management is not available
 
 
 
@@ -422,12 +437,21 @@ public final class JdkMemoryStatistics
 			final LastGcInfoAccess             access     = LastGcInfoAccess.New();
 			final List<GarbageCollectorMXBean> collectors = List.copyOf(ManagementFactory.getGarbageCollectorMXBeans());
 
-			final List<GarbageCollectorMXBean> polled = new ArrayList<>();
+			final List<GarbageCollectorMXBean> polled       = new ArrayList<>();
+			final List<GarbageCollectorMXBean> activityOnly = new ArrayList<>();
 			if(access != null)
 			{
 				for(final GarbageCollectorMXBean gc : collectors)
 				{
-					if(access.gcBeanType.isInstance(gc) && !G1_CONCURRENT_COLLECTOR.equals(gc.getName()))
+					if(!access.gcBeanType.isInstance(gc))
+					{
+						continue;
+					}
+					if(G1_CONCURRENT_COLLECTOR.equals(gc.getName()))
+					{
+						activityOnly.add(gc);
+					}
+					else
 					{
 						polled.add(gc);
 					}
@@ -449,7 +473,15 @@ public final class JdkMemoryStatistics
 				}
 			}
 
-			return new Beans(collectors, List.copyOf(polled), Set.copyOf(heapPoolNames), List.copyOf(oldPools), access);
+			return new Beans(
+				collectors,
+				List.copyOf(polled),
+				List.copyOf(activityOnly),
+				Set.copyOf(heapPoolNames),
+				List.copyOf(oldPools),
+				ManagementFactory.getRuntimeMXBean(),
+				access
+			);
 		}
 
 		/*
@@ -469,19 +501,23 @@ public final class JdkMemoryStatistics
 		/////////////////
 
 		Beans(
-			final List<GarbageCollectorMXBean> collectors      ,
-			final List<GarbageCollectorMXBean> polledCollectors,
-			final Set<String>                  heapPoolNames   ,
-			final List<MemoryPoolMXBean>       oldPools        ,
+			final List<GarbageCollectorMXBean> collectors            ,
+			final List<GarbageCollectorMXBean> polledCollectors      ,
+			final List<GarbageCollectorMXBean> activityOnlyCollectors,
+			final Set<String>                  heapPoolNames         ,
+			final List<MemoryPoolMXBean>       oldPools              ,
+			final RuntimeMXBean                runtime               ,
 			final LastGcInfoAccess             access
 		)
 		{
 			super();
-			this.collectors       = collectors      ;
-			this.polledCollectors = polledCollectors;
-			this.heapPoolNames    = heapPoolNames   ;
-			this.oldPools         = oldPools        ;
-			this.access           = access          ;
+			this.collectors             = collectors            ;
+			this.polledCollectors       = polledCollectors      ;
+			this.activityOnlyCollectors = activityOnlyCollectors;
+			this.heapPoolNames          = heapPoolNames         ;
+			this.oldPools               = oldPools              ;
+			this.runtime                = runtime               ;
+			this.access                 = access                ;
 		}
 	}
 
