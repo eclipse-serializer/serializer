@@ -67,7 +67,8 @@ public interface LazyReferenceManager
 	
 
 	/**
-	 * Replaces the global manager. The new manager takes over all registered references and controllers.
+	 * Replaces the global manager. The new manager takes over all registered references and controllers, and later
+	 * registrations at the previous manager are forwarded to it.
 	 * If the previous manager is running, the new one is started and the previous one is stopped.
 	 *
 	 * @param referenceManager the new global manager
@@ -96,6 +97,27 @@ public interface LazyReferenceManager
 		static synchronized LazyReferenceManager set(final LazyReferenceManager referenceManager)
 		{
 			final LazyReferenceManager old = globalReferenceManager;
+			if(referenceManager == old)
+			{
+				// checked before the forwarding below, which would otherwise point the manager to itself
+				throw new IllegalArgumentException(
+					"The " + LazyReferenceManager.class.getSimpleName() + " is already the global one."
+				);
+			}
+
+			// a manager that becomes global again must register itself instead of forwarding (else a forwarding cycle)
+			if(referenceManager instanceof Default)
+			{
+				((Default)referenceManager).forwardRegistrationsTo(null);
+			}
+			/*
+			 * Lazy instances may have got the old manager just before the swap. Forwarding is set up before the takeover:
+			 * every registration at the old manager is either taken over or forwarded, none stays with it alone.
+			 */
+			if(old instanceof Default)
+			{
+				((Default)old).forwardRegistrationsTo(referenceManager);
+			}
 			referenceManager.registerAll(old);
 			globalReferenceManager = referenceManager;
 
@@ -105,6 +127,11 @@ public interface LazyReferenceManager
 			{
 				old.stop();
 				referenceManager.start();
+				if(referenceManager instanceof Default)
+				{
+					// a replacement started before set() could not register its JMX bean while the old one held the name
+					((Default)referenceManager).ensureMonitorRegistered();
+				}
 			}
 
 			return old;
@@ -226,10 +253,11 @@ public interface LazyReferenceManager
 		private          Entry          tail   = this.head            ;
 		private          Entry          cursor = this.head            ; // current "last" entry for checking
 		
-		private boolean         running        ;
-		private Thread          cleanupThread  ;
-		private ControllerEntry headController ;
-		private long            controllerCount;
+		private boolean              running        ;
+		private Thread               cleanupThread  ;
+		private LazyReferenceManager successor      ; // set when replaced as the global manager, see register()
+		private ControllerEntry      headController ;
+		private long                 controllerCount;
 		
 		private final MonitoringManager           monitorManager;
 		private final LazyReferenceManagerMonitor monitor       ;
@@ -490,10 +518,40 @@ public interface LazyReferenceManager
 		////////////
 
 		@Override
-		public synchronized void register(final Lazy<?> lazyReference)
+		public void register(final Lazy<?> lazyReference)
 		{
-			// uniqueness of references is guaranteed by calling this method only exactely once per reference instance
-			this.tail = this.tail.nextLazyManagerEntry = new Entry(lazyReference);
+			final LazyReferenceManager successor;
+			synchronized(this)
+			{
+				if((successor = this.successor) == null)
+				{
+					// uniqueness of references is guaranteed by calling this method only exactely once per reference instance
+					this.tail = this.tail.nextLazyManagerEntry = new Entry(lazyReference);
+					return;
+				}
+			}
+
+			// outside this lock: the successor takes this manager's lock in registerAll, the reverse order could deadlock
+			successor.register(lazyReference);
+		}
+
+		/**
+		 * Forwards all later registrations to the passed manager, the global manager that replaced this one, or ends
+		 * forwarding for {@code null}.
+		 */
+		final synchronized void forwardRegistrationsTo(final LazyReferenceManager successor)
+		{
+			this.successor = successor;
+		}
+
+		final synchronized void ensureMonitorRegistered()
+		{
+			if(this.running)
+			{
+				// a failed registration is not recorded, so register anew
+				this.monitorManager.shutdown();
+				this.monitorManager.registerMonitor(this.monitor);
+			}
 		}
 		
 
@@ -773,9 +831,14 @@ public interface LazyReferenceManager
 				{
 					intervalMs = this.checkIntervalProvider.get();
 				}
-				catch(final RuntimeException e)
+				catch(final Throwable t)
 				{
-					this.intervalFailures.report(e);
+					// like a failing cycle: only errors indicating a broken VM end the thread
+					if(isUnrecoverable(t))
+					{
+						throw t;
+					}
+					this.intervalFailures.report(t);
 					intervalMs = DEFAULT_CHECK_INTERVAL_MS;
 				}
 
