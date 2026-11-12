@@ -15,6 +15,8 @@ package org.eclipse.serializer.reference;
  */
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.eclipse.serializer.memory.MemoryStatistics;
@@ -44,6 +46,10 @@ public interface LazyReferenceManager
 		this.cleanUp(Long.MAX_VALUE, checker);
 	}
 
+	/**
+	 * Clears all registered lazy references that were stored and are not marked as used.
+	 * Unstored and used-marked ones keep their subject, as clearing them would lose data.
+	 */
 	public void clear();
 
 	public LazyReferenceManager start();
@@ -62,6 +68,17 @@ public interface LazyReferenceManager
 
 	
 
+	/**
+	 * Replaces the global manager. The new manager takes over all registered references and controllers, and later
+	 * registrations at the previous manager are forwarded to it.
+	 * If the previous manager is running, the new one is started and the previous one is stopped.
+	 * <p>
+	 * This asks the controllers ({@link Controller#mayRun()}) while holding a lock that {@link #startGlobal(Controller)}
+	 * needs as well: neither may be called while holding a lock that a controller's {@code mayRun()} waits for.
+	 *
+	 * @param referenceManager the new global manager
+	 * @return the previous global manager
+	 */
 	public static LazyReferenceManager set(final LazyReferenceManager referenceManager)
 	{
 		return Static.set(referenceManager);
@@ -72,23 +89,105 @@ public interface LazyReferenceManager
 		return Static.get();
 	}
 
+	/**
+	 * Adds the passed controller to the global manager and starts it, atomically with {@link #set(LazyReferenceManager)}:
+	 * a manager replaced meanwhile is never started. Meant for the start of a component that allows the manager to run,
+	 * e.g. a storage.
+	 * <p>
+	 * Must not be called while holding a lock that a controller's {@link Controller#mayRun()} waits for: a concurrent
+	 * {@link #set(LazyReferenceManager)} asks the controllers while holding the lock this method needs.
+	 *
+	 * @param controller the controller to add
+	 * @return the global manager
+	 */
+	public static LazyReferenceManager startGlobal(final LazyReferenceManager.Controller controller)
+	{
+		return Static.startGlobal(controller);
+	}
+
 
 	public final class Static
 	{
-		static LazyReferenceManager globalReferenceManager = LazyReferenceManager.New();
+		/*
+		 * Read without a lock: every Lazy creation reads it, while set() may wait for controllers, e.g. a storage
+		 * that holds its state lock during its whole start.
+		 */
+		static volatile LazyReferenceManager globalReferenceManager = LazyReferenceManager.New();
 
+		// serializes replacements, so that the handover of one is complete before the next one starts
 		static synchronized LazyReferenceManager set(final LazyReferenceManager referenceManager)
 		{
 			final LazyReferenceManager old = globalReferenceManager;
-			referenceManager.registerAll(old);
+			if(referenceManager == old)
+			{
+				// checked before the forwarding below, which would otherwise point the manager to itself
+				throw new IllegalArgumentException(
+					"The " + LazyReferenceManager.class.getSimpleName() + " is already the global one."
+				);
+			}
+
+			// a manager that becomes global again must register itself instead of forwarding (else a forwarding cycle)
+			if(referenceManager instanceof Default)
+			{
+				((Default)referenceManager).forwardRegistrationsTo(null);
+			}
+			/*
+			 * Lazy instances may have got the old manager just before the swap. Forwarding is set up before the takeover:
+			 * every registration at the old manager is either taken over or forwarded, none stays with it alone.
+			 */
+			if(old instanceof Default)
+			{
+				((Default)old).forwardRegistrationsTo(referenceManager);
+			}
+			try
+			{
+				referenceManager.registerAll(old);
+			}
+			catch(final Throwable t)
+			{
+				// the old manager stays global: it must not forward to the manager that failed to take over
+				if(old instanceof Default)
+				{
+					((Default)old).forwardRegistrationsTo(null);
+				}
+				throw t;
+			}
 			globalReferenceManager = referenceManager;
-			
+
+			// storages start the manager only on their own start: without the handover, clearing would stop silently.
+			final boolean oldWasRunning = old.isRunning();
+
+			/*
+			 * The old manager is retired in any case: while its controllers disallow running, its thread may still sleep
+			 * and hold the JMX bean. Stop first: the bean name is shared and only free after it has been unregistered.
+			 */
+			old.stop();
+			if(oldWasRunning)
+			{
+				referenceManager.start();
+			}
+			if(referenceManager instanceof Default)
+			{
+				// a replacement started before set() could not register its JMX bean while the old one held the name
+				((Default)referenceManager).ensureMonitorRegistered();
+			}
+
 			return old;
 		}
 
-		static synchronized LazyReferenceManager get()
+		static LazyReferenceManager get()
 		{
 			return globalReferenceManager;
+		}
+
+		// under the lock of set(): a separate get() and start() could start a manager that set() retired in between
+		static synchronized LazyReferenceManager startGlobal(final LazyReferenceManager.Controller controller)
+		{
+			final LazyReferenceManager manager = globalReferenceManager;
+			manager.addController(controller);
+			manager.start();
+
+			return manager;
 		}
 
 		
@@ -115,7 +214,11 @@ public interface LazyReferenceManager
 		@Override
 		public boolean check(final Lazy<?> lazyReference)
 		{
-			lazyReference.clear();
+			/*
+			 * Only stored references that are not marked as used: an unstored one cannot be reloaded, and a used mark
+			 * pins changes that are not stored yet (e.g. GigaMap segments). Clearing either would lose data.
+			 */
+			lazyReference.clear(ref -> true);
 			return true;
 		}
 	}
@@ -198,9 +301,11 @@ public interface LazyReferenceManager
 		private          Entry          tail   = this.head            ;
 		private          Entry          cursor = this.head            ; // current "last" entry for checking
 		
-		private boolean         running        ;
-		private ControllerEntry headController ;
-		private long            controllerCount;
+		private boolean              running        ;
+		private Thread               cleanupThread  ;
+		private LazyReferenceManager successor      ; // set when replaced as the global manager, see register()
+		private ControllerEntry      headController ;
+		private long                 controllerCount;
 		
 		private final MonitoringManager           monitorManager;
 		private final LazyReferenceManagerMonitor monitor       ;
@@ -224,7 +329,6 @@ public interface LazyReferenceManager
 			this.monitorManager                 = monitorManager        ;
 			
 			this.monitor = new LazyReferenceManagerMonitor(this);
-			this.monitorManager.registerMonitor(this.monitor);
 		}
 		
 		private synchronized boolean mayRun()
@@ -326,7 +430,7 @@ public interface LazyReferenceManager
 		////////////
 		
 
-		final void internalCleanUp(final long nanoTimeBudget, final Lazy.Checker checker)
+		final void internalCleanUp(final Entry start, final long nanoTimeBudget, final Lazy.Checker checker)
 		{
 			/* (22.06.2016 TM)NOTE: full clear does not clear fully
 			 * productive use of the full clear call clears only like 6 of 300 references on a regular basis.
@@ -338,8 +442,6 @@ public interface LazyReferenceManager
 			 * However, the basic logic of entry iteration and the "Clearer" checker remained unchanged.
 			 * So the age old note might still be relevant.
 			 */
-			
-			final long timeBudgetBound = XTime.calculateNanoTimeBudgetBound(nanoTimeBudget);
 
 			final Entry currentTail;
 
@@ -368,7 +470,7 @@ public interface LazyReferenceManager
 				currentTail = this.tail;
 			}
 
-			Entry last, e = (last = this.cursor).nextLazyManagerEntry;
+			Entry last, e = (last = start).nextLazyManagerEntry;
 
 			// special case check initially, there is only the head with no next entry
 			if(e == null)
@@ -377,6 +479,9 @@ public interface LazyReferenceManager
 			}
 		
 			checker.beginCheckCycle();
+
+			// the budget is for checking references: the checker's cycle preparation (memory statistics) must not consume it
+			final long timeBudgetBound = XTime.calculateNanoTimeBudgetBound(nanoTimeBudget);
 
 			cleanUp:
 			do // do at least one check, no matter what
@@ -461,15 +566,45 @@ public interface LazyReferenceManager
 		////////////
 
 		@Override
-		public synchronized void register(final Lazy<?> lazyReference)
+		public void register(final Lazy<?> lazyReference)
 		{
-			// uniqueness of references is guaranteed by calling this method only exactely once per reference instance
-			this.tail = this.tail.nextLazyManagerEntry = new Entry(lazyReference);
+			final LazyReferenceManager successor;
+			synchronized(this)
+			{
+				if((successor = this.successor) == null)
+				{
+					// uniqueness of references is guaranteed by calling this method only exactely once per reference instance
+					this.tail = this.tail.nextLazyManagerEntry = new Entry(lazyReference);
+					return;
+				}
+			}
+
+			// outside this lock: no manager holds its own lock while taking another manager's lock (no lock order to keep)
+			successor.register(lazyReference);
+		}
+
+		/**
+		 * Forwards all later registrations to the passed manager, the global manager that replaced this one, or ends
+		 * forwarding for {@code null}.
+		 */
+		final synchronized void forwardRegistrationsTo(final LazyReferenceManager successor)
+		{
+			this.successor = successor;
+		}
+
+		final synchronized void ensureMonitorRegistered()
+		{
+			if(this.running)
+			{
+				// a failed registration is not recorded, so register anew
+				this.monitorManager.shutdown();
+				this.monitorManager.registerMonitor(this.monitor);
+			}
 		}
 		
 
 		@Override
-		public synchronized LazyReferenceManager registerAll(final LazyReferenceManager other)
+		public LazyReferenceManager registerAll(final LazyReferenceManager other)
 		{
 			if(other == this)
 			{
@@ -477,10 +612,17 @@ public interface LazyReferenceManager
 					"Other " + LazyReferenceManager.class.getSimpleName() + " may not be this."
 				);
 			}
-			
-			other.iterate(lr ->
-				this.register(lr)
-			);
+
+			/*
+			 * A snapshot first: if this manager forwards to the other one, registering while iterating it would never end.
+			 * Not synchronized: this manager's lock is never held while the other one's is taken, in neither order.
+			 */
+			final List<Lazy<?>> references = new ArrayList<>();
+			other.iterate(references::add);
+			for(final Lazy<?> reference : references)
+			{
+				this.register(reference);
+			}
 			
 			other.iterateControllers(ac ->
 				this.addController(ac)
@@ -492,19 +634,20 @@ public interface LazyReferenceManager
 		@Override
 		public void clear()
 		{
-			this.internalCleanUp(Long.MAX_VALUE, CLEARER);
+			// from the head: the cursor of a budgeted cycle may stand anywhere in the list
+			this.internalCleanUp(this.head, Long.MAX_VALUE, CLEARER);
 		}
 
 		@Override
 		public void cleanUp(final long nanoTimeBudget)
 		{
-			this.internalCleanUp(nanoTimeBudget, this.checker);
+			this.internalCleanUp(this.cursor, nanoTimeBudget, this.checker);
 		}
 		
 		@Override
 		public void cleanUp(final long nanoTimeBudget, final Lazy.Checker checker)
 		{
-			this.internalCleanUp(nanoTimeBudget, checker);
+			this.internalCleanUp(this.cursor, nanoTimeBudget, checker);
 		}
 		
 		@Override
@@ -519,8 +662,18 @@ public interface LazyReferenceManager
 			// check for already running condition to avoid starting more than more thread
 			if(!this.running && this.mayRun())
 			{
-				this.running = true;
-				new LazyReferenceCleanupThread(new WeakReference<>(this), this.millitimeCheckIntervalProvider).start();
+				/*
+				 * Running only once the thread is started: a failing start (e.g. "unable to create native thread") must
+				 * not leave the manager marked as running without a thread, which no start() would ever repair.
+				 * The thread waits for this monitor in its loop condition, so the order is safe.
+				 */
+				final Thread thread = new LazyReferenceCleanupThread(new WeakReference<>(this), this.millitimeCheckIntervalProvider);
+				thread.start();
+				this.running       = true  ;
+				this.cleanupThread = thread;
+
+				// registered only while running: the bean name is shared by all managers
+				this.monitorManager.registerMonitor(this.monitor);
 			}
 			
 			return this;
@@ -529,9 +682,52 @@ public interface LazyReferenceManager
 		@Override
 		public synchronized LazyReferenceManager stop()
 		{
-			this.running = false;
-			this.monitorManager.shutdown();
+			// detach and wake up the thread, so that a start() right after this creates the only running thread
+			final Thread thread = this.detachCleanupThread();
+			if(thread != null)
+			{
+				thread.interrupt();
+			}
+
 			return this;
+		}
+
+		private Thread detachCleanupThread()
+		{
+			final Thread thread = this.cleanupThread;
+			this.running       = false;
+			this.cleanupThread = null ;
+			this.monitorManager.shutdown();
+
+			return thread;
+		}
+
+		/**
+		 * The loop condition of the cleanup thread: a thread detached by {@link #stop()} must end, even if the
+		 * manager has been started again in the meantime. A thread ending because no controller allows running
+		 * resets the running state in the same lock, so that a following {@link #start()} creates a new thread.
+		 */
+		final synchronized boolean mayContinue(final Thread thread)
+		{
+			if(this.cleanupThread != thread)
+			{
+				return false;
+			}
+			if(this.isRunning())
+			{
+				return true;
+			}
+			this.cleanupThreadTerminated(thread);
+			return false;
+		}
+
+		final synchronized void cleanupThreadTerminated(final Thread thread)
+		{
+			// only for the current thread: a detached older thread must not reset the state of a newer one
+			if(this.cleanupThread == thread)
+			{
+				this.detachCleanupThread();
+			}
 		}
 		
 		@Override
@@ -656,9 +852,20 @@ public interface LazyReferenceManager
 
 		static final class LazyReferenceCleanupThread extends Thread
 		{
+			// a shorter (or non-positive) interval would let the thread spin
+			private static final long MINIMUM_CHECK_INTERVAL_MS = 1;
+
 			// lazy reference for automatic thread termination
 			private final WeakReference<LazyReferenceManager.Default> parent               ;
 			private final _longReference                              checkIntervalProvider;
+
+			// failure reporting, only accessed by this thread
+			private final FailureReport cycleFailures = new FailureReport(
+				"LazyReferenceManager cleanup cycle failed, no lazy references are cleared while this persists"
+			);
+			private final FailureReport intervalFailures = new FailureReport(
+				"LazyReferenceManager check interval could not be determined, using the default interval"
+			);
 
 			LazyReferenceCleanupThread(
 				final WeakReference<LazyReferenceManager.Default> parent,
@@ -670,51 +877,177 @@ public interface LazyReferenceManager
 				this.checkIntervalProvider = checkIntervalProvider;
 			}
 
+			private static boolean isUnrecoverable(final Throwable t)
+			{
+				/*
+				 * An OutOfMemoryError is exactly the situation clearing lazy references is meant to relieve, so the
+				 * thread must keep going. Only errors indicating a broken VM end it.
+				 */
+				return t instanceof InternalError || t instanceof UnknownError;
+			}
+
+			private void sleepUntilNextCycle()
+			{
+				long intervalMs;
+				try
+				{
+					intervalMs = this.checkIntervalProvider.get();
+				}
+				catch(final Throwable t)
+				{
+					// like a failing cycle: only errors indicating a broken VM end the thread
+					if(isUnrecoverable(t))
+					{
+						throw t;
+					}
+					this.intervalFailures.report(t);
+					intervalMs = DEFAULT_CHECK_INTERVAL_MS;
+				}
+
+				try
+				{
+					// a negative interval would make Thread.sleep throw and kill this thread, zero would make it spin
+					Thread.sleep(Math.max(intervalMs, MINIMUM_CHECK_INTERVAL_MS));
+				}
+				catch(final InterruptedException e)
+				{
+					// sleep interrupted (e.g. by stop()), proceed with the loop condition immediately
+				}
+			}
+
 
 			@Override
 			public void run()
 			{
 				logger.debug("LazyReferenceManager started");
-				
-				LazyReferenceManager.Default parent;
-				while((parent = this.parent.get()) != null)
-				{
-					// sleep for a dynamically specified milli time until the next check
-					try
-					{
-						// check for running state. Must be the first action in case of swallowed exception
-						if(!parent.isRunning())
-						{
-							break;
-						}
 
-						// perform check
-						parent.cleanUpBudgeted();
+				boolean terminatedRegularly = false;
+				try
+				{
+					LazyReferenceManager.Default parent;
+					while((parent = this.parent.get()) != null)
+					{
+						try
+						{
+							// check for running state. Must be the first action in case of swallowed exception.
+							// A thread detached by stop() ends, even if the manager has been started again.
+							if(!parent.mayContinue(this))
+							{
+								break;
+							}
+
+							// perform check
+							parent.cleanUpBudgeted();
+							this.cycleFailures.recovered();
+						}
+						catch(final Throwable t)
+						{
+							if(isUnrecoverable(t))
+							{
+								// let the thread die, see finally
+								throw t;
+							}
+							/*
+							 * Thread may not die on any other exception or error, just continue looping
+							 * as long as parent exists and running is true.
+							 * The sleep below must happen in this case, too, otherwise a persistent failure
+							 * makes this thread spin without any pause.
+							 */
+							this.cycleFailures.report(t);
+						}
 
 						// very nasty: must clear the reference from the stack in order for the WeakReference to work
 						parent = null;
 
 						// extra nasty: must sleep with nulled reference for WeakReference to work, not before.
-						try
-						{
-							Thread.sleep(this.checkIntervalProvider.get());
-						}
-						catch(final InterruptedException e)
-						{
-							// sleep interrupted, proceed with check immediately
-						}
+						this.sleepUntilNextCycle();
 					}
-					catch(final Exception e)
+					terminatedRegularly = true;
+				}
+				finally
+				{
+					// let a later start() create a new thread instead of believing this one is still running
+					final LazyReferenceManager.Default parent = this.parent.get();
+					if(parent != null)
 					{
-						/*
-						 * Thread may not die on any exception, just continue looping
-						 * as long as parent exists and running is true
-						 */
+						parent.cleanupThreadTerminated(this);
+					}
+					if(!terminatedRegularly)
+					{
+						logger.error("LazyReferenceManager thread terminated abnormally, no lazy references are cleared until start() is called again.");
 					}
 				}
-				
+
 				// either parent has been garbage collected or stopped, so terminate.
 				logger.debug("LazyReferenceManager stopped");
+			}
+		}
+
+		/**
+		 * Rate-limited reporting of a recurring failure: at most one warning (with stack trace) and one recovery
+		 * message per {@link #LOG_INTERVAL_MS}, also when failures and successes alternate.
+		 * Must not fail itself: it is used while handling errors such as an OutOfMemoryError.
+		 */
+		static final class FailureReport
+		{
+			private static final long LOG_INTERVAL_MS = 60_000;
+
+			private final String message;
+
+			private long failures            ; // since the last recovery
+			private long failuresSinceLastLog;
+			// 0 (epoch) means "never": the first report is logged right away
+			private long lastFailureLogMs    ;
+			private long lastRecoveryLogMs   ;
+
+			FailureReport(final String message)
+			{
+				super();
+				this.message = message;
+			}
+
+			final void report(final Throwable t)
+			{
+				try
+				{
+					this.failures++;
+					this.failuresSinceLastLog++;
+
+					final long now = System.currentTimeMillis();
+					if(now - this.lastFailureLogMs < LOG_INTERVAL_MS)
+					{
+						return;
+					}
+					logger.warn("{} ({} failure(s) since the last report).", this.message, this.failuresSinceLastLog, t);
+					this.lastFailureLogMs     = now;
+					this.failuresSinceLastLog = 0  ;
+				}
+				catch(final Throwable reportingFailure)
+				{
+					// e.g. no memory left to log: the failure is counted, logging is retried next time
+				}
+			}
+
+			final void recovered()
+			{
+				if(this.failures == 0)
+				{
+					return;
+				}
+				try
+				{
+					final long now = System.currentTimeMillis();
+					if(now - this.lastRecoveryLogMs >= LOG_INTERVAL_MS)
+					{
+						logger.info("{}: recovered after {} failure(s).", this.message, this.failures);
+						this.lastRecoveryLogMs = now;
+					}
+					this.failures = 0;
+				}
+				catch(final Throwable reportingFailure)
+				{
+					// logging is retried at the next recovery
+				}
 			}
 		}
 

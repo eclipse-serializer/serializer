@@ -345,6 +345,13 @@ public interface MemoryAccessor
 	
 	// memory statistics creation //
 	
+	/**
+	 * Creates statistics of the heap memory.
+	 * Implementations must never throw: the {@link org.eclipse.serializer.reference.LazyReferenceManager} relies on the
+	 * heap statistics in every cleanup cycle.
+	 *
+	 * @return the heap memory statistics
+	 */
 	public MemoryStatistics createHeapMemoryStatistics();
 	
 	public MemoryStatistics createNonHeapMemoryStatistics();

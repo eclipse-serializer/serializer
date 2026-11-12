@@ -698,8 +698,12 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			
 			public static double defaultMemoryQuota()
 			{
-				// all available memory is used
-				return 1.0;
+				/*
+				 * Headroom: the memory check compares the heap usage after the last GC with the maximum heap × quota.
+				 * At 1.0, clearing of recently used references starts only when the heap is practically full,
+				 * which is too late to prevent an OutOfMemoryError when references are loaded steadily.
+				 */
+				return 0.8;
 			}
 			
 		}
@@ -739,13 +743,24 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 		/**
 		 * This implementation uses two dimensions to evaluate if a lazy reference will be cleared:<br>
 		 * - time: a ref's "age" in terms of {@link Lazy#lastTouched()} compared to {@link System#currentTimeMillis()}<br>
-		 * - memory: the amount of used memory compared to the permitted quota of total available memory.
+		 * - memory: the amount of used memory compared to the permitted quota of the maximum heap.
 		 * <p>
 		 * Either dimension can be deactivated by setting its configuration value to 0.<br>
 		 * If both are non-zero, a arithmetically combined check will make clearing of a certain reference
 		 * more like the older it gets as free memory shrinks.<br>
 		 * So, as free memory gets lower, older/passive references are cleared sooner, newer/active ones later.
-		 *
+		 * <p>
+		 * The used memory is {@link MemoryStatistics#usedAfterLastGc()}, i.e. what is retained after the last garbage
+		 * collection, not the instantaneous usage including uncollected garbage. Concurrent collectors (e.g. ZGC) let the
+		 * instantaneous usage climb up to the committed size before a cycle completes, which would clear every reference
+		 * beyond the grace time.
+		 * The limit is the quota of the maximum heap, the size the heap can grow to; the committed heap only if no maximum
+		 * is defined. Collectors keep the committed heap well below the maximum (G1 often at less than half) and fill it
+		 * with garbage between their cycles, so against the committed heap the check would see memory pressure all the time.
+		 * With a fixed-size old generation (Parallel, Serial), its fill level after its last collection counts as well,
+		 * scaled to the same heap. That value only changes with a full collection: memory-based clearing for it starts
+		 * once a full collection left the old generation at the limit, and it continues until the next full collection.
+		 * A non-lazy live set above the limit of the old generation therefore keeps clearing lazy references.
 		 */
 		public final class Default implements Lazy.Checker, Lazy.ClearingEvaluator
 		{
@@ -755,7 +770,10 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			///////////////////////////////////////////////////////////////////////////
 			// constants //
 			//////////////
-			
+
+			// the largest memory value the age penalty can compute with (shifted by 10 bits, multiplied by up to 2)
+			static final long MAX_MEMORY_BASE = Long.MAX_VALUE >> 11;
+
 			public static double memoryQuotaNoCheck()
 			{
 				return 0.0;
@@ -765,7 +783,7 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			{
 				return 1000;
 			}
-			
+
 			
 			
 			///////////////////////////////////////////////////////////////////////////
@@ -794,7 +812,7 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			private final long graceTimeMs;
 			
 			/**
-			 * The quota of total available memory (= min(committed, max)) the check has to comply with.<br>
+			 * The quota of the maximum heap (the committed heap if no maximum is defined) the check has to comply with.<br>
 			 * May be 0.0 to be deactivated.<br>
 			 * 1.0 means all the available memory can be used.<br>
 			 * Anything outside [0.0; 1.0] is invalid and must be checked before the constructor is called.
@@ -822,7 +840,7 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			private long cycleMemoryLimit;
 			private long cycleMemoryUsed;
 			private long cycleClearCount;
-			
+
 			// derive working variables for fast integer arithmetic //
 			
 			private long sh10MemoryLimit;
@@ -882,7 +900,7 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 				this.cycleTimeoutThresholdMs   = this.cycleStartMs - this.timeoutMs;
 				this.cycleGraceTimeThresholdMs = this.cycleStartMs - this.graceTimeMs;
 
-				// querying a MemoryUsage instance takes about 500 ns to query, so it is only done occasionally.
+				// querying the memory statistics can take up to about a millisecond, so it is only done occasionally.
 				this.updateMemoryUsage();
 				this.cycleClearCount = 0;
 
@@ -906,11 +924,38 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			{
 				this.cycleMemoryStatistics = MemoryStatisticsProvider.get().heapMemoryUsage();
 				this.cycleMemoryLimit      = this.calculateMemoryLimit(this.cycleMemoryStatistics);
-				this.cycleMemoryUsed       = this.cycleMemoryStatistics.used();
-				
+
+				/*
+				 * The usage after the last GC is what is actually retained. The instantaneous usage also contains
+				 * the garbage allocated since then, which concurrent collectors (ZGC) let grow up to the committed size.
+				 */
+				this.cycleMemoryUsed = memoryUsedForCheck(this.cycleMemoryStatistics);
+
 				// derived values for fast integer arithmetic for every check
 				this.sh10MemoryLimit = shift10(this.cycleMemoryLimit);
 				this.sh10MemoryUsed  = shift10(this.cycleMemoryUsed);
+			}
+
+			/*
+			 * A fixed-size old generation (Parallel, Serial: about two thirds of the heap) can be full of retained data
+			 * long before the heap as a whole reaches the limit, and retained lazy data lives there. Its fill level after
+			 * its last collection (i.e. without the garbage promoted since) is scaled to the heap the limit is based on,
+			 * so that the same quota applies to it. An old generation that may span the whole heap (G1, generational
+			 * ZGC) is covered by the heap-wide value and ignored here.
+			 */
+			static long memoryUsedForCheck(final MemoryStatistics statistics)
+			{
+				final long used    = statistics.usedAfterLastGc();
+				final long oldUsed = statistics.oldGenerationUsedAfterLastGc();
+				final long oldMax  = statistics.oldGenerationMax();
+				final long base    = memoryBase(statistics);
+				final long max     = statistics.max();
+				if(oldUsed < 0 || oldMax <= 0 || base <= 0 || max > 0 && oldMax >= max)
+				{
+					return used;
+				}
+
+				return Math.max(used, (long)((double)oldUsed / oldMax * base));
 			}
 			
 			final String DEBUG_cycleState()
@@ -921,8 +966,15 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 					.lf().add("GraceTime        = " + this.graceTimeMs                     + " ms"   )
 					.lf().add("memory maximum   = " + format.format(this.cycleMemoryStatistics.max()) + " bytes")
 					.lf().add("memory committed = " + format.format(this.cycleMemoryStatistics.committed()) + " bytes")
+					.lf().add("memory used now  = " + format.format(this.cycleMemoryStatistics.used()) + " bytes")
 					.lf().add("cycleMemoryLimit = " + format.format(this.cycleMemoryLimit) + " bytes")
-					.lf().add("cycleMemoryUsed  = " + format.format(this.cycleMemoryUsed ) + " bytes")
+					.lf().add("cycleMemoryUsed  = " + format.format(this.cycleMemoryUsed ) + " bytes (after last GC)")
+					.lf().add("gcCount          = " + this.cycleMemoryStatistics.gcCount())
+					.lf().add("old generation   = " + (this.cycleMemoryStatistics.oldGenerationMax() < 0
+						? "unknown"
+						: format.format(this.cycleMemoryStatistics.oldGenerationUsedAfterLastGc())
+							+ " of " + format.format(this.cycleMemoryStatistics.oldGenerationMax()) + " bytes (after its last collection)"
+					))
 				;
 				return vs.toString();
 			}
@@ -970,9 +1022,28 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 				{
 					return Long.MAX_VALUE;
 				}
-				
-				// committed heap is guaranteed. Max might be unsupported or not providable by the OS.
-				return (long)(memoryStatistics.committed() * this.memoryQuota);
+
+				return (long)(memoryBase(memoryStatistics) * this.memoryQuota);
+			}
+
+			/*
+			 * The maximum heap, i.e. the size the heap can grow to. Collectors keep the committed heap well below it (G1
+			 * often at less than half) and fill it with garbage between their cycles: against the committed heap that
+			 * looks like memory pressure all the time. The committed heap if no maximum is defined (-1, or an "unlimited"
+			 * value like Long.MAX_VALUE from Runtime.maxMemory(): no real heap comes near MAX_MEMORY_BASE, and larger
+			 * values would overflow the shifted arithmetic of the age penalty), and if a provider reports a maximum below
+			 * the committed heap.
+			 */
+			static long memoryBase(final MemoryStatistics statistics)
+			{
+				final long max       = statistics.max();
+				final long committed = statistics.committed();
+				if(max <= 0 || max > MAX_MEMORY_BASE)
+				{
+					return committed;
+				}
+
+				return Math.max(max, committed);
 			}
 
 			@Override
