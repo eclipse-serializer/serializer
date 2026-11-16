@@ -301,6 +301,10 @@ public interface LazyReferenceManager
 		private          Entry          tail   = this.head            ;
 		private          Entry          cursor = this.head            ; // current "last" entry for checking
 		
+		// statistics of the current check pass, published when the pass reaches the tail
+		private int passLazyReferences      ;
+		private int passLoadedLazyReferences;
+		
 		private boolean              running        ;
 		private Thread               cleanupThread  ;
 		private LazyReferenceManager successor      ; // set when replaced as the global manager, see register()
@@ -480,6 +484,15 @@ public interface LazyReferenceManager
 		
 			checker.beginCheckCycle();
 
+			/*
+			 * The statistics are counted while checking instead of in a separate walk over all entries:
+			 * a get() on every entry in every cycle would keep dropped references alive under a concurrent
+			 * collector (ZGC) whose marking takes longer than the check interval.
+			 */
+			int lazyReferences       = start == this.head ? 0 : this.passLazyReferences      ;
+			int loadedLazyReferences = start == this.head ? 0 : this.passLoadedLazyReferences;
+			boolean passComplete     = false                                                 ;
+
 			// the budget is for checking references: the checker's cycle preparation (memory statistics) must not consume it
 			final long timeBudgetBound = XTime.calculateNanoTimeBudgetBound(nanoTimeBudget);
 
@@ -494,6 +507,11 @@ public interface LazyReferenceManager
 				{
 					// leave checking logic completely to checker (also for lock atomicity reasons)
 					checker.check(ref);
+					lazyReferences++;
+					if(ref.isLoaded())
+					{
+						loadedLazyReferences++;
+					}
 				}
 				else if(e != currentTail)
 				{
@@ -511,7 +529,8 @@ public interface LazyReferenceManager
 					 * executed. However, these entries are newly created, hence will hardly timeout right away.
 					 * The oldest entries near the head are much more likely for that, so it is efficient to restart.
 					 */
-					last = this.head;
+					last         = this.head;
+					passComplete = true     ;
 					break cleanUp;
 				}
 
@@ -524,31 +543,15 @@ public interface LazyReferenceManager
 
 			checker.endCheckCycle();
 			
-			this.updateStatistics();
-		}
-		
-		private void updateStatistics()
-		{
-			/*
-			 * This method is intentionally not synchronized.
-			 * locking the LazyReferenceManager instance here may
-			 * cause deadlocks. See comments in internalCleanUp above.
-			 */
-			
-			int lazyReferences       = 0;
-			int loadedLazyReferences = 0;
-			
-			for(Entry e = this.head; (e = e.nextLazyManagerEntry) != null;)
+			if(passComplete)
 			{
-				lazyReferences++;
-				final Lazy<?> ref = e.get();
-				if(ref != null && ref.isLoaded())
-				{
-					loadedLazyReferences++;
-				}
+				this.monitor.update(lazyReferences, loadedLazyReferences);
 			}
-			
-			this.monitor.update(lazyReferences, loadedLazyReferences);
+			else
+			{
+				this.passLazyReferences       = lazyReferences      ;
+				this.passLoadedLazyReferences = loadedLazyReferences;
+			}
 		}
 
 		final void cleanUpBudgeted()
