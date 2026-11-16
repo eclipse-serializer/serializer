@@ -301,9 +301,10 @@ public interface LazyReferenceManager
 		private          Entry          tail   = this.head            ;
 		private          Entry          cursor = this.head            ; // current "last" entry for checking
 		
-		// statistics of the current check pass, published when the pass reaches the tail
-		private int passLazyReferences      ;
-		private int passLoadedLazyReferences;
+		// statistics of the current check pass, published at its boundary and when the pass reaches the tail
+		private int   passLazyReferences      ;
+		private int   passLoadedLazyReferences;
+		private Entry passStatisticsBoundary  ;
 		
 		private boolean              running        ;
 		private Thread               cleanupThread  ;
@@ -489,9 +490,16 @@ public interface LazyReferenceManager
 			 * a get() on every entry in every cycle would keep dropped references alive under a concurrent
 			 * collector (ZGC) whose marking takes longer than the check interval.
 			 */
-			int lazyReferences       = start == this.head ? 0 : this.passLazyReferences      ;
-			int loadedLazyReferences = start == this.head ? 0 : this.passLoadedLazyReferences;
-			boolean passComplete     = false                                                 ;
+			final boolean passStart            = start == this.head;
+			int           lazyReferences       = passStart ? 0 : this.passLazyReferences      ;
+			int           loadedLazyReferences = passStart ? 0 : this.passLoadedLazyReferences;
+
+			/*
+			 * Registrations faster than the budgeted checks keep the cursor from ever reaching the current tail.
+			 * A boundary fixed at the start of the pass is always reached: the counts from the head are published
+			 * there, and counting continues towards a new boundary.
+			 */
+			Entry statisticsBoundary = passStart ? currentTail : this.passStatisticsBoundary;
 
 			// the budget is for checking references: the checker's cycle preparation (memory statistics) must not consume it
 			final long timeBudgetBound = XTime.calculateNanoTimeBudgetBound(nanoTimeBudget);
@@ -513,7 +521,15 @@ public interface LazyReferenceManager
 						loadedLazyReferences++;
 					}
 				}
-				else if(e != currentTail)
+
+				// before a removal: an orphan boundary is reached here, too
+				if(e == statisticsBoundary || e == currentTail)
+				{
+					this.monitor.update(lazyReferences, loadedLazyReferences);
+					statisticsBoundary = currentTail;
+				}
+
+				if(ref == null && e != currentTail)
 				{
 					// remove orphan entry (never remove current tail entry for list consistency reasons)
 					e = last.nextLazyManagerEntry = e.nextLazyManagerEntry;
@@ -529,8 +545,7 @@ public interface LazyReferenceManager
 					 * executed. However, these entries are newly created, hence will hardly timeout right away.
 					 * The oldest entries near the head are much more likely for that, so it is efficient to restart.
 					 */
-					last         = this.head;
-					passComplete = true     ;
+					last = this.head;
 					break cleanUp;
 				}
 
@@ -542,15 +557,9 @@ public interface LazyReferenceManager
 			this.cursor = last;
 
 			// together with the cursor: a failing endCheckCycle() must not separate the counts from the checked entries
-			if(passComplete)
-			{
-				this.monitor.update(lazyReferences, loadedLazyReferences);
-			}
-			else
-			{
-				this.passLazyReferences       = lazyReferences      ;
-				this.passLoadedLazyReferences = loadedLazyReferences;
-			}
+			this.passLazyReferences       = lazyReferences      ;
+			this.passLoadedLazyReferences = loadedLazyReferences;
+			this.passStatisticsBoundary   = statisticsBoundary  ;
 
 			checker.endCheckCycle();
 		}
