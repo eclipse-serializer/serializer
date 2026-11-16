@@ -529,7 +529,11 @@ public interface LazyReferenceManager
 					statisticsBoundary = currentTail;
 				}
 
-				if(ref == null && e != currentTail)
+				/*
+				 * The saved boundary stays linked even if orphaned: a cycle that fails after replacing it does not
+				 * save the replacement, and a removed boundary would never be reached again. A later pass removes it.
+				 */
+				if(ref == null && e != currentTail && e != this.passStatisticsBoundary)
 				{
 					// remove orphan entry (never remove current tail entry for list consistency reasons)
 					e = last.nextLazyManagerEntry = e.nextLazyManagerEntry;
