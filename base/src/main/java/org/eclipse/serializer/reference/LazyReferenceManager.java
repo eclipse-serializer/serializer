@@ -541,8 +541,7 @@ public interface LazyReferenceManager
 			// remember last checked entry for next cleanup run. Cursor field is strictly only used by one thread.
 			this.cursor = last;
 
-			checker.endCheckCycle();
-			
+			// together with the cursor: a failing endCheckCycle() must not separate the counts from the checked entries
 			if(passComplete)
 			{
 				this.monitor.update(lazyReferences, loadedLazyReferences);
@@ -552,6 +551,8 @@ public interface LazyReferenceManager
 				this.passLazyReferences       = lazyReferences      ;
 				this.passLoadedLazyReferences = loadedLazyReferences;
 			}
+
+			checker.endCheckCycle();
 		}
 
 		final void cleanUpBudgeted()
