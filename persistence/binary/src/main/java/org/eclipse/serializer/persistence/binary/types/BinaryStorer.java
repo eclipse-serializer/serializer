@@ -1954,9 +1954,17 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			 * and keeps the invariant explicit for any other call site that may go through
 			 * super.forceRootStore -> this.processItems.
 			 */
-			synchronized(this.commitLock)
+			try
 			{
-				super.processItems();
+				synchronized(this.commitLock)
+				{
+					super.processItems();
+				}
+			}
+			finally
+			{
+				// also after a failure: the next tick reports the failed store once
+				this.flusher.setPending(true);
 			}
 		}
 
@@ -1971,6 +1979,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					super.clear();
 					this.pendingSinceNanos = 0L;
 					this.failureReported   = false;
+					this.flusher.setPending(false);
 				}
 			}
 		}
@@ -2070,6 +2079,7 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 			{
 				if(this.closed || this.isEmpty())
 				{
+					this.flusher.setPending(false);
 					return;
 				}
 
@@ -2077,6 +2087,8 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				final Throwable storeFailure = this.synchStoreFailure();
 				if(storeFailure != null)
 				{
+					// ticks cannot flush until clear(), so they need not resolve the storer
+					this.flusher.setPending(false);
 					if(!this.failureReported)
 					{
 						this.failureReported = true;
@@ -2134,11 +2146,16 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 		 * <p>
 		 * Mirrors {@code EvictionManager.IntervalThread} and the JVector {@code BackgroundTaskManager}:
 		 * a strong self-referencing scheduled task would leak the storer for the JVM lifetime.
+		 * <p>
+		 * A tick resolves the storer only while it has pending data: under a concurrent collector (ZGC) a
+		 * {@code get()} during marking keeps the referent alive, so resolving it on every tick would keep an
+		 * idle abandoned storer alive whenever marking takes longer than the check interval.
 		 */
 		private static final class BackgroundFlusher implements Runnable
 		{
 			private final WeakReference<Batching>  storerRef;
 			private final ScheduledExecutorService scheduler;
+			private volatile boolean               pending  ;
 
 			BackgroundFlusher(
 				final Batching storer        ,
@@ -2169,7 +2186,17 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 				 * without close(): self-terminate so the daemon thread is reclaimed. This runs ON the
 				 * executor thread, so it must NOT awaitTermination() (that would dead-lock).
 				 * The strong reference is not retained in a field, so the next tick can observe a cleared referent.
+				 * refersTo() does not keep the referent alive, unlike get().
 				 */
+				if(this.storerRef.refersTo(null))
+				{
+					this.scheduler.shutdown();
+					return;
+				}
+				if(!this.pending)
+				{
+					return;
+				}
 				final Batching storer = this.storerRef.get();
 				if(storer == null)
 				{
@@ -2177,6 +2204,11 @@ public interface BinaryStorer extends PersistenceStorer, PersistenceStoringCallb
 					return;
 				}
 				storer.backgroundFlush();
+			}
+
+			void setPending(final boolean pending)
+			{
+				this.pending = pending;
 			}
 
 			void shutdown()
