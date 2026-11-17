@@ -123,7 +123,7 @@ public class BufferRegistry
 	{
 		for(Entry e = this.hashTable[this.hash(byteBuffer)]; e != null; e = e.link)
 		{
-			if(e.get() == byteBuffer)
+			if(e.refersTo(byteBuffer))
 			{
 				return e.index;
 			}
@@ -392,7 +392,7 @@ public class BufferRegistry
 	{
 		for(Entry e = this.hashTable[this.hash(byteBuffer)], last = null; e != null; e = (last = e).link)
 		{
-			if(e.get() == byteBuffer)
+			if(e.refersTo(byteBuffer))
 			{
 				this.removeEntry(byteBuffer, e, last);
 				return byteBuffer;
@@ -425,7 +425,7 @@ public class BufferRegistry
 		
 		final boolean isHollow()
 		{
-			return this.get() == null;
+			return this.refersTo(null);
 		}
 		
 	}

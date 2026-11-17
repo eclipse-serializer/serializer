@@ -119,6 +119,22 @@ public interface PersistenceObjectRegistry extends PersistenceSwizzlingLookup, C
 	 */
 	public <A extends PersistenceAcceptor> A iterateEntries(A acceptor);
 
+	/**
+	 * Iterates the object ids of the same entries as {@link #iterateEntries(PersistenceAcceptor)}, without
+	 * resolving the registered instances. For callers that need only the ids: resolving every instance keeps
+	 * the instances alive under a concurrent collector (ZGC) when it happens during marking.
+	 *
+	 * @param <A>      the acceptor type, returned for fluent chaining.
+	 * @param acceptor the acceptor to invoke for each object id.
+	 *
+	 * @return the same acceptor that was passed in.
+	 */
+	public default <A extends PersistenceObjectIdAcceptor> A iterateObjectIds(final A acceptor)
+	{
+		this.iterateEntries((objectId, instance) -> acceptor.acceptObjectId(objectId));
+		return acceptor;
+	}
+
 	// general querying //
 
 	/**
