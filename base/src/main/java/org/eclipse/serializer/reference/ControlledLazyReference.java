@@ -26,6 +26,13 @@ import org.slf4j.Logger;
  */
 public interface ControlledLazyReference<T> extends Lazy<T>
 {
+	/**
+	 * Sets the controller that decides whether the reference may be cleared.
+	 * The controller is not persisted: after loading, the owner has to set it again. Without a controller,
+	 * {@link #clear()} and {@link #clear(Lazy.ClearingEvaluator)} keep the subject loaded.
+	 *
+	 * @param lazyClearController the controller, or {@code null} to deny clearing
+	 */
 	public void setLazyClearController(LazyClearController lazyClearController);
 	
 	/**

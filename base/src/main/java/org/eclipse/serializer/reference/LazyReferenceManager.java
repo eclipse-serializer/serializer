@@ -32,6 +32,14 @@ public interface LazyReferenceManager
 	
 	public LazyReferenceManager registerAll(LazyReferenceManager other);
 
+	/**
+	 * Checks registered lazy references for clearing, starting where the previous call stopped, until the time
+	 * budget is used up or the end of the registrations is reached.
+	 * A reference whose check fails is skipped and the failure is logged (rate-limited); only a
+	 * {@link VirtualMachineError} other than a {@link StackOverflowError} aborts the call.
+	 *
+	 * @param nanoTimeBudget the time budget in nanoseconds
+	 */
 	public void cleanUp(long nanoTimeBudget);
 
 	public default void cleanUp()
@@ -48,7 +56,9 @@ public interface LazyReferenceManager
 
 	/**
 	 * Clears all registered lazy references that were stored and are not marked as used.
-	 * Unstored and used-marked ones keep their subject, as clearing them would lose data.
+	 * Unstored and used-marked ones keep their subject, as clearing them would lose data, and so do
+	 * {@link ControlledLazyReference}s whose controller denies clearing or that have no controller.
+	 * A reference whose check fails is skipped as in {@link #cleanUp(long)}.
 	 */
 	public void clear();
 
@@ -575,13 +585,18 @@ public interface LazyReferenceManager
 		/*
 		 * A reference whose check fails (e.g. a throwing custom Lazy.Check) must not abort the cycle: the cursor would
 		 * stay before it and every following cycle would stop there, so no reference behind it would ever be cleared.
-		 * VM errors are not specific to the reference and abort the cycle as before.
+		 * Other VM errors are not specific to the reference and abort the cycle; a StackOverflowError usually is
+		 * (e.g. a recursive custom check).
 		 */
 		private void checkSkippingFailure(final Lazy.Checker checker, final Lazy<?> ref)
 		{
 			try
 			{
 				checker.check(ref);
+			}
+			catch(final StackOverflowError e)
+			{
+				this.checkFailures.report(e);
 			}
 			catch(final VirtualMachineError e)
 			{
