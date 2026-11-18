@@ -26,6 +26,13 @@ import org.slf4j.Logger;
  */
 public interface ControlledLazyReference<T> extends Lazy<T>
 {
+	/**
+	 * Sets the controller that decides whether the reference may be cleared.
+	 * The controller is not persisted: after loading, the owner has to set it again. Without a controller,
+	 * {@link #clear()} and {@link #clear(Lazy.ClearingEvaluator)} keep the subject loaded.
+	 *
+	 * @param lazyClearController the controller, or {@code null} to deny clearing
+	 */
 	public void setLazyClearController(LazyClearController lazyClearController);
 	
 	/**
@@ -75,28 +82,37 @@ public interface ControlledLazyReference<T> extends Lazy<T>
 			this.lazyClearController = lazyClearController;
 		}
 		
+		/*
+		 * The controller is not persisted: a reference loaded from storage has none until its owner sets one
+		 * (a LazyArrayList/LazyHashMap segment does so when the collection is loaded). Without a controller
+		 * nothing is known about the owner's state, so the data stays loaded.
+		 */
+		private boolean allowClear()
+		{
+			final LazyClearController controller = this.lazyClearController;
+			if(controller == null)
+			{
+				logger.trace("Denied unloading Lazy reference {}: no clear controller", this);
+				return false;
+			}
+			if(controller.allowClear())
+			{
+				return true;
+			}
+			logger.trace("Denied unloading Lazy reference {}", this);
+			return false;
+		}
+		
 		@Override
 		public final synchronized T clear()
 		{
-			if(this.lazyClearController.allowClear())
-			{
-				return super.clear();
-			}
-			
-			logger.trace("Denied unloading Lazy reference {}", this);
-			return this.peek();
+			return this.allowClear() ? super.clear() : this.peek();
 		}
 		
 		@Override
 		public final synchronized boolean clear(final ClearingEvaluator clearingEvaluator)
 		{
-			if(this.lazyClearController.allowClear())
-			{
-				return super.clear(clearingEvaluator);
-			}
-			
-			logger.trace("Denied unloading Lazy reference {}", this);
-			return false;
+			return this.allowClear() && super.clear(clearingEvaluator);
 		}
 	}
 }

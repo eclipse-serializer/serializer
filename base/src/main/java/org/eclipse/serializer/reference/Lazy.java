@@ -820,6 +820,9 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			 */
 			private final double memoryQuota;
 			
+			// false only if nothing uses them: memory check disabled, no custom check, no cycle evaluator
+			private final boolean needsMemoryStatistics;
+			
 			// cycle working variables //
 			
 			private MemoryStatistics cycleMemoryStatistics;
@@ -867,6 +870,8 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 				this.cycleEvaluator = cycleEvaluator;
 				
 				this.graceTimeMs = deriveGraceTime(timeoutMs);
+				
+				this.needsMemoryStatistics = this.isMemoryCheckEnabled() || customCheck != null || cycleEvaluator != null;
 			}
 			
 			
@@ -922,6 +927,11 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 			
 			private void updateMemoryUsage()
 			{
+				// a query costs up to about a millisecond on every cycle
+				if(!this.needsMemoryStatistics)
+				{
+					return;
+				}
 				this.cycleMemoryStatistics = MemoryStatisticsProvider.get().heapMemoryUsage();
 				this.cycleMemoryLimit      = this.calculateMemoryLimit(this.cycleMemoryStatistics);
 
@@ -964,6 +974,12 @@ public interface Lazy<T> extends UsageMarkable, Referencing<T>
 				final VarString vs = VarString.New()
 					.lf().add("Timeout          = " + this.timeoutMs                       + " ms"   )
 					.lf().add("GraceTime        = " + this.graceTimeMs                     + " ms"   )
+				;
+				if(this.cycleMemoryStatistics == null)
+				{
+					return vs.lf().add("memory           = not queried (memory check disabled)").toString();
+				}
+				vs
 					.lf().add("memory maximum   = " + format.format(this.cycleMemoryStatistics.max()) + " bytes")
 					.lf().add("memory committed = " + format.format(this.cycleMemoryStatistics.committed()) + " bytes")
 					.lf().add("memory used now  = " + format.format(this.cycleMemoryStatistics.used()) + " bytes")

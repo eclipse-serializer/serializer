@@ -32,6 +32,14 @@ public interface LazyReferenceManager
 	
 	public LazyReferenceManager registerAll(LazyReferenceManager other);
 
+	/**
+	 * Checks registered lazy references for clearing, starting where the previous call stopped, until the time
+	 * budget is used up or the end of the registrations is reached.
+	 * A reference whose check fails is skipped and the failure is logged (rate-limited); only a
+	 * {@link VirtualMachineError} other than a {@link StackOverflowError} aborts the call.
+	 *
+	 * @param nanoTimeBudget the time budget in nanoseconds
+	 */
 	public void cleanUp(long nanoTimeBudget);
 
 	public default void cleanUp()
@@ -48,7 +56,9 @@ public interface LazyReferenceManager
 
 	/**
 	 * Clears all registered lazy references that were stored and are not marked as used.
-	 * Unstored and used-marked ones keep their subject, as clearing them would lose data.
+	 * Unstored and used-marked ones keep their subject, as clearing them would lose data, and so do
+	 * {@link ControlledLazyReference}s whose controller denies clearing or that have no controller.
+	 * A reference whose check fails is skipped as in {@link #cleanUp(long)}.
 	 */
 	public void clear();
 
@@ -315,6 +325,10 @@ public interface LazyReferenceManager
 		private final MonitoringManager           monitorManager;
 		private final LazyReferenceManagerMonitor monitor       ;
 
+		private final FailureReport checkFailures = new FailureReport(
+			"LazyReferenceManager could not check a lazy reference, it is skipped"
+		);
+
 		
 		///////////////////////////////////////////////////////////////////////////
 		// constructors //
@@ -514,7 +528,7 @@ public interface LazyReferenceManager
 				if(ref != null)
 				{
 					// leave checking logic completely to checker (also for lock atomicity reasons)
-					checker.check(ref);
+					this.checkSkippingFailure(checker, ref);
 					lazyReferences++;
 					if(ref.isLoaded())
 					{
@@ -566,6 +580,32 @@ public interface LazyReferenceManager
 			this.passStatisticsBoundary   = statisticsBoundary  ;
 
 			checker.endCheckCycle();
+		}
+
+		/*
+		 * A reference whose check fails (e.g. a throwing custom Lazy.Check) must not abort the cycle: the cursor would
+		 * stay before it and every following cycle would stop there, so no reference behind it would ever be cleared.
+		 * Other VM errors are not specific to the reference and abort the cycle; a StackOverflowError usually is
+		 * (e.g. a recursive custom check).
+		 */
+		private void checkSkippingFailure(final Lazy.Checker checker, final Lazy<?> ref)
+		{
+			try
+			{
+				checker.check(ref);
+			}
+			catch(final StackOverflowError e)
+			{
+				this.checkFailures.report(e);
+			}
+			catch(final VirtualMachineError e)
+			{
+				throw e;
+			}
+			catch(final Throwable t)
+			{
+				this.checkFailures.report(t);
+			}
 		}
 
 		final void cleanUpBudgeted()
@@ -1004,6 +1044,7 @@ public interface LazyReferenceManager
 		 * Rate-limited reporting of a recurring failure: at most one warning (with stack trace) and one recovery
 		 * message per {@link #LOG_INTERVAL_MS}, also when failures and successes alternate.
 		 * Must not fail itself: it is used while handling errors such as an OutOfMemoryError.
+		 * Thread-safe: cleanUp() and clear() may report concurrently with the cleanup thread.
 		 */
 		static final class FailureReport
 		{
@@ -1023,7 +1064,7 @@ public interface LazyReferenceManager
 				this.message = message;
 			}
 
-			final void report(final Throwable t)
+			final synchronized void report(final Throwable t)
 			{
 				try
 				{
@@ -1045,7 +1086,7 @@ public interface LazyReferenceManager
 				}
 			}
 
-			final void recovered()
+			final synchronized void recovered()
 			{
 				if(this.failures == 0)
 				{
