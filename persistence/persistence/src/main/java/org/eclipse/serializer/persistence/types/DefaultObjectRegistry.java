@@ -546,7 +546,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
         {
             if(e.objectId == objectId)
             {
-                return e.get() != null;
+                return !e.refersTo(null);
             }
         }
 
@@ -559,7 +559,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
         {
             if(e.objectId == objectId)
             {
-                return e.get() == null;
+                return e.refersTo(null);
             }
         }
 
@@ -583,7 +583,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	{
 		for(Entry e = this.refHashTable[hash(object) & this.hashRange]; e != null; e = e.refNext)
 		{
-			if(e.get() == object)
+			if(e.refersTo(object))
 			{
 				return e.objectId;
 			}
@@ -738,6 +738,16 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 			return acceptor;
 		}
 	}
+
+	@Override
+	public final <A extends PersistenceObjectIdAcceptor> A iterateObjectIds(final A acceptor)
+	{
+		synchronized(this.mutex)
+		{
+			iterateObjectIds(this.oidHashTable, acceptor);
+			return acceptor;
+		}
+	}
 		
 	private boolean synchAdd(final long objectId, final Object object)
 	{
@@ -812,12 +822,12 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	
 	private boolean synchHandleExisting(final Object object, final Entry entry)
 	{
-		if(entry.get() == object)
+		if(entry.refersTo(object))
 		{
 			return true;
 		}
 		
-		if(entry.get() != null)
+		if(!entry.refersTo(null))
 		{
 			throw new PersistenceExceptionConsistencyObject(entry.objectId, entry.get(), object);
 		}
@@ -885,7 +895,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		for(Entry e = this.refHashTable[refHash & this.hashRange]; e != null; e = e.refNext)
 		{
 			// intentionally no check of refHash first as the hash table is assumed to be rather flat.
-			if(e.get() == object)
+			if(e.refersTo(object))
 			{
 				throw new PersistenceExceptionConsistencyObjectId(object, e.objectId, objectId);
 			}
@@ -942,7 +952,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		int orphanCount = 0;
 		for(Entry e = oidHashTable[h], lastProper = null; e != null; e = e.oidNext)
 		{
-			if(e.get() != null)
+			if(!e.refersTo(null))
 			{
 				// everything stays as it is.
 				lastProper = e;
@@ -968,7 +978,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 	{
 		for(Entry e = refHashTable[h], lastProper = null; e != null; e = e.refNext)
 		{
-			if(e.get() != null)
+			if(!e.refersTo(null))
 			{
 				// everything stays as it is.
 				lastProper = e;
@@ -1061,7 +1071,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		do
 		{
 			next = e.oidNext;
-			if(e.get() != null)
+			if(!e.refersTo(null))
 			{
 				e.oidNext = newOidHashTable[(int)e.objectId & hashRange];
 				e.refNext = newRefHashTable[     e.refHash  & hashRange];
@@ -1088,7 +1098,18 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 			}
 		}
 	}
-	
+
+	private static void iterateObjectIds(final Entry[] oidHashTable, final PersistenceObjectIdAcceptor acceptor)
+	{
+		for(int s = 0; s < oidHashTable.length; s++)
+		{
+			for(Entry e = oidHashTable[s]; e != null; e = e.oidNext)
+			{
+				acceptor.acceptObjectId(e.objectId);
+			}
+		}
+	}
+
 	// clearing //
 	
 	@Override
@@ -1312,7 +1333,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		long count = 0;
 		for(Entry e = firstEntry; e != null; e = e.oidNext)
 		{
-			if(e.get() != null)
+			if(!e.refersTo(null))
 			{
 				count++;
 			}
@@ -1326,7 +1347,7 @@ public final class DefaultObjectRegistry implements PersistenceObjectRegistry
 		long count = 0;
 		for(Entry e = firstEntry; e != null; e = e.refNext)
 		{
-			if(e.get() != null)
+			if(!e.refersTo(null))
 			{
 				count++;
 			}
