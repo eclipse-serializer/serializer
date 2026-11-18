@@ -95,17 +95,13 @@ public interface ControlledLazyReference<T> extends Lazy<T>
 			logger.trace("Denied unloading Lazy reference {}", this);
 			return false;
 		}
-
+		
 		@Override
 		public final synchronized T clear()
 		{
-			if(this.allowClear())
-			{
-				return super.clear();
-			}
-			return this.peek();
+			return this.allowClear() ? super.clear() : this.peek();
 		}
-
+		
 		@Override
 		public final synchronized boolean clear(final ClearingEvaluator clearingEvaluator)
 		{

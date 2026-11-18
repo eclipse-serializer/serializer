@@ -315,12 +315,11 @@ public interface LazyReferenceManager
 		private final MonitoringManager           monitorManager;
 		private final LazyReferenceManagerMonitor monitor       ;
 
-		// cleanUp()/clear() may run concurrently with the cleanup thread: guarded by its own monitor
 		private final FailureReport checkFailures = new FailureReport(
 			"LazyReferenceManager could not check a lazy reference, it is skipped"
 		);
 
-
+		
 		///////////////////////////////////////////////////////////////////////////
 		// constructors //
 		/////////////////
@@ -590,10 +589,7 @@ public interface LazyReferenceManager
 			}
 			catch(final Throwable t)
 			{
-				synchronized(this.checkFailures)
-				{
-					this.checkFailures.report(t);
-				}
+				this.checkFailures.report(t);
 			}
 		}
 
@@ -1033,6 +1029,7 @@ public interface LazyReferenceManager
 		 * Rate-limited reporting of a recurring failure: at most one warning (with stack trace) and one recovery
 		 * message per {@link #LOG_INTERVAL_MS}, also when failures and successes alternate.
 		 * Must not fail itself: it is used while handling errors such as an OutOfMemoryError.
+		 * Thread-safe: cleanUp() and clear() may report concurrently with the cleanup thread.
 		 */
 		static final class FailureReport
 		{
@@ -1052,7 +1049,7 @@ public interface LazyReferenceManager
 				this.message = message;
 			}
 
-			final void report(final Throwable t)
+			final synchronized void report(final Throwable t)
 			{
 				try
 				{
@@ -1074,7 +1071,7 @@ public interface LazyReferenceManager
 				}
 			}
 
-			final void recovered()
+			final synchronized void recovered()
 			{
 				if(this.failures == 0)
 				{
