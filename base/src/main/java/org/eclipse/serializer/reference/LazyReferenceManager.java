@@ -315,7 +315,12 @@ public interface LazyReferenceManager
 		private final MonitoringManager           monitorManager;
 		private final LazyReferenceManagerMonitor monitor       ;
 
-		
+		// cleanUp()/clear() may run concurrently with the cleanup thread: guarded by its own monitor
+		private final FailureReport checkFailures = new FailureReport(
+			"LazyReferenceManager could not check a lazy reference, it is skipped"
+		);
+
+
 		///////////////////////////////////////////////////////////////////////////
 		// constructors //
 		/////////////////
@@ -514,7 +519,7 @@ public interface LazyReferenceManager
 				if(ref != null)
 				{
 					// leave checking logic completely to checker (also for lock atomicity reasons)
-					checker.check(ref);
+					this.checkSkippingFailure(checker, ref);
 					lazyReferences++;
 					if(ref.isLoaded())
 					{
@@ -566,6 +571,30 @@ public interface LazyReferenceManager
 			this.passStatisticsBoundary   = statisticsBoundary  ;
 
 			checker.endCheckCycle();
+		}
+
+		/*
+		 * A reference whose check fails (e.g. a throwing custom Lazy.Check) must not abort the cycle: the cursor would
+		 * stay before it and every following cycle would stop there, so no reference behind it would ever be cleared.
+		 * VM errors are not specific to the reference and abort the cycle as before.
+		 */
+		private void checkSkippingFailure(final Lazy.Checker checker, final Lazy<?> ref)
+		{
+			try
+			{
+				checker.check(ref);
+			}
+			catch(final VirtualMachineError e)
+			{
+				throw e;
+			}
+			catch(final Throwable t)
+			{
+				synchronized(this.checkFailures)
+				{
+					this.checkFailures.report(t);
+				}
+			}
 		}
 
 		final void cleanUpBudgeted()

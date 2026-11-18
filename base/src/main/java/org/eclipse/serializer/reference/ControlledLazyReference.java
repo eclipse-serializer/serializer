@@ -75,28 +75,41 @@ public interface ControlledLazyReference<T> extends Lazy<T>
 			this.lazyClearController = lazyClearController;
 		}
 		
+		/*
+		 * The controller is not persisted: a reference loaded from storage has none until its owner sets one
+		 * (a LazyArrayList/LazyHashMap segment does so when the collection is loaded). Without a controller
+		 * nothing is known about the owner's state, so the data stays loaded.
+		 */
+		private boolean allowClear()
+		{
+			final LazyClearController controller = this.lazyClearController;
+			if(controller == null)
+			{
+				logger.trace("Denied unloading Lazy reference {}: no clear controller", this);
+				return false;
+			}
+			if(controller.allowClear())
+			{
+				return true;
+			}
+			logger.trace("Denied unloading Lazy reference {}", this);
+			return false;
+		}
+
 		@Override
 		public final synchronized T clear()
 		{
-			if(this.lazyClearController.allowClear())
+			if(this.allowClear())
 			{
 				return super.clear();
 			}
-			
-			logger.trace("Denied unloading Lazy reference {}", this);
 			return this.peek();
 		}
-		
+
 		@Override
 		public final synchronized boolean clear(final ClearingEvaluator clearingEvaluator)
 		{
-			if(this.lazyClearController.allowClear())
-			{
-				return super.clear(clearingEvaluator);
-			}
-			
-			logger.trace("Denied unloading Lazy reference {}", this);
-			return false;
+			return this.allowClear() && super.clear(clearingEvaluator);
 		}
 	}
 }
