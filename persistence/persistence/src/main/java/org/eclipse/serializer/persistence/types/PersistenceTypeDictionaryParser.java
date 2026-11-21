@@ -20,6 +20,7 @@ import org.eclipse.serializer.chars.XChars;
 import org.eclipse.serializer.collections.BulkList;
 import org.eclipse.serializer.collections.types.XGettingSequence;
 import org.eclipse.serializer.math.XMath;
+import org.eclipse.serializer.persistence.exceptions.PersistenceException;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionParser;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionParserIncompleteInput;
 import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionParserMissingComplexTypeDefinition;
@@ -373,8 +374,120 @@ public interface PersistenceTypeDictionaryParser
 			{
 				return i;
 			}
-			
+
+			i = parseValueStructDefinition(input, iStart, iBound, member);
+			if(i != iStart)
+			{
+				return i;
+			}
+
 			return parseFieldDefinition(input, iStart, iBound, member);
+		}
+
+		private static int parseValueStructDefinition(
+			final char[]                input ,
+			final int                   iStart,
+			final int                   iBound,
+			final AbstractMemberBuilder member
+		)
+		{
+			if(!equalsCharSequence(input, iStart, iBound, ARRAY_KEYWORD_VALUE))
+			{
+				return iStart;
+			}
+
+			/* The keyword must be followed by a separating whitespace. Without that check, a field whose type
+			 * name merely starts with the keyword (a package named "value", say) would be misparsed.
+			 */
+			final int afterKeyword = iStart + ARRAY_KEYWORD_VALUE.length;
+			if(afterKeyword >= iBound || input[afterKeyword] > ' ')
+			{
+				return iStart;
+			}
+
+			member.isValueStruct = true;
+
+			int i = skipWhitespaces(input, afterKeyword, iBound);
+			i = parseFieldTypeName(input, i, iBound, member);
+			i = parseValueStructMemberName(input, i, iBound, member);
+
+			final NestedMemberBuilder nestedMemberBuilder = member.createNestedMemberBuilder();
+			while(i < iBound)
+			{
+				if(input[i] == MEMBER_COMPLEX_DEF_END)
+				{
+					break;
+				}
+
+				/* A member of the inlined layout may be inlined itself, which the appender writes by the same
+				 * dispatch it writes the outer one by. Reading it needs the same recursion, or a dictionary
+				 * this parser's own assembler produced could not be read back.
+				 */
+				final int afterNested = parseValueStructDefinition(input, i, iBound, nestedMemberBuilder);
+				if(afterNested != i)
+				{
+					i = afterNested;
+					member.structMembers.add(nestedMemberBuilder.buildMemberValueStruct());
+				}
+				else
+				{
+					i = parseFieldSimple(input, i, iBound, nestedMemberBuilder);
+					member.structMembers.add(nestedMemberBuilder.buildMemberField());
+				}
+				nestedMemberBuilder.reset();
+
+				// skip trailing whitespaces before bound is checked again
+				i = skipWhitespaces(input, i, iBound);
+			}
+			checkForIncompleteInput(i, iBound);
+
+			// +1 to skip the inlined layout's end
+			return parseMemberTermination(input, i + 1, iBound);
+		}
+
+		private static int parseValueStructMemberName(
+			final char[]                input ,
+			final int                   iStart,
+			final int                   iBound,
+			final AbstractMemberBuilder member
+		)
+		{
+			int i = skipTerminated(input, iStart, iBound, MEMBER_FIELD_QUALIFIER_SEPERATOR, MEMBER_COMPLEX_DEF_START, TYPE_END);
+			if(i == iStart)
+			{
+				throw new PersistenceExceptionParserMissingMemberName(i);
+			}
+
+			int a = skipWhitespaces(input, i, iBound);
+			checkForIncompleteInput(a, iBound);
+
+			// the owner's field may be qualified by its declaring type, exactly as a plain field is
+			if(input[a] == MEMBER_FIELD_QUALIFIER_SEPERATOR)
+			{
+				member.setQualifier(new String(input, iStart, i - iStart));
+
+				final int nameStart = skipWhitespaces(input, a + 1, iBound);
+				i = skipTerminated(input, nameStart, iBound, MEMBER_COMPLEX_DEF_START, TYPE_END, MEMBER_TERMINATOR);
+				if(i == nameStart)
+				{
+					throw new PersistenceExceptionParserMissingMemberName(i);
+				}
+				setFieldName(input, nameStart, i, member);
+
+				a = skipWhitespaces(input, i, iBound);
+				checkForIncompleteInput(a, iBound);
+			}
+			else
+			{
+				setFieldName(input, iStart, i, member);
+			}
+
+			if(input[a] != MEMBER_COMPLEX_DEF_START)
+			{
+				throw new PersistenceExceptionParserMissingComplexTypeDefinition(a);
+			}
+
+			return skipWhitespaces(input, a + 1, iBound);
 		}
 
 		private static int parseFieldTypeName(
@@ -959,8 +1072,11 @@ public interface PersistenceTypeDictionaryParser
 		final PersistenceTypeNameMapper      typeNameMapper     ;
 
 		final BulkList<PersistenceTypeDescriptionMemberFieldGeneric> nestedMembers = new BulkList<>();
-		
-		boolean isVariableLength, isComplex;
+
+		// members describing the layout of an inlined field, filled only while such a member is parsed
+		final BulkList<PersistenceTypeDescriptionMemberField> structMembers = new BulkList<>();
+
+		boolean isVariableLength, isComplex, isValueStruct;
 		String qualifier, originalTypeName, typeName, fieldName;
 
 		
@@ -1047,10 +1163,12 @@ public interface PersistenceTypeDictionaryParser
 			this.qualifier        = null ;
 			this.isVariableLength = false;
 			this.isComplex        = false;
+			this.isValueStruct    = false;
 			this.originalTypeName = null ;
 			this.typeName         = null ;
 			this.fieldName        = null ;
 			this.nestedMembers.clear();
+			this.structMembers.clear();
 			return this;
 		}
 		
@@ -1098,6 +1216,54 @@ public interface PersistenceTypeDictionaryParser
 				!XReflect.isPrimitiveTypeName(typeName),
 				lengthResolver.resolveMinimumLengthFromDictionary(null, fieldName, typeName),
 				lengthResolver.resolveMaximumLengthFromDictionary(null, fieldName, typeName)
+			);
+		}
+
+		final PersistenceTypeDescriptionMemberField buildMemberField()
+		{
+			final String   qualifier               = this.qualifier();
+			final Class<?> resolvableDeclaringType = qualifier == null
+				? null
+				: this.typeResolver.tryResolveType(qualifier)
+			;
+
+			/* If the qualifier is resolvable to a class, the field is reflectivly derivable.
+			 * If not, it must be a generic simple field. Even if that field was reflectively derived in the past.
+			 * It is not (or no longer), it cannot be handled reflectively, but only generically.
+			 * And, of course, should a type formerly being a class have changed to being an interface,
+			 * the field cannot be handled reflectively, either. Whatever future improvements might come to interfaces
+			 * (like protected methods, since they already can have private ones, now), it should be pretty much
+			 * out of the question that they could possibly ever have instance fields. That would make them identical
+			 * to classes and defeat their purpose of implementing multiple inheritance.
+			 */
+
+			final String  tName  = this.typeName();
+			final boolean isPrim = XReflect.isPrimitiveTypeName(tName);
+			final String  fName  = this.fieldName();
+			final long    minLen = this.resolveMemberMinimumLength();
+			final long    maxLen = this.resolveMemberMaximumLength();
+
+			return resolvableDeclaringType != null && !resolvableDeclaringType.isInterface()
+				? PersistenceTypeDescriptionMemberFieldReflective.New(tName, qualifier, fName, !isPrim, minLen, maxLen)
+				: PersistenceTypeDescriptionMemberFieldGenericSimple.New(tName, qualifier, fName, !isPrim, minLen, maxLen)
+			;
+		}
+
+		final PersistenceTypeDescriptionMemberFieldValueStruct buildMemberValueStruct()
+		{
+			if(this.qualifier() == null)
+			{
+				// an inlined field is a field of a class, so its declaring type is part of its identity
+				throw new PersistenceException(
+					"Inlined field " + this.fieldName() + " lacks its declaring type qualifier."
+				);
+			}
+
+			return PersistenceTypeDescriptionMemberFieldValueStruct.New(
+				this.typeName() ,
+				this.qualifier(),
+				this.fieldName(),
+				this.structMembers
 			);
 		}
 
@@ -1173,6 +1339,11 @@ public interface PersistenceTypeDictionaryParser
 				return this.buildMemberEnumConstant();
 			}
 
+			if(this.isValueStruct)
+			{
+				return this.buildMemberValueStruct();
+			}
+
 			if(!this.isVariableLength)
 			{
 				return this.buildMemberField();
@@ -1200,37 +1371,6 @@ public interface PersistenceTypeDictionaryParser
 				this.fieldName()
 			);
 		}
-		
-		final PersistenceTypeDescriptionMemberField buildMemberField()
-		{
-			final String   qualifier               = this.qualifier();
-			final Class<?> resolvableDeclaringType = qualifier == null
-				? null
-				: this.typeResolver.tryResolveType(qualifier)
-			;
-		
-			/* If the qualifier is resolvable to a class, the field is reflectivly derivable.
-			 * If not, it must be a generic simple field. Even if that field was reflectively derived in the past.
-			 * It is not (or no longer), it cannot be handled reflectively, but only generically.
-			 * And, of course, should a type formerly being a class have changed to being an interface,
-			 * the field cannot be handled reflectively, either. Whatever future improvements might come to interfaces
-			 * (like protected methods, since they already can have private ones, now), it should be pretty much
-			 * out of the question that they could possibly ever have instance fields. That would make them identical
-			 * to classes and defeat their purpose of implementing multiple inheritance.
-			 */
-			
-			final String  tName  = this.typeName();
-			final boolean isPrim = XReflect.isPrimitiveTypeName(tName);
-			final String  fName  = this.fieldName();
-			final long    minLen = this.resolveMemberMinimumLength();
-			final long    maxLen = this.resolveMemberMaximumLength();
-			
-			return resolvableDeclaringType != null && !resolvableDeclaringType.isInterface()
-				? PersistenceTypeDescriptionMemberFieldReflective.New(tName, qualifier, fName, !isPrim, minLen, maxLen)
-				: PersistenceTypeDescriptionMemberFieldGenericSimple.New(tName, qualifier, fName, !isPrim, minLen, maxLen)
-			;
-		}
-		
 
 
 		///////////////////////////////////////////////////////////////////////////

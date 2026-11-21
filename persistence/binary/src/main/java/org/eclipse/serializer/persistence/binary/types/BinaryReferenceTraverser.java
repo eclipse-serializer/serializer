@@ -1163,9 +1163,14 @@ public interface BinaryReferenceTraverser
 			}
 			else
 			{
-				// only remaining option is fixed length primitive
+				/* Everything left is fixed length and holds no reference to traverse: a primitive, or an
+				 * inlined value slot, which is a composite of primitives plus a null marker and reports
+				 * its whole length here (references inside one are refused where such a member is
+				 * created, precisely so that this skip stays correct). Fixed length means minimum and
+				 * maximum are the same, so the minimum is the length to skip.
+				 */
 				this.finishReferenceRange();
-				this.skipLength += member.persistentMinimumLength(); // fixed length primitive ensured above
+				this.skipLength += member.persistentMinimumLength();
 			}
 		}
 

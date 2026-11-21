@@ -18,6 +18,7 @@ import java.time.MonthDay;
 
 import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustomNonReferentialFixedLength;
 import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.binary.types.ValidatingBinaryHandler;
 import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
 import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 
@@ -30,6 +31,7 @@ import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
  * 
  */
 public class BinaryHandlerMonthDay extends AbstractBinaryHandlerCustomNonReferentialFixedLength<MonthDay>
+implements ValidatingBinaryHandler<MonthDay, MonthDay>
 {
 	static final long BINARY_OFFSET_MONTH = 0L;
 	static final long BINARY_OFFSET_DAY   = BINARY_OFFSET_MONTH + Integer.BYTES;
@@ -64,10 +66,27 @@ public class BinaryHandlerMonthDay extends AbstractBinaryHandlerCustomNonReferen
 	// methods //
 	////////////
 	///
+	/**
+	 * This handler transfers state in {@link #create} alone, so an instance it is handed here was
+	 * created elsewhere and cannot be updated. Validating instead of ignoring keeps a divergence from
+	 * dropping the persisted state silently, e.g. for an explicitly set root.
+	 */
 	@Override
 	public void updateState(final Binary data, final MonthDay instance, final PersistenceLoadHandler handler)
 	{
-		// no-op
+		this.validateState(data, instance, handler);
+	}
+
+	@Override
+	public MonthDay getValidationStateFromInstance(final MonthDay instance)
+	{
+		return instance;
+	}
+
+	@Override
+	public MonthDay getValidationStateFromBinary(final Binary data)
+	{
+		return binaryState(data);
 	}
 
 	@Override
@@ -81,6 +100,11 @@ public class BinaryHandlerMonthDay extends AbstractBinaryHandlerCustomNonReferen
 
 	@Override
 	public MonthDay create(final Binary data, final PersistenceLoadHandler handler)
+	{
+		return binaryState(data);
+	}
+
+	private static MonthDay binaryState(final Binary data)
 	{
 		return MonthDay.of(
 			data.read_int (BINARY_OFFSET_MONTH),

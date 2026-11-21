@@ -158,7 +158,16 @@ public interface PersistenceTypeDescriptionMember
 	 */
 	public default boolean equalsLayout(final PersistenceTypeDescriptionMember other)
 	{
-		return other != null && Objects.equals(this.typeName(), other.typeName());
+		/* The lengths are part of the layout, not a consequence of the type name: the same type can be
+		 * written either as an object id or as its own content embedded in the owner. Comparing only the
+		 * name would let the two pass as layout-equal, and the legacy data would then be read with the
+		 * wrong layout instead of being translated.
+		 */
+		return other != null
+			&& Objects.equals(this.typeName(), other.typeName())
+			&& this.persistentMinimumLength() == other.persistentMinimumLength()
+			&& this.persistentMaximumLength() == other.persistentMaximumLength()
+		;
 	}
 	
 	/**
