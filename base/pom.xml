@@ -24,6 +24,30 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
+
+		<!-- Test libraries -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Run the tests on the class path instead of patching them into the
+					     org.eclipse.serializer.base module. The concurrency tests reflect on
+					     private fields to simulate a deserialized instance, which would otherwise
+					     require additional add-opens flags. -->
+					<useModulePath>false</useModulePath>
+					<trimStackTrace>false</trimStackTrace>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

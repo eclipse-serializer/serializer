@@ -19,22 +19,6 @@
 	<description>Serializer-level integration test suite (collections, serialization, communication, layered entities). Test-only, not deployed.</description>
 	<url>https://projects.eclipse.org/projects/technology.serializer</url>
 
-	<properties>
-		<junit-jupiter.version>6.0.3</junit-jupiter.version>
-	</properties>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.junit</groupId>
-				<artifactId>junit-bom</artifactId>
-				<version>${junit-jupiter.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 	<dependencies>
 		<!-- Eclipse Serializer (reactor siblings) -->
 		<dependency>
@@ -83,25 +67,21 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.21.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
-			<version>3.30.2-GA</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
-			<version>${slf4j.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.datafaker</groupId>
 			<artifactId>datafaker</artifactId>
-			<version>2.5.3</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
